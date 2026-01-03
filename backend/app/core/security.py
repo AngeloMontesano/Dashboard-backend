@@ -76,10 +76,11 @@ def create_access_token(
     subject: str,
     tenant_id: str,
     role: str,
-    expires_minutes: int = 15,
+    expires_minutes: int | None = None,
 ) -> tuple[str, int]:
+    lifetime_minutes = expires_minutes or settings.ACCESS_TOKEN_EXPIRES_MIN
     now = datetime.now(timezone.utc)
-    exp = now + timedelta(minutes=expires_minutes)
+    exp = now + timedelta(minutes=lifetime_minutes)
 
     payload: dict[str, Any] = {
         "sub": subject,

@@ -2,14 +2,14 @@ from __future__ import annotations
 
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import get_db
 from app.core.deps import get_admin_actor
 from app.models.tenant import Tenant
 from app.modules.admin.schemas import TenantUserCreate, TenantUserOut, TenantUserUpdate
-from app.modules.admin.service import create_tenant_user, list_tenant_users, update_tenant_user
+from app.modules.admin.service import create_tenant_user, delete_tenant_user, list_tenant_users, update_tenant_user
 
 router = APIRouter(
     prefix="/tenants/{tenant_id}/users",
@@ -84,4 +84,25 @@ async def admin_update_tenant_user(
             raise HTTPException(status_code=422, detail={"error": {"code": "invalid_role", "message": "Role not allowed"}})
         if str(e) == "invalid_password":
             raise HTTPException(status_code=422, detail={"error": {"code": "invalid_password", "message": "Password invalid"}})
+        raise
+
+
+@router.delete("/{membership_id}", status_code=204, response_class=Response)
+async def admin_delete_tenant_user(
+    tenant_id: uuid.UUID,
+    membership_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    actor: str = Depends(get_admin_actor),
+) -> Response:
+    try:
+        await delete_tenant_user(
+            db=db,
+            actor=actor,
+            tenant_id=tenant_id,
+            membership_id=membership_id,
+        )
+        return Response(status_code=204)
+    except ValueError as e:
+        if str(e) == "tenant_user_not_found":
+            raise HTTPException(status_code=404, detail={"error": {"code": "tenant_user_not_found", "message": "Tenant user not found"}})
         raise

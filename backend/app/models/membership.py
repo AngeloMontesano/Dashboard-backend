@@ -13,6 +13,7 @@ class Membership(Base):
     __tablename__ = "memberships"
     __table_args__ = (
         UniqueConstraint("user_id", "tenant_id", name="uq_memberships_user_tenant"),
+        UniqueConstraint("user_id", name="uq_memberships_user_id"),
     )
 
     # Technischer Primärschlüssel

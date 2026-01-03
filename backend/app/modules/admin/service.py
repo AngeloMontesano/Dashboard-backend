@@ -378,6 +378,47 @@ async def update_tenant_user(
     )
 
 
+async def delete_tenant_user(
+    db: AsyncSession,
+    *,
+    actor: str,
+    tenant_id: uuid.UUID,
+    membership_id: uuid.UUID,
+) -> None:
+    """
+    Löscht eine Membership (User bleibt erhalten, da global eindeutig).
+    """
+    stmt = (
+        select(Membership, User)
+        .join(User, User.id == Membership.user_id)
+        .where(Membership.id == membership_id)
+        .where(Membership.tenant_id == tenant_id)
+    )
+    res = await db.execute(stmt)
+    row = res.first()
+    if row is None:
+        raise ValueError("tenant_user_not_found")
+
+    membership, user = row
+
+    await db.delete(membership)
+
+    await write_audit_log(
+        db=db,
+        actor=actor,
+        action="delete",
+        entity_type="tenant_user",
+        entity_id=str(membership.id),
+        payload={
+            "tenant_id": str(tenant_id),
+            "user_id": str(user.id),
+            "email": user.email,
+        },
+    )
+
+    await db.commit()
+
+
 async def create_membership(
     db: AsyncSession,
     actor: str,

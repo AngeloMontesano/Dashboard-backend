@@ -86,8 +86,6 @@
         </button>
         <div class="muted">E-Mail wird in Kleinbuchstaben gespeichert.</div>
       </div>
-    </section>
-
       <div class="divider"></div>
 
       <div v-if="selectedUser" class="box">

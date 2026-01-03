@@ -1,0 +1,8 @@
+﻿# lokale Dinge
+.venv/
+.env
+
+# Unterordner sind eigene Repos
+backend/
+admin_frontend/
+customer_frontend/

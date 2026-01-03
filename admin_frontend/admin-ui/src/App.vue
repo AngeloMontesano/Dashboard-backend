@@ -115,13 +115,36 @@
         <!-- Workspace -->
         <section class="workspace">
           <!-- SECTION: Kunden -->
-          <AdminTenantsView
-            v-if="ui.section === 'kunden'"
-            :adminKey="ui.adminKey"
-            :actor="ui.actor"
-            :apiOk="api.ok"
-            :dbOk="db.ok"
-          />
+          <div v-if="!ui.authenticated" class="workspace">
+            <AdminLoginView @loggedIn="applyLogin" />
+          </div>
+          <template v-else>
+            <!-- SECTION: Kunden -->
+            <AdminTenantsView
+              v-if="ui.section === 'kunden'"
+              :adminKey="ui.adminKey"
+              :actor="ui.actor"
+              :apiOk="api.ok"
+              :dbOk="db.ok"
+            />
+
+          <!-- SECTION: Users -->
+            <AdminUsersView
+              v-else-if="ui.section === 'users'"
+              :adminKey="ui.adminKey"
+              :actor="ui.actor"
+              :apiOk="api.ok"
+              :dbOk="db.ok"
+            />
+
+          <!-- SECTION: Tenant Users / Memberships -->
+            <AdminMembershipsView
+              v-else-if="ui.section === 'memberships'"
+              :adminKey="ui.adminKey"
+              :actor="ui.actor"
+              :apiOk="api.ok"
+              :dbOk="db.ok"
+            />
 
           <!-- SECTION: Users -->
           <AdminUsersView
@@ -142,34 +165,35 @@
           />
 
           <!-- SECTION: Audit -->
-          <AdminAuditView
-            v-else-if="ui.section === 'audit'"
-            :adminKey="ui.adminKey"
-            :actor="ui.actor"
-          />
+            <AdminAuditView
+              v-else-if="ui.section === 'audit'"
+              :adminKey="ui.adminKey"
+              :actor="ui.actor"
+            />
 
           <!-- SECTION: Diagnostics -->
-          <AdminDiagnosticsView
-            v-else-if="ui.section === 'diagnostics'"
-            :adminKey="ui.adminKey"
-            :actor="ui.actor"
-            :apiOk="api.ok"
-            :dbOk="db.ok"
-          />
+            <AdminDiagnosticsView
+              v-else-if="ui.section === 'diagnostics'"
+              :adminKey="ui.adminKey"
+              :actor="ui.actor"
+              :apiOk="api.ok"
+              :dbOk="db.ok"
+            />
 
           <!-- SECTION: Settings -->
-          <AdminSettingsView
-            v-else
-            :adminKey="ui.adminKey"
-            :actor="ui.actor"
-            :apiOk="api.ok"
-            :dbOk="db.ok"
-            :dark="ui.dark"
-            :apiBase="apiBase"
-            :baseDomain="baseDomain"
-            @toggleDark="ui.dark = !ui.dark"
-            @resetContext="resetContext"
-          />
+            <AdminSettingsView
+              v-else
+              :adminKey="ui.adminKey"
+              :actor="ui.actor"
+              :apiOk="api.ok"
+              :dbOk="db.ok"
+              :dark="ui.dark"
+              :apiBase="apiBase"
+              :baseDomain="baseDomain"
+              @toggleDark="ui.dark = !ui.dark"
+              @resetContext="resetContext"
+            />
+          </template>
         </section>
       </main>
     </div>
@@ -208,6 +232,7 @@ import AdminMembershipsView from "./views/AdminMembershipsView.vue";
 import AdminAuditView from "./views/AdminAuditView.vue";
 import AdminDiagnosticsView from "./views/AdminDiagnosticsView.vue";
 import AdminSettingsView from "./views/AdminSettingsView.vue";
+import AdminLoginView from "./views/AdminLoginView.vue";
 
 /* Zentraler Toast State */
 const { toastState, toast } = useToast();
@@ -231,6 +256,7 @@ const ui = reactive({
   dark: false,
   actor: "admin",
   adminKey: "",
+  authenticated: false,
   section: "kunden" as SectionId,
 });
 
@@ -246,6 +272,14 @@ const db = reactive({ ok: false, busy: false });
 /* Navigation */
 function goSection(sectionId: SectionId) {
   ui.section = sectionId;
+}
+
+function applyLogin(payload: { adminKey: string; actor: string }) {
+  ui.adminKey = payload.adminKey;
+  ui.actor = payload.actor || "admin";
+  ui.authenticated = true;
+  sessionStorage.setItem("adminKey", ui.adminKey);
+  sessionStorage.setItem("adminActor", ui.actor);
 }
 
 /* Titles */
@@ -313,11 +347,21 @@ async function quickRefresh() {
 function resetContext() {
   ui.adminKey = "";
   ui.actor = "admin";
+  ui.authenticated = false;
   toast("Admin Context zurückgesetzt");
+  sessionStorage.removeItem("adminKey");
+  sessionStorage.removeItem("adminActor");
 }
 
 /* Boot */
 onMounted(async () => {
+  const savedKey = sessionStorage.getItem("adminKey");
+  const savedActor = sessionStorage.getItem("adminActor");
+  if (savedKey) {
+    ui.adminKey = savedKey;
+    ui.actor = savedActor || "admin";
+    ui.authenticated = true;
+  }
   await quickRefresh();
 });
 </script>

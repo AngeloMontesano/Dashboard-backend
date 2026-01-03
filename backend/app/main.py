@@ -15,6 +15,7 @@ from app.core.db import get_db
 from app.core.errors import register_exception_handlers
 from app.core.logging import configure_logging
 from app.modules.admin.routes import router as admin_router
+from app.modules.admin.login_routes import router as admin_login_router
 from app.modules.inventory.routes import router as inventory_router
 from app.modules.auth.routes import router as auth_router
 
@@ -59,6 +60,7 @@ def create_app() -> FastAPI:
             settings.BASE_ADMIN_DOMAIN,
         )
 
+    app.include_router(admin_login_router)
     app.include_router(inventory_router)
     app.include_router(admin_router)
     app.include_router(auth_router)

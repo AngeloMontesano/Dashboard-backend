@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import logging
 import sys
+import json
+from datetime import datetime, timezone
 from typing import Any
 
 
@@ -33,10 +35,19 @@ def configure_logging(environment: str) -> None:
     handler = logging.StreamHandler(sys.stdout)
     handler.setLevel(level)
 
-    formatter = logging.Formatter(
-        fmt="%(asctime)s %(levelname)s %(name)s %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S",
-    )
+    class JsonFormatter(logging.Formatter):
+        def format(self, record: logging.LogRecord) -> str:
+            payload = {
+                "ts": datetime.now(timezone.utc).isoformat(),
+                "level": record.levelname,
+                "logger": record.name,
+                "message": self.formatMessage(record),
+            }
+            if record.exc_info:
+                payload["exc_info"] = self.formatException(record.exc_info)
+            return json.dumps(payload, ensure_ascii=False)
+
+    formatter = JsonFormatter(fmt="%(message)s")
     handler.setFormatter(formatter)
     handler.addFilter(_RedactAdminKeyFilter())
 

@@ -4,11 +4,12 @@ import uuid
 import logging
 import time
 
-from fastapi import Depends, FastAPI, Request
+from fastapi import Depends, FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
+from prometheus_client import CONTENT_TYPE_LATEST, CollectorRegistry, Counter, generate_latest
 
 from app.core.config import settings
 from app.core.db import get_db
@@ -36,6 +37,13 @@ OPENAPI_TAGS = [
 def create_app() -> FastAPI:
     configure_logging(environment=settings.ENVIRONMENT)
     request_logger = logging.getLogger("app.request")
+    metrics_registry = CollectorRegistry()
+    http_requests_total = Counter(
+        "app_http_requests_total",
+        "Total HTTP requests",
+        ["method", "path", "status"],
+        registry=metrics_registry,
+    )
 
     app = FastAPI(
         title="Multi-Tenant Lagerverwaltung API",
@@ -92,6 +100,10 @@ def create_app() -> FastAPI:
             duration_ms = (time.perf_counter() - start) * 1000
             request_id = getattr(request.state, "request_id", "-")
             actor = request.headers.get("x-admin-actor") or "-"
+            try:
+                http_requests_total.labels(request.method, request.url.path, str(status_code)).inc()
+            except Exception:
+                request_logger.debug("failed to record metric for %s %s", request.method, request.url.path)
             request_logger.info(
                 "request %s %s -> %s in %.1fms [req_id=%s actor=%s]",
                 request.method,
@@ -149,6 +161,11 @@ def create_app() -> FastAPI:
         if settings.GIT_COMMIT:
             payload["git_commit"] = settings.GIT_COMMIT
         return payload
+
+    @app.get("/metrics")
+    async def metrics() -> Response:
+        output = generate_latest(metrics_registry)
+        return Response(content=output, media_type=CONTENT_TYPE_LATEST)
 
     return app
 

@@ -19,6 +19,13 @@
             <div class="v mono">{{ baseDomain }}</div>
           </div>
           <div class="kv">
+            <div class="k">Observability</div>
+            <div class="v">
+              <a :href="grafanaUrl" target="_blank" rel="noreferrer">Grafana</a>
+              <div class="muted">Prometheus &amp; Loki</div>
+            </div>
+          </div>
+          <div class="kv">
             <div class="k">Admin Key Länge</div>
             <div class="v">{{ adminKey ? adminKey.length : 0 }} Zeichen</div>
           </div>
@@ -158,6 +165,7 @@ const themes = [
   { id: "theme-ocean", label: "Ocean" },
 ];
 const localTheme = ref(props.theme || "theme-classic");
+const grafanaUrl = import.meta.env.VITE_GRAFANA_URL || "http://localhost:3000";
 
 const userForm = reactive({
   email: "",

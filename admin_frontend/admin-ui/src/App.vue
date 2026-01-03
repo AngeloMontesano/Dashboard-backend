@@ -165,7 +165,10 @@
             :apiOk="api.ok"
             :dbOk="db.ok"
             :dark="ui.dark"
+            :apiBase="apiBase"
+            :baseDomain="baseDomain"
             @toggleDark="ui.dark = !ui.dark"
+            @resetContext="resetContext"
           />
         </section>
       </main>
@@ -196,6 +199,7 @@
 import { computed, onMounted, reactive } from "vue";
 import { useToast } from "./composables/useToast";
 import { platformHealth, platformHealthDb } from "./api/platform";
+import { getBaseDomain, getBaseURL } from "./api/base";
 
 /* Views */
 import AdminTenantsView from "./views/AdminTenantsView.vue";
@@ -207,6 +211,8 @@ import AdminSettingsView from "./views/AdminSettingsView.vue";
 
 /* Zentraler Toast State */
 const { toastState, toast } = useToast();
+const baseDomain = getBaseDomain();
+const apiBase = getBaseURL();
 
 /* Sidebar Sections */
 const sections = [
@@ -302,6 +308,12 @@ async function quickRefresh() {
   } finally {
     busy.refresh = false;
   }
+}
+
+function resetContext() {
+  ui.adminKey = "";
+  ui.actor = "admin";
+  toast("Admin Context zurückgesetzt");
 }
 
 /* Boot */

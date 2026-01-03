@@ -49,15 +49,46 @@
               Membership {{ u.membership_is_active ? "aktiv" : "deaktiviert" }}
             </span>
           </div>
-          <div class="row gap6">
+          <div class="row gap6 wrap">
             <button class="btnGhost small" :disabled="busy.updateId === u.membership_id" @click="toggleUser(u)">
               {{ busy.updateId === u.membership_id ? "..." : u.user_is_active ? "User deaktivieren" : "User aktivieren" }}
             </button>
             <button class="btnGhost small" :disabled="busy.updateId === u.membership_id" @click="toggleMembership(u)">
               {{ busy.updateId === u.membership_id ? "..." : u.membership_is_active ? "Membership deaktivieren" : "Membership aktivieren" }}
             </button>
+            <button class="btnGhost small" :disabled="busy.updateId === u.membership_id" @click="resetPassword(u)">
+              {{ busy.updateId === u.membership_id ? "..." : "Passwort setzen" }}
+            </button>
+            <button class="btnGhost small danger" :disabled="busy.updateId === u.membership_id" @click="deleteTenantUser(u)">
+              {{ busy.updateId === u.membership_id ? "..." : "Löschen" }}
+            </button>
           </div>
         </div>
+        <div class="kv">
+          <div class="k">User aktiv?</div>
+          <div class="v">
+            <label class="toggle">
+              <input type="checkbox" v-model="form.user_is_active" />
+              <span>{{ form.user_is_active ? "aktiv" : "deaktiviert" }}</span>
+            </label>
+          </div>
+        </div>
+        <div class="kv">
+          <div class="k">Membership aktiv?</div>
+          <div class="v">
+            <label class="toggle">
+              <input type="checkbox" v-model="form.membership_is_active" />
+              <span>{{ form.membership_is_active ? "aktiv" : "deaktiviert" }}</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="row gap8">
+        <button class="btnPrimary" :disabled="!selectedTenantId || busy.create" @click="createTenantUser">
+          {{ busy.create ? "legt an..." : "Hinzufügen" }}
+        </button>
+        <div class="muted">Legt User an (falls neu) und verknüpft Membership.</div>
       </div>
 
       <div class="hintBox">
@@ -136,6 +167,7 @@ import {
   adminListTenantUsers,
   adminListTenants,
   adminRoles,
+  adminDeleteTenantUser,
   adminUpdateTenantUser,
 } from "../api/admin";
 import type { TenantOut, TenantUserOut } from "../types";
@@ -269,6 +301,12 @@ async function changeRole(u: TenantUserOut, event: Event) {
   await patchTenantUser(u, { role });
 }
 
+async function resetPassword(u: TenantUserOut) {
+  const pw = window.prompt("Neues Passwort für diesen User setzen (mind. 8 Zeichen). Leer zum Abbrechen.");
+  if (!pw) return;
+  await patchTenantUser(u, { password: pw });
+}
+
 async function patchTenantUser(u: TenantUserOut, payload: Record<string, unknown>) {
   busy.updateId = u.membership_id;
   try {
@@ -283,6 +321,25 @@ async function patchTenantUser(u: TenantUserOut, payload: Record<string, unknown
     toast("Aktualisiert");
   } catch (e: any) {
     toast(`Fehler beim Update: ${stringifyError(e)}`);
+  } finally {
+    busy.updateId = "";
+  }
+}
+
+async function deleteTenantUser(u: TenantUserOut) {
+  if (!selectedTenantId.value) {
+    toast("Bitte Tenant auswählen");
+    return;
+  }
+  const confirmDelete = window.confirm(`Membership für ${u.email} löschen? User bleibt erhalten.`);
+  if (!confirmDelete) return;
+  busy.updateId = u.membership_id;
+  try {
+    await adminDeleteTenantUser(props.adminKey, props.actor, selectedTenantId.value, u.membership_id);
+    tenantUsers.value = tenantUsers.value.filter((x) => x.membership_id !== u.membership_id);
+    toast("Membership gelöscht");
+  } catch (e: any) {
+    toast(`Fehler beim Löschen: ${stringifyError(e)}`);
   } finally {
     busy.updateId = "";
   }

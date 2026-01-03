@@ -55,7 +55,7 @@ export async function adminUpdateTenant(adminKey: string, actor?: string, tenant
 
 export async function adminDeleteTenant(adminKey: string, actor?: string, tenantId: string) {
   const api = apiClient(adminKey, actor);
-  await api.delete(`/admin/tenants/${tenantId}`);
+  await api.delete(`/admin/tenants/${tenantId}`, { params: { confirm: true } });
   return true;
 }
 
@@ -111,6 +111,17 @@ export async function adminUpdateTenantUser(
   const api = apiClient(adminKey, actor);
   const res = await api.patch(`/admin/tenants/${tenantId}/users/${membershipId}`, payload);
   return res.data as TenantUserOut;
+}
+
+export async function adminDeleteTenantUser(
+  adminKey: string,
+  actor: string | undefined,
+  tenantId: string,
+  membershipId: string
+) {
+  const api = apiClient(adminKey, actor);
+  await api.delete(`/admin/tenants/${tenantId}/users/${membershipId}`);
+  return true;
 }
 
 /* Memberships */

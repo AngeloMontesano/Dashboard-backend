@@ -29,6 +29,10 @@
         </button>
         <div class="muted">Nutzung: /admin/ping mit Key und optional Actor.</div>
       </div>
+
+      <div v-if="status.message" class="status" :class="status.type">
+        {{ status.message }}
+      </div>
     </div>
   </div>
 </template>
@@ -49,19 +53,34 @@ const form = reactive({
 
 const busy = ref(false);
 const { toast } = useToast();
+const status = reactive({
+  message: "",
+  type: "",
+});
 
 async function login() {
   if (!form.adminKey.trim()) {
     toast("Bitte Admin Key eingeben");
+    status.message = "Bitte Admin Key eingeben";
+    status.type = "error";
     return;
   }
   busy.value = true;
+  status.message = "Prüfe Admin Zugang...";
+  status.type = "info";
+  console.info("[admin-login] Start", { actor: form.actor || "admin" });
   try {
     await adminPing(form.adminKey, form.actor || undefined);
+    console.info("[admin-login] Erfolg", { actor: form.actor || "admin" });
     emit("loggedIn", { adminKey: form.adminKey.trim(), actor: form.actor.trim() || "admin" });
     toast("Login erfolgreich");
+    status.message = "Login erfolgreich. Admin Portal wird geladen...";
+    status.type = "ok";
   } catch (e: any) {
     toast(asError(e));
+    status.message = asError(e);
+    status.type = "error";
+    console.error("[admin-login] Fehler", e);
   } finally {
     busy.value = false;
   }
@@ -91,4 +110,11 @@ function asError(e: any): string {
 .loginCard {
   width: 420px;
 }
+.status{
+  margin-top: 10px;
+  font-size: 13px;
+}
+.status.info{ color: var(--muted); }
+.status.ok{ color: var(--ok); }
+.status.error{ color: var(--bad); }
 </style>

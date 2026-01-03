@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import uuid
+import logging
+import time
 
 from fastapi import Depends, FastAPI, Request
 from sqlalchemy import text
@@ -31,6 +33,7 @@ OPENAPI_TAGS = [
 
 def create_app() -> FastAPI:
     configure_logging(environment=settings.ENVIRONMENT)
+    request_logger = logging.getLogger("app.request")
 
     app = FastAPI(
         title="Multi-Tenant Lagerverwaltung API",
@@ -53,6 +56,28 @@ def create_app() -> FastAPI:
         response = await call_next(request)
         response.headers["X-Request-Id"] = request_id
         return response
+
+    @app.middleware("http")
+    async def request_logging_middleware(request: Request, call_next):
+        start = time.perf_counter()
+        status_code: int | str = "error"
+        try:
+            response = await call_next(request)
+            status_code = response.status_code
+            return response
+        finally:
+            duration_ms = (time.perf_counter() - start) * 1000
+            request_id = getattr(request.state, "request_id", "-")
+            actor = request.headers.get("x-admin-actor") or "-"
+            request_logger.info(
+                "request %s %s -> %s in %.1fms [req_id=%s actor=%s]",
+                request.method,
+                request.url.path,
+                status_code,
+                duration_ms,
+                request_id,
+                actor,
+            )
 
 
     @app.get("/health", tags=["platform"])

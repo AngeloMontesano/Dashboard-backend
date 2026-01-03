@@ -257,6 +257,8 @@ function applyLogin(payload: { adminKey: string; actor: string }) {
   ui.authenticated = true;
   sessionStorage.setItem("adminKey", ui.adminKey);
   sessionStorage.setItem("adminActor", ui.actor);
+  toast("Admin Login erfolgreich, lade Portal...");
+  quickRefresh();
 }
 
 /* Titles */

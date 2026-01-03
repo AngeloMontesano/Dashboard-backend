@@ -40,6 +40,7 @@
 <script setup lang="ts">
 import { reactive, ref } from "vue";
 import { adminPing } from "../api/admin";
+import { getBaseURL } from "../api/base";
 import { useToast } from "../composables/useToast";
 
 const emit = defineEmits<{
@@ -90,6 +91,7 @@ function asError(e: any): string {
   if (!e) return "unknown";
   if (typeof e === "string") return e;
   if (e?.response?.data?.detail) return JSON.stringify(e.response.data.detail);
+  if (e?.message === "Network Error") return `Network Error (API ${getBaseURL()})`;
   if (e?.message) return e.message;
   try {
     return JSON.stringify(e);

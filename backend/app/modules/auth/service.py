@@ -2,12 +2,12 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
-from typing import Final
 
 from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import settings
 from app.core.security import (
     create_access_token,
     create_refresh_token,
@@ -17,8 +17,6 @@ from app.core.security import (
 from app.models.membership import Membership
 from app.models.refresh_session import RefreshSession
 from app.models.user import User
-
-REFRESH_TTL_DAYS: Final[int] = 30
 
 
 def _http_401(code: str, message: str) -> HTTPException:
@@ -62,7 +60,7 @@ async def login(*, db: AsyncSession, tenant_id: str, email: str, password: str) 
         subject=str(user.id),
         tenant_id=str(tenant_id),
         role=membership.role,
-        expires_minutes=15,
+        expires_minutes=settings.ACCESS_TOKEN_EXPIRES_MIN,
     )
 
     # Refresh token + Session
@@ -74,7 +72,7 @@ async def login(*, db: AsyncSession, tenant_id: str, email: str, password: str) 
         user_id=user.id,
         tenant_id=tenant_id,
         refresh_token_hash=refresh_hash,
-        expires_at=now + timedelta(days=REFRESH_TTL_DAYS),
+        expires_at=now + timedelta(days=settings.REFRESH_TOKEN_EXPIRES_DAYS),
         revoked_at=None,
         last_used_at=now,
     )
@@ -117,13 +115,13 @@ async def refresh(*, db: AsyncSession, tenant_id: str, refresh_token: str) -> tu
     new_refresh = create_refresh_token()
     session.refresh_token_hash = hash_refresh_token(new_refresh)
     session.last_used_at = now
-    session.expires_at = now + timedelta(days=REFRESH_TTL_DAYS)
+    session.expires_at = now + timedelta(days=settings.REFRESH_TOKEN_EXPIRES_DAYS)
 
     access_token, expires_in = create_access_token(
         subject=str(user.id),
         tenant_id=str(tenant_id),
         role=membership.role,
-        expires_minutes=15,
+        expires_minutes=settings.ACCESS_TOKEN_EXPIRES_MIN,
     )
 
     await db.commit()

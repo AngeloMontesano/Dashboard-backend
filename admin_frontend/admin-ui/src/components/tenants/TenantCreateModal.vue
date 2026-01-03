@@ -34,6 +34,9 @@
               @input="$emit('update:slug', ($event.target as HTMLInputElement).value)"
               placeholder="baeckerei-muster"
             />
+            <div class="muted" style="margin-top: 4px;">
+              Subdomain: <span class="mono">{{ slugPreview }}</span>
+            </div>
           </div>
         </div>
 
@@ -53,11 +56,14 @@
 </template>
 
 <script setup lang="ts">
-defineProps<{
+import { computed } from "vue";
+
+const props = defineProps<{
   open: boolean;
   busy: boolean;
   name: string;
   slug: string;
+  baseDomain: string;
 }>();
 
 defineEmits<{
@@ -66,4 +72,9 @@ defineEmits<{
   (e: "update:name", v: string): void;
   (e: "update:slug", v: string): void;
 }>();
+
+const slugPreview = computed(() => {
+  const s = props.slug.trim().toLowerCase() || "<slug>";
+  return `${s}.${props.baseDomain}`;
+});
 </script>

@@ -49,6 +49,7 @@
         @select="selectTenant"
         @details="openDrawer"
         @toggle="toggleTenant"
+        @delete="deleteTenant"
       />
 
       <div class="hintBox">
@@ -102,7 +103,15 @@
       </div>
 
       <div class="hintBox" style="margin-top: 10px;">
-        Nächster Schritt: Workspace Tabs (Benutzer, Memberships, Support) tenant scoped laden.
+        Tenant Host: <span class="mono" v-if="selectedTenant">{{ `${selectedTenant.slug}.${baseDomain}` }}</span>
+        <span v-else class="muted">Kein Tenant ausgewählt.</span>
+      </div>
+
+      <div class="row gap8 wrap">
+        <button class="btnGhost danger" :disabled="!selectedTenant || busy.deleteId === selectedTenant?.id" @click="selectedTenant && deleteTenant(selectedTenant)">
+          {{ busy.deleteId === selectedTenant?.id ? "löscht..." : "Tenant löschen" }}
+        </button>
+        <div class="muted">Löscht Tenant via DELETE /admin/tenants/{id}?confirm=true</div>
       </div>
     </section>
 
@@ -111,15 +120,18 @@
       :open="drawer.open"
       :tenant="drawer.tenant"
       :busyToggle="busy.toggleId"
+      :baseDomain="baseDomain"
       v-model:note="drawer.note"
       @close="closeDrawer"
       @toggle="toggleTenant"
+      @delete="deleteTenant"
     />
 
     <!-- Create Modal -->
     <TenantCreateModal
       :open="modal.open"
       :busy="busy.create"
+      :baseDomain="baseDomain"
       v-model:name="modal.name"
       v-model:slug="modal.slug"
       @close="closeCreateModal"
@@ -141,7 +153,7 @@
 
 import { computed, onMounted, reactive, ref } from "vue";
 import type { TenantOut } from "../types";
-import { adminListTenants, adminCreateTenant, adminUpdateTenant } from "../api/admin";
+import { adminListTenants, adminCreateTenant, adminUpdateTenant, adminDeleteTenant } from "../api/admin";
 import { useToast } from "../composables/useToast";
 
 /* Components */
@@ -169,6 +181,7 @@ const busy = reactive({
   list: false,
   create: false,
   toggleId: "" as string,
+  deleteId: "" as string,
 });
 
 /* Drawer State */
@@ -185,6 +198,8 @@ const modal = reactive({
   slug: "",
 });
 
+const baseDomain = import.meta.env.VITE_BASE_DOMAIN || "test.myitnetwork.de";
+
 /* Derived: Filter nach Status (Suche ist serverseitig via q) */
 const filteredTenants = computed(() => {
   let list = tenants.value.slice();
@@ -197,20 +212,20 @@ const filteredTenants = computed(() => {
 
 /* API: Load Tenants */
 async function loadTenants() {
+  if (!ensureAdminKey()) return;
   busy.list = true;
   try {
     const res = await adminListTenants(props.adminKey, props.actor, {
       q: q.value || undefined,
       limit: 200,
-      offset: 0,
-    });
+        offset: 0,
+      });
+      tenants.value = res;
 
-    tenants.value = res;
-
-    /* Selection stabil halten */
-    if (selectedTenant.value) {
-      selectedTenant.value = res.find((t) => t.id === selectedTenant.value!.id) ?? null;
-    }
+      /* Selection stabil halten */
+      if (selectedTenant.value) {
+        selectedTenant.value = res.find((t) => t.id === selectedTenant.value!.id) ?? null;
+      }
 
     toast(`Tenants geladen: ${res.length}`);
   } catch (e: any) {
@@ -222,8 +237,9 @@ async function loadTenants() {
 
 /* API: Create Tenant */
 async function createTenant() {
+  if (!ensureAdminKey()) return;
   const name = modal.name.trim();
-  const slug = modal.slug.trim();
+  const slug = modal.slug.trim().toLowerCase();
 
   if (!name || !slug) {
     toast("Name und Slug sind Pflicht");
@@ -251,6 +267,7 @@ async function createTenant() {
 
 /* API: Toggle Tenant Active */
 async function toggleTenant(t: TenantOut) {
+  if (!ensureAdminKey()) return;
   if (!t) return;
 
   busy.toggleId = t.id;
@@ -297,6 +314,34 @@ function openCreateModal() {
 
 function closeCreateModal() {
   modal.open = false;
+}
+
+function ensureAdminKey(): boolean {
+  if (!props.adminKey) {
+    toast("Bitte Admin Key setzen");
+    return false;
+  }
+  return true;
+}
+
+async function deleteTenant(t: TenantOut) {
+  if (!ensureAdminKey()) return;
+  if (!t) return;
+  const confirmDelete = window.confirm(`Tenant ${t.slug} wirklich löschen? Diese Aktion ist irreversibel.`);
+  if (!confirmDelete) return;
+
+  busy.deleteId = t.id;
+  try {
+    await adminDeleteTenant(props.adminKey, props.actor, t.id);
+    tenants.value = tenants.value.filter((x) => x.id !== t.id);
+    if (selectedTenant.value?.id === t.id) selectedTenant.value = null;
+    if (drawer.tenant?.id === t.id) closeDrawer();
+    toast("Tenant gelöscht");
+  } catch (e: any) {
+    toast(`Fehler beim Löschen: ${stringifyError(e)}`);
+  } finally {
+    busy.deleteId = "";
+  }
 }
 
 /* Helpers */

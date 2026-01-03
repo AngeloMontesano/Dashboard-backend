@@ -1,7 +1,7 @@
 """refresh sessions
 
-Revision ID: 0003_refresh_sessions
-Revises: 0002_memberships_user_unique
+Revision ID: 0004_refresh_sessions
+Revises: 0003_memberships_user_unique
 Create Date: 2026-01-02
 """
 

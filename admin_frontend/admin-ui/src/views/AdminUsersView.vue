@@ -7,7 +7,6 @@
           <div class="cardTitle">Benutzer</div>
           <div class="cardHint">Globale User-Verwaltung (E-Mail eindeutig)</div>
         </div>
-
         <div class="cardHeaderActions">
           <button class="btnPrimary" :disabled="busy.list" @click="loadUsers">
             {{ busy.list ? "lade..." : "Neu laden" }}

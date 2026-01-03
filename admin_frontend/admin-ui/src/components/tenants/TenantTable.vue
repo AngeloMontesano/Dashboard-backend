@@ -40,6 +40,7 @@
             >
               {{ busyToggleId === t.id ? "..." : (t.is_active ? "deaktivieren" : "aktivieren") }}
             </button>
+            <button class="link danger" @click.stop="$emit('delete', t)">Löschen</button>
           </td>
         </tr>
 
@@ -67,5 +68,6 @@ defineEmits<{
   (e: "select", t: TenantOut): void;
   (e: "details", t: TenantOut): void;
   (e: "toggle", t: TenantOut): void;
+  (e: "delete", t: TenantOut): void;
 }>();
 </script>

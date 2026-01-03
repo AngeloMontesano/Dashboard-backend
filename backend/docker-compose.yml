@@ -1,10 +1,16 @@
 services:
   db:
     image: postgres:16
+    env_file:
+      - ../.env
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U lager -d lager"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 5s
       timeout: 3s
       retries: 20
@@ -12,8 +18,21 @@ services:
   api:
     build: .
     working_dir: /app
+    env_file:
+      - ../.env
     environment:
       PYTHONPATH: /app
+      DATABASE_URL: ${DATABASE_URL}
+      ADMIN_API_KEY: ${ADMIN_API_KEY}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_ALGORITHM: ${JWT_ALGORITHM}
+      BASE_DOMAIN: ${BASE_DOMAIN}
+      BASE_ADMIN_DOMAIN: ${BASE_ADMIN_DOMAIN}
+      ENVIRONMENT: ${ENVIRONMENT:-prod}
+      APP_VERSION: ${APP_VERSION}
+      GIT_COMMIT: ${GIT_COMMIT}
+      ACCESS_TOKEN_EXPIRES_MIN: ${ACCESS_TOKEN_EXPIRES_MIN:-15}
+      REFRESH_TOKEN_EXPIRES_DAYS: ${REFRESH_TOKEN_EXPIRES_DAYS:-30}
     ports:
       - "${API_PORT:-8000}:8000"
     depends_on:

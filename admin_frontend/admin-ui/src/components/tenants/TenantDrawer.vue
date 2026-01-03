@@ -12,7 +12,9 @@
       <div class="drawerHeader">
         <div>
           <div class="drawerTitle">{{ tenant?.name || "-" }}</div>
-          <div class="drawerSub mono">{{ tenant?.slug || "-" }} · {{ tenant?.id || "-" }}</div>
+          <div class="drawerSub mono">
+            {{ tenant ? `${tenant.slug}.${baseDomain}` : "-" }} · {{ tenant?.id || "-" }}
+          </div>
         </div>
         <button class="btnGhost" @click="$emit('close')">Schließen</button>
       </div>
@@ -29,6 +31,9 @@
             {{ tenant?.is_active ? "Deaktivieren" : "Aktivieren" }}
           </button>
 
+          <button class="btnGhost danger" :disabled="!tenant || busyDelete === tenant?.id" @click="tenant && $emit('delete', tenant)">
+            {{ busyDelete === tenant?.id ? "löscht..." : "Löschen" }}
+          </button>
           <button class="btnGhost" disabled>Support Session</button>
           <button class="btnGhost" disabled>Passwort Reset</button>
         </div>
@@ -52,12 +57,15 @@ defineProps<{
   open: boolean;
   tenant: TenantOut | null;
   busyToggle: string;
+  busyDelete: string;
   note: string;
+  baseDomain: string;
 }>();
 
 defineEmits<{
   (e: "close"): void;
   (e: "toggle", t: TenantOut): void;
+  (e: "delete", t: TenantOut): void;
   (e: "update:note", v: string): void;
 }>();
 </script>

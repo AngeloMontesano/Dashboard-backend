@@ -64,6 +64,31 @@
             </button>
           </div>
         </div>
+        <div class="kv">
+          <div class="k">User aktiv?</div>
+          <div class="v">
+            <label class="toggle">
+              <input type="checkbox" v-model="form.user_is_active" />
+              <span>{{ form.user_is_active ? "aktiv" : "deaktiviert" }}</span>
+            </label>
+          </div>
+        </div>
+        <div class="kv">
+          <div class="k">Membership aktiv?</div>
+          <div class="v">
+            <label class="toggle">
+              <input type="checkbox" v-model="form.membership_is_active" />
+              <span>{{ form.membership_is_active ? "aktiv" : "deaktiviert" }}</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="row gap8">
+        <button class="btnPrimary" :disabled="!selectedTenantId || busy.create" @click="createTenantUser">
+          {{ busy.create ? "legt an..." : "Hinzufügen" }}
+        </button>
+        <div class="muted">Legt User an (falls neu) und verknüpft Membership.</div>
       </div>
 
       <div class="hintBox">

@@ -1,0 +1,56 @@
+/*
+  tokens.css
+  Zweck
+  - Zentrale Design Tokens
+  - Komponenten nutzen nur var(--token)
+*/
+
+:root{
+  /* Core */
+  --bg: #f4f6fb;
+  --panel: #ffffff;
+  --text: #0f172a;
+  --muted: #64748b;
+  --border: rgba(15, 23, 42, 0.10);
+
+  /* Elevation */
+  --shadow: 0 10px 30px rgba(2, 6, 23, 0.08);
+  --shadow2: 0 8px 18px rgba(2, 6, 23, 0.10);
+
+  /* Brand */
+  --primary: #3b5bdb;
+
+  /* Status */
+  --ok: #16a34a;
+  --bad: #dc2626;
+  --neutral: #475569;
+
+  /* Surfaces */
+  --surface: rgba(2, 6, 23, 0.03);
+  --surface2: rgba(2, 6, 23, 0.05);
+  --surface3: rgba(2, 6, 23, 0.08);
+
+  /* Radius */
+  --radius: 16px;
+  --radius2: 12px;
+
+  /* Fonts */
+  --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+}
+
+/* Dark Theme Overrides */
+.dark{
+  --bg: #060a12;
+  --panel: #0f172a;
+  --text: #e5e7eb;
+  --muted: #94a3b8;
+  --border: rgba(148, 163, 184, 0.16);
+
+  --shadow: 0 16px 44px rgba(0, 0, 0, 0.38);
+  --shadow2: 0 10px 26px rgba(0, 0, 0, 0.38);
+
+  --surface: rgba(255, 255, 255, 0.06);
+  --surface2: rgba(255, 255, 255, 0.08);
+  --surface3: rgba(255, 255, 255, 0.10);
+}

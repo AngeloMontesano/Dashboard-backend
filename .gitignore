@@ -1,8 +1,11 @@
-﻿# lokale Dinge
-.venv/
+﻿.venv/
+**/.venv/
 .env
-
-# Unterordner sind eigene Repos
-backend/
-admin_frontend/
-customer_frontend/
+**/.env
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+__pycache__/
+**/__pycache__/
+.vscode/

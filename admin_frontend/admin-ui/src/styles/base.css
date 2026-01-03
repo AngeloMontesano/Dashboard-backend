@@ -1,0 +1,39 @@
+/*
+  base.css
+  Zweck
+  - Globales Basis Styling
+  - Typografie, Hintergrund, Default Textfarbe
+  - Keine Komponenten Styles
+*/
+
+*{ box-sizing: border-box; }
+html, body { height: 100%; }
+
+body{
+  margin: 0;
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* App Background + Dark Gradient */
+.app{
+  min-height: 100vh;
+  background: var(--bg);
+}
+
+.dark .app{
+  background:
+    radial-gradient(900px 500px at 15% 10%, rgba(59, 91, 219, 0.18), transparent 60%),
+    radial-gradient(700px 420px at 80% 15%, rgba(22, 163, 74, 0.10), transparent 62%),
+    var(--bg);
+}
+
+/* Textfarbe erzwingen, damit Darkmode lesbar bleibt */
+.app, .app *{ color: var(--text); }
+.muted{ color: var(--muted); }
+
+input, select, textarea, button{
+  color: var(--text);
+  font-family: inherit;
+}

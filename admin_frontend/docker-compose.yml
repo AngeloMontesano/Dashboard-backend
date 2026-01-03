@@ -1,0 +1,8 @@
+  admin_ui:
+    build: ./admin-ui
+    environment:
+      VITE_API_BASE: http://localhost:8000
+    ports:
+      - "5173:5173"
+    depends_on:
+      - api

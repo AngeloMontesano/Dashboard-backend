@@ -9,7 +9,7 @@
     - Zentrales Toast Rendering (alle Views nutzen nur toast())
     - Sections links sind gekoppelt an Content rechts (keine "toten" Menüs)
   -->
-  <div :class="['app', ui.dark ? 'dark' : '']">
+  <div :class="['app', ui.theme, ui.theme === 'theme-dark' ? 'dark' : '']">
     <template v-if="!ui.authenticated">
       <AdminLoginView @loggedIn="applyLogin" />
     </template>
@@ -71,9 +71,9 @@
 
             <div class="divider"></div>
 
-            <!-- Darkmode -->
+            <!-- Theme Quick Toggle -->
             <label class="toggle">
-              <input type="checkbox" v-model="ui.dark" />
+              <input type="checkbox" :checked="ui.theme === 'theme-dark'" @change="toggleSidebarTheme" />
               <span>Darkmode</span>
             </label>
 
@@ -103,10 +103,10 @@
           <!-- Topbar -->
           <header class="topbar">
             <div class="topLeft">
-              <div class="titleRow">
-                <div class="pageTitle">{{ pageTitle }}</div>
-                <div class="crumbs">{{ pageSubtitle }}</div>
-              </div>
+            <div class="titleRow">
+              <div class="pageTitle">{{ pageTitle }}</div>
+              <div class="crumbs">{{ pageSubtitle }}</div>
+            </div>
             </div>
 
             <div class="topRight">
@@ -164,10 +164,10 @@
               :actor="ui.actor"
               :apiOk="api.ok"
               :dbOk="db.ok"
-              :dark="ui.dark"
+              :theme="ui.theme"
               :apiBase="apiBase"
               :baseDomain="baseDomain"
-              @toggleDark="ui.dark = !ui.dark"
+              @setTheme="setTheme"
               @resetContext="resetContext"
             />
           </section>
@@ -230,7 +230,7 @@ type SectionId = (typeof sections)[number]["id"];
 
 /* UI State */
 const ui = reactive({
-  dark: false,
+  theme: "theme-classic",
   actor: "admin",
   adminKey: "",
   authenticated: false,
@@ -257,6 +257,7 @@ function applyLogin(payload: { adminKey: string; actor: string }) {
   ui.authenticated = true;
   sessionStorage.setItem("adminKey", ui.adminKey);
   sessionStorage.setItem("adminActor", ui.actor);
+  sessionStorage.setItem("adminTheme", ui.theme);
   toast("Admin Login erfolgreich, lade Portal...");
   quickRefresh();
 }
@@ -336,11 +337,26 @@ function resetContext() {
 onMounted(async () => {
   const savedKey = sessionStorage.getItem("adminKey");
   const savedActor = sessionStorage.getItem("adminActor");
+  const savedTheme = sessionStorage.getItem("adminTheme");
   if (savedKey) {
     ui.adminKey = savedKey;
     ui.actor = savedActor || "admin";
     ui.authenticated = true;
   }
+  if (savedTheme) {
+    ui.theme = savedTheme;
+  }
   await quickRefresh();
 });
+
+function toggleSidebarTheme() {
+  const next = ui.theme === "theme-dark" ? "theme-classic" : "theme-dark";
+  setTheme(next);
+}
+
+function setTheme(themeId: string) {
+  ui.theme = themeId;
+  sessionStorage.setItem("adminTheme", themeId);
+  toast(`Theme gesetzt: ${themeId.replace("theme-", "")}`);
+}
 </script>

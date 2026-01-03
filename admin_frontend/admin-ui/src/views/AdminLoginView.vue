@@ -62,10 +62,6 @@
       <div v-if="status.message" class="status" :class="status.type">
         {{ status.message }}
       </div>
-
-      <div v-if="status.message" class="status" :class="status.type">
-        {{ status.message }}
-      </div>
     </div>
   </div>
 </template>

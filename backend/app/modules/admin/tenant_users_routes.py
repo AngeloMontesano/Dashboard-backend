@@ -87,13 +87,13 @@ async def admin_update_tenant_user(
         raise
 
 
-@router.delete("/{membership_id}", status_code=204)
+@router.delete("/{membership_id}", status_code=204, response_class=Response)
 async def admin_delete_tenant_user(
     tenant_id: uuid.UUID,
     membership_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
     actor: str = Depends(get_admin_actor),
-) -> None:
+) -> Response:
     try:
         await delete_tenant_user(
             db=db,
@@ -101,6 +101,7 @@ async def admin_delete_tenant_user(
             tenant_id=tenant_id,
             membership_id=membership_id,
         )
+        return Response(status_code=204)
     except ValueError as e:
         if str(e) == "tenant_user_not_found":
             raise HTTPException(status_code=404, detail={"error": {"code": "tenant_user_not_found", "message": "Tenant user not found"}})

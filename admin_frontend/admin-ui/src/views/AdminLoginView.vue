@@ -90,6 +90,7 @@ async function login() {
 function asError(e: any): string {
   if (!e) return "unknown";
   if (typeof e === "string") return e;
+  if (e?.response?.status === 401) return "401 Unauthorized – bitte Admin Key prüfen";
   if (e?.response?.data?.detail) return JSON.stringify(e.response.data.detail);
   if (e?.message === "Network Error") return `Network Error (API ${getBaseURL()})`;
   if (e?.message) return e.message;

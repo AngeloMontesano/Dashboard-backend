@@ -123,6 +123,24 @@
             :dbOk="db.ok"
           />
 
+          <!-- SECTION: Users -->
+          <AdminUsersView
+            v-else-if="ui.section === 'users'"
+            :adminKey="ui.adminKey"
+            :actor="ui.actor"
+            :apiOk="api.ok"
+            :dbOk="db.ok"
+          />
+
+          <!-- SECTION: Tenant Users / Memberships -->
+          <AdminMembershipsView
+            v-else-if="ui.section === 'memberships'"
+            :adminKey="ui.adminKey"
+            :actor="ui.actor"
+            :apiOk="api.ok"
+            :dbOk="db.ok"
+          />
+
           <!-- SECTION: Audit -->
           <AdminAuditView
             v-else-if="ui.section === 'audit'"
@@ -181,6 +199,8 @@ import { platformHealth, platformHealthDb } from "./api/platform";
 
 /* Views */
 import AdminTenantsView from "./views/AdminTenantsView.vue";
+import AdminUsersView from "./views/AdminUsersView.vue";
+import AdminMembershipsView from "./views/AdminMembershipsView.vue";
 import AdminAuditView from "./views/AdminAuditView.vue";
 import AdminDiagnosticsView from "./views/AdminDiagnosticsView.vue";
 import AdminSettingsView from "./views/AdminSettingsView.vue";
@@ -191,6 +211,8 @@ const { toastState, toast } = useToast();
 /* Sidebar Sections */
 const sections = [
   { id: "kunden", label: "Kunden", icon: "👥" },
+  { id: "users", label: "Benutzer", icon: "👤" },
+  { id: "memberships", label: "Tenant-User", icon: "🧩" },
   { id: "audit", label: "Audit", icon: "🧾" },
   { id: "diagnostics", label: "Diagnostics", icon: "🩺" },
   { id: "settings", label: "Einstellungen", icon: "⚙️" },
@@ -224,6 +246,8 @@ function goSection(sectionId: SectionId) {
 const pageTitle = computed(() => {
   const m: Record<SectionId, string> = {
     kunden: "Kunden",
+    users: "Benutzer",
+    memberships: "Tenant-User",
     audit: "Audit",
     diagnostics: "Diagnostics",
     settings: "Einstellungen",
@@ -233,6 +257,8 @@ const pageTitle = computed(() => {
 
 const pageSubtitle = computed(() => {
   if (ui.section === "kunden") return "Tenants verwalten, aktivieren, Details";
+  if (ui.section === "users") return "Globale Benutzer verwalten";
+  if (ui.section === "memberships") return "User mit Tenants verknüpfen und Rollen setzen";
   if (ui.section === "audit") return "Audit Log durchsuchen, filtern, exportieren";
   if (ui.section === "diagnostics") return "Health, Admin Checks, Snapshot";
   return "Security, Theme, Feature Flags";

@@ -11,11 +11,21 @@ type LoginResponse = {
 };
 
 export async function authLogin(email: string, password: string) {
+  const baseURL = getBaseURL();
   const client = axios.create({
-    baseURL: getBaseURL(),
+    baseURL,
     timeout: 15000,
     headers: { 'Content-Type': 'application/json' }
   });
-  const res = await client.post<LoginResponse>('/auth/login', { email, password });
-  return res.data;
+  try {
+    const res = await client.post<LoginResponse>('/auth/login', { email, password });
+    return res.data;
+  } catch (err: any) {
+    if (err?.code === 'ECONNABORTED') {
+      err.message = `Login Timeout (API ${baseURL})`;
+    } else if (err?.message === 'Network Error') {
+      err.message = `Network Error (API ${baseURL})`;
+    }
+    throw err;
+  }
 }

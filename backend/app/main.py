@@ -80,6 +80,7 @@ def create_app() -> FastAPI:
     async def request_logging_middleware(request: Request, call_next):
         start = time.perf_counter()
         status_code: int | str = "error"
+        host = request.headers.get("host", "-")
         try:
             response = await call_next(request)
             status_code = response.status_code
@@ -94,7 +95,7 @@ def create_app() -> FastAPI:
             request_logger.info(
                 "request %s %s -> %s in %.1fms [req_id=%s actor=%s]",
                 request.method,
-                request.url.path,
+                f"{request.url.path} host={host}",
                 status_code,
                 duration_ms,
                 request_id,

@@ -69,7 +69,7 @@ async function login() {
   busy.value = true;
   status.message = "Prüfe Admin Zugang...";
   status.type = "info";
-  console.info("[admin-login] Start", { actor: form.actor || "admin" });
+  console.info("[admin-login] Start", { actor: form.actor || "admin", apiBase: getBaseURL(), host: window.location.host });
   try {
     await adminPing(form.adminKey, form.actor || undefined);
     console.info("[admin-login] Erfolg", { actor: form.actor || "admin" });

@@ -50,6 +50,15 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
+    @app.on_event("startup")
+    async def log_startup_config() -> None:
+        request_logger.info(
+            "startup config env=%s base_domain=%s admin_domain=%s",
+            settings.ENVIRONMENT,
+            settings.BASE_DOMAIN,
+            settings.BASE_ADMIN_DOMAIN,
+        )
+
     app.include_router(inventory_router)
     app.include_router(admin_router)
     app.include_router(auth_router)
@@ -73,6 +82,9 @@ def create_app() -> FastAPI:
             response = await call_next(request)
             status_code = response.status_code
             return response
+        except Exception:
+            request_logger.exception("unhandled error for %s %s", request.method, request.url.path)
+            raise
         finally:
             duration_ms = (time.perf_counter() - start) * 1000
             request_id = getattr(request.state, "request_id", "-")

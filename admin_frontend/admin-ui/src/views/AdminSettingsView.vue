@@ -26,14 +26,23 @@
             <div class="k">Actor</div>
             <div class="v mono">{{ actor || "admin" }}</div>
           </div>
+          <div class="kv">
+            <div class="k">Theme</div>
+            <div class="v">
+              <div class="row gap8 wrap themeSelector">
+                <label v-for="t in themes" :key="t.id" class="themeOption">
+                  <input type="radio" :value="t.id" v-model="localTheme" @change="onThemeChange(t.id)" />
+                  <span>{{ t.label }}</span>
+                </label>
+              </div>
+              <div class="muted">Wirken direkt im UI (ohne Reload).</div>
+            </div>
+          </div>
         </div>
 
         <div class="divider"></div>
 
         <div class="row gap8 wrap">
-          <button class="btnGhost" @click="$emit('toggleDark')">
-            {{ dark ? "Light Mode" : "Dark Mode" }}
-          </button>
           <button class="btnGhost" :disabled="!adminKey && !actor" @click="$emit('resetContext')">
             Admin Context zurücksetzen
           </button>
@@ -130,19 +139,25 @@ const props = defineProps<{
   dbOk: boolean;
   actor: string;
   adminKey: string;
-  dark: boolean;
+  theme: string;
   apiBase: string;
   baseDomain: string;
 }>();
 
 const emit = defineEmits<{
-  (e: "toggleDark"): void;
+  (e: "setTheme", theme: string): void;
   (e: "resetContext"): void;
 }>();
 
 const { toast } = useToast();
 const users = ref<UserOut[]>([]);
 const selectedUserId = ref("");
+const themes = [
+  { id: "theme-classic", label: "Classic" },
+  { id: "theme-dark", label: "Dark" },
+  { id: "theme-ocean", label: "Ocean" },
+];
+const localTheme = ref(props.theme || "theme-classic");
 
 const userForm = reactive({
   email: "",
@@ -259,4 +274,29 @@ function asError(e: any): string {
 onMounted(() => {
   loadUsers();
 });
+
+function onThemeChange(themeId: string) {
+  localTheme.value = themeId;
+  emit("setTheme", themeId);
+}
 </script>
+
+<style scoped>
+.themeSelector{
+  display: flex;
+  gap: 12px;
+}
+.themeOption{
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius2);
+  background: var(--surface);
+  cursor: pointer;
+}
+.themeOption input{
+  margin: 0;
+}
+</style>

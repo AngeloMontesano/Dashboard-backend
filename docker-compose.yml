@@ -31,5 +31,14 @@ services:
     depends_on:
       - api
 
+  customer_ui:
+    build: ./customer_frontend/customer-ui
+    environment:
+      VITE_API_BASE: http://api:8000
+    ports:
+      - "6173:6173"
+    depends_on:
+      - api
+
 volumes:
   pgdata:

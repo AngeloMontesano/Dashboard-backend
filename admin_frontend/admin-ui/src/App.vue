@@ -10,115 +10,114 @@
     - Sections links sind gekoppelt an Content rechts (keine "toten" Menüs)
   -->
   <div :class="['app', ui.dark ? 'dark' : '']">
-    <div class="shell">
-      <!-- =========================================================
-           SIDEBAR
-      ========================================================== -->
-      <aside class="sidebar">
-        <!-- Brand -->
-        <div class="brand">
-          <div class="logo">LV</div>
-          <div class="brandText">
-            <div class="brandTitle">Lagerverwaltung</div>
-            <div class="brandSub">Admin Portal</div>
-          </div>
-        </div>
-
-        <!-- Navigation -->
-        <nav class="nav">
-          <button
-            v-for="item in sections"
-            :key="item.id"
-            class="navItem"
-            :class="{ active: ui.section === item.id }"
-            @click="goSection(item.id)"
-          >
-            <span class="navIcon">{{ item.icon }}</span>
-            <span class="navLabel">{{ item.label }}</span>
-          </button>
-        </nav>
-
-        <!-- Bottom Area -->
-        <div class="sideBottom">
-          <!-- System Status -->
-          <div class="sysBlock">
-            <div class="sysTitle">System</div>
-
-            <div class="sysRow">
-              <div class="statusPill" :class="api.ok ? 'ok' : 'bad'">
-                <span class="dot"></span>
-                <span>API {{ api.ok ? "erreichbar" : "nicht erreichbar" }}</span>
-              </div>
-              <button class="btnPrimary small" :disabled="api.busy" @click="checkApi">
-                {{ api.busy ? "prüfe..." : "Prüfen" }}
-              </button>
-            </div>
-
-            <div class="sysRow">
-              <div class="statusPill" :class="db.ok ? 'ok' : 'bad'">
-                <span class="dot"></span>
-                <span>DB {{ db.ok ? "erreichbar" : "nicht erreichbar" }}</span>
-              </div>
-              <button class="btnGhost small" :disabled="db.busy" @click="checkDb">
-                {{ db.busy ? "prüfe..." : "Prüfen" }}
-              </button>
+    <template v-if="!ui.authenticated">
+      <AdminLoginView @loggedIn="applyLogin" />
+    </template>
+    <template v-else>
+      <div class="shell">
+        <!-- =========================================================
+             SIDEBAR
+        ========================================================== -->
+        <aside class="sidebar">
+          <!-- Brand -->
+          <div class="brand">
+            <div class="logo">LV</div>
+            <div class="brandText">
+              <div class="brandTitle">Lagerverwaltung</div>
+              <div class="brandSub">Admin Portal</div>
             </div>
           </div>
 
-          <div class="divider"></div>
-
-          <!-- Darkmode -->
-          <label class="toggle">
-            <input type="checkbox" v-model="ui.dark" />
-            <span>Darkmode</span>
-          </label>
-
-          <!-- Admin Context -->
-          <div class="sideFields">
-            <div class="field">
-              <div class="label">Actor</div>
-              <input class="input" v-model.trim="ui.actor" placeholder="admin" />
-            </div>
-
-            <div class="field">
-              <div class="label">Admin Key</div>
-              <input class="input" v-model.trim="ui.adminKey" placeholder="X-Admin-Key" type="password" />
-            </div>
-          </div>
-
-          <div class="hintBox">
-            Admin Endpunkte benötigen <span class="mono">X-Admin-Key</span>. Key wird nur im Memory gehalten.
-          </div>
-        </div>
-      </aside>
-
-      <!-- =========================================================
-           MAIN
-      ========================================================== -->
-      <main class="main">
-        <!-- Topbar -->
-        <header class="topbar">
-          <div class="topLeft">
-            <div class="titleRow">
-              <div class="pageTitle">{{ pageTitle }}</div>
-              <div class="crumbs">{{ pageSubtitle }}</div>
-            </div>
-          </div>
-
-          <div class="topRight">
-            <button class="btnGhost" @click="quickRefresh" :disabled="busy.refresh">
-              {{ busy.refresh ? "..." : "Refresh" }}
+          <!-- Navigation -->
+          <nav class="nav">
+            <button
+              v-for="item in sections"
+              :key="item.id"
+              class="navItem"
+              :class="{ active: ui.section === item.id }"
+              @click="goSection(item.id)"
+            >
+              <span class="navIcon">{{ item.icon }}</span>
+              <span class="navLabel">{{ item.label }}</span>
             </button>
-          </div>
-        </header>
+          </nav>
 
-        <!-- Workspace -->
-        <section class="workspace">
-          <!-- SECTION: Kunden -->
-          <div v-if="!ui.authenticated" class="workspace">
-            <AdminLoginView @loggedIn="applyLogin" />
+          <!-- Bottom Area -->
+          <div class="sideBottom">
+            <!-- System Status -->
+            <div class="sysBlock">
+              <div class="sysTitle">System</div>
+
+              <div class="sysRow">
+                <div class="statusPill" :class="api.ok ? 'ok' : 'bad'">
+                  <span class="dot"></span>
+                  <span>API {{ api.ok ? "erreichbar" : "nicht erreichbar" }}</span>
+                </div>
+                <button class="btnPrimary small" :disabled="api.busy" @click="checkApi">
+                  {{ api.busy ? "prüfe..." : "Prüfen" }}
+                </button>
+              </div>
+
+              <div class="sysRow">
+                <div class="statusPill" :class="db.ok ? 'ok' : 'bad'">
+                  <span class="dot"></span>
+                  <span>DB {{ db.ok ? "erreichbar" : "nicht erreichbar" }}</span>
+                </div>
+                <button class="btnGhost small" :disabled="db.busy" @click="checkDb">
+                  {{ db.busy ? "prüfe..." : "Prüfen" }}
+                </button>
+              </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <!-- Darkmode -->
+            <label class="toggle">
+              <input type="checkbox" v-model="ui.dark" />
+              <span>Darkmode</span>
+            </label>
+
+            <!-- Admin Context -->
+            <div class="sideFields">
+              <div class="field">
+                <div class="label">Actor</div>
+                <input class="input" v-model.trim="ui.actor" placeholder="admin" />
+              </div>
+
+              <div class="field">
+                <div class="label">Admin Key</div>
+                <input class="input" v-model.trim="ui.adminKey" placeholder="X-Admin-Key" type="password" />
+              </div>
+            </div>
+
+            <div class="hintBox">
+              Admin Endpunkte benötigen <span class="mono">X-Admin-Key</span>. Key wird nur im Memory gehalten.
+            </div>
           </div>
-          <template v-else>
+        </aside>
+
+        <!-- =========================================================
+             MAIN
+        ========================================================== -->
+        <main class="main">
+          <!-- Topbar -->
+          <header class="topbar">
+            <div class="topLeft">
+              <div class="titleRow">
+                <div class="pageTitle">{{ pageTitle }}</div>
+                <div class="crumbs">{{ pageSubtitle }}</div>
+              </div>
+            </div>
+
+            <div class="topRight">
+              <button class="btnGhost" @click="quickRefresh" :disabled="busy.refresh">
+                {{ busy.refresh ? "..." : "Refresh" }}
+              </button>
+            </div>
+          </header>
+
+          <!-- Workspace -->
+          <section class="workspace">
             <!-- SECTION: Kunden -->
             <AdminTenantsView
               v-if="ui.section === 'kunden'"
@@ -147,27 +146,7 @@
             />
 
           <!-- SECTION: Audit -->
-            <AdminAuditView
-              v-else-if="ui.section === 'audit'"
-              :adminKey="ui.adminKey"
-              :actor="ui.actor"
-            />
-
-          <!-- SECTION: Diagnostics -->
-            <AdminDiagnosticsView
-              v-else-if="ui.section === 'diagnostics'"
-              :adminKey="ui.adminKey"
-              :actor="ui.actor"
-              :apiOk="api.ok"
-              :dbOk="db.ok"
-            />
-
-          <!-- SECTION: Audit -->
-            <AdminAuditView
-              v-else-if="ui.section === 'audit'"
-              :adminKey="ui.adminKey"
-              :actor="ui.actor"
-            />
+            <AdminAuditView v-else-if="ui.section === 'audit'" :adminKey="ui.adminKey" :actor="ui.actor" />
 
           <!-- SECTION: Diagnostics -->
             <AdminDiagnosticsView
@@ -191,10 +170,10 @@
               @toggleDark="ui.dark = !ui.dark"
               @resetContext="resetContext"
             />
-          </template>
-        </section>
-      </main>
-    </div>
+          </section>
+        </main>
+      </div>
+    </template>
 
     <!-- =========================================================
          ZENTRALER TOAST
@@ -278,6 +257,8 @@ function applyLogin(payload: { adminKey: string; actor: string }) {
   ui.authenticated = true;
   sessionStorage.setItem("adminKey", ui.adminKey);
   sessionStorage.setItem("adminActor", ui.actor);
+  toast("Admin Login erfolgreich, lade Portal...");
+  quickRefresh();
 }
 
 /* Titles */

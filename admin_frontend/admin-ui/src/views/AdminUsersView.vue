@@ -87,6 +87,7 @@
         </button>
         <div class="muted">E-Mail wird in Kleinbuchstaben gespeichert.</div>
       </div>
+    </section>
 
       <div class="divider"></div>
 
@@ -160,6 +161,7 @@ const filteredUsers = computed(() => {
 const selectedUser = computed(() => users.value.find((u) => u.id === selectedId.value));
 
 async function loadUsers() {
+  if (!ensureAdminKey()) return;
   busy.list = true;
   try {
     const res = await adminListUsers(props.adminKey, props.actor);
@@ -173,6 +175,7 @@ async function loadUsers() {
 }
 
 async function createUser() {
+  if (!ensureAdminKey()) return;
   const email = form.email.trim();
   const password = form.password.trim();
 
@@ -197,6 +200,7 @@ async function createUser() {
 }
 
 async function toggleActive(u: UserOut) {
+  if (!ensureAdminKey()) return;
   busy.toggleId = u.id;
   try {
     const updated = await adminUpdateUser(props.adminKey, props.actor, u.id, { is_active: !u.is_active });
@@ -210,6 +214,7 @@ async function toggleActive(u: UserOut) {
 }
 
 async function promptPassword(u: UserOut) {
+  if (!ensureAdminKey()) return;
   const pw = window.prompt("Neues Passwort setzen (mind. 8 Zeichen). Leer lassen zum Abbrechen.");
   if (!pw) return;
   busy.passwordId = u.id;
@@ -238,6 +243,14 @@ function stringifyError(e: any): string {
   } catch {
     return String(e);
   }
+}
+
+function ensureAdminKey(): boolean {
+  if (!props.adminKey) {
+    toast("Bitte Admin Key setzen");
+    return false;
+  }
+  return true;
 }
 
 onMounted(() => {

@@ -186,6 +186,7 @@ const currentTenantLabel = computed(() => {
 });
 
 async function loadTenants() {
+  if (!ensureAdminKey()) return;
   busy.tenants = true;
   try {
     tenants.value = await adminListTenants(props.adminKey, props.actor, { limit: 200, offset: 0 });
@@ -202,6 +203,7 @@ async function loadTenants() {
 }
 
 async function loadRoles() {
+  if (!ensureAdminKey()) return;
   try {
     roles.value = await adminRoles(props.adminKey, props.actor);
     if (!roles.value.includes(form.role)) {
@@ -213,6 +215,7 @@ async function loadRoles() {
 }
 
 async function loadTenantUsers() {
+  if (!ensureAdminKey()) return;
   if (!selectedTenantId.value) return;
   busy.users = true;
   try {
@@ -230,6 +233,7 @@ async function loadTenantUsers() {
 }
 
 async function createTenantUser() {
+  if (!ensureAdminKey()) return;
   if (!selectedTenantId.value) {
     toast("Bitte Tenant auswählen");
     return;
@@ -263,14 +267,17 @@ async function createTenantUser() {
 }
 
 async function toggleUser(u: TenantUserOut) {
+  if (!ensureAdminKey()) return;
   await patchTenantUser(u, { user_is_active: !u.user_is_active });
 }
 
 async function toggleMembership(u: TenantUserOut) {
+  if (!ensureAdminKey()) return;
   await patchTenantUser(u, { membership_is_active: !u.membership_is_active });
 }
 
 async function changeRole(u: TenantUserOut, event: Event) {
+  if (!ensureAdminKey()) return;
   const target = event.target as HTMLSelectElement;
   const role = target.value;
   await patchTenantUser(u, { role });
@@ -302,6 +309,7 @@ async function patchTenantUser(u: TenantUserOut, payload: Record<string, unknown
 }
 
 async function deleteTenantUser(u: TenantUserOut) {
+  if (!ensureAdminKey()) return;
   if (!selectedTenantId.value) {
     toast("Bitte Tenant auswählen");
     return;
@@ -330,6 +338,14 @@ function stringifyError(e: any): string {
   } catch {
     return String(e);
   }
+}
+
+function ensureAdminKey(): boolean {
+  if (!props.adminKey) {
+    toast("Bitte Admin Key setzen");
+    return false;
+  }
+  return true;
 }
 
 onMounted(async () => {

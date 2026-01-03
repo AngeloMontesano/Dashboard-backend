@@ -212,11 +212,12 @@ const filteredTenants = computed(() => {
 
 /* API: Load Tenants */
 async function loadTenants() {
+  if (!ensureAdminKey()) return;
   busy.list = true;
-    try {
-      const res = await adminListTenants(props.adminKey, props.actor, {
-        q: q.value || undefined,
-        limit: 200,
+  try {
+    const res = await adminListTenants(props.adminKey, props.actor, {
+      q: q.value || undefined,
+      limit: 200,
         offset: 0,
       });
       tenants.value = res;
@@ -236,6 +237,7 @@ async function loadTenants() {
 
 /* API: Create Tenant */
 async function createTenant() {
+  if (!ensureAdminKey()) return;
   const name = modal.name.trim();
   const slug = modal.slug.trim().toLowerCase();
 
@@ -265,6 +267,7 @@ async function createTenant() {
 
 /* API: Toggle Tenant Active */
 async function toggleTenant(t: TenantOut) {
+  if (!ensureAdminKey()) return;
   if (!t) return;
 
   busy.toggleId = t.id;
@@ -313,7 +316,16 @@ function closeCreateModal() {
   modal.open = false;
 }
 
+function ensureAdminKey(): boolean {
+  if (!props.adminKey) {
+    toast("Bitte Admin Key setzen");
+    return false;
+  }
+  return true;
+}
+
 async function deleteTenant(t: TenantOut) {
+  if (!ensureAdminKey()) return;
   if (!t) return;
   const confirmDelete = window.confirm(`Tenant ${t.slug} wirklich löschen? Diese Aktion ist irreversibel.`);
   if (!confirmDelete) return;

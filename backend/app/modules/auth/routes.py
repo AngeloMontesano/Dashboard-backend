@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends
+import logging
+
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import get_db
@@ -10,14 +12,22 @@ from app.modules.auth.schemas import LoginRequest, LogoutRequest, RefreshRequest
 from app.modules.auth import service
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+logger = logging.getLogger("app.auth")
 
 
 @router.post("/login", response_model=TokenResponse)
 async def login(
     payload: LoginRequest,
+    request: Request,
     tenant_ctx: TenantContext = Depends(get_tenant_context),
     db: AsyncSession = Depends(get_db),
 ) -> TokenResponse:
+    logger.info(
+        "auth.login attempt email=%s tenant_id=%s host=%s",
+        payload.email,
+        tenant_ctx.tenant.id if tenant_ctx else "-",
+        request.headers.get("host", "-"),
+    )
     access_token, refresh_token, expires_in, role, user_id = await service.login(
         db=db,
         tenant_id=str(tenant_ctx.tenant.id),

@@ -1,8 +1,11 @@
 from __future__ import annotations
 
 import uuid
+import logging
+import time
 
 from fastapi import Depends, FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -12,6 +15,7 @@ from app.core.db import get_db
 from app.core.errors import register_exception_handlers
 from app.core.logging import configure_logging
 from app.modules.admin.routes import router as admin_router
+from app.modules.admin.login_routes import router as admin_login_router
 from app.modules.inventory.routes import router as inventory_router
 from app.modules.auth.routes import router as auth_router
 
@@ -31,6 +35,7 @@ OPENAPI_TAGS = [
 
 def create_app() -> FastAPI:
     configure_logging(environment=settings.ENVIRONMENT)
+    request_logger = logging.getLogger("app.request")
 
     app = FastAPI(
         title="Multi-Tenant Lagerverwaltung API",
@@ -38,7 +43,24 @@ def create_app() -> FastAPI:
         openapi_tags=OPENAPI_TAGS,
     )
 
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
+    @app.on_event("startup")
+    async def log_startup_config() -> None:
+        request_logger.info(
+            "startup config env=%s base_domain=%s admin_domain=%s",
+            settings.ENVIRONMENT,
+            settings.BASE_DOMAIN,
+            settings.BASE_ADMIN_DOMAIN,
+        )
+
+    app.include_router(admin_login_router)
     app.include_router(inventory_router)
     app.include_router(admin_router)
     app.include_router(auth_router)
@@ -53,6 +75,32 @@ def create_app() -> FastAPI:
         response = await call_next(request)
         response.headers["X-Request-Id"] = request_id
         return response
+
+    @app.middleware("http")
+    async def request_logging_middleware(request: Request, call_next):
+        start = time.perf_counter()
+        status_code: int | str = "error"
+        host = request.headers.get("host", "-")
+        try:
+            response = await call_next(request)
+            status_code = response.status_code
+            return response
+        except Exception:
+            request_logger.exception("unhandled error for %s %s", request.method, request.url.path)
+            raise
+        finally:
+            duration_ms = (time.perf_counter() - start) * 1000
+            request_id = getattr(request.state, "request_id", "-")
+            actor = request.headers.get("x-admin-actor") or "-"
+            request_logger.info(
+                "request %s %s -> %s in %.1fms [req_id=%s actor=%s]",
+                request.method,
+                f"{request.url.path} host={host}",
+                status_code,
+                duration_ms,
+                request_id,
+                actor,
+            )
 
 
     @app.get("/health", tags=["platform"])

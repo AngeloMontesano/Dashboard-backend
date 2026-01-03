@@ -12,6 +12,9 @@ import type {
   AuditOut,
   AuditFilters,
   DiagnosticsOut,
+  TenantUserOut,
+  TenantUserCreate,
+  TenantUserUpdate,
 } from "../types";
 
 import { apiClient } from "./client";
@@ -52,7 +55,7 @@ export async function adminUpdateTenant(adminKey: string, actor?: string, tenant
 
 export async function adminDeleteTenant(adminKey: string, actor?: string, tenantId: string) {
   const api = apiClient(adminKey, actor);
-  await api.delete(`/admin/tenants/${tenantId}`);
+  await api.delete(`/admin/tenants/${tenantId}`, { params: { confirm: true } });
   return true;
 }
 
@@ -73,6 +76,52 @@ export async function adminUpdateUser(adminKey: string, actor?: string, userId: 
   const api = apiClient(adminKey, actor);
   const res = await api.patch(`/admin/users/${userId}`, payload);
   return res.data as UserOut;
+}
+
+/* Tenant Users (combined user + membership for a tenant) */
+export async function adminListTenantUsers(
+  adminKey: string,
+  actor: string | undefined,
+  tenantId: string,
+  params?: { q?: string; limit?: number; offset?: number }
+) {
+  const api = apiClient(adminKey, actor);
+  const res = await api.get(`/admin/tenants/${tenantId}/users`, { params });
+  return res.data as TenantUserOut[];
+}
+
+export async function adminCreateTenantUser(
+  adminKey: string,
+  actor: string | undefined,
+  tenantId: string,
+  payload: TenantUserCreate
+) {
+  const api = apiClient(adminKey, actor);
+  const res = await api.post(`/admin/tenants/${tenantId}/users`, payload);
+  return res.data as TenantUserOut;
+}
+
+export async function adminUpdateTenantUser(
+  adminKey: string,
+  actor: string | undefined,
+  tenantId: string,
+  membershipId: string,
+  payload: TenantUserUpdate
+) {
+  const api = apiClient(adminKey, actor);
+  const res = await api.patch(`/admin/tenants/${tenantId}/users/${membershipId}`, payload);
+  return res.data as TenantUserOut;
+}
+
+export async function adminDeleteTenantUser(
+  adminKey: string,
+  actor: string | undefined,
+  tenantId: string,
+  membershipId: string
+) {
+  const api = apiClient(adminKey, actor);
+  await api.delete(`/admin/tenants/${tenantId}/users/${membershipId}`);
+  return true;
 }
 
 /* Memberships */

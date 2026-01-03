@@ -45,3 +45,27 @@ export type AuditFilters = {
   limit?: number;
   offset?: number;
 };
+
+export type TenantUserOut = {
+  membership_id: string;
+  user_id: string;
+  email: string;
+  role: string;
+  user_is_active: boolean;
+  membership_is_active: boolean;
+};
+
+export type TenantUserCreate = {
+  email: string;
+  role: string;
+  password?: string | null;
+  user_is_active?: boolean;
+  membership_is_active?: boolean;
+};
+
+export type TenantUserUpdate = {
+  role?: string | null;
+  password?: string | null;
+  user_is_active?: boolean | null;
+  membership_is_active?: boolean | null;
+};

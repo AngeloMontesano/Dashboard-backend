@@ -146,6 +146,24 @@
               :dbOk="db.ok"
             />
 
+          <!-- SECTION: Users -->
+          <AdminUsersView
+            v-else-if="ui.section === 'users'"
+            :adminKey="ui.adminKey"
+            :actor="ui.actor"
+            :apiOk="api.ok"
+            :dbOk="db.ok"
+          />
+
+          <!-- SECTION: Tenant Users / Memberships -->
+          <AdminMembershipsView
+            v-else-if="ui.section === 'memberships'"
+            :adminKey="ui.adminKey"
+            :actor="ui.actor"
+            :apiOk="api.ok"
+            :dbOk="db.ok"
+          />
+
           <!-- SECTION: Audit -->
             <AdminAuditView
               v-else-if="ui.section === 'audit'"

@@ -86,6 +86,7 @@
         </button>
         <div class="muted">E-Mail wird in Kleinbuchstaben gespeichert.</div>
       </div>
+    </section>
 
       <div class="divider"></div>
 

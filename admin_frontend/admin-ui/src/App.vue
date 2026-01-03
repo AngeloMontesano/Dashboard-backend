@@ -162,6 +162,22 @@
               :dbOk="db.ok"
             />
 
+          <!-- SECTION: Audit -->
+            <AdminAuditView
+              v-else-if="ui.section === 'audit'"
+              :adminKey="ui.adminKey"
+              :actor="ui.actor"
+            />
+
+          <!-- SECTION: Diagnostics -->
+            <AdminDiagnosticsView
+              v-else-if="ui.section === 'diagnostics'"
+              :adminKey="ui.adminKey"
+              :actor="ui.actor"
+              :apiOk="api.ok"
+              :dbOk="db.ok"
+            />
+
           <!-- SECTION: Settings -->
             <AdminSettingsView
               v-else

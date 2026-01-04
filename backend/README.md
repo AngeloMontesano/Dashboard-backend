@@ -69,22 +69,30 @@ docker compose up -d --build
 - `uvicorn` läuft ohne Reload (prod-orientiert). Für Dev kann `--reload` im Entrypoint ergänzt werden.
 
 ## Seeding
-- Automatisch, falls DB leer (`app/scripts/seed_initial.py`).
-- Defaults: `SEED_TENANT_SLUG=kunde1`, `SEED_ADMIN_EMAIL=admin@test.myitnetwork.de`, `SEED_ADMIN_PASSWORD=admin`, Rolle `owner`.
-- Override via `SEED_*` Variablen in `.env`. Seed legt Tenant, User und Membership an.【F:backend/app/scripts/seed_initial.py†L1-L54】
+- Läuft automatisch, wenn die DB leer ist.
+- Werte können via `SEED_*` Variablen in `.env` überschrieben werden.
 
-## Fehlerformate (für Frontend)
-- Standard: `{ "error": { "code": "<string>", "message": "<string>", "details": <optional> } }`
-- Validation: Code `validation_error`, `details` enthält Pydantic-Fehlerliste (Frontends können `details[0].msg` / `details[0].loc` anzeigen).【F:backend/app/core/errors.py†L75-L93】
-- Tenant-Fehler: 404 `tenant_not_found` mit Host/Slug-Infos (hilfreich für falsche Subdomains/Headers).【F:backend/app/core/tenant.py†L80-L117】
+## Multi-Tenant Inventar/Artikel (Planung & Regeln)
+Dieser Abschnitt dokumentiert die vereinbarten Regeln für die Artikelverwaltung, damit Implementierungen konsistent bleiben.
 
-## Troubleshooting
-- **Login 401/403:** Prüfe Membership des Users im Tenant und Passwort-Hash. Logs in `app.auth` zeigen Code/Status + Request-ID.
-- **Login 422:** Validation-Details im Response (`validation_error`), Logs enthalten Path + Details. Häufig: Passwort zu kurz.
-- **Tenant 404:** Stimmt Subdomain mit `BASE_DOMAIN` überein? Wird `X-Tenant-Slug` gesetzt? Ports/Kommas entfernt?
-- **Cross-Origin:** Falls Browser blockt, `CORSMiddleware` konfigurieren (allow_origins einschränken oder erweitern).
+- **Tenant-Isolation**: Alle Queries/Mutationen müssen mit `WHERE tenant_id = ctx.tenant.id` arbeiten. Der Tenant wird über Host/Subdomain (`X-Forwarded-Host`/`Host`) ermittelt.
+- **SKU-Eindeutigkeit**: `sku` muss pro Tenant eindeutig sein (Unique-Constraint einplanen). Frontend soll vor dem Speichern bereits gegen eine „SKU existiert“-Prüfung testen.
+- **Kundeneigene SKUs**: Eingaben ohne Präfix werden beim Speichern zu `z_<eingabe>` normalisiert, damit ERP-Importe eigene Artikel nicht überschreiben.
+- **Kategorien**: Artikel referenzieren Kategorien per ID. Kategorien können global (systemweit) oder tenant-spezifisch sein; das Dropdown soll beide anbieten, eigene Kategorien dürfen angelegt werden.
+- **Felder (Soll-Stand)**:
+  - `sku`, `barcode`, `name` (Pflicht)
+  - `description` (optional)
+  - `quantity` (aktueller Bestand)
+  - `min_stock`, `max_stock`, `target_stock` (Soll), `recommended_stock`
+  - `order_mode` (Bestellung) mit 4 Modi:
+    - `0`: kein Alarm bei Unterschreitung
+    - `1`: Alarm bei Unterschreitung des Mindestbestands
+    - `2`: Artikel in Bestellliste mit empfohlener Menge aufnehmen
+    - `3`: automatisch sofort nachbestellen
+  - `unit` (z. B. `pcs`), `is_active` (bool), `category_id` (optional)
+- **CSV-Import/Export (geplant)**:
+  - Spalten: `sku`, `barcode`, `name`, `description`, `qty`, `unit`, `is_active`, `category`, `min_stock`, `max_stock`, `target_stock`, `recommended_stock`, `order_mode`
+  - Pflicht: `sku`, `barcode`, `name`; Defaults: `qty=0`, `unit="pcs"`, `is_active=true`.
+  - Upsert pro Tenant anhand `sku` (mit Präfix-Regel); Fehler pro Zeile zurückmelden; Export liefert die gleichen Spalten.
 
-## Erweiterungshinweise
-- Zusätzliche Module sollten `get_tenant_context` als Dependency nutzen, wenn Daten tenant-spezifisch sind.
-- Für Admin-Only Routen `X-Admin-Key` Header erzwingen (siehe bestehende Admin-Router).
-- Neue Hintergrundjobs sollten Request-ID/Context nicht voraussetzen; Logs mit klaren Labels schreiben.
+Diese Regeln dienen als Referenz, bis die vollständigen Endpunkte/Modelle implementiert sind.

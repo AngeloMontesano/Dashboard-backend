@@ -11,16 +11,6 @@ const runtimeHost = typeof window !== "undefined" ? window.location.hostname : "
 const runtimeProtocol = typeof window !== "undefined" ? window.location.protocol.replace(":", "") : "";
 const runtimePort = typeof window !== "undefined" ? window.location.port : "";
 
-function replaceHost(url: string, host: string): string | null {
-  try {
-    const parsed = new URL(url);
-    parsed.host = host;
-    return parsed.toString().replace(/\/$/, "");
-  } catch {
-    return null;
-  }
-}
-
 export function getBaseURL(): string {
   // If an explicit base is set, use it unless runtime-host overriding is explicitly allowed.
   if (explicitApiBase && (!allowRuntimeHost || !runtimeHost)) {

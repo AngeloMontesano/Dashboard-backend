@@ -86,7 +86,13 @@ async def resolve_tenant(
         )
         raise HTTPException(
             status_code=404,
-            detail={"error": {"code": "tenant_not_found", "message": "Tenant not found"}},
+            detail={
+                "error": {
+                    "code": "tenant_not_found",
+                    "message": "Tenant not found",
+                    "host": host,
+                }
+            },
         )
 
     result = await db.execute(select(Tenant).where(Tenant.slug == slug))
@@ -104,7 +110,14 @@ async def resolve_tenant(
         )
         raise HTTPException(
             status_code=404,
-            detail={"error": {"code": "tenant_not_found", "message": "Tenant not found"}},
+            detail={
+                "error": {
+                    "code": "tenant_not_found",
+                    "message": "Tenant not found",
+                    "host": host,
+                    "slug": slug,
+                }
+            },
         )
 
     request_logger.debug(

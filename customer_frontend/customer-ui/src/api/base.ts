@@ -5,13 +5,17 @@ const apiHost = import.meta.env.VITE_API_HOST || "";
 const apiPort = import.meta.env.VITE_API_PORT || "";
 const tenantSlug = import.meta.env.VITE_TENANT_SLUG || "";
 const explicitApiBase = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_BASE;
+const allowRuntimeHost = (import.meta.env.VITE_ALLOW_RUNTIME_HOST || "false").toLowerCase() === "true";
 
 const runtimeHost = typeof window !== "undefined" ? window.location.hostname : "";
 const runtimeProtocol = typeof window !== "undefined" ? window.location.protocol.replace(":", "") : "";
 const runtimePort = typeof window !== "undefined" ? window.location.port : "";
 
 export function getBaseURL(): string {
-  if (explicitApiBase) return explicitApiBase;
+  // If an explicit base is set, use it unless runtime-host overriding is explicitly allowed.
+  if (explicitApiBase && (!allowRuntimeHost || !runtimeHost)) {
+    return explicitApiBase;
+  }
   if (apiHost) {
     const portPart = apiPort ? `:${apiPort}` : "";
     return `${apiProtocol}://${apiHost}${portPart}`;
@@ -32,6 +36,27 @@ export function getBaseURL(): string {
   return `${apiProtocol}://${apiSubdomain}.${baseDomain}`;
 }
 
+export function getTenantHost(): string | null {
+  // Prefer the runtime host when it already contains the tenant slug.
+  if (baseDomain && runtimeHost && runtimeHost.endsWith(`.${baseDomain}`)) {
+    return runtimeHost + (runtimePort ? `:${runtimePort}` : "");
+  }
+  // Fallback: build host from env slug
+  if (tenantSlug && baseDomain) {
+    const portPart = apiPort ? `:${apiPort}` : "";
+    return `${tenantSlug}.${baseDomain}${portPart}`;
+  }
+  return null;
+}
+
+export function getTenantForwardHeader(): Record<string, string> {
+  const tenantHost = getTenantHost();
+  if (tenantHost) {
+    return { "X-Forwarded-Host": tenantHost };
+  }
+  return {};
+}
+
 // Helpful console output for debugging connectivity
 if (typeof console !== "undefined") {
   console.info(
@@ -48,6 +73,7 @@ if (typeof console !== "undefined") {
       runtimeHost,
       runtimeProtocol,
       runtimePort,
+      allowRuntimeHost,
     }
   );
 }

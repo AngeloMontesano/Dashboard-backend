@@ -37,6 +37,13 @@ function applyPrefix(url: string): string {
 }
 
 export function getBaseURL(): string {
+  // Prefer the runtime tenant host when we are served from a tenant subdomain.
+  if (baseDomain && runtimeHost && runtimeHost.endsWith(`.${baseDomain}`)) {
+    const portPart = runtimePort ? `:${runtimePort}` : "";
+    const protocol = runtimeProtocol || apiProtocol;
+    return applyPrefix(`${protocol}://${runtimeHost}${portPart}`);
+  }
+
   // If an explicit base is set, use it unless runtime-host overriding is explicitly allowed.
   if (explicitApiBase) {
     if (allowRuntimeHost && baseDomain && runtimeHost && runtimeHost.endsWith(`.${baseDomain}`)) {

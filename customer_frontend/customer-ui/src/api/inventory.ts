@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { getBaseURL } from './base';
+import { getBaseURL, getTenantHeaders } from './base';
 
 export type MovementPayload = {
   client_tx_id: string;
@@ -12,7 +12,10 @@ export type MovementPayload = {
 
 const client = axios.create({
   baseURL: getBaseURL(),
-  timeout: 8000
+  timeout: 8000,
+  headers: {
+    ...getTenantHeaders()
+  }
 });
 
 const mockPost = async (payload: MovementPayload) => {

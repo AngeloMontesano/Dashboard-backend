@@ -137,16 +137,15 @@
               @tenantSelected="setTenantContext"
             />
 
-          <!-- SECTION: Audit -->
-            <AdminAuditView v-else-if="ui.section === 'audit'" :adminKey="ui.adminKey" :actor="ui.actor" />
-
-          <!-- SECTION: Diagnostics -->
-            <AdminDiagnosticsView
-              v-else-if="ui.section === 'diagnostics'"
+          <!-- SECTION: Operations -->
+            <AdminOperationsView
+              v-else-if="ui.section === 'operations'"
               :adminKey="ui.adminKey"
               :actor="ui.actor"
               :apiOk="api.ok"
               :dbOk="db.ok"
+              :initialTab="operationsTab"
+              @tabChange="setOperationsTab"
             />
 
           <!-- SECTION: Settings -->
@@ -189,7 +188,7 @@
     BaseURL kommt aus VITE_API_BASE
 */
 
-import { computed, onMounted, reactive } from "vue";
+import { computed, onBeforeUnmount, onMounted, reactive, ref } from "vue";
 import { useToast } from "./composables/useToast";
 import { platformHealth, platformHealthDb } from "./api/platform";
 import { getBaseDomain, getBaseURL } from "./api/base";
@@ -198,23 +197,23 @@ import { getBaseDomain, getBaseURL } from "./api/base";
 import AdminTenantsView from "./views/AdminTenantsView.vue";
 import AdminUsersView from "./views/AdminUsersView.vue";
 import AdminMembershipsView from "./views/AdminMembershipsView.vue";
-import AdminAuditView from "./views/AdminAuditView.vue";
-import AdminDiagnosticsView from "./views/AdminDiagnosticsView.vue";
 import AdminSettingsView from "./views/AdminSettingsView.vue";
 import AdminLoginView from "./views/AdminLoginView.vue";
 import ToastHost from "./components/common/ToastHost.vue";
+import AdminOperationsView from "./views/AdminOperationsView.vue";
 
 /* Zentraler Toast State */
 const { toast } = useToast();
 const baseDomain = getBaseDomain();
 const apiBase = getBaseURL();
 
+type OperationsTab = "overview" | "health" | "audit" | "snapshot" | "logs";
+
 /* Sidebar Sections */
 const sections = [
   { id: "kunden", label: "Kunden", icon: "👥" },
   { id: "memberships", label: "Tenant-User", icon: "🧩" },
-  { id: "audit", label: "Audit", icon: "🧾" },
-  { id: "diagnostics", label: "Diagnostics", icon: "🩺" },
+  { id: "operations", label: "Operations", icon: "🛠️" },
   { id: "users", label: "Benutzer", icon: "👤" },
   { id: "settings", label: "Einstellungen", icon: "⚙️" },
 ] as const;
@@ -230,6 +229,8 @@ const ui = reactive({
   authenticated: false,
   section: "kunden" as SectionId,
 });
+
+const operationsTab = ref<OperationsTab>("overview");
 
 const tenantContext = reactive({
   id: localStorage.getItem("adminSelectedTenantId") || "",
@@ -249,6 +250,12 @@ const db = reactive({ ok: false, busy: false });
 /* Navigation */
 function goSection(sectionId: SectionId) {
   ui.section = sectionId;
+  if (sectionId === "operations") {
+    pushOperationsRoute(operationsTab.value);
+  } else {
+    const targetPath = sectionId === "kunden" ? "/" : `/${sectionId}`;
+    window.history.pushState({}, "", targetPath);
+  }
 }
 
 function setTenantContext(payload: { id: string; name: string; slug: string } | null) {
@@ -285,8 +292,7 @@ const pageTitle = computed(() => {
     kunden: "Kunden",
     users: "Benutzer",
     memberships: "Tenant-User",
-    audit: "Audit",
-    diagnostics: "Diagnostics",
+    operations: "Operations",
     settings: "Einstellungen",
   };
   return m[ui.section];
@@ -296,8 +302,7 @@ const pageSubtitle = computed(() => {
   if (ui.section === "kunden") return "Tenants suchen, auswählen, Details & Aktionen";
   if (ui.section === "users") return "Admin-Portal Benutzer verwalten";
   if (ui.section === "memberships") return "User mit Tenants verknüpfen und Rollen setzen";
-  if (ui.section === "audit") return "Audit Log durchsuchen, filtern, exportieren";
-  if (ui.section === "diagnostics") return "Health, Admin Checks, Snapshot";
+  if (ui.section === "operations") return "Health, Audit, Snapshots und Logs";
   return "Security, Theme, Feature Flags";
 });
 
@@ -361,6 +366,9 @@ onMounted(async () => {
   if (savedTheme) {
     ui.theme = savedTheme;
   }
+
+  syncFromLocation();
+  window.addEventListener("popstate", syncFromLocation);
   await quickRefresh();
 });
 
@@ -376,7 +384,7 @@ function setTheme(themeId: string) {
 }
 
 function openMemberships(tenantId: string) {
-  ui.section = "memberships";
+  goSection("memberships");
   if (tenantId) localStorage.setItem("adminSelectedTenantId", tenantId);
   toast("Wechsle zu Tenant-User Verwaltung");
 }
@@ -389,6 +397,69 @@ function logout() {
   toast("Abgemeldet", "info");
   window.history.pushState({}, "", "/login");
 }
+
+function pushOperationsRoute(tab: OperationsTab) {
+  const query = tab ? `?tab=${tab}` : "";
+  window.history.pushState({}, "", `/operations${query}`);
+}
+
+function setOperationsTab(tab: OperationsTab) {
+  operationsTab.value = tab;
+  if (ui.section === "operations") {
+    const currentPath = window.location.pathname;
+    const currentTab = new URLSearchParams(window.location.search).get("tab");
+    const desiredPath = `/operations${tab ? `?tab=${tab}` : ""}`;
+    if (currentPath !== "/operations" || currentTab !== tab) {
+      window.history.pushState({}, "", desiredPath);
+    }
+  }
+}
+
+function syncFromLocation() {
+  const path = window.location.pathname;
+  const params = new URLSearchParams(window.location.search);
+  const tabFromQuery = params.get("tab") as OperationsTab | null;
+
+  if (path === "/operations") {
+    ui.section = "operations";
+    if (tabFromQuery && ["overview", "health", "audit", "snapshot", "logs"].includes(tabFromQuery)) {
+      operationsTab.value = tabFromQuery;
+    } else {
+      operationsTab.value = "overview";
+    }
+    return;
+  }
+
+  if (path === "/diagnostics") {
+    ui.section = "operations";
+    operationsTab.value = "health";
+    window.history.replaceState({}, "", "/operations?tab=health");
+    return;
+  }
+
+  if (path === "/audit") {
+    ui.section = "operations";
+    operationsTab.value = "audit";
+    window.history.replaceState({}, "", "/operations?tab=audit");
+    return;
+  }
+
+  const sectionPathMap: Record<string, SectionId> = {
+    "/": "kunden",
+    "/kunden": "kunden",
+    "/users": "users",
+    "/memberships": "memberships",
+    "/settings": "settings",
+  };
+
+  if (sectionPathMap[path]) {
+    ui.section = sectionPathMap[path];
+  }
+}
+
+onBeforeUnmount(() => {
+  window.removeEventListener("popstate", syncFromLocation);
+});
 </script>
 
 <style>

@@ -27,17 +27,15 @@
           </div>
 
           <div class="field">
-            <div class="label">URL-Kürzel (für Links)</div>
+            <div class="label">Subdomain (Slug)</div>
             <input
               class="input"
               :value="slug"
               @input="$emit('update:slug', ($event.target as HTMLInputElement).value)"
               placeholder="z. B. baeckerei-muster"
-              aria-describedby="slug-help"
             />
-            <div class="muted" id="slug-help" style="margin-top: 4px;">
-              Wird zur Subdomain: <span class="mono">{{ slugPreview }}</span>. Nur Kleinbuchstaben, Zahlen und
-              Bindestriche, z. B. <span class="mono">firma-mueller</span>.
+            <div class="muted" style="margin-top: 4px;">
+              Wird zur Subdomain: <span class="mono">{{ slugPreview }}</span>
             </div>
           </div>
         </div>

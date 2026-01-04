@@ -21,14 +21,11 @@
     <div class="grid2" style="align-items: start; gap: 16px;">
       <!-- Liste + Suche -->
       <div class="box">
+        <div v-if="adminKeyMissing" class="hintBox" style="margin-bottom: 8px;">
+          Admin Key fehlt. Bitte links in der Sidebar setzen, damit Kunden geladen werden können.
+        </div>
         <div class="row gap8 wrap" style="margin-bottom: 10px;">
-          <input
-            class="input"
-            v-model.trim="q"
-            placeholder="Suche: Name oder URL-Kürzel"
-            @keyup.enter="loadTenants"
-            aria-label="Tenant suchen"
-          />
+          <input class="input" v-model.trim="q" placeholder="Suche: Name, Slug" @keyup.enter="loadTenants" />
           <select class="input" v-model="statusFilter">
             <option value="all">Alle</option>
             <option value="active">Aktiv</option>
@@ -189,12 +186,12 @@ const props = defineProps<{
   actor: string;
   apiOk: boolean;
   dbOk: boolean;
-  selectedTenantId?: string;
+  selectedTenantId: string;
 }>();
 
 const emit = defineEmits<{
   (e: "openMemberships", tenantId: string): void;
-  (e: "tenantSelected", payload: { id: string; name: string; slug: string } | null): void;
+  (e: "selectTenant", tenantId: string): void;
 }>();
 
 const { toast } = useToast();
@@ -230,6 +227,7 @@ const modal = reactive({
 const baseDomain = import.meta.env.VITE_BASE_DOMAIN || "test.myitnetwork.de";
 
 const hasTenants = computed(() => tenants.value.length > 0);
+const adminKeyMissing = computed(() => !props.adminKey);
 
 /* Derived: Filter nach Status (Suche ist serverseitig via q) */
 const filteredTenants = computed(() => {
@@ -254,23 +252,16 @@ async function loadTenants() {
       tenants.value = res;
 
       /* Selection stabil halten oder erste wählen */
-      const preferredId =
-        props.selectedTenantId ||
-        localStorage.getItem("adminSelectedTenantId") ||
-        sessionStorage.getItem("adminSelectedTenantId") ||
-        "";
-
+      if (props.selectedTenantId) {
+        const pre = res.find((t) => t.id === props.selectedTenantId);
+        if (pre) selectedTenant.value = pre;
+      }
       if (selectedTenant.value) {
         selectedTenant.value = res.find((t) => t.id === selectedTenant.value!.id) ?? null;
-      }
-      if (!selectedTenant.value && preferredId) {
-        selectedTenant.value = res.find((t) => t.id === preferredId) ?? null;
       }
       if (!selectedTenant.value && res.length > 0) {
         selectedTenant.value = res[0];
       }
-
-      emitSelectedTenant();
 
     toast(`Tenants geladen: ${res.length}`);
   } catch (e: any) {
@@ -342,7 +333,7 @@ async function toggleTenant(t: TenantOut) {
 /* UI actions */
 function selectTenant(t: TenantOut) {
   selectedTenant.value = t;
-  emitSelectedTenant();
+  emit("selectTenant", t.id);
 }
 
 function openDrawer(t: TenantOut) {
@@ -368,7 +359,7 @@ function closeCreateModal() {
 }
 
 function openMemberships(tenantId: string) {
-  localStorage.setItem("adminSelectedTenantId", tenantId);
+  sessionStorage.setItem("adminSelectedTenantId", tenantId);
   emit("openMemberships", tenantId);
 }
 
@@ -376,26 +367,7 @@ watch(
   () => selectedTenant.value?.id,
   (id) => {
     if (id) {
-      localStorage.setItem("adminSelectedTenantId", id);
-    } else {
-      localStorage.removeItem("adminSelectedTenantId");
-    }
-  }
-);
-watch(
-  () => props.selectedTenantId,
-  (id) => {
-    if (!id) {
-      selectedTenant.value = null;
-      emitSelectedTenant();
-      return;
-    }
-    if (!tenants.value.length) return;
-    if (selectedTenant.value?.id === id) return;
-    const match = tenants.value.find((t) => t.id === id);
-    if (match) {
-      selectedTenant.value = match;
-      emitSelectedTenant();
+      sessionStorage.setItem("adminSelectedTenantId", id);
     }
   }
 );

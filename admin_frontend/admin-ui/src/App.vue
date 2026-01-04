@@ -141,9 +141,9 @@
               :actor="ui.actor"
               :apiOk="api.ok"
               :dbOk="db.ok"
-              :selectedTenantId="tenantContext.id"
+              :selectedTenantId="ui.selectedTenantId"
               @openMemberships="openMemberships"
-              @tenantSelected="setTenantContext"
+              @selectTenant="setSelectedTenant"
             />
 
           <!-- SECTION: Users -->
@@ -162,8 +162,7 @@
               :actor="ui.actor"
               :apiOk="api.ok"
               :dbOk="db.ok"
-              :selectedTenantId="tenantContext.id"
-              @tenantSelected="setTenantContext"
+              :selectedTenantId="ui.selectedTenantId"
             />
 
           <!-- SECTION: Audit -->
@@ -256,6 +255,7 @@ const ui = reactive({
   adminKey: "",
   authenticated: false,
   section: "kunden" as SectionId,
+  selectedTenantId: "",
 });
 
 const tenantContext = reactive({
@@ -304,6 +304,9 @@ function applyLogin(payload: { adminKey: string; actor: string }) {
   ui.authenticated = true;
   sessionStorage.setItem("adminKey", ui.adminKey);
   sessionStorage.setItem("adminActor", ui.actor);
+  if (ui.selectedTenantId) {
+    sessionStorage.setItem("adminSelectedTenantId", ui.selectedTenantId);
+  }
   sessionStorage.setItem("adminTheme", ui.theme);
   toast("Admin Login erfolgreich, lade Portal...");
   quickRefresh();
@@ -385,10 +388,14 @@ onMounted(async () => {
   const savedKey = sessionStorage.getItem("adminKey");
   const savedActor = sessionStorage.getItem("adminActor");
   const savedTheme = sessionStorage.getItem("adminTheme");
+  const savedTenant = sessionStorage.getItem("adminSelectedTenantId");
   if (savedKey) {
     ui.adminKey = savedKey;
     ui.actor = savedActor || "admin";
     ui.authenticated = true;
+  }
+  if (savedTenant) {
+    ui.selectedTenantId = savedTenant;
   }
   if (savedTheme) {
     ui.theme = savedTheme;
@@ -409,8 +416,17 @@ function setTheme(themeId: string) {
 
 function openMemberships(tenantId: string) {
   ui.section = "memberships";
-  if (tenantId) localStorage.setItem("adminSelectedTenantId", tenantId);
+  if (tenantId) sessionStorage.setItem("adminSelectedTenantId", tenantId);
   toast("Wechsle zu Tenant-User Verwaltung");
+}
+
+function setSelectedTenant(tenantId: string) {
+  ui.selectedTenantId = tenantId;
+  if (tenantId) {
+    sessionStorage.setItem("adminSelectedTenantId", tenantId);
+  } else {
+    sessionStorage.removeItem("adminSelectedTenantId");
+  }
 }
 </script>
 

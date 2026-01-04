@@ -410,6 +410,21 @@
 /* Utility */
 .mono{ font-family: var(--mono); }
 
+/* Toast (global, App.vue) */
+.toast{
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  max-width: 320px;
+  font-weight: 750;
+  z-index: 9999;
+}
+
 /* ===============================================================
    RESPONSIVE
 =============================================================== */

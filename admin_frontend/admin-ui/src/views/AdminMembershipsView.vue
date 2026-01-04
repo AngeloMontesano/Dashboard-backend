@@ -156,10 +156,6 @@ const props = defineProps<{
   selectedTenantId?: string;
 }>();
 
-const emit = defineEmits<{
-  (e: "tenantSelected", payload: { id: string; name: string; slug: string } | null): void;
-}>();
-
 const { toast } = useToast();
 
 const tenants = ref<TenantOut[]>([]);
@@ -195,10 +191,9 @@ async function loadTenants() {
   busy.tenants = true;
   try {
     tenants.value = await adminListTenants(props.adminKey, props.actor, { limit: 200, offset: 0 });
-    const stored = localStorage.getItem("adminSelectedTenantId");
-    const targetId = props.selectedTenantId || stored;
-    if (!selectedTenantId.value && targetId && tenants.value.some((t) => t.id === targetId)) {
-      selectedTenantId.value = targetId;
+    const stored = props.selectedTenantId || sessionStorage.getItem("adminSelectedTenantId") || "";
+    if (!selectedTenantId.value && stored && tenants.value.some((t) => t.id === stored)) {
+      selectedTenantId.value = stored;
     } else if (!selectedTenantId.value && tenants.value.length > 0) {
       selectedTenantId.value = tenants.value[0].id;
     }
@@ -372,12 +367,9 @@ watch(
   () => selectedTenantId.value,
   (id) => {
     if (id) {
-      localStorage.setItem("adminSelectedTenantId", id);
-      emitSelectedTenant();
-      loadTenantUsers();
+      sessionStorage.setItem("adminSelectedTenantId", id);
     } else {
-      localStorage.removeItem("adminSelectedTenantId");
-      emitSelectedTenant();
+      sessionStorage.removeItem("adminSelectedTenantId");
     }
   }
 );
@@ -385,22 +377,10 @@ watch(
 watch(
   () => props.selectedTenantId,
   (id) => {
-    if (!id) {
-      selectedTenantId.value = "";
-      emitSelectedTenant();
-      return;
+    if (id && tenants.value.some((t) => t.id === id)) {
+      selectedTenantId.value = id;
+      loadTenantUsers();
     }
-    if (id === selectedTenantId.value) return;
-    selectedTenantId.value = id;
   }
 );
-
-function emitSelectedTenant() {
-  const t = tenants.value.find((x) => x.id === selectedTenantId.value);
-  if (t) {
-    emit("tenantSelected", { id: t.id, name: t.name, slug: t.slug });
-  } else {
-    emit("tenantSelected", null);
-  }
-}
 </script>

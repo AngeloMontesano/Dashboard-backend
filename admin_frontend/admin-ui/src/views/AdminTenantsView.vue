@@ -115,20 +115,32 @@
       </div>
 
       <div class="detailGrid">
-        <div class="detailBox">
+        <div class="detailBox tight">
           <div class="boxLabel">Name</div>
           <div class="boxValue">{{ selectedTenant.name }}</div>
         </div>
-        <div class="detailBox">
+        <div class="detailBox tight">
           <div class="boxLabel">URL-Kürzel</div>
           <div class="boxValue mono">{{ selectedTenant.slug }}</div>
         </div>
-        <div class="detailBox">
-          <div class="boxLabel">Tenant ID</div>
+        <div class="detailBox wide">
+          <div class="boxLabel">
+            Tenant ID
+            <button class="link tiny" type="button" @click="copyValue(selectedTenant.id, 'Tenant ID')">kopieren</button>
+          </div>
           <div class="boxValue mono">{{ selectedTenant.id }}</div>
         </div>
-        <div class="detailBox">
-          <div class="boxLabel">Tenant Host</div>
+        <div class="detailBox wide">
+          <div class="boxLabel">
+            Tenant Host
+            <button
+              class="link tiny"
+              type="button"
+              @click="copyValue(`${selectedTenant.slug}.${baseDomain}`, 'Tenant Host')"
+            >
+              kopieren
+            </button>
+          </div>
           <div class="boxValue mono">{{ `${selectedTenant.slug}.${baseDomain}` }}</div>
         </div>
       </div>
@@ -326,7 +338,10 @@ async function deleteTenant(t: TenantOut) {
   const check = window.prompt(
     `Kunde ${t.slug} wirklich löschen? Diese Aktion ist irreversibel.\nBitte Tenant ID zur Bestätigung eingeben:`
   );
-  if (!check || check.trim() !== t.id) return;
+  if (!check || check.trim() !== t.id) {
+    toast("Löschen abgebrochen: Tenant ID stimmt nicht.");
+    return;
+  }
 
   busy.deleteId = t.id;
   try {
@@ -364,6 +379,15 @@ function openMemberships(tenantId: string) {
 function resetFilters() {
   q.value = "";
   statusFilter.value = "all";
+}
+
+async function copyValue(value: string, label: string) {
+  try {
+    await navigator.clipboard.writeText(value);
+    toast(`${label} kopiert`);
+  } catch {
+    toast(`${label} konnte nicht kopiert werden`);
+  }
 }
 
 function ensureAdminKey(): boolean {
@@ -566,6 +590,7 @@ watch(
   border-radius: 12px;
   padding: 12px;
   background: var(--surface);
+  color: var(--text, #0f172a);
   display: grid;
   gap: 10px;
   margin-top: 10px;
@@ -593,7 +618,7 @@ watch(
 
 .detailGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 10px;
 }
 
@@ -614,12 +639,25 @@ watch(
   margin-top: 4px;
 }
 
+.detailBox.tight {
+  min-width: 180px;
+}
+
+.detailBox.wide {
+  min-width: 240px;
+}
+
 .detailActions {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 12px;
   flex-wrap: wrap;
+}
+
+.tiny {
+  font-size: 11px;
+  padding: 0;
 }
 
 .smallText {

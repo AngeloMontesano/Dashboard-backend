@@ -145,6 +145,7 @@
               :apiOk="api.ok"
               :dbOk="db.ok"
               :initialTab="operationsTab"
+              :tenant="tenantContext"
               @tabChange="setOperationsTab"
             />
 

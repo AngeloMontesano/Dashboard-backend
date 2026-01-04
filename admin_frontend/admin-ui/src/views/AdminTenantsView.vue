@@ -1,150 +1,159 @@
 <template>
-  <!--
-    AdminTenantsView
-    - Kompaktere Ansicht: Suche + Anlage links, Details rechts
-    - Workspace zeigt nur relevante Infos + Aktionen zum ausgewählten Tenant
-  -->
-  <section class="card">
-    <header class="cardHeader">
+  <section class="card minimalHeader">
+    <header class="cardHeader tight">
       <div>
         <div class="cardTitle">Kunden</div>
-        <div class="cardHint">Tenants suchen, anlegen, Details & Tenant-User verwalten</div>
+        <div class="cardHint">Kunden suchen und auswählen</div>
       </div>
       <div class="cardHeaderActions">
-        <button class="btnGhost" @click="openCreateModal">Tenant anlegen</button>
+        <button class="btnGhost" @click="openCreateModal">Neuen Kunden anlegen</button>
         <button class="btnPrimary" :disabled="busy.list" @click="loadTenants">
-          {{ busy.list ? "lade..." : "Neu laden" }}
+          <span v-if="busy.list" class="dotSpinner" aria-hidden="true"></span>
+          {{ busy.list ? "lädt..." : "Neu laden" }}
         </button>
       </div>
     </header>
 
-    <div class="grid2" style="align-items: start; gap: 16px;">
-      <!-- Liste + Suche -->
-      <div class="box">
-        <div class="row gap8 wrap" style="margin-bottom: 10px;">
-          <input class="input" v-model.trim="q" placeholder="Suche: Name, Slug" @keyup.enter="loadTenants" />
-          <select class="input" v-model="statusFilter">
-            <option value="all">Alle</option>
-            <option value="active">Aktiv</option>
-            <option value="disabled">Deaktiviert</option>
-          </select>
+    <div class="toolbar">
+      <div class="chips">
+        <div class="chip">
+          <div class="chipLabel">Kunden gesamt</div>
+          <div class="chipValue">{{ totalTenants }}</div>
         </div>
-        <div class="meta" style="margin-bottom: 8px;">
-          <div class="muted">Treffer: {{ filteredTenants.length }}</div>
-          <div class="muted">
-            Ausgewählt: <span class="mono">{{ selectedTenant ? selectedTenant.slug : "-" }}</span>
-          </div>
+        <div class="chip">
+          <div class="chipLabel">aktiv</div>
+          <div class="chipValue success">{{ activeTenants }}</div>
         </div>
-
-        <TenantTable
-          :tenants="filteredTenants"
-          :selectedId="selectedTenant?.id || ''"
-          :busyToggleId="busy.toggleId"
-          :busyList="busy.list"
-          @select="selectTenant"
-          @details="openDrawer"
-          @toggle="toggleTenant"
-          @delete="deleteTenant"
-        />
-
-        <div class="hintBox">
-          Tipp: Suche via <span class="mono">GET /admin/tenants?q=...</span>. Enter startet den Call.
+        <div class="chip">
+          <div class="chipLabel">deaktiviert</div>
+          <div class="chipValue danger">{{ inactiveTenants }}</div>
         </div>
       </div>
-
-      <!-- Details + Aktionen -->
-      <div class="box">
-        <header class="row" style="justify-content: space-between; align-items: center; margin-bottom: 8px;">
-          <div>
-            <div class="cardTitle" style="margin: 0;">Tenant Details</div>
-            <div class="cardHint" style="margin: 0;">Status, Host, User-Verwaltung</div>
-          </div>
-          <button class="btnGhost small" :disabled="!selectedTenant" @click="selectedTenant && openDrawer(selectedTenant)">
-            Details
-          </button>
-        </header>
-
-        <div v-if="!selectedTenant" class="muted">
-          Kein Tenant ausgewählt. Wähle links einen Kunden aus oder lege einen neuen an.
-        </div>
-
-        <div v-else class="kvGrid">
-          <div class="kv">
-            <div class="k">Name</div>
-            <div class="v">{{ selectedTenant.name }}</div>
-          </div>
-
-          <div class="kv">
-            <div class="k">Slug</div>
-            <div class="v mono">{{ selectedTenant.slug }}</div>
-          </div>
-
-          <div class="kv">
-            <div class="k">Status</div>
-            <div class="v">
-              <span class="tag" :class="selectedTenant.is_active ? 'ok' : 'bad'">
-                {{ selectedTenant.is_active ? "aktiv" : "deaktiviert" }}
-              </span>
-            </div>
-          </div>
-
-          <div class="kv">
-            <div class="k">Tenant ID</div>
-            <div class="v mono">{{ selectedTenant.id }}</div>
-          </div>
-
-          <div class="kv">
-            <div class="k">Tenant Host</div>
-            <div class="v mono">{{ `${selectedTenant.slug}.${baseDomain}` }}</div>
-          </div>
-        </div>
-
-        <div class="row gap8 wrap" style="margin-top: 12px;">
-          <button
-            class="btnGhost small"
-            :disabled="!selectedTenant || busy.toggleId === selectedTenant?.id"
-            @click="selectedTenant && toggleTenant(selectedTenant)"
-          >
-            {{ busy.toggleId === selectedTenant?.id ? "..." : selectedTenant?.is_active ? "Deaktivieren" : "Aktivieren" }}
-          </button>
-          <button
-            class="btnGhost small danger"
-            :disabled="!selectedTenant || busy.deleteId === selectedTenant?.id"
-            @click="selectedTenant && deleteTenant(selectedTenant)"
-          >
-            {{ busy.deleteId === selectedTenant?.id ? "löscht..." : "Tenant löschen" }}
-          </button>
-          <button
-            class="btnPrimary small"
-            :disabled="!selectedTenant"
-            @click="selectedTenant && openMemberships(selectedTenant.id)"
-          >
-            Tenant-User verwalten
-          </button>
-        </div>
-
-        <div class="hintBox" style="margin-top: 10px;">
-          Tenant-User Verwaltung öffnet den Tab <span class="mono">Tenant-User</span> und übernimmt den ausgewählten Kunden.
-          <div v-if="!hasTenants" class="muted" style="margin-top: 4px;">
-            Noch keine Kunden vorhanden – lege zuerst einen Tenant an.
-          </div>
-        </div>
+      <div class="toolbarActions">
+        <button class="btnGhost" :disabled="!filteredTenants.length" @click="exportCsv">Kunden exportieren CSV</button>
+        <button class="btnGhost" :disabled="busy.list" @click="loadTenants">Neu laden</button>
       </div>
     </div>
 
-    <!-- Drawer -->
-    <TenantDrawer
-      :open="drawer.open"
-      :tenant="drawer.tenant"
-      :busyToggle="busy.toggleId"
-      :baseDomain="baseDomain"
-      v-model:note="drawer.note"
-      @close="closeDrawer"
-      @toggle="toggleTenant"
-      @delete="deleteTenant"
-    />
+    <div class="searchCard">
+      <label class="fieldLabel" for="kunden-search">Suche</label>
+      <input
+        id="kunden-search"
+        class="input"
+        v-model.trim="q"
+        placeholder="Name oder URL-Kürzel eingeben"
+        aria-label="Kunden suchen"
+      />
+      <div class="hint">Tippen zum Filtern. Groß und Kleinschreibung egal. Prefix-Treffer zuerst.</div>
+      <div class="filterRow">
+        <select class="input" v-model="statusFilter" aria-label="Status filtern">
+          <option value="all">Alle</option>
+          <option value="active">Aktiv</option>
+          <option value="disabled">Deaktiviert</option>
+        </select>
+        <span class="muted smallText">Treffer: {{ filteredTenants.length }}</span>
+      </div>
+    </div>
 
-    <!-- Create Modal -->
+    <div class="tableCard">
+      <div class="tableHeader">
+        <div class="tableTitle">Kundenliste</div>
+        <div class="muted smallText">Zeile anklicken, um auszuwählen.</div>
+      </div>
+      <div class="tableWrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th></th>
+              <th>Slug</th>
+              <th>Name</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              v-for="t in filteredTenants"
+              :key="t.id"
+              :class="{ rowActive: selectedTenant?.id === t.id }"
+              @click="selectTenant(t)"
+            >
+              <td class="selectDot">
+                <span class="dot" :class="selectedTenant?.id === t.id ? 'dotActive' : ''"></span>
+              </td>
+              <td class="mono">{{ t.slug }}</td>
+              <td>{{ t.name }}</td>
+              <td>
+                <span class="tag" :class="t.is_active ? 'ok' : 'bad'">
+                  {{ t.is_active ? "aktiv" : "deaktiviert" }}
+                </span>
+              </td>
+            </tr>
+            <tr v-if="!busy.list && filteredTenants.length === 0">
+              <td colspan="4" class="mutedPad">Keine Kunden gefunden.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div v-if="busy.error" class="errorText">Fehler: {{ busy.error }}</div>
+      <div v-if="!busy.list && filteredTenants.length === 0" class="row gap8 wrap">
+        <button class="btnPrimary small" @click="openCreateModal">Ersten Kunden anlegen</button>
+        <button class="btnGhost small" @click="resetFilters">Filter zurücksetzen</button>
+      </div>
+    </div>
+
+    <div v-if="selectedTenant" class="detailCard">
+      <div class="detailHeader">
+        <div>
+          <div class="detailTitle">{{ selectedTenant.name }}</div>
+          <div class="detailSub mono">{{ selectedTenant.slug }} · {{ selectedTenant.id }}</div>
+        </div>
+        <div class="detailStatus">
+          <span class="tag" :class="selectedTenant.is_active ? 'ok' : 'bad'">
+            {{ selectedTenant.is_active ? "aktiv" : "deaktiviert" }}
+          </span>
+        </div>
+      </div>
+
+      <div class="detailGrid">
+        <div class="detailBox">
+          <div class="boxLabel">Name</div>
+          <div class="boxValue">{{ selectedTenant.name }}</div>
+        </div>
+        <div class="detailBox">
+          <div class="boxLabel">URL-Kürzel</div>
+          <div class="boxValue mono">{{ selectedTenant.slug }}</div>
+        </div>
+        <div class="detailBox">
+          <div class="boxLabel">Tenant ID</div>
+          <div class="boxValue mono">{{ selectedTenant.id }}</div>
+        </div>
+        <div class="detailBox">
+          <div class="boxLabel">Tenant Host</div>
+          <div class="boxValue mono">{{ `${selectedTenant.slug}.${baseDomain}` }}</div>
+        </div>
+      </div>
+
+      <div class="detailActions">
+        <div class="row gap8 wrap">
+          <button
+            class="btnGhost small"
+            :disabled="busy.toggleId === selectedTenant.id"
+            @click="toggleTenant(selectedTenant)"
+          >
+            {{ busy.toggleId === selectedTenant.id ? "..." : selectedTenant.is_active ? "Deaktivieren" : "Aktivieren" }}
+          </button>
+          <button
+            class="btnGhost small danger"
+            :disabled="busy.deleteId === selectedTenant.id"
+            @click="deleteTenant(selectedTenant)"
+          >
+            {{ busy.deleteId === selectedTenant.id ? "löscht..." : "Kunde löschen" }}
+          </button>
+        </div>
+        <button class="btnPrimary small" @click="openMemberships(selectedTenant.id)">Tenant User verwalten</button>
+      </div>
+    </div>
+
     <TenantCreateModal
       :open="modal.open"
       :busy="busy.create"
@@ -159,23 +168,17 @@
 
 <script setup lang="ts">
 /*
-  AdminTenantsView
-  - Enthält nur State + API Calls + Orchestration
-  - UI Bausteine sind ausgelagert:
-      - TenantTable
-      - TenantDrawer
-      - TenantCreateModal
-  - Toast zentral in App.vue, hier nur toast() verwenden
+  Kunden-Ansicht
+  - Live-Suche (Prefix-first), case insensitive
+  - Tabelle nur zur Auswahl
+  - Detailbereich mit Aktionen
+  - CSV-Export aus gefilterter Liste
 */
-
 import { computed, reactive, ref, watch } from "vue";
 import type { TenantOut } from "../types";
 import { adminListTenants, adminCreateTenant, adminUpdateTenant, adminDeleteTenant } from "../api/admin";
 import { useToast } from "../composables/useToast";
 
-/* Components */
-import TenantTable from "../components/tenants/TenantTable.vue";
-import TenantDrawer from "../components/tenants/TenantDrawer.vue";
 import TenantCreateModal from "../components/tenants/TenantCreateModal.vue";
 
 const props = defineProps<{
@@ -187,6 +190,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: "openMemberships", tenantId: string): void;
+  (e: "tenantSelected", payload: { id: string; name: string; slug: string } | null): void;
 }>();
 
 const { toast } = useToast();
@@ -198,18 +202,16 @@ const selectedTenant = ref<TenantOut | null>(null);
 const q = ref("");
 const statusFilter = ref<"all" | "active" | "disabled">("all");
 
+const totalTenants = computed(() => tenants.value.length);
+const activeTenants = computed(() => tenants.value.filter((t) => t.is_active).length);
+const inactiveTenants = computed(() => tenants.value.filter((t) => !t.is_active).length);
+
 const busy = reactive({
   list: false,
   create: false,
   toggleId: "" as string,
   deleteId: "" as string,
-});
-
-/* Drawer State */
-const drawer = reactive({
-  open: false,
-  tenant: null as TenantOut | null,
-  note: "",
+  error: "",
 });
 
 /* Modal State */
@@ -221,41 +223,42 @@ const modal = reactive({
 
 const baseDomain = import.meta.env.VITE_BASE_DOMAIN || "test.myitnetwork.de";
 
-const hasTenants = computed(() => tenants.value.length > 0);
-
-/* Derived: Filter nach Status (Suche ist serverseitig via q) */
+/* Filter */
 const filteredTenants = computed(() => {
   let list = tenants.value.slice();
-
   if (statusFilter.value === "active") list = list.filter((t) => t.is_active);
   if (statusFilter.value === "disabled") list = list.filter((t) => !t.is_active);
 
-  return list;
+  const term = q.value.trim().toLowerCase();
+  if (!term) return list;
+
+  const prefix = list.filter(
+    (t) => t.slug.toLowerCase().startsWith(term) || t.name.toLowerCase().startsWith(term)
+  );
+  if (prefix.length) return prefix;
+  return list.filter((t) => t.slug.toLowerCase().includes(term) || t.name.toLowerCase().includes(term));
 });
 
 /* API: Load Tenants */
 async function loadTenants() {
   if (!ensureAdminKey()) return;
   busy.list = true;
+  busy.error = "";
   try {
     const res = await adminListTenants(props.adminKey, props.actor, {
-      q: q.value || undefined,
-      limit: 200,
-        offset: 0,
-      });
-      tenants.value = res;
-
-      /* Selection stabil halten oder erste wählen */
-      if (selectedTenant.value) {
-        selectedTenant.value = res.find((t) => t.id === selectedTenant.value!.id) ?? null;
-      }
-      if (!selectedTenant.value && res.length > 0) {
-        selectedTenant.value = res[0];
-      }
-
-    toast(`Tenants geladen: ${res.length}`);
+      limit: 500,
+      offset: 0,
+    });
+    tenants.value = res;
+    // Default: keine Auswahl
+    if (selectedTenant.value) {
+      selectedTenant.value = res.find((t) => t.id === selectedTenant.value.id) ?? null;
+    }
+    emitSelectedTenant();
+    toast(`Kunden geladen: ${res.length}`);
   } catch (e: any) {
-    toast(`Fehler beim Laden: ${stringifyError(e)}`);
+    busy.error = stringifyError(e);
+    toast(`Fehler beim Laden: ${busy.error}`);
   } finally {
     busy.list = false;
   }
@@ -268,22 +271,22 @@ async function createTenant() {
   const slug = modal.slug.trim().toLowerCase();
 
   if (!name || !slug) {
-    toast("Name und Slug sind Pflicht");
+    toast("Name und URL-Kürzel sind Pflicht");
+    return;
+  }
+
+  if (!/^[a-z0-9-]+$/.test(slug)) {
+    toast("URL-Kürzel: nur Kleinbuchstaben, Zahlen und Bindestriche erlaubt");
     return;
   }
 
   busy.create = true;
   try {
     const created = await adminCreateTenant(props.adminKey, props.actor, { name, slug });
-
-    /* Optimistisch in Liste vorne einfügen */
     tenants.value = [created, ...tenants.value];
-
-    /* UX: neuen Tenant direkt selektieren */
     selectedTenant.value = created;
-
     closeCreateModal();
-    toast("Tenant angelegt");
+    toast("Kunde angelegt");
   } catch (e: any) {
     toast(`Fehler beim Anlegen: ${stringifyError(e)}`);
   } finally {
@@ -296,18 +299,19 @@ async function toggleTenant(t: TenantOut) {
   if (!ensureAdminKey()) return;
   if (!t) return;
 
+  if (t.is_active) {
+    const ok = window.confirm(`Kunde ${t.slug} wirklich deaktivieren?`);
+    if (!ok) return;
+  }
+
   busy.toggleId = t.id;
   try {
     const updated = await adminUpdateTenant(props.adminKey, props.actor, t.id, {
       is_active: !t.is_active,
     });
-
     tenants.value = tenants.value.map((x) => (x.id === updated.id ? updated : x));
-
     if (selectedTenant.value?.id === updated.id) selectedTenant.value = updated;
-    if (drawer.tenant?.id === updated.id) drawer.tenant = updated;
-
-    toast(updated.is_active ? "Tenant aktiviert" : "Tenant deaktiviert");
+    toast(updated.is_active ? "Kunde aktiviert" : "Kunde deaktiviert");
   } catch (e: any) {
     toast(`Fehler beim Update: ${stringifyError(e)}`);
   } finally {
@@ -315,21 +319,31 @@ async function toggleTenant(t: TenantOut) {
   }
 }
 
+async function deleteTenant(t: TenantOut) {
+  if (!ensureAdminKey()) return;
+  if (!t) return;
+  const check = window.prompt(
+    `Kunde ${t.slug} wirklich löschen? Diese Aktion ist irreversibel.\nBitte Tenant ID zur Bestätigung eingeben:`
+  );
+  if (!check || check.trim() !== t.id) return;
+
+  busy.deleteId = t.id;
+  try {
+    await adminDeleteTenant(props.adminKey, props.actor, t.id);
+    tenants.value = tenants.value.filter((x) => x.id !== t.id);
+    if (selectedTenant.value?.id === t.id) selectedTenant.value = null;
+    toast("Kunde gelöscht");
+  } catch (e: any) {
+    toast(`Fehler beim Löschen: ${stringifyError(e)}`);
+  } finally {
+    busy.deleteId = "";
+  }
+}
+
 /* UI actions */
 function selectTenant(t: TenantOut) {
   selectedTenant.value = t;
-}
-
-function openDrawer(t: TenantOut) {
-  drawer.open = true;
-  drawer.tenant = t;
-  drawer.note = "";
-}
-
-function closeDrawer() {
-  drawer.open = false;
-  drawer.tenant = null;
-  drawer.note = "";
+  emitSelectedTenant();
 }
 
 function openCreateModal() {
@@ -343,18 +357,13 @@ function closeCreateModal() {
 }
 
 function openMemberships(tenantId: string) {
-  sessionStorage.setItem("adminSelectedTenantId", tenantId);
   emit("openMemberships", tenantId);
 }
 
-watch(
-  () => selectedTenant.value?.id,
-  (id) => {
-    if (id) {
-      sessionStorage.setItem("adminSelectedTenantId", id);
-    }
-  }
-);
+function resetFilters() {
+  q.value = "";
+  statusFilter.value = "all";
+}
 
 function ensureAdminKey(): boolean {
   if (!props.adminKey) {
@@ -364,27 +373,18 @@ function ensureAdminKey(): boolean {
   return true;
 }
 
-async function deleteTenant(t: TenantOut) {
-  if (!ensureAdminKey()) return;
-  if (!t) return;
-  const confirmDelete = window.confirm(`Tenant ${t.slug} wirklich löschen? Diese Aktion ist irreversibel.`);
-  if (!confirmDelete) return;
-
-  busy.deleteId = t.id;
-  try {
-    await adminDeleteTenant(props.adminKey, props.actor, t.id);
-    tenants.value = tenants.value.filter((x) => x.id !== t.id);
-    if (selectedTenant.value?.id === t.id) selectedTenant.value = null;
-    if (drawer.tenant?.id === t.id) closeDrawer();
-    toast("Tenant gelöscht");
-  } catch (e: any) {
-    toast(`Fehler beim Löschen: ${stringifyError(e)}`);
-  } finally {
-    busy.deleteId = "";
+function emitSelectedTenant() {
+  if (selectedTenant.value) {
+    emit("tenantSelected", {
+      id: selectedTenant.value.id,
+      name: selectedTenant.value.name,
+      slug: selectedTenant.value.slug,
+    });
+  } else {
+    emit("tenantSelected", null);
   }
 }
 
-/* Helpers */
 function stringifyError(e: any): string {
   if (!e) return "unknown";
   if (typeof e === "string") return e;
@@ -397,6 +397,37 @@ function stringifyError(e: any): string {
   }
 }
 
+function exportCsv() {
+  if (!filteredTenants.value.length) {
+    toast("Keine Kunden zum Export");
+    return;
+  }
+  const header = ["slug", "name", "status", "tenant_id", "host"];
+  const rows = filteredTenants.value.map((t) => [
+    t.slug,
+    t.name,
+    t.is_active ? "aktiv" : "deaktiviert",
+    t.id,
+    `${t.slug}.${baseDomain}`,
+  ]);
+  const csv = [
+    header.join(";"),
+    ...rows.map((r) => r.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(";")),
+  ].join("\n");
+  const stamp = new Date();
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const filename = `kunden_export_${stamp.getFullYear()}${pad(stamp.getMonth() + 1)}${pad(stamp.getDate())}_${pad(
+    stamp.getHours()
+  )}${pad(stamp.getMinutes())}.csv`;
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(url);
+  toast("Export erstellt");
+}
 
 watch(
   () => props.adminKey,
@@ -408,3 +439,229 @@ watch(
   { immediate: true }
 );
 </script>
+
+<style scoped>
+.minimalHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.chip {
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-2, #f8fafc);
+  min-width: 120px;
+}
+
+.chipLabel {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.chipValue {
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.chipValue.success {
+  color: var(--success, #22c55e);
+}
+
+.chipValue.danger {
+  color: var(--danger, #c53030);
+}
+
+.toolbarActions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.searchCard {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px;
+  background: var(--surface);
+  display: grid;
+  gap: 8px;
+}
+
+.fieldLabel {
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.hint {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.filterRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.tableCard {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px;
+  background: var(--surface);
+  display: grid;
+  gap: 8px;
+}
+
+.tableHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.tableTitle {
+  font-weight: 800;
+}
+
+.tableWrap {
+  overflow: auto;
+}
+
+.selectDot {
+  width: 32px;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  display: inline-block;
+}
+
+.dotActive {
+  border-color: var(--primary);
+  background: var(--primary);
+}
+
+.detailCard {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px;
+  background: var(--surface);
+  display: grid;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.detailHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.detailTitle {
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.detailSub {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.detailStatus {
+  display: flex;
+}
+
+.detailGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+}
+
+.detailBox {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px;
+  background: var(--surface-2, #f8fafc);
+}
+
+.boxLabel {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.boxValue {
+  font-weight: 700;
+  margin-top: 4px;
+}
+
+.detailActions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.smallText {
+  font-size: 12px;
+}
+
+.emptyState {
+  margin-top: 8px;
+  padding: 12px;
+  border: 1px dashed var(--border, #dcdcdc);
+  border-radius: 10px;
+  background: var(--surface-2, #f9fafb);
+}
+
+.emptyTitle {
+  font-weight: 600;
+}
+
+.emptyBody {
+  color: var(--muted);
+  margin: 4px 0 8px 0;
+}
+
+.errorText {
+  color: var(--danger, #c53030);
+  margin-top: 8px;
+  font-size: 13px;
+}
+
+.dotSpinner {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid var(--muted);
+  border-top-color: transparent;
+  display: inline-block;
+  margin-right: 6px;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+</style>

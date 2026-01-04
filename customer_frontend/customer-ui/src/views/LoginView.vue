@@ -34,6 +34,28 @@ const route = useRoute();
 const { login } = useAuth();
 const { push } = useToast();
 
+function formatLoginError(e: any): string {
+  const responseData = e?.response?.data;
+  const status = e?.response?.status;
+  const errorPayload = responseData?.error;
+
+  if (errorPayload) {
+    const code = errorPayload.code ? ` (${errorPayload.code})` : '';
+    const baseMessage = errorPayload.message || 'Login fehlgeschlagen';
+    const firstDetail = Array.isArray(errorPayload.details) ? errorPayload.details[0] : null;
+    const detailMessage = firstDetail?.msg;
+    const detailLoc = Array.isArray(firstDetail?.loc) ? firstDetail.loc.join('.') : '';
+    const detail = detailMessage ? `${detailLoc ? `${detailLoc}: ` : ''}${detailMessage}` : '';
+    return detail ? `${baseMessage}${code} – ${detail}` : `${baseMessage}${code}`;
+  }
+
+  if (status === 422) {
+    return 'Ungültige Eingabe (422)';
+  }
+
+  return e?.message || 'Login fehlgeschlagen';
+}
+
 async function submit() {
   error.value = '';
   if (!email.value || !password.value) {
@@ -47,7 +69,8 @@ async function submit() {
     const redirect = (route.query.redirect as string) || '/';
     router.push(redirect);
   } catch (e: any) {
-    error.value = e?.response?.data?.detail || e?.message || 'Login fehlgeschlagen';
+    console.error('Login failed', e?.response?.data || e);
+    error.value = formatLoginError(e);
   } finally {
     busy.value = false;
   }

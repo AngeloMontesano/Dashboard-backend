@@ -12,12 +12,9 @@ import {
   type Item
 } from '@/api/inventory';
 import { useAuth } from '@/composables/useAuth';
-import InputText from 'primevue/inputtext';
-import InputNumber from 'primevue/inputnumber';
-import Dropdown from 'primevue/dropdown';
-import Textarea from 'primevue/textarea';
-import Checkbox from 'primevue/checkbox';
-import Button from 'primevue/button';
+import BaseInput from '@/components/common/BaseInput.vue';
+import BaseSelect from '@/components/common/BaseSelect.vue';
+import BaseField from '@/components/common/BaseField.vue';
 
 const router = useRouter();
 const { state: authState, isAuthenticated, logout } = useAuth();
@@ -68,8 +65,8 @@ const editForm = reactive({
 
 const showCreate = ref(false);
 const createCardRef = ref<HTMLElement | null>(null);
-const createBarcodeInput = ref<InstanceType<typeof InputText> | null>(null);
-const createUnitInput = ref<InstanceType<typeof InputText> | null>(null);
+const createBarcodeInput = ref<InstanceType<typeof BaseInput> | null>(null);
+const createUnitInput = ref<InstanceType<typeof BaseInput> | null>(null);
 const createForm = reactive({
   sku: '',
   barcode: '',
@@ -125,6 +122,9 @@ const isCreateValid = computed(
   () => !!createForm.sku.trim() && !!createForm.barcode.trim() && !!createForm.name.trim() && !!createForm.unit.trim()
 );
 const showCreateCard = computed(() => showCreate.value);
+const categoryOptions = computed(() =>
+  categories.value.map((cat) => ({ label: cat.name, value: cat.id }))
+);
 
 function resetCreateForm() {
   createForm.sku = '';
@@ -516,6 +516,22 @@ function focusCreateBarcode() {
 }
 
 function focusPrimeInput(comp: any) {
+  if (comp?.focus) {
+    comp.focus();
+    return;
+  }
+  const el: HTMLInputElement | HTMLTextAreaElement | null | undefined =
+    comp?.$el?.querySelector?.('input,textarea');
+  el?.focus();
+}
+
+function closeCreateCard() {
+  showCreate.value = false;
+  resetCreateForm();
+  nextTick(() => quickScanInput.value?.focus());
+}
+
+function focusPrimeInput(comp: any) {
   const el: HTMLInputElement | HTMLTextAreaElement | null | undefined =
     comp?.$el?.querySelector?.('input,textarea');
   el?.focus();
@@ -819,67 +835,52 @@ watch(
           <p class="card__hint">Pflichtfelder: Artikelnummer, Name, Barcode, Einheit.</p>
         </div>
         <div class="detail-card__actions">
-          <Button severity="secondary" text @click="resetCreateForm" label="Zurücksetzen" />
-          <Button severity="secondary" text @click="closeCreateCard" label="Abbrechen" />
-          <Button :disabled="!isCreateValid || isSaving" @click="handleCreate" label="Speichern" />
+          <button class="button button--ghost" type="button" @click="resetCreateForm">Zurücksetzen</button>
+          <button class="button button--ghost" type="button" @click="closeCreateCard">Abbrechen</button>
+          <button class="button button--primary" type="button" :disabled="!isCreateValid || isSaving" @click="handleCreate">
+            {{ isSaving ? 'Speichert...' : 'Speichern' }}
+          </button>
         </div>
       </header>
 
       <div v-if="createFeedback.error" class="alert alert--error">{{ createFeedback.error }}</div>
 
-      <div class="form-grid two-col">
-        <label>
-          <span>Artikelnummer *</span>
-          <InputText v-model="createForm.sku" required @blur="handleCreateSkuBlur" />
-          <small v-if="createSkuHint">{{ createSkuHint }}</small>
-          <small v-else-if="!createForm.sku">Interne Artikelnummer, z.B. A-10023</small>
-        </label>
-        <label>
-          <span>Name *</span>
-          <InputText v-model="createForm.name" required />
-          <small v-if="!createForm.name">Name ist erforderlich.</small>
-        </label>
-        <label>
-          <span>Barcode *</span>
-          <div class="p-input-icon-left">
-            <i class="pi pi-barcode" />
-            <InputText
-              ref="createBarcodeInput"
-              v-model="createForm.barcode"
-              required
-              @keydown.enter.prevent="focusPrimeInput(createUnitInput)"
-            />
-          </div>
-          <small v-if="!createForm.barcode">Scanner benutzen oder eintippen.</small>
-        </label>
-        <label>
-          <span>Kategorie</span>
-          <Dropdown
-            v-model="createForm.category_id"
-            :options="categories"
-            optionLabel="name"
-            optionValue="id"
-            placeholder="Keine"
-            showClear
-          />
-        </label>
-        <label>
-          <span>Einheit *</span>
-          <InputText ref="createUnitInput" v-model="createForm.unit" required />
-          <small v-if="!createForm.unit">Einheit ist erforderlich.</small>
-        </label>
-        <label class="checkbox">
-          <Checkbox v-model="createForm.is_active" :binary="true" />
-          <div>
-            <span>Artikel ist aktiv</span>
-            <small>Inaktive Artikel werden nicht in Auswahl und Buchungen angeboten.</small>
-          </div>
-        </label>
+      <div class="create-grid">
+        <BaseField
+          label="Artikelnummer"
+          :required="true"
+          :hint="createSkuHint || 'Interne Artikelnummer, z.B. A-10023'"
+          :error="!createForm.sku ? 'Artikelnummer ist erforderlich.' : ''"
+        >
+          <BaseInput v-model="createForm.sku" @blur="handleCreateSkuBlur" />
+        </BaseField>
 
-        <label class="full-width">
-          <span>Artikelbeschreibung</span>
-          <Textarea v-model="createForm.description" rows="2" autoResize />
-        </label>
+        <BaseField label="Name" :required="true" :error="!createForm.name ? 'Name ist erforderlich.' : ''">
+          <BaseInput v-model="createForm.name" />
+        </BaseField>
+
+        <BaseField label="Barcode" :required="true" :error="!createForm.barcode ? 'Barcode ist erforderlich.' : ''" hint="Scanner benutzen oder eintippen.">
+          <BaseInput ref="createBarcodeInput" v-model="createForm.barcode" @keydown.enter.prevent="focusPrimeInput(createUnitInput)" />
+        </BaseField>
+
+        <BaseField label="Einheit" :required="true" :error="!createForm.unit ? 'Einheit ist erforderlich.' : ''">
+          <BaseInput ref="createUnitInput" v-model="createForm.unit" />
+        </BaseField>
+
+        <BaseField label="Kategorie">
+          <BaseSelect v-model="createForm.category_id" :options="categoryOptions" placeholder="Keine" />
+        </BaseField>
+
+        <BaseField label="Artikel ist aktiv" hint="Inaktive Artikel werden nicht in Auswahl und Buchungen angeboten.">
+          <label class="checkbox">
+            <input type="checkbox" v-model="createForm.is_active" />
+            <span>Aktiv</span>
+          </label>
+        </BaseField>
+
+        <BaseField class="full-span" label="Artikelbeschreibung">
+          <textarea class="input" rows="2" v-model="createForm.description" />
+        </BaseField>
       </div>
 
       <details
@@ -888,30 +889,24 @@ watch(
         @toggle="showMoreCreateFields = ($event.target as HTMLDetailsElement).open"
       >
         <summary>Weitere Felder</summary>
-        <div class="form-grid two-col" style="margin-top: 12px">
-          <label>
-            <span>Bestand</span>
-            <InputNumber v-model="createForm.quantity" :min="0" inputId="quantity" showButtons :useGrouping="false" />
-          </label>
-          <label>
-            <span>Min-Bestand</span>
-            <InputNumber v-model="createForm.min_stock" :min="0" showButtons :useGrouping="false" />
-          </label>
-          <label>
-            <span>Max-Bestand</span>
-            <InputNumber v-model="createForm.max_stock" :min="0" showButtons :useGrouping="false" />
-          </label>
-          <label>
-            <span>Soll-Bestand</span>
-            <InputNumber v-model="createForm.target_stock" :min="0" showButtons :useGrouping="false" />
-          </label>
-          <label>
-            <span>Empfohlen</span>
-            <InputNumber v-model="createForm.recommended_stock" :min="0" showButtons :useGrouping="false" />
-          </label>
-          <label>
-            <span>Bestell-Modus</span>
-            <Dropdown
+        <div class="create-grid" style="margin-top: 12px">
+          <BaseField label="Bestand">
+            <BaseInput type="number" :min="0" v-model="createForm.quantity" />
+          </BaseField>
+          <BaseField label="Min-Bestand">
+            <BaseInput type="number" :min="0" v-model="createForm.min_stock" />
+          </BaseField>
+          <BaseField label="Max-Bestand">
+            <BaseInput type="number" :min="0" v-model="createForm.max_stock" />
+          </BaseField>
+          <BaseField label="Soll-Bestand">
+            <BaseInput type="number" :min="0" v-model="createForm.target_stock" />
+          </BaseField>
+          <BaseField label="Empfohlen">
+            <BaseInput type="number" :min="0" v-model="createForm.recommended_stock" />
+          </BaseField>
+          <BaseField label="Bestell-Modus">
+            <BaseSelect
               v-model="createForm.order_mode"
               :options="[
                 { label: '0 - Kein Alarm', value: 0 },
@@ -921,7 +916,7 @@ watch(
               ]"
               placeholder="Wählen"
             />
-          </label>
+          </BaseField>
         </div>
       </details>
     </section>
@@ -1107,6 +1102,28 @@ watch(
   border: 1px solid var(--color-border);
   border-radius: 12px;
   padding: 16px;
+}
+
+.create-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+}
+
+.create-grid .full-span {
+  grid-column: 1 / -1;
+}
+
+@media (min-width: 768px) {
+  .create-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1200px) {
+  .create-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
 }
 
 .detail-card__header {

@@ -107,52 +107,54 @@
     </div>
 
     <div v-if="selectedTenant" class="detailCard">
-      <div class="detailHeader">
-        <div class="detailTitles">
-          <div class="detailLine">
-            <div class="lineMain">
-              <span class="detailTitle">{{ selectedTenant.name }}</span>
-              <span class="dotSep">·</span>
-              <span class="mono">{{ selectedTenant.id }}</span>
-            </div>
-            <button
-              class="link tiny"
-              type="button"
-              title="In Zwischenablage kopieren"
-              @click="copyValue(selectedTenant.id, 'Tenant ID')"
-            >
-              kopieren
-            </button>
-          </div>
-          <div class="detailLine hostRow">
-            <span class="mono hostValue">{{ tenantHost }}</span>
-            <button
-              class="link tiny"
-              type="button"
-              title="In Zwischenablage kopieren"
-              @click="copyValue(tenantHost, 'Tenant Host')"
-            >
-              kopieren
-            </button>
-          </div>
-        </div>
-      </div>
-
       <div class="detailGrid">
         <div class="detailBox tight">
           <div class="boxLabel">Name</div>
           <div class="boxValue">{{ selectedTenant.name }}</div>
         </div>
         <div class="detailBox tight">
-          <div class="boxLabel">URL-Kürzel</div>
+          <div class="boxLabel copyLabel">
+            <span>URL-Kürzel</span>
+            <button
+              class="iconBtn"
+              type="button"
+              aria-label="In Zwischenablage kopieren"
+              title="In Zwischenablage kopieren"
+              @click.stop="copyValue(selectedTenant.slug, 'URL-Kürzel')"
+            >
+              📋
+            </button>
+          </div>
           <div class="boxValue mono">{{ selectedTenant.slug }}</div>
         </div>
         <div class="detailBox medium">
-          <div class="boxLabel">Tenant ID</div>
+          <div class="boxLabel copyLabel">
+            <span>Tenant ID</span>
+            <button
+              class="iconBtn"
+              type="button"
+              aria-label="In Zwischenablage kopieren"
+              title="In Zwischenablage kopieren"
+              @click.stop="copyValue(selectedTenant.id, 'Tenant ID')"
+            >
+              📋
+            </button>
+          </div>
           <div class="boxValue mono">{{ selectedTenant.id }}</div>
         </div>
         <div class="detailBox hostBox">
-          <div class="boxLabel">Tenant Host</div>
+          <div class="boxLabel copyLabel">
+            <span>Tenant Host</span>
+            <button
+              class="iconBtn"
+              type="button"
+              aria-label="In Zwischenablage kopieren"
+              title="In Zwischenablage kopieren"
+              @click.stop="copyValue(tenantHost, 'Tenant Host')"
+            >
+              📋
+            </button>
+          </div>
           <div class="boxValue mono hostValue">{{ tenantHost }}</div>
         </div>
       </div>
@@ -662,72 +664,6 @@ watch(
   margin-top: 4px;
 }
 
-.detailHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-}
-
-.detailTitles {
-  display: grid;
-  gap: 6px;
-}
-
-.detailTitleRow {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.detailTitles {
-  display: grid;
-  gap: 6px;
-}
-
-.detailTitleRow {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.detailTitles {
-  display: grid;
-  gap: 8px;
-  width: 100%;
-}
-
-.detailLine {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 10px;
-}
-
-.lineMain {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-.detailTitle {
-  font-size: 16px;
-  font-weight: 800;
-}
-
-.hostRow {
-  color: var(--text, #0f172a);
-}
-
-.hostValue {
-  white-space: nowrap;
-  overflow-x: auto;
-}
-
-.dotSep {
-  opacity: 0.6;
-}
-
 .detailGrid {
   display: grid;
   grid-template-columns: 1fr 1fr 2fr 3fr;
@@ -747,6 +683,31 @@ watch(
   color: var(--muted);
 }
 
+.copyLabel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.iconBtn {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  border-radius: 6px;
+  padding: 2px 6px;
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--muted);
+}
+
+.iconBtn:hover,
+.iconBtn:focus-visible {
+  color: var(--text);
+  border-color: var(--primary);
+  outline: none;
+}
+
 .boxValue {
   font-weight: 700;
   margin-top: 4px;
@@ -762,6 +723,11 @@ watch(
 
 .detailBox.hostBox {
   min-width: 320px;
+}
+
+.hostValue {
+  white-space: nowrap;
+  overflow-x: auto;
 }
 
 .detailActions {

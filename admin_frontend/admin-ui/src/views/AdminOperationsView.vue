@@ -45,6 +45,32 @@
             Wähle oben einen Tab für Details oder Checks. Health und Admin Checks lassen sich über „Aktualisieren“ erneut ausführen.
           </div>
         </div>
+
+        <div class="box" style="margin-top: 12px;">
+          <div class="sectionTitle">Tenant Routing Debug</div>
+          <div class="kvGrid">
+            <div class="kv">
+              <div class="k">Host</div>
+              <div class="v mono">{{ currentHost }}</div>
+            </div>
+            <div class="kv">
+              <div class="k">X-Forwarded-Host</div>
+              <div class="v mono">{{ forwardedHost || "unbekannt" }}</div>
+            </div>
+            <div class="kv">
+              <div class="k">Tenant (UI)</div>
+              <div class="v">{{ tenantLabel }}</div>
+            </div>
+            <div class="kv">
+              <div class="k">API Base</div>
+              <div class="v mono">{{ baseURL }}</div>
+            </div>
+            <div class="kv">
+              <div class="k">Browser Origin</div>
+              <div class="v mono">{{ windowOrigin }}</div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div class="panel" v-else-if="tab === 'health'">
@@ -125,35 +151,58 @@
         <div class="box">
           <div class="sectionTitle">Snapshot</div>
           <div class="rowActions" style="margin-top: 10px;">
-            <button class="btnPrimary" :disabled="busy.snapshot" @click="copySnapshot">
-              {{ busy.snapshot ? "kopiere..." : "Snapshot kopieren" }}
+            <button class="btnPrimary" :disabled="busy.snapshot" @click="createSnapshot">
+              {{ busy.snapshot ? "speichere..." : "Snapshot erstellen" }}
             </button>
+            <div class="muted" style="margin-left: auto;">max. 20 Snapshots, lokal gespeichert</div>
           </div>
-          <pre class="code" style="margin-top: 10px;">{{ prettySnapshot }}</pre>
+
+          <div class="tableWrap" style="margin-top: 10px;" v-if="snapshots.length">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Zeit</th>
+                  <th>Tenant</th>
+                  <th>Status</th>
+                  <th class="right">Aktion</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="s in snapshots" :key="s.id">
+                  <td class="mono">{{ s.ts }}</td>
+                  <td>{{ s.tenant?.slug || "—" }}</td>
+                  <td>
+                    <span class="tag" :class="s.status.apiOk ? 'ok' : 'bad'">API {{ s.status.apiOk ? "ok" : "down" }}</span>
+                    <span class="tag" :class="s.status.dbOk ? 'ok' : 'bad'">DB {{ s.status.dbOk ? "ok" : "down" }}</span>
+                    <span class="tag" :class="s.status.diagOk ? 'ok' : 'bad'">Diag {{ s.status.diagOk ? "ok" : "down" }}</span>
+                  </td>
+                  <td class="right">
+                    <button class="btnGhost" @click="downloadSnapshot(s)">JSON herunterladen</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="muted" v-else style="margin-top: 12px;">Noch keine Snapshots gespeichert.</div>
+        </div>
+
+        <div class="box" v-if="latestSnapshotJson" style="margin-top: 12px;">
+          <div class="sectionTitle">Letzter Snapshot</div>
+          <pre class="code" style="margin-top: 8px;">{{ latestSnapshotJson }}</pre>
         </div>
       </div>
 
       <div class="panel" v-else>
         <div class="box">
           <div class="sectionTitle">Logs (Demo)</div>
-          <div class="tableWrap">
-            <table class="table">
-              <thead>
-                <tr>
-                  <th>Zeit</th>
-                  <th>Level</th>
-                  <th>Message</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="l in demoLogs" :key="l.id">
-                  <td class="mono">{{ l.ts }}</td>
-                  <td><span class="tag neutral">{{ l.level }}</span></td>
-                  <td>{{ l.msg }}</td>
-                </tr>
-              </tbody>
-            </table>
+          <div class="rowActions" style="margin-bottom: 8px;">
+            <button class="btnPrimary" :disabled="busy.logs" @click="loadLogs">
+              {{ busy.logs ? "lade..." : "Letzte Logs laden" }}
+            </button>
+            <div class="muted" style="margin-left: auto;">TODO: Backend Endpoint anbinden</div>
           </div>
+          <pre class="code">{{ logText }}</pre>
         </div>
       </div>
     </section>
@@ -176,6 +225,7 @@ import AuditTable from "../components/audit/AuditTable.vue";
 import AuditDrawer from "../components/audit/AuditDrawer.vue";
 import type { AuditOut } from "../types";
 import { useToast } from "../composables/useToast";
+import { AuditDisplayRow, formatLocal, summarizePayload, toDisplayRow } from "../components/audit/format";
 
 type OperationsTab = "overview" | "health" | "audit" | "snapshot" | "logs";
 
@@ -185,6 +235,7 @@ const props = defineProps<{
   actor: string;
   adminKey: string;
   initialTab?: OperationsTab;
+  tenant?: { id: string; slug: string; name: string } | null;
 }>();
 
 const emit = defineEmits<{
@@ -207,15 +258,16 @@ const busy = reactive({
   admin: false,
   snapshot: false,
   list: false,
+  logs: false,
 });
 
 const adminPingOk = ref(false);
 const diagOk = ref(false);
-const diagData = ref<Record<string, unknown> | null>(null);
+const diagData = ref<Record<string, any> | null>(null);
 
 const drawer = reactive({
   open: false,
-  row: null as AuditOut | null,
+  row: null as AuditDisplayRow | null,
 });
 
 const filters = reactive({
@@ -229,34 +281,37 @@ const filters = reactive({
   offset: 0,
 });
 
-const rows = ref<AuditOut[]>([]);
+const rows = ref<AuditDisplayRow[]>([]);
 const auditLoadedOnce = ref(false);
 
 const baseURL = getBaseURL();
+const windowOrigin = window.location.origin;
+const currentHost = window.location.host;
+const forwardedHost = computed(() => extractForwardedHost(diagData.value));
+const tenantLabel = computed(() => props.tenant?.slug || "kein Tenant ausgewählt");
 
 const apiStatus = computed(() => (props.apiOk ? "ok" : "down"));
 const dbStatus = computed(() => (props.dbOk ? "ok" : "down"));
 
-const snapshot = computed(() => ({
-  ts: new Date().toISOString(),
-  baseURL,
-  apiOk: props.apiOk,
-  dbOk: props.dbOk,
-  actor: props.actor || null,
-  adminKeySet: Boolean(props.adminKey),
-  adminPingOk: adminPingOk.value,
-  diagnosticsOk: diagOk.value,
-  diagnostics: diagData.value,
-  ui: { tab: tab.value },
-}));
+type SnapshotEntry = {
+  id: string;
+  ts: string;
+  baseURL: string;
+  actor: string | null;
+  tenant: { id: string; slug: string; name: string } | null;
+  status: { apiOk: boolean; dbOk: boolean; diagOk: boolean; adminPingOk: boolean };
+  diagnostics: Record<string, any> | null;
+};
 
-const prettySnapshot = computed(() => JSON.stringify(snapshot.value, null, 2));
+const SNAPSHOT_KEY = "adminOperationsSnapshots";
+const snapshots = ref<SnapshotEntry[]>(loadSnapshots());
+const latestSnapshotJson = computed(() => {
+  if (!snapshots.value.length) return "";
+  return JSON.stringify(snapshots.value[0], null, 2);
+});
 
-const demoLogs = [
-  { id: "l1", ts: "11:01:02", level: "info", msg: "health check ok" },
-  { id: "l2", ts: "11:02:18", level: "warn", msg: "tenant kunde3 disabled" },
-  { id: "l3", ts: "11:04:41", level: "error", msg: "db timeout (demo)" },
-];
+const logLines = ref<string[]>([]);
+const logText = computed(() => (logLines.value.length ? logLines.value.join("\n") : "Noch keine Logs geladen."));
 
 async function runHealthChecks() {
   busy.health = true;
@@ -304,18 +359,6 @@ async function runAdminChecks() {
   }
 }
 
-async function copySnapshot() {
-  busy.snapshot = true;
-  try {
-    await navigator.clipboard.writeText(prettySnapshot.value);
-    toast("Kopiert");
-  } catch {
-    toast("Kopieren nicht möglich");
-  } finally {
-    busy.snapshot = false;
-  }
-}
-
 async function loadAudit() {
   if (!props.adminKey) {
     toast("Admin Key fehlt");
@@ -335,7 +378,7 @@ async function loadAudit() {
       offset: filters.offset,
     });
 
-    rows.value = res;
+    rows.value = res.map(toDisplayRow);
     auditLoadedOnce.value = true;
     toast(`Audit geladen: ${res.length}`);
   } catch (e: any) {
@@ -379,7 +422,7 @@ function resetFilters() {
   toast("Filter zurückgesetzt");
 }
 
-function openDrawer(row: AuditOut) {
+function openDrawer(row: AuditDisplayRow) {
   drawer.open = true;
   drawer.row = row;
 }
@@ -387,6 +430,39 @@ function openDrawer(row: AuditOut) {
 function closeDrawer() {
   drawer.open = false;
   drawer.row = null;
+}
+
+function createSnapshot() {
+  busy.snapshot = true;
+  const entry: SnapshotEntry = {
+    id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+    ts: formatLocal(new Date().toISOString()),
+    baseURL,
+    actor: props.actor || null,
+    tenant: props.tenant ?? null,
+    status: {
+      apiOk: props.apiOk,
+      dbOk: props.dbOk,
+      diagOk: diagOk.value,
+      adminPingOk: adminPingOk.value,
+    },
+    diagnostics: diagData.value,
+  };
+
+  snapshots.value = [entry, ...snapshots.value].slice(0, 20);
+  persistSnapshots();
+  busy.snapshot = false;
+  toast("Snapshot gespeichert");
+}
+
+function downloadSnapshot(entry: SnapshotEntry) {
+  const blob = new Blob([JSON.stringify(entry, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `snapshot-${entry.ts.replace(/[^0-9A-Za-z]/g, "_")}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 function refreshActiveTab() {
@@ -416,6 +492,38 @@ function applyInitialTab(next?: OperationsTab | null) {
   if (next === "audit" && !auditLoadedOnce.value) {
     loadAudit();
   }
+}
+
+function loadLogs() {
+  busy.logs = true;
+  // TODO: Backend Endpoint anbinden, derzeit Demo-Daten
+  logLines.value = [
+    `${new Date().toISOString()} [info] health check ok`,
+    `${new Date().toISOString()} [warn] tenant routing fallback ${tenantLabel.value}`,
+    `${new Date().toISOString()} [info] diagnostics ${diagOk.value ? "ok" : "unbekannt"}`,
+  ];
+  busy.logs = false;
+}
+
+function loadSnapshots(): SnapshotEntry[] {
+  try {
+    const raw = localStorage.getItem(SNAPSHOT_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function persistSnapshots() {
+  localStorage.setItem(SNAPSHOT_KEY, JSON.stringify(snapshots.value));
+}
+
+function extractForwardedHost(diag: Record<string, any> | null) {
+  if (!diag) return "";
+  const headers = diag.request_headers || diag.headers || {};
+  return headers["x-forwarded-host"] || headers["X-Forwarded-Host"] || diag.x_forwarded_host || "";
 }
 
 watch(

@@ -47,26 +47,24 @@ export type AuditFilters = {
 };
 
 export type TenantUserOut = {
-  membership_id: string;
-  user_id: string;
+  id: string;
+  tenant_id?: string;
+  user_id?: string;
   email: string;
   role: string;
-  user_is_active: boolean;
-  membership_is_active: boolean;
+  is_active: boolean;
+  has_password?: boolean;
   updated_at?: string;
 };
 
 export type TenantUserCreate = {
   email: string;
   role: string;
-  password?: string | null;
-  user_is_active?: boolean;
-  membership_is_active?: boolean;
+  password: string;
+  is_active?: boolean;
 };
 
 export type TenantUserUpdate = {
   role?: string | null;
-  password?: string | null;
-  user_is_active?: boolean | null;
-  membership_is_active?: boolean | null;
+  is_active?: boolean | null;
 };

@@ -490,7 +490,7 @@ const onRowSelect = (item: Item) => {
   banner.error = '';
 };
 
-const goToCategories = () => {
+const navigateToCategories = () => {
   router.push('/kategorien');
 };
 
@@ -573,7 +573,7 @@ watch(
         <p class="section-subtitle">Artikel, Barcodes und Mindestbestände verwalten.</p>
       </div>
       <div class="page-head__actions">
-        <button class="button button--ghost" type="button" @click="goToCategories">
+        <button class="button button--ghost" type="button" @click="navigateToCategories">
           Kategorien verwalten
         </button>
         <button class="button button--ghost" type="button" @click="openImportModal" :disabled="!canOpenModals">

@@ -227,10 +227,10 @@ const apiBase = getBaseURL();
 /* Sidebar Sections */
 const sections = [
   { id: "kunden", label: "Kunden", icon: "👥" },
-  { id: "users", label: "Benutzer", icon: "👤" },
   { id: "memberships", label: "Tenant-User", icon: "🧩" },
   { id: "audit", label: "Audit", icon: "🧾" },
   { id: "diagnostics", label: "Diagnostics", icon: "🩺" },
+  { id: "users", label: "Benutzer", icon: "👤" },
   { id: "settings", label: "Einstellungen", icon: "⚙️" },
 ] as const;
 
@@ -311,7 +311,7 @@ const pageTitle = computed(() => {
 
 const pageSubtitle = computed(() => {
   if (ui.section === "kunden") return "Tenants suchen, auswählen, Details & Aktionen";
-  if (ui.section === "users") return "Globale Benutzer verwalten";
+  if (ui.section === "users") return "Admin-Portal Benutzer verwalten";
   if (ui.section === "memberships") return "User mit Tenants verknüpfen und Rollen setzen";
   if (ui.section === "audit") return "Audit Log durchsuchen, filtern, exportieren";
   if (ui.section === "diagnostics") return "Health, Admin Checks, Snapshot";

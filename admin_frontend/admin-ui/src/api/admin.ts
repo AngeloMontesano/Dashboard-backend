@@ -17,6 +17,8 @@ import type {
   TenantUserUpdate,
 } from "../types";
 
+import axios from "axios";
+import { getBaseURL } from "./base";
 import { apiClient } from "./client";
 
 /*
@@ -28,6 +30,16 @@ export async function adminPing(adminKey: string, actor?: string) {
   const api = apiClient(adminKey, actor);
   const res = await api.get("/admin/ping");
   return res.data as Record<string, unknown>;
+}
+
+export async function adminLoginWithCredentials(email: string, password: string) {
+  const api = axios.create({
+    baseURL: getBaseURL(),
+    timeout: 15000,
+    headers: { "Content-Type": "application/json" },
+  });
+  const res = await api.post("/admin/login", { email, password });
+  return res.data as { admin_key: string; actor?: string };
 }
 
 /* Tenants */

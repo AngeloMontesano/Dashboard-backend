@@ -16,6 +16,7 @@ import {
 import { useAuth } from '@/composables/useAuth';
 
 const { state: authState, isAuthenticated } = useAuth();
+const hasWriteAccess = computed(() => ['owner', 'admin'].includes(authState.role));
 const isLoading = ref(false);
 const isImporting = ref(false);
 const isCreating = ref(false);
@@ -101,7 +102,10 @@ async function handleSkuBlur() {
 }
 
 async function handleCreate() {
-  if (!authState.accessToken) return;
+  if (!authState.accessToken || !hasWriteAccess.value) {
+    error.value = 'Keine Berechtigung für Änderungen.';
+    return;
+  }
   error.value = null;
   message.value = null;
   isCreating.value = true;
@@ -138,7 +142,10 @@ function resetForm() {
 }
 
 async function handleExport() {
-  if (!authState.accessToken) return;
+  if (!authState.accessToken || !hasWriteAccess.value) {
+    error.value = 'Keine Berechtigung für Export.';
+    return;
+  }
   error.value = null;
   message.value = null;
   try {
@@ -158,7 +165,10 @@ async function handleExport() {
 }
 
 async function handleImport(event: Event) {
-  if (!authState.accessToken) return;
+  if (!authState.accessToken || !hasWriteAccess.value) {
+    error.value = 'Keine Berechtigung für Import.';
+    return;
+  }
   const target = event.target as HTMLInputElement;
   const file = target.files?.[0];
   if (!file) return;
@@ -203,7 +213,10 @@ watch(
 );
 
 async function handleDeactivate(item: Item, active: boolean) {
-  if (!authState.accessToken) return;
+  if (!authState.accessToken || !hasWriteAccess.value) {
+    error.value = 'Keine Berechtigung für Änderungen.';
+    return;
+  }
   error.value = null;
   message.value = null;
   try {
@@ -232,7 +245,10 @@ function selectForEdit(item: Item) {
 }
 
 async function handleUpdate(item: Item) {
-  if (!authState.accessToken) return;
+  if (!authState.accessToken || !hasWriteAccess.value) {
+    error.value = 'Keine Berechtigung für Änderungen.';
+    return;
+  }
   error.value = null;
   message.value = null;
   try {
@@ -249,7 +265,10 @@ async function handleUpdate(item: Item) {
 }
 
 async function handleCreateCategory() {
-  if (!authState.accessToken) return;
+  if (!authState.accessToken || !hasWriteAccess.value) {
+    categoryError.value = 'Keine Berechtigung für Kategorien.';
+    return;
+  }
   categoryError.value = null;
   categoryMessage.value = null;
   try {
@@ -263,7 +282,10 @@ async function handleCreateCategory() {
 }
 
 async function handleUpdateCategory(cat: Category) {
-  if (!authState.accessToken) return;
+  if (!authState.accessToken || !hasWriteAccess.value) {
+    categoryError.value = 'Keine Berechtigung für Kategorien.';
+    return;
+  }
   categoryError.value = null;
   categoryMessage.value = null;
   try {
@@ -278,7 +300,10 @@ async function handleUpdateCategory(cat: Category) {
 }
 
 async function handleToggleCategory(cat: Category, active: boolean) {
-  if (!authState.accessToken) return;
+  if (!authState.accessToken || !hasWriteAccess.value) {
+    categoryError.value = 'Keine Berechtigung für Kategorien.';
+    return;
+  }
   categoryError.value = null;
   categoryMessage.value = null;
   try {
@@ -306,11 +331,18 @@ function startEditCategory(cat: Category) {
         <p class="section-subtitle">Artikel, Barcodes und Mindestbestände pro Tenant verwalten.</p>
       </div>
       <div class="actions">
-        <label class="button button--ghost" style="cursor: pointer">
-          <input type="file" accept=".csv" style="display: none" @change="handleImport" />
+        <label class="button button--ghost" style="cursor: pointer" :class="{ 'button--disabled': !hasWriteAccess }">
+          <input type="file" accept=".csv" style="display: none" @change="handleImport" :disabled="!hasWriteAccess" />
           Import CSV
         </label>
-        <button class="button button--ghost" type="button" @click="handleExport" :disabled="!isLoggedIn">Export CSV</button>
+        <button
+          class="button button--ghost"
+          type="button"
+          @click="handleExport"
+          :disabled="!isLoggedIn || !hasWriteAccess"
+        >
+          Export CSV
+        </button>
       </div>
     </header>
 
@@ -380,15 +412,20 @@ function startEditCategory(cat: Category) {
               </span>
             </td>
             <td class="table-actions">
-              <button class="button button--ghost" type="button" @click="selectForEdit(item)">Bearbeiten</button>
+              <button class="button button--ghost" type="button" @click="selectForEdit(item)" :disabled="!hasWriteAccess">
+                Bearbeiten
+              </button>
               <button
                 class="button button--ghost"
                 type="button"
                 @click="handleDeactivate(item, !item.is_active)"
+                :disabled="!hasWriteAccess"
               >
                 {{ item.is_active ? 'Deaktivieren' : 'Aktivieren' }}
               </button>
-              <button class="button button--ghost" type="button" @click="handleUpdate(item)">Speichern</button>
+              <button class="button button--ghost" type="button" @click="handleUpdate(item)" :disabled="!hasWriteAccess">
+                Speichern
+              </button>
             </td>
           </tr>
         </tbody>
@@ -418,55 +455,55 @@ function startEditCategory(cat: Category) {
       <form class="form-grid" @submit.prevent="handleCreate">
         <label>
           <span>SKU *</span>
-          <input v-model="newItem.sku" required @blur="handleSkuBlur" />
+          <input v-model="newItem.sku" required @blur="handleSkuBlur" :disabled="!hasWriteAccess" />
           <small v-if="skuHint">{{ skuHint }}</small>
         </label>
         <label>
           <span>Barcode *</span>
-          <input v-model="newItem.barcode" required />
+          <input v-model="newItem.barcode" required :disabled="!hasWriteAccess" />
         </label>
         <label>
           <span>Name *</span>
-          <input v-model="newItem.name" required />
+          <input v-model="newItem.name" required :disabled="!hasWriteAccess" />
         </label>
         <label>
           <span>Kategorie</span>
-          <select v-model="newItem.category_id">
+          <select v-model="newItem.category_id" :disabled="!hasWriteAccess">
             <option value="">Keine</option>
             <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
           </select>
         </label>
         <label>
           <span>Beschreibung</span>
-          <textarea v-model="newItem.description" rows="2" />
+          <textarea v-model="newItem.description" rows="2" :disabled="!hasWriteAccess" />
         </label>
         <label>
           <span>Bestand</span>
-          <input type="number" v-model.number="newItem.quantity" min="0" />
+          <input type="number" v-model.number="newItem.quantity" min="0" :disabled="!hasWriteAccess" />
         </label>
         <label>
           <span>Einheit</span>
-          <input v-model="newItem.unit" />
+          <input v-model="newItem.unit" :disabled="!hasWriteAccess" />
         </label>
         <label>
           <span>Min-Bestand</span>
-          <input type="number" v-model.number="newItem.min_stock" min="0" />
+          <input type="number" v-model.number="newItem.min_stock" min="0" :disabled="!hasWriteAccess" />
         </label>
         <label>
           <span>Max-Bestand</span>
-          <input type="number" v-model.number="newItem.max_stock" min="0" />
+          <input type="number" v-model.number="newItem.max_stock" min="0" :disabled="!hasWriteAccess" />
         </label>
         <label>
           <span>Soll-Bestand</span>
-          <input type="number" v-model.number="newItem.target_stock" min="0" />
+          <input type="number" v-model.number="newItem.target_stock" min="0" :disabled="!hasWriteAccess" />
         </label>
         <label>
           <span>Empfohlen</span>
-          <input type="number" v-model.number="newItem.recommended_stock" min="0" />
+          <input type="number" v-model.number="newItem.recommended_stock" min="0" :disabled="!hasWriteAccess" />
         </label>
         <label>
           <span>Bestell-Modus</span>
-          <select v-model.number="newItem.order_mode">
+          <select v-model.number="newItem.order_mode" :disabled="!hasWriteAccess">
             <option :value="0">0 - Kein Alarm</option>
             <option :value="1">1 - Alarm bei Unterschreitung</option>
             <option :value="2">2 - In Bestellliste aufnehmen</option>
@@ -474,11 +511,13 @@ function startEditCategory(cat: Category) {
           </select>
         </label>
         <label class="checkbox">
-          <input type="checkbox" v-model="newItem.is_active" />
+          <input type="checkbox" v-model="newItem.is_active" :disabled="!hasWriteAccess" />
           <span>Aktiv</span>
         </label>
         <div class="form-actions">
-          <button class="button button--primary" type="submit" :disabled="isCreating">Speichern</button>
+          <button class="button button--primary" type="submit" :disabled="isCreating || !hasWriteAccess">
+            Speichern
+          </button>
           <button class="button button--ghost" type="button" @click="resetForm">Zurücksetzen</button>
         </div>
       </form>
@@ -492,10 +531,16 @@ function startEditCategory(cat: Category) {
         <input
           v-model="categoryNameInput"
           placeholder="Kategoriename"
-          :disabled="Boolean(editingCategoryId)"
+          :disabled="Boolean(editingCategoryId) || !hasWriteAccess"
           required
         />
-        <button class="button button--primary" type="submit" :disabled="Boolean(editingCategoryId)">Neue Kategorie</button>
+        <button
+          class="button button--primary"
+          type="submit"
+          :disabled="Boolean(editingCategoryId) || !hasWriteAccess"
+        >
+          Neue Kategorie
+        </button>
       </form>
       <table class="table" style="margin-top: 12px">
         <thead>
@@ -513,7 +558,7 @@ function startEditCategory(cat: Category) {
               <input
                 v-else
                 v-model="categoryNameInput"
-                :disabled="cat.is_system"
+                :disabled="cat.is_system || !hasWriteAccess"
               />
             </td>
             <td>{{ cat.is_system ? 'Ja' : 'Nein' }}</td>
@@ -526,7 +571,7 @@ function startEditCategory(cat: Category) {
               <button
                 class="button button--ghost"
                 type="button"
-                :disabled="cat.is_system"
+                :disabled="cat.is_system || !hasWriteAccess"
                 @click="startEditCategory(cat)"
               >
                 Bearbeiten
@@ -536,13 +581,14 @@ function startEditCategory(cat: Category) {
                 class="button button--primary"
                 type="button"
                 @click="handleUpdateCategory(cat)"
+                :disabled="!hasWriteAccess"
               >
                 Speichern
               </button>
               <button
                 class="button button--ghost"
                 type="button"
-                :disabled="cat.is_system"
+                :disabled="cat.is_system || !hasWriteAccess"
                 @click="handleToggleCategory(cat, !cat.is_active)"
               >
                 {{ cat.is_active ? 'Deaktivieren' : 'Aktivieren' }}

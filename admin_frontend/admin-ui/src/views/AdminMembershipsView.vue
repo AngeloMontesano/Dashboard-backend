@@ -2,14 +2,18 @@
   <div class="grid2">
     <!-- Tenant Auswahl + Liste -->
     <section class="card">
-      <header class="cardHeader">
+      <header class="cardHeader tight">
         <div>
           <div class="cardTitle">Tenant-User</div>
           <div class="cardHint">User + Membership pro Tenant verwalten</div>
         </div>
         <div class="cardHeaderActions">
-          <button class="btnPrimary" :disabled="busy.tenants" @click="loadTenants">
+          <button class="btnGhost" :disabled="busy.tenants" @click="loadTenants">
             {{ busy.tenants ? "lädt..." : "Tenants laden" }}
+          </button>
+          <button class="btnPrimary" :disabled="busy.users || !selectedTenantId" @click="loadTenantUsers">
+            <span v-if="busy.users" class="dotSpinner" aria-hidden="true"></span>
+            {{ busy.users ? "lädt..." : "Neu laden" }}
           </button>
         </div>
       </header>
@@ -22,9 +26,6 @@
           </option>
         </select>
         <input class="input" v-model.trim="q" placeholder="Suche E-Mail (serverseitig q)" @keyup.enter="loadTenantUsers" />
-        <button class="btnGhost" :disabled="busy.users || !selectedTenantId" @click="loadTenantUsers">
-          {{ busy.users ? "lädt..." : "Neu laden" }}
-        </button>
       </div>
 
       <div class="table">
@@ -63,6 +64,11 @@
               {{ busy.updateId === u.membership_id ? "..." : "Löschen" }}
             </button>
           </div>
+        </div>
+
+        <div v-if="!busy.users && tenantUsers.length === 0" class="emptyState">
+          <div class="emptyTitle">Keine User im ausgewählten Tenant</div>
+          <div class="emptyBody">Lege einen neuen User an oder lade die Liste neu.</div>
         </div>
       </div>
 
@@ -404,3 +410,39 @@ function emitSelectedTenant() {
   }
 }
 </script>
+
+<style scoped>
+.emptyState {
+  margin-top: 8px;
+  padding: 12px;
+  border: 1px dashed var(--border, #dcdcdc);
+  border-radius: 10px;
+  background: var(--surface-2, #f9fafb);
+}
+
+.emptyTitle {
+  font-weight: 600;
+}
+
+.emptyBody {
+  color: var(--muted);
+  margin: 4px 0 8px 0;
+}
+
+.dotSpinner {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid var(--muted);
+  border-top-color: transparent;
+  display: inline-block;
+  margin-right: 6px;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+</style>

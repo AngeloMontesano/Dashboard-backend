@@ -103,10 +103,11 @@
           <!-- Topbar -->
           <header class="topbar">
             <div class="topLeft">
-            <div class="titleRow">
-              <div class="pageTitle">{{ pageTitle }}</div>
-              <div class="crumbs">{{ pageSubtitle }}</div>
-            </div>
+              <div class="titleRow">
+                <div class="pageTitle">{{ pageTitle }}</div>
+                <div class="crumbs">{{ breadcrumb }}</div>
+              </div>
+              <div class="pageHint">{{ pageSubtitle }}</div>
             </div>
 
             <div class="topRight">
@@ -126,9 +127,11 @@
                   Kein Tenant gewählt – bitte unter „Kunden“ auswählen.
                 </div>
               </div>
-              <button class="btnGhost" @click="quickRefresh" :disabled="busy.refresh">
-                {{ busy.refresh ? "..." : "Refresh" }}
-              </button>
+              <div class="topActions">
+                <button class="btnGhost small" @click="quickRefresh" :disabled="busy.refresh">
+                  {{ busy.refresh ? "..." : "Refresh" }}
+                </button>
+              </div>
             </div>
           </header>
 
@@ -323,12 +326,19 @@ const pageTitle = computed(() => {
 });
 
 const pageSubtitle = computed(() => {
-  if (ui.section === "kunden") return "Tenants verwalten, aktivieren, Details";
+  if (ui.section === "kunden") return "Tenants suchen, auswählen, Details & Aktionen";
   if (ui.section === "users") return "Globale Benutzer verwalten";
   if (ui.section === "memberships") return "User mit Tenants verknüpfen und Rollen setzen";
   if (ui.section === "audit") return "Audit Log durchsuchen, filtern, exportieren";
   if (ui.section === "diagnostics") return "Health, Admin Checks, Snapshot";
   return "Security, Theme, Feature Flags";
+});
+
+const breadcrumb = computed(() => {
+  if (tenantContext.slug) {
+    return `${pageTitle.value} / ${tenantContext.slug}`;
+  }
+  return pageTitle.value;
 });
 
 /* Checks */
@@ -419,7 +429,7 @@ function openMemberships(tenantId: string) {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-right: 12px;
+  margin-right: 8px;
 }
 
 .tenantBadge {
@@ -445,5 +455,16 @@ function openMemberships(tenantId: string) {
   display: flex;
   gap: 6px;
   justify-content: flex-end;
+}
+
+.topActions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.pageHint {
+  color: var(--muted);
+  margin-top: 4px;
 }
 </style>

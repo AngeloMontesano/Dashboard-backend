@@ -78,7 +78,7 @@
           </div>
 
           <div class="kv">
-            <div class="k">Slug</div>
+            <div class="k">URL-Kürzel</div>
             <div class="v mono">{{ selectedTenant.slug }}</div>
           </div>
 
@@ -278,7 +278,12 @@ async function createTenant() {
   const slug = modal.slug.trim().toLowerCase();
 
   if (!name || !slug) {
-    toast("Name und Slug sind Pflicht");
+    toast("Name und URL-Kürzel sind Pflicht");
+    return;
+  }
+
+  if (!/^[a-z0-9-]+$/.test(slug)) {
+    toast("URL-Kürzel: nur Kleinbuchstaben, Zahlen und Bindestriche erlaubt");
     return;
   }
 
@@ -396,6 +401,18 @@ async function deleteTenant(t: TenantOut) {
 }
 
 /* Helpers */
+function emitSelectedTenant() {
+  if (selectedTenant.value) {
+    emit("tenantSelected", {
+      id: selectedTenant.value.id,
+      name: selectedTenant.value.name,
+      slug: selectedTenant.value.slug,
+    });
+  } else {
+    emit("tenantSelected", null);
+  }
+}
+
 function stringifyError(e: any): string {
   if (!e) return "unknown";
   if (typeof e === "string") return e;

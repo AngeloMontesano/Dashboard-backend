@@ -15,7 +15,7 @@
       </header>
 
       <div class="controls">
-        <select class="input" v-model="selectedTenantId" @change="loadTenantUsers">
+        <select class="input" v-model="selectedTenantId">
           <option value="">Tenant auswählen</option>
           <option v-for="t in tenants" :key="t.id" :value="t.id">
             {{ t.name }} ({{ t.slug }})
@@ -197,8 +197,8 @@ async function loadTenants() {
     } else if (!selectedTenantId.value && tenants.value.length > 0) {
       selectedTenantId.value = tenants.value[0].id;
     }
+    emitSelectedTenant();
     toast(`Tenants geladen: ${tenants.value.length}`);
-    await loadTenantUsers();
   } catch (e: any) {
     toast(`Fehler beim Laden: ${stringifyError(e)}`);
   } finally {

@@ -76,23 +76,6 @@
               <input type="checkbox" :checked="ui.theme === 'theme-dark'" @change="toggleSidebarTheme" />
               <span>Darkmode</span>
             </label>
-
-            <!-- Admin Context -->
-            <div class="sideFields">
-              <div class="field">
-                <div class="label">Actor</div>
-                <input class="input" v-model.trim="ui.actor" placeholder="admin" />
-              </div>
-
-              <div class="field">
-                <div class="label">Admin Key</div>
-                <input class="input" v-model.trim="ui.adminKey" placeholder="X-Admin-Key" type="password" />
-              </div>
-            </div>
-
-            <div class="hintBox">
-              Admin Endpunkte benötigen <span class="mono">X-Admin-Key</span>. Key wird nur im Memory gehalten.
-            </div>
           </div>
         </aside>
 
@@ -115,6 +98,7 @@
                 <button class="btnGhost small" @click="quickRefresh" :disabled="busy.refresh">
                   {{ busy.refresh ? "..." : "Refresh" }}
                 </button>
+                <button class="btnGhost small" @click="logout">Abmelden</button>
               </div>
             </div>
           </header>
@@ -238,9 +222,10 @@ const sections = [
 type SectionId = (typeof sections)[number]["id"];
 
 /* UI State */
+// TODO: Entfernen, sobald Admin-APIs ohne expliziten adminKey/actor auskommen.
 const ui = reactive({
   theme: "theme-classic",
-  actor: "admin",
+  actor: "",
   adminKey: "",
   authenticated: false,
   section: "kunden" as SectionId,
@@ -290,9 +275,6 @@ function applyLogin(payload: { adminKey: string; actor: string }) {
   ui.adminKey = payload.adminKey;
   ui.actor = payload.actor || "admin";
   ui.authenticated = true;
-  sessionStorage.setItem("adminKey", ui.adminKey);
-  sessionStorage.setItem("adminActor", ui.actor);
-  sessionStorage.setItem("adminTheme", ui.theme);
   toast("Admin Login erfolgreich, lade Portal...");
   quickRefresh();
 }
@@ -368,23 +350,14 @@ async function quickRefresh() {
 
 function resetContext() {
   ui.adminKey = "";
-  ui.actor = "admin";
+  ui.actor = "";
   ui.authenticated = false;
   toast("Admin Context zurückgesetzt");
-  sessionStorage.removeItem("adminKey");
-  sessionStorage.removeItem("adminActor");
 }
 
 /* Boot */
 onMounted(async () => {
-  const savedKey = sessionStorage.getItem("adminKey");
-  const savedActor = sessionStorage.getItem("adminActor");
   const savedTheme = sessionStorage.getItem("adminTheme");
-  if (savedKey) {
-    ui.adminKey = savedKey;
-    ui.actor = savedActor || "admin";
-    ui.authenticated = true;
-  }
   if (savedTheme) {
     ui.theme = savedTheme;
   }
@@ -406,6 +379,15 @@ function openMemberships(tenantId: string) {
   ui.section = "memberships";
   if (tenantId) localStorage.setItem("adminSelectedTenantId", tenantId);
   toast("Wechsle zu Tenant-User Verwaltung");
+}
+
+function logout() {
+  ui.adminKey = "";
+  ui.actor = "";
+  ui.authenticated = false;
+  ui.section = "kunden";
+  toast("Abgemeldet", "info");
+  window.history.pushState({}, "", "/login");
 }
 </script>
 

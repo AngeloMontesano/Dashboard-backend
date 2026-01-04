@@ -14,7 +14,6 @@
       </div>
     </header>
 
-    <!-- Toolbar mit KPIs + Export -->
     <div class="toolbar">
       <div class="chips">
         <div class="chip">
@@ -36,7 +35,6 @@
       </div>
     </div>
 
-    <!-- Suche -->
     <div class="searchCard">
       <label class="fieldLabel" for="kunden-search">Suche</label>
       <input
@@ -57,7 +55,6 @@
       </div>
     </div>
 
-    <!-- Tabelle -->
     <div class="tableCard">
       <div class="tableHeader">
         <div class="tableTitle">Kundenliste</div>
@@ -104,7 +101,6 @@
       </div>
     </div>
 
-    <!-- Details -->
     <div v-if="selectedTenant" class="detailCard">
       <div class="detailHeader">
         <div>
@@ -156,8 +152,8 @@
         </div>
         <button class="btnPrimary small" @click="openMemberships(selectedTenant.id)">Tenant User verwalten</button>
       </div>
+    </div>
 
-    <!-- Create Modal -->
     <TenantCreateModal
       :open="modal.open"
       :busy="busy.create"

@@ -6,7 +6,6 @@ import uuid
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.audit_log import AdminAuditLog
 from app.models.membership import Membership
 from app.models.tenant import Tenant
 from app.models.user import User
@@ -18,28 +17,6 @@ from fastapi import HTTPException
 from app.core.security import hash_password
 
 ALLOWED_ROLES = {"tenant_admin", "staff", "readonly"}
-
-
-async def write_audit_log(
-    db: AsyncSession,
-    actor: str,
-    action: str,
-    entity_type: str,
-    entity_id: str,
-    payload: dict,
-) -> None:
-    """
-    Schreibt einen Admin Audit Eintrag.
-    Payload darf keine sensiblen Inhalte enthalten.
-    """
-    entry = AdminAuditLog(
-        actor=actor,
-        action=action,
-        entity_type=entity_type,
-        entity_id=entity_id,
-        payload=payload,
-    )
-    db.add(entry)
 
 async def list_tenants(
     db: AsyncSession,
@@ -428,15 +405,15 @@ async def create_membership(
 ) -> Membership:
     """
     Legt eine Membership an und schreibt Audit.
-    Regel: 1 User = 1 Tenant (global).
+    Regel: pro Tenant nur eine Membership pro User.
     """
     if role not in ALLOWED_ROLES:
         raise ValueError("invalid_role")
 
-    # 1 User = 1 Tenant erzwingen
+    # 1 User = 1 Membership pro Tenant erzwingen
     exists_stmt = (
         select(Membership.id)
-        .where(Membership.user_id == user_id)
+        .where(Membership.user_id == user_id, Membership.tenant_id == tenant_id)
         .limit(1)
     )
     res = await db.execute(exists_stmt)
@@ -446,7 +423,7 @@ async def create_membership(
             detail={
                 "error": {
                     "code": "user_already_assigned",
-                    "message": "User already has a tenant membership",
+                    "message": "User already has a membership for this tenant",
                 }
             },
         )

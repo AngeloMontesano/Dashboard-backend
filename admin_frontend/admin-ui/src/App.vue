@@ -111,22 +111,6 @@
             </div>
 
             <div class="topRight">
-              <div class="tenantContext" role="status" aria-live="polite">
-                <div v-if="tenantContext.id" class="tenantBadge">
-                  <div class="tenantLabel">Aktiver Tenant</div>
-                  <div class="tenantValue">
-                    <span class="mono">{{ tenantContext.slug }}</span>
-                    <span class="muted">({{ tenantContext.name }})</span>
-                  </div>
-                  <div class="tenantActions">
-                    <button class="btnGhost small" @click="goSection('kunden')">Tenant wechseln</button>
-                    <button class="btnGhost small" @click="clearTenantContext">Entfernen</button>
-                  </div>
-                </div>
-                <div v-else class="muted">
-                  Kein Tenant gewählt – bitte unter „Kunden“ auswählen.
-                </div>
-              </div>
               <div class="topActions">
                 <button class="btnGhost small" @click="quickRefresh" :disabled="busy.refresh">
                   {{ busy.refresh ? "..." : "Refresh" }}
@@ -425,38 +409,6 @@ function openMemberships(tenantId: string) {
 </script>
 
 <style>
-.tenantContext {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-right: 8px;
-}
-
-.tenantBadge {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  text-align: right;
-}
-
-.tenantLabel {
-  font-size: 12px;
-  color: var(--muted);
-}
-
-.tenantValue {
-  display: flex;
-  gap: 6px;
-  align-items: baseline;
-  justify-content: flex-end;
-}
-
-.tenantActions {
-  display: flex;
-  gap: 6px;
-  justify-content: flex-end;
-}
-
 .topbar-flat {
   background: transparent;
   border: none;
@@ -467,13 +419,6 @@ function openMemberships(tenantId: string) {
 
 .topbar-flat .topRight {
   align-items: center;
-}
-
-.topbar-flat .tenantContext {
-  padding: 6px 10px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--surface);
 }
 
 .topActions {

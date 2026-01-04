@@ -12,6 +12,12 @@ const runtimeHost = typeof window !== "undefined" ? window.location.hostname : "
 const runtimeProtocol = typeof window !== "undefined" ? window.location.protocol.replace(":", "") : "";
 const runtimePort = typeof window !== "undefined" ? window.location.port : "";
 
+export function getTenantSlug(): string {
+  const tenantHost = getTenantHost();
+  const slugFromHost = tenantHost ? tenantHost.split(":")[0]?.split(".")[0] : "";
+  return slugFromHost || tenantSlug || "";
+}
+
 function normalizePrefix(prefix: string | undefined | null): string {
   if (!prefix) return "";
   const trimmed = prefix.trim();
@@ -80,8 +86,7 @@ export function getTenantHost(): string | null {
 
 export function getTenantHeaders(): Record<string, string> {
   const tenantHost = getTenantHost();
-  const slugFromHost = tenantHost ? tenantHost.split(":")[0]?.split(".")[0] : "";
-  const slug = slugFromHost || tenantSlug || "";
+  const slug = getTenantSlug();
 
   const headers: Record<string, string> = {};
   if (tenantHost) headers["X-Forwarded-Host"] = tenantHost;

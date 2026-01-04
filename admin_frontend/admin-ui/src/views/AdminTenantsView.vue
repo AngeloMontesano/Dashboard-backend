@@ -1,13 +1,13 @@
 <template>
-  <section class="card minimalHeader">
-    <header class="cardHeader tight">
-      <div>
-        <div class="cardTitle">Kunden</div>
-        <div class="cardHint">Kunden suchen und auswählen</div>
+  <section class="tenantsView">
+    <header class="viewHeader">
+      <div class="headTitles">
+        <div class="headTitle">Kunden</div>
+        <div class="headSubtitle">Kunden suchen und auswählen</div>
       </div>
-      <div class="cardHeaderActions">
-        <button class="btnGhost" @click="openCreateModal">Neuen Kunden anlegen</button>
-        <button class="btnPrimary" :disabled="busy.list" @click="loadTenants">
+      <div class="headActions">
+        <button class="btnGhost small" @click="openCreateModal">Neuen Kunden anlegen</button>
+        <button class="btnGhost small" :disabled="busy.list" @click="loadTenants">
           <span v-if="busy.list" class="dotSpinner" aria-hidden="true"></span>
           {{ busy.list ? "lädt..." : "Neu laden" }}
         </button>
@@ -30,23 +30,28 @@
         </div>
       </div>
       <div class="toolbarActions">
-        <button class="btnGhost" :disabled="!filteredTenants.length" @click="exportCsv">Kunden exportieren CSV</button>
-        <button class="btnGhost" :disabled="busy.list" @click="loadTenants">Neu laden</button>
+        <button class="btnGhost small" :disabled="!filteredTenants.length" @click="exportCsv">
+          Kunden exportieren CSV
+        </button>
+        <button class="btnGhost small" :disabled="busy.list" @click="loadTenants">Neu laden</button>
       </div>
     </div>
 
     <div class="searchCard">
-      <label class="fieldLabel" for="kunden-search">Suche</label>
-      <input
-        id="kunden-search"
-        class="input"
-        v-model.trim="q"
-        placeholder="Name oder URL-Kürzel eingeben"
-        aria-label="Kunden suchen"
-      />
-      <div class="hint">Tippen zum Filtern. Groß und Kleinschreibung egal. Prefix-Treffer zuerst.</div>
-      <div class="filterRow">
-        <select class="input" v-model="statusFilter" aria-label="Status filtern">
+      <div class="searchLeft">
+        <label class="fieldLabel" for="kunden-search">Suche</label>
+        <input
+          id="kunden-search"
+          class="input"
+          v-model.trim="q"
+          placeholder="Name oder URL-Kürzel eingeben"
+          aria-label="Kunden suchen"
+        />
+        <div class="hint">Tippen zum Filtern. Groß und Kleinschreibung egal. Prefix zuerst, sonst enthält.</div>
+      </div>
+      <div class="searchRight">
+        <label class="fieldLabel" for="kunden-status">Status</label>
+        <select id="kunden-status" class="input" v-model="statusFilter" aria-label="Status filtern">
           <option value="all">Alle</option>
           <option value="active">Aktiv</option>
           <option value="disabled">Deaktiviert</option>
@@ -64,7 +69,7 @@
         <table class="table">
           <thead>
             <tr>
-              <th></th>
+              <th class="narrowCol"></th>
               <th>Slug</th>
               <th>Name</th>
               <th>Status</th>
@@ -102,46 +107,55 @@
     </div>
 
     <div v-if="selectedTenant" class="detailCard">
-      <div class="detailHeader">
-        <div>
-          <div class="detailTitle">{{ selectedTenant.name }}</div>
-          <div class="detailSub mono">{{ selectedTenant.slug }} · {{ selectedTenant.id }}</div>
-        </div>
-        <div class="detailStatus">
-          <span class="tag" :class="selectedTenant.is_active ? 'ok' : 'bad'">
-            {{ selectedTenant.is_active ? "aktiv" : "deaktiviert" }}
-          </span>
-        </div>
-      </div>
-
       <div class="detailGrid">
         <div class="detailBox tight">
           <div class="boxLabel">Name</div>
           <div class="boxValue">{{ selectedTenant.name }}</div>
         </div>
         <div class="detailBox tight">
-          <div class="boxLabel">URL-Kürzel</div>
+          <div class="boxLabel copyLabel">
+            <span>URL-Kürzel</span>
+            <button
+              class="iconBtn"
+              type="button"
+              aria-label="In Zwischenablage kopieren"
+              title="In Zwischenablage kopieren"
+              @click.stop="copyValue(selectedTenant.slug, 'URL-Kürzel')"
+            >
+              📋
+            </button>
+          </div>
           <div class="boxValue mono">{{ selectedTenant.slug }}</div>
         </div>
-        <div class="detailBox wide">
-          <div class="boxLabel">
-            Tenant ID
-            <button class="link tiny" type="button" @click="copyValue(selectedTenant.id, 'Tenant ID')">kopieren</button>
+        <div class="detailBox medium">
+          <div class="boxLabel copyLabel">
+            <span>Tenant ID</span>
+            <button
+              class="iconBtn"
+              type="button"
+              aria-label="In Zwischenablage kopieren"
+              title="In Zwischenablage kopieren"
+              @click.stop="copyValue(selectedTenant.id, 'Tenant ID')"
+            >
+              📋
+            </button>
           </div>
           <div class="boxValue mono">{{ selectedTenant.id }}</div>
         </div>
-        <div class="detailBox wide">
-          <div class="boxLabel">
-            Tenant Host
+        <div class="detailBox hostBox">
+          <div class="boxLabel copyLabel">
+            <span>Tenant Host</span>
             <button
-              class="link tiny"
+              class="iconBtn"
               type="button"
-              @click="copyValue(`${selectedTenant.slug}.${baseDomain}`, 'Tenant Host')"
+              aria-label="In Zwischenablage kopieren"
+              title="In Zwischenablage kopieren"
+              @click.stop="copyValue(tenantHost, 'Tenant Host')"
             >
-              kopieren
+              📋
             </button>
           </div>
-          <div class="boxValue mono">{{ `${selectedTenant.slug}.${baseDomain}` }}</div>
+          <div class="boxValue mono hostValue">{{ tenantHost }}</div>
         </div>
       </div>
 
@@ -235,6 +249,7 @@ const modal = reactive({
 });
 
 const baseDomain = import.meta.env.VITE_BASE_DOMAIN || "test.myitnetwork.de";
+const tenantHost = computed(() => (selectedTenant.value ? `${selectedTenant.value.slug}.${baseDomain}` : ""));
 
 /* Filter */
 const filteredTenants = computed(() => {
@@ -312,10 +327,9 @@ async function toggleTenant(t: TenantOut) {
   if (!ensureAdminKey()) return;
   if (!t) return;
 
-  if (t.is_active) {
-    const ok = window.confirm(`Kunde ${t.slug} wirklich deaktivieren?`);
-    if (!ok) return;
-  }
+  const actionLabel = t.is_active ? "deaktivieren" : "aktivieren";
+  const ok = window.confirm(`Kunde ${t.slug} wirklich ${actionLabel}?`);
+  if (!ok) return;
 
   busy.toggleId = t.id;
   try {
@@ -335,8 +349,10 @@ async function toggleTenant(t: TenantOut) {
 async function deleteTenant(t: TenantOut) {
   if (!ensureAdminKey()) return;
   if (!t) return;
+  const confirmed = window.confirm(`Kunde ${t.slug} wirklich löschen? Diese Aktion ist irreversibel.`);
+  if (!confirmed) return;
   const check = window.prompt(
-    `Kunde ${t.slug} wirklich löschen? Diese Aktion ist irreversibel.\nBitte Tenant ID zur Bestätigung eingeben:`
+    `Bitte Tenant ID zur Bestätigung eingeben:\n${t.id}\nLöschen kann nicht rückgängig gemacht werden.`
   );
   if (!check || check.trim() !== t.id) {
     toast("Löschen abgebrochen: Tenant ID stimmt nicht.");
@@ -466,10 +482,41 @@ watch(
 </script>
 
 <style scoped>
-.minimalHeader {
+.tenantsView {
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+.viewHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0 12px;
+  border-bottom: 1px solid var(--border);
+  min-height: 56px;
+}
+
+.headTitles {
+  display: grid;
+  gap: 4px;
+}
+
+.headTitle {
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.headSubtitle {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.headActions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
 }
 
 .toolbar {
@@ -524,7 +571,8 @@ watch(
   padding: 12px;
   background: var(--surface);
   display: grid;
-  gap: 8px;
+  grid-template-columns: 1fr 220px;
+  gap: 12px;
 }
 
 .fieldLabel {
@@ -535,14 +583,22 @@ watch(
 .hint {
   font-size: 12px;
   color: var(--muted);
+  margin-top: 6px;
 }
 
-.filterRow {
-  display: flex;
-  align-items: center;
+.searchLeft {
+  display: grid;
+  gap: 6px;
+}
+
+.searchRight {
+  display: grid;
   gap: 8px;
-  justify-content: space-between;
-  flex-wrap: wrap;
+  align-content: start;
+}
+
+.smallText {
+  font-size: 12px;
 }
 
 .tableCard {
@@ -572,6 +628,10 @@ watch(
   width: 32px;
 }
 
+.narrowCol {
+  width: 32px;
+}
+
 .dot {
   width: 10px;
   height: 10px;
@@ -585,6 +645,14 @@ watch(
   background: var(--primary);
 }
 
+.table tbody tr {
+  cursor: pointer;
+}
+
+.table tbody tr.rowActive {
+  background: var(--surface-2, #f8fafc);
+}
+
 .detailCard {
   border: 1px solid var(--border);
   border-radius: 12px;
@@ -593,33 +661,14 @@ watch(
   color: var(--text, #0f172a);
   display: grid;
   gap: 10px;
-  margin-top: 10px;
-}
-
-.detailHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.detailTitle {
-  font-size: 16px;
-  font-weight: 800;
-}
-
-.detailSub {
-  color: var(--muted);
-  font-size: 12px;
-}
-
-.detailStatus {
-  display: flex;
+  margin-top: 4px;
 }
 
 .detailGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  grid-template-columns: 1fr 1fr 2fr 3fr;
   gap: 10px;
+  align-items: stretch;
 }
 
 .detailBox {
@@ -634,17 +683,51 @@ watch(
   color: var(--muted);
 }
 
+.copyLabel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.iconBtn {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  border-radius: 6px;
+  padding: 2px 6px;
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--muted);
+}
+
+.iconBtn:hover,
+.iconBtn:focus-visible {
+  color: var(--text);
+  border-color: var(--primary);
+  outline: none;
+}
+
 .boxValue {
   font-weight: 700;
   margin-top: 4px;
 }
 
 .detailBox.tight {
-  min-width: 180px;
+  min-width: 120px;
 }
 
-.detailBox.wide {
-  min-width: 240px;
+.detailBox.medium {
+  min-width: 200px;
+}
+
+.detailBox.hostBox {
+  min-width: 320px;
+}
+
+.hostValue {
+  white-space: nowrap;
+  overflow-x: auto;
 }
 
 .detailActions {
@@ -658,27 +741,6 @@ watch(
 .tiny {
   font-size: 11px;
   padding: 0;
-}
-
-.smallText {
-  font-size: 12px;
-}
-
-.emptyState {
-  margin-top: 8px;
-  padding: 12px;
-  border: 1px dashed var(--border, #dcdcdc);
-  border-radius: 10px;
-  background: var(--surface-2, #f9fafb);
-}
-
-.emptyTitle {
-  font-weight: 600;
-}
-
-.emptyBody {
-  color: var(--muted);
-  margin: 4px 0 8px 0;
 }
 
 .errorText {
@@ -701,6 +763,23 @@ watch(
 @keyframes spin {
   to {
     transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 1024px) {
+  .detailGrid {
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  }
+}
+
+@media (max-width: 860px) {
+  .searchCard {
+    grid-template-columns: 1fr;
+  }
+
+  .hostValue {
+    white-space: nowrap;
+    overflow-x: auto;
   }
 }
 </style>

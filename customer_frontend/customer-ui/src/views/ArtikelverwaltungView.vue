@@ -483,16 +483,16 @@ async function startImport() {
   }
 }
 
-function handleRowSelect(item: Item) {
+const handleRowSelect = (item: Item) => {
   selectedArticleId.value = item.id;
   hydrateFormFromItem(item, editForm);
   banner.message = '';
   banner.error = '';
-}
+};
 
-function goToCategories() {
+const goToCategories = () => {
   router.push('/kategorien');
-}
+};
 
 function focusCreateBarcode() {
   if (showCreateCard.value) {

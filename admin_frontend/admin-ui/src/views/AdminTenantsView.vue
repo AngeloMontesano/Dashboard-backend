@@ -189,6 +189,7 @@ const props = defineProps<{
   actor: string;
   apiOk: boolean;
   dbOk: boolean;
+  selectedTenantId?: string;
 }>();
 
 const emit = defineEmits<{

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import datetime
 from typing import List, Optional
 
 from pydantic import BaseModel, Field, field_validator
@@ -109,3 +110,19 @@ class ItemsPage(BaseModel):
 class SKUExistsResponse(BaseModel):
     exists: bool
     normalized_sku: str
+
+
+class MovementPayload(BaseModel):
+    client_tx_id: str = Field(..., max_length=128)
+    type: str = Field(..., pattern="^(IN|OUT)$")
+    barcode: str = Field(..., max_length=64)
+    qty: int = Field(..., gt=0)
+    note: Optional[str] = Field(default=None, max_length=255)
+    created_at: datetime | None = None
+
+    @field_validator("type")
+    @classmethod
+    def validate_type(cls, v: str) -> str:
+        if v not in {"IN", "OUT"}:
+            raise ValueError("type must be IN or OUT")
+        return v

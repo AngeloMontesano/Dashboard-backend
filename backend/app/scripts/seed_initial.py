@@ -16,8 +16,8 @@ from app.models.membership import Membership
 # Minimalwerte, bewusst simpel gehalten
 SEED_TENANT_SLUG = os.getenv("SEED_TENANT_SLUG", "kunde1")
 SEED_TENANT_NAME = os.getenv("SEED_TENANT_NAME", "Kunde 1")
-SEED_ADMIN_EMAIL = os.getenv("SEED_ADMIN_EMAIL", "admin@local.test")
-SEED_ADMIN_PASSWORD = os.getenv("SEED_ADMIN_PASSWORD", "Secret123!")  # nur Dev
+SEED_ADMIN_EMAIL = os.getenv("SEED_ADMIN_EMAIL", "admin@test.myitnetwork.de")
+SEED_ADMIN_PASSWORD = os.getenv("SEED_ADMIN_PASSWORD", "admin")  # nur Dev
 SEED_ADMIN_ROLE = os.getenv("SEED_ADMIN_ROLE", "owner")
 
 

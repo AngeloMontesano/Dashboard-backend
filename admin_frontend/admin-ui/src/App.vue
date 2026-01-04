@@ -186,9 +186,9 @@
     <!-- =========================================================
          ZENTRALER TOAST
          - Alle Views nutzen useToast().toast(...)
-         - Nur App.vue rendert toastState
+         - Nur App.vue rendert ToastHost
     ========================================================== -->
-    <div class="toast" v-if="toastState.open">{{ toastState.text }}</div>
+    <ToastHost />
   </div>
 </template>
 
@@ -198,7 +198,7 @@
   Architektur Entscheidungen
   - Layout/Design über globale CSS Dateien (tokens.css, base.css, layout.css)
   - App.vue enthält KEIN <style scoped>
-  - Toast ist zentral (kein Toast Markup in Views)
+  - Toast ist zentral (kein Toast Markup in Views, ToastHost am Root)
   - Checks laufen über platform endpoints:
       GET /health
       GET /health/db
@@ -218,9 +218,10 @@ import AdminAuditView from "./views/AdminAuditView.vue";
 import AdminDiagnosticsView from "./views/AdminDiagnosticsView.vue";
 import AdminSettingsView from "./views/AdminSettingsView.vue";
 import AdminLoginView from "./views/AdminLoginView.vue";
+import ToastHost from "./components/common/ToastHost.vue";
 
 /* Zentraler Toast State */
-const { toastState, toast } = useToast();
+const { toast } = useToast();
 const baseDomain = getBaseDomain();
 const apiBase = getBaseURL();
 

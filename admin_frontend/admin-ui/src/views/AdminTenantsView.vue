@@ -537,7 +537,7 @@ watch(
   padding: 8px 10px;
   border: 1px solid var(--border);
   border-radius: 10px;
-  background: var(--surface-2, #f8fafc);
+  background: var(--surface2);
   min-width: 120px;
 }
 
@@ -650,7 +650,7 @@ watch(
 }
 
 .table tbody tr.rowActive {
-  background: var(--surface-2, #f8fafc);
+  background: var(--table-row-active);
 }
 
 .detailCard {
@@ -675,7 +675,7 @@ watch(
   border: 1px solid var(--border);
   border-radius: 10px;
   padding: 10px;
-  background: var(--surface-2, #f8fafc);
+  background: var(--surface2);
 }
 
 .boxLabel {

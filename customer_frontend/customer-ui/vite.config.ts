@@ -10,8 +10,13 @@ export default defineConfig(({ mode }) => {
 
   if (baseDomain && tenantSlug) {
     allowedHosts.push(`${tenantSlug}.${baseDomain}`);
-  } else if (baseDomain) {
-    allowedHosts.push(`*.${baseDomain}`);
+  }
+  if (baseDomain) {
+    const escaped = baseDomain.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    // allow any subdomain of baseDomain, e.g. *.test.myitnetwork.de
+    allowedHosts.push(new RegExp(`^[^.]+\\.${escaped}$`));
+    // also allow the bare base domain if ever served directly
+    allowedHosts.push(baseDomain);
   }
 
   return {

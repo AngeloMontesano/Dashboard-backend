@@ -37,17 +37,18 @@ def configure_logging(environment: str) -> None:
 
     class JsonFormatter(logging.Formatter):
         def format(self, record: logging.LogRecord) -> str:
+            message = record.getMessage()
             payload = {
                 "ts": datetime.now(timezone.utc).isoformat(),
                 "level": record.levelname,
                 "logger": record.name,
-                "message": self.formatMessage(record),
+                "message": _redact_value(message),
             }
             if record.exc_info:
                 payload["exc_info"] = self.formatException(record.exc_info)
             return json.dumps(payload, ensure_ascii=False)
 
-    formatter = JsonFormatter(fmt="%(message)s")
+    formatter = JsonFormatter()
     handler.setFormatter(formatter)
     handler.addFilter(_RedactAdminKeyFilter())
 

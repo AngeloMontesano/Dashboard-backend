@@ -17,6 +17,7 @@ const router = useRouter();
 const { state: authState, isAuthenticated, logout } = useAuth();
 
 const hasWriteAccess = computed(() => Boolean(authState.accessToken) && authState.role !== 'readonly');
+const canOpenModals = computed(() => Boolean(authState.accessToken));
 const isLoggedIn = computed(() => isAuthenticated());
 
 const categories = ref<Category[]>([]);
@@ -412,6 +413,7 @@ function openImportModal() {
   importResult.updated = 0;
   importResult.errors = [];
   Object.keys(importMapping).forEach((key) => (importMapping[key] = ''));
+  banner.error = '';
 }
 
 function closeImportModal() {
@@ -550,7 +552,7 @@ watch(
         <button class="button button--ghost" type="button" @click="goToCategories">
           Kategorien verwalten
         </button>
-        <button class="button button--ghost" type="button" @click="openImportModal" :disabled="!hasWriteAccess">
+        <button class="button button--ghost" type="button" @click="openImportModal" :disabled="!canOpenModals">
           Import CSV
         </button>
         <button class="button button--ghost" type="button" @click="handleExportAll" :disabled="isExporting">
@@ -560,7 +562,7 @@ watch(
           class="button button--primary"
           type="button"
           @click="openCreateModal"
-          :disabled="!hasWriteAccess"
+          :disabled="!canOpenModals"
         >
           Neuer Artikel
         </button>

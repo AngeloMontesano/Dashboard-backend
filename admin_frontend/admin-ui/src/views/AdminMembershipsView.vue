@@ -136,7 +136,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from "vue";
+import { computed, reactive, ref, watch } from "vue";
 import {
   adminCreateTenantUser,
   adminListTenantUsers,
@@ -348,8 +348,14 @@ function ensureAdminKey(): boolean {
   return true;
 }
 
-onMounted(async () => {
-  await loadRoles();
-  await loadTenants();
-});
+watch(
+  () => props.adminKey,
+  async (key, prev) => {
+    if (key && key !== prev) {
+      await loadRoles();
+      await loadTenants();
+    }
+  },
+  { immediate: true }
+);
 </script>

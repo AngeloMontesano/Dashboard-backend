@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { getBaseURL, getTenantHeaders } from './base';
+import { getBaseURL, getTenantHeaders, getTenantSlug } from './base';
 
 type LoginResponse = {
   access_token: string;
@@ -12,6 +12,7 @@ type LoginResponse = {
 
 export async function authLogin(email: string, password: string) {
   const baseURL = getBaseURL();
+  const tenantSlug = getTenantSlug();
   const client = axios.create({
     baseURL,
     timeout: 15000,

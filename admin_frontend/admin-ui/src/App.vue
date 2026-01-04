@@ -125,6 +125,7 @@
               :actor="ui.actor"
               :apiOk="api.ok"
               :dbOk="db.ok"
+              @openMemberships="openMemberships"
             />
 
           <!-- SECTION: Users -->
@@ -358,5 +359,11 @@ function setTheme(themeId: string) {
   ui.theme = themeId;
   sessionStorage.setItem("adminTheme", themeId);
   toast(`Theme gesetzt: ${themeId.replace("theme-", "")}`);
+}
+
+function openMemberships(tenantId: string) {
+  ui.section = "memberships";
+  if (tenantId) sessionStorage.setItem("adminSelectedTenantId", tenantId);
+  toast("Wechsle zu Tenant-User Verwaltung");
 }
 </script>

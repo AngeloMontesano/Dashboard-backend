@@ -9,11 +9,13 @@ import BerichteAnalysenView from '@/views/BerichteAnalysenView.vue';
 import BestellungenView from '@/views/BestellungenView.vue';
 import EinstellungenView from '@/views/EinstellungenView.vue';
 import LoginView from '@/views/LoginView.vue';
+import KategorienView from '@/views/KategorienView.vue';
 
 const routes: RouteRecordRaw[] = [
   { path: '/login', name: 'login', component: LoginView, meta: { public: true } },
   { path: '/', name: 'dashboard', component: DashboardView },
   { path: '/artikelverwaltung', name: 'artikelverwaltung', component: ArtikelverwaltungView },
+  { path: '/kategorien', name: 'kategorien', component: KategorienView },
   { path: '/lagerbewegungen', name: 'lagerbewegungen', component: LagerbewegungenView },
   { path: '/inventur', name: 'inventur', component: InventurView },
   { path: '/berichte-analysen', name: 'berichte-analysen', component: BerichteAnalysenView },

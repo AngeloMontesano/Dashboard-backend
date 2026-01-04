@@ -14,7 +14,6 @@
       </div>
     </header>
 
-    <!-- Toolbar mit KPIs + Export -->
     <div class="toolbar">
       <div class="chips">
         <div class="chip">
@@ -36,7 +35,6 @@
       </div>
     </div>
 
-    <!-- Suche -->
     <div class="searchCard">
       <label class="fieldLabel" for="kunden-search">Suche</label>
       <input
@@ -57,7 +55,6 @@
       </div>
     </div>
 
-    <!-- Tabelle -->
     <div class="tableCard">
       <div class="tableHeader">
         <div class="tableTitle">Kundenliste</div>
@@ -104,7 +101,6 @@
       </div>
     </div>
 
-    <!-- Details -->
     <div v-if="selectedTenant" class="detailCard">
       <div class="detailHeader">
         <div>
@@ -118,45 +114,46 @@
         </div>
       </div>
 
-      <div class="kvGrid">
-        <div class="kv">
-          <div class="k">Name</div>
-          <div class="v">{{ selectedTenant.name }}</div>
+      <div class="detailGrid">
+        <div class="detailBox">
+          <div class="boxLabel">Name</div>
+          <div class="boxValue">{{ selectedTenant.name }}</div>
         </div>
-        <div class="kv">
-          <div class="k">URL-Kürzel</div>
-          <div class="v mono">{{ selectedTenant.slug }}</div>
+        <div class="detailBox">
+          <div class="boxLabel">URL-Kürzel</div>
+          <div class="boxValue mono">{{ selectedTenant.slug }}</div>
         </div>
-        <div class="kv">
-          <div class="k">Tenant ID</div>
-          <div class="v mono">{{ selectedTenant.id }}</div>
+        <div class="detailBox">
+          <div class="boxLabel">Tenant ID</div>
+          <div class="boxValue mono">{{ selectedTenant.id }}</div>
         </div>
-        <div class="kv">
-          <div class="k">Tenant Host</div>
-          <div class="v mono">{{ `${selectedTenant.slug}.${baseDomain}` }}</div>
+        <div class="detailBox">
+          <div class="boxLabel">Tenant Host</div>
+          <div class="boxValue mono">{{ `${selectedTenant.slug}.${baseDomain}` }}</div>
         </div>
       </div>
 
-      <div class="row gap8 wrap" style="margin-top: 12px;">
-        <button
-          class="btnGhost small"
-          :disabled="busy.toggleId === selectedTenant.id"
-          @click="toggleTenant(selectedTenant)"
-        >
-          {{ busy.toggleId === selectedTenant.id ? "..." : selectedTenant.is_active ? "Deaktivieren" : "Aktivieren" }}
-        </button>
-        <button
-          class="btnGhost small danger"
-          :disabled="busy.deleteId === selectedTenant.id"
-          @click="deleteTenant(selectedTenant)"
-        >
-          {{ busy.deleteId === selectedTenant.id ? "löscht..." : "Kunde löschen" }}
-        </button>
+      <div class="detailActions">
+        <div class="row gap8 wrap">
+          <button
+            class="btnGhost small"
+            :disabled="busy.toggleId === selectedTenant.id"
+            @click="toggleTenant(selectedTenant)"
+          >
+            {{ busy.toggleId === selectedTenant.id ? "..." : selectedTenant.is_active ? "Deaktivieren" : "Aktivieren" }}
+          </button>
+          <button
+            class="btnGhost small danger"
+            :disabled="busy.deleteId === selectedTenant.id"
+            @click="deleteTenant(selectedTenant)"
+          >
+            {{ busy.deleteId === selectedTenant.id ? "löscht..." : "Kunde löschen" }}
+          </button>
+        </div>
         <button class="btnPrimary small" @click="openMemberships(selectedTenant.id)">Tenant User verwalten</button>
       </div>
     </div>
 
-    <!-- Create Modal -->
     <TenantCreateModal
       :open="modal.open"
       :busy="busy.create"
@@ -303,6 +300,11 @@ async function toggleTenant(t: TenantOut) {
   if (!ensureAdminKey()) return;
   if (!t) return;
 
+  if (t.is_active) {
+    const ok = window.confirm(`Kunde ${t.slug} wirklich deaktivieren?`);
+    if (!ok) return;
+  }
+
   busy.toggleId = t.id;
   try {
     const updated = await adminUpdateTenant(props.adminKey, props.actor, t.id, {
@@ -321,8 +323,10 @@ async function toggleTenant(t: TenantOut) {
 async function deleteTenant(t: TenantOut) {
   if (!ensureAdminKey()) return;
   if (!t) return;
-  const confirmDelete = window.confirm(`Kunde ${t.slug} wirklich löschen? Diese Aktion ist irreversibel.`);
-  if (!confirmDelete) return;
+  const check = window.prompt(
+    `Kunde ${t.slug} wirklich löschen? Diese Aktion ist irreversibel.\nBitte Tenant ID zur Bestätigung eingeben:`
+  );
+  if (!check || check.trim() !== t.id) return;
 
   busy.deleteId = t.id;
   try {
@@ -585,6 +589,37 @@ watch(
 
 .detailStatus {
   display: flex;
+}
+
+.detailGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+}
+
+.detailBox {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px;
+  background: var(--surface-2, #f8fafc);
+}
+
+.boxLabel {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.boxValue {
+  font-weight: 700;
+  margin-top: 4px;
+}
+
+.detailActions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
 .smallText {

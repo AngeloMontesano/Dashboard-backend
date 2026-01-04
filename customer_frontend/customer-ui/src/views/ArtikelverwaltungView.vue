@@ -502,6 +502,17 @@ function focusCreateBarcode() {
   }
 }
 
+function handleRowSelect(item: Item) {
+  selectedArticleId.value = item.id;
+  hydrateFormFromItem(item, editForm);
+  banner.message = '';
+  banner.error = '';
+}
+
+function goToCategories() {
+  router.push('/kategorien');
+}
+
 onMounted(async () => {
   if (!isLoggedIn.value) return;
   await loadCategories();

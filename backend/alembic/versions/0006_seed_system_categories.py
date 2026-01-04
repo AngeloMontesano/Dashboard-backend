@@ -24,16 +24,16 @@ def upgrade() -> None:
         {"id": "00000000-0000-0000-0000-000000000102", "name": "Verbrauchsmaterial"},
         {"id": "00000000-0000-0000-0000-000000000103", "name": "Ersatzteile"},
     ]
+    uuid_param = sa.bindparam("id", type_=postgresql.UUID())
     for cat in categories:
-        op.execute(
-            sa.text(
-                """
-                INSERT INTO categories (id, tenant_id, name, is_system, is_active)
-                VALUES (:id, NULL, :name, TRUE, TRUE)
-                ON CONFLICT (tenant_id, name) DO NOTHING
-                """
-            ).bindparams(id=cat["id"], name=cat["name"])
-        )
+        stmt = sa.text(
+            """
+            INSERT INTO categories (id, tenant_id, name, is_system, is_active)
+            VALUES (:id, NULL, :name, TRUE, TRUE)
+            ON CONFLICT (tenant_id, name) DO NOTHING
+            """
+        ).bindparams(uuid_param, name=cat["name"])
+        op.execute(stmt.params(id=cat["id"]))
 
 
 def downgrade() -> None:
@@ -41,8 +41,8 @@ def downgrade() -> None:
         sa.text(
             "DELETE FROM categories WHERE tenant_id IS NULL AND id IN (:c1, :c2, :c3)"
         ).bindparams(
-            c1="00000000-0000-0000-0000-000000000101",
-            c2="00000000-0000-0000-0000-000000000102",
-            c3="00000000-0000-0000-0000-000000000103",
+            sa.bindparam("c1", type_=postgresql.UUID(), value="00000000-0000-0000-0000-000000000101"),
+            sa.bindparam("c2", type_=postgresql.UUID(), value="00000000-0000-0000-0000-000000000102"),
+            sa.bindparam("c3", type_=postgresql.UUID(), value="00000000-0000-0000-0000-000000000103"),
         )
     )

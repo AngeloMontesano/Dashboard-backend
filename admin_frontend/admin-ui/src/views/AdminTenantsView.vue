@@ -151,7 +151,7 @@
   - Toast zentral in App.vue, hier nur toast() verwenden
 */
 
-import { computed, onMounted, reactive, ref } from "vue";
+import { computed, reactive, ref, watch } from "vue";
 import type { TenantOut } from "../types";
 import { adminListTenants, adminCreateTenant, adminUpdateTenant, adminDeleteTenant } from "../api/admin";
 import { useToast } from "../composables/useToast";
@@ -357,7 +357,14 @@ function stringifyError(e: any): string {
   }
 }
 
-onMounted(() => {
-  loadTenants();
-});
+
+watch(
+  () => props.adminKey,
+  (key, prev) => {
+    if (key && key !== prev) {
+      loadTenants();
+    }
+  },
+  { immediate: true }
+);
 </script>

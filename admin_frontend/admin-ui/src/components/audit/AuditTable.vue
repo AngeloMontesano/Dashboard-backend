@@ -5,25 +5,27 @@
         <tr>
           <th>Zeit</th>
           <th>Actor</th>
-          <th>Action</th>
+          <th>Aktion</th>
           <th>Entity</th>
+          <th>Änderung</th>
           <th class="right">Aktion</th>
         </tr>
       </thead>
 
       <tbody>
         <tr v-for="r in rows" :key="r.id" @dblclick="open(r)">
-          <td class="mono">{{ formatTs(r.created_at) }}</td>
+          <td class="mono">{{ r.createdAtLocal }}</td>
           <td class="mono">{{ r.actor }}</td>
-          <td><span class="tag neutral">{{ r.action }}</span></td>
-          <td class="mono">{{ r.entity_type }} · {{ r.entity_id }}</td>
+          <td><span class="tag neutral">{{ r.actionLabel }}</span></td>
+          <td class="mono">{{ r.entityLabel }} · {{ r.entity_id }}</td>
+          <td>{{ r.summary }}</td>
           <td class="right">
             <button class="link" @click.stop="open(r)">Details</button>
           </td>
         </tr>
 
         <tr v-if="rows.length === 0">
-          <td colspan="5" class="mutedPad">
+          <td colspan="6" class="mutedPad">
             {{ busy ? "Lade Audit..." : "Keine Einträge." }}
           </td>
         </tr>
@@ -33,28 +35,18 @@
 </template>
 
 <script setup lang="ts">
-import type { AuditOut } from "../../types";
+import type { AuditDisplayRow } from "./format";
 
 const props = defineProps<{
-  rows: AuditOut[];
+  rows: AuditDisplayRow[];
   busy: boolean;
 }>();
 
 const emit = defineEmits<{
-  (e: "open", row: AuditOut): void;
+  (e: "open", row: AuditDisplayRow): void;
 }>();
 
-function open(row: AuditOut) {
+function open(row: AuditDisplayRow) {
   emit("open", row);
-}
-
-function formatTs(iso: string) {
-  // simpel, stabil, ohne externe libs
-  try {
-    const d = new Date(iso);
-    return `${d.toLocaleDateString()} ${d.toLocaleTimeString()}`;
-  } catch {
-    return iso;
-  }
 }
 </script>

@@ -110,6 +110,22 @@
             </div>
 
             <div class="topRight">
+              <div class="tenantContext" role="status" aria-live="polite">
+                <div v-if="tenantContext.id" class="tenantBadge">
+                  <div class="tenantLabel">Aktiver Tenant</div>
+                  <div class="tenantValue">
+                    <span class="mono">{{ tenantContext.slug }}</span>
+                    <span class="muted">({{ tenantContext.name }})</span>
+                  </div>
+                  <div class="tenantActions">
+                    <button class="btnGhost small" @click="goSection('kunden')">Tenant wechseln</button>
+                    <button class="btnGhost small" @click="clearTenantContext">Entfernen</button>
+                  </div>
+                </div>
+                <div v-else class="muted">
+                  Kein Tenant gewählt – bitte unter „Kunden“ auswählen.
+                </div>
+              </div>
               <button class="btnGhost" @click="quickRefresh" :disabled="busy.refresh">
                 {{ busy.refresh ? "..." : "Refresh" }}
               </button>
@@ -125,7 +141,9 @@
               :actor="ui.actor"
               :apiOk="api.ok"
               :dbOk="db.ok"
+              :selectedTenantId="tenantContext.id"
               @openMemberships="openMemberships"
+              @tenantSelected="setTenantContext"
             />
 
           <!-- SECTION: Users -->
@@ -144,6 +162,8 @@
               :actor="ui.actor"
               :apiOk="api.ok"
               :dbOk="db.ok"
+              :selectedTenantId="tenantContext.id"
+              @tenantSelected="setTenantContext"
             />
 
           <!-- SECTION: Audit -->
@@ -238,6 +258,12 @@ const ui = reactive({
   section: "kunden" as SectionId,
 });
 
+const tenantContext = reactive({
+  id: localStorage.getItem("adminSelectedTenantId") || "",
+  name: localStorage.getItem("adminSelectedTenantName") || "",
+  slug: localStorage.getItem("adminSelectedTenantSlug") || "",
+});
+
 /* Busy Flags */
 const busy = reactive({
   refresh: false,
@@ -250,6 +276,26 @@ const db = reactive({ ok: false, busy: false });
 /* Navigation */
 function goSection(sectionId: SectionId) {
   ui.section = sectionId;
+}
+
+function setTenantContext(payload: { id: string; name: string; slug: string } | null) {
+  tenantContext.id = payload?.id || "";
+  tenantContext.name = payload?.name || "";
+  tenantContext.slug = payload?.slug || "";
+  if (payload?.id) {
+    localStorage.setItem("adminSelectedTenantId", payload.id);
+    localStorage.setItem("adminSelectedTenantName", payload.name || "");
+    localStorage.setItem("adminSelectedTenantSlug", payload.slug || "");
+  } else {
+    localStorage.removeItem("adminSelectedTenantId");
+    localStorage.removeItem("adminSelectedTenantName");
+    localStorage.removeItem("adminSelectedTenantSlug");
+  }
+}
+
+function clearTenantContext() {
+  setTenantContext(null);
+  toast("Tenant Auswahl entfernt");
 }
 
 function applyLogin(payload: { adminKey: string; actor: string }) {
@@ -363,7 +409,41 @@ function setTheme(themeId: string) {
 
 function openMemberships(tenantId: string) {
   ui.section = "memberships";
-  if (tenantId) sessionStorage.setItem("adminSelectedTenantId", tenantId);
+  if (tenantId) localStorage.setItem("adminSelectedTenantId", tenantId);
   toast("Wechsle zu Tenant-User Verwaltung");
 }
 </script>
+
+<style>
+.tenantContext {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-right: 12px;
+}
+
+.tenantBadge {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: right;
+}
+
+.tenantLabel {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.tenantValue {
+  display: flex;
+  gap: 6px;
+  align-items: baseline;
+  justify-content: flex-end;
+}
+
+.tenantActions {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+}
+</style>

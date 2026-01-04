@@ -4,6 +4,7 @@ import {
   fetchCategories,
   fetchItems,
   createItem,
+  updateItem,
   checkSkuExists,
   exportItems,
   importItems,
@@ -59,10 +60,10 @@ const isLoggedIn = computed(() => isAuthenticated());
 async function loadCategories() {
   if (!authState.accessToken) return;
   const data = await fetchCategories(authState.accessToken);
-    categories.value = data.filter((c) => c.is_active);
-  }
+  categories.value = data.filter((c) => c.is_active);
+}
 
-  async function loadItems() {
+async function loadItems() {
   if (!authState.accessToken) return;
   isLoading.value = true;
   error.value = null;

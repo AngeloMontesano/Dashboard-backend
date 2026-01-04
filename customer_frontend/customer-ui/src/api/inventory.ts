@@ -131,10 +131,13 @@ export async function updateItem(token: string, id: string, payload: Partial<Ite
   return res.data;
 }
 
-export async function importItems(token: string, file: File) {
+export async function importItems(token: string, file: File, mapping?: Record<string, string>) {
   const client = buildClient(token);
   const form = new FormData();
   form.append('file', file);
+  if (mapping) {
+    form.append('mapping', JSON.stringify(mapping));
+  }
   const res = await client.post<{ imported: number; updated: number; errors: Array<{ row: string; error: string }> }>(
     '/inventory/items/import',
     form,

@@ -16,7 +16,7 @@ import { useAuth } from '@/composables/useAuth';
 const router = useRouter();
 const { state: authState, isAuthenticated, logout } = useAuth();
 
-const hasWriteAccess = computed(() => ['owner', 'admin'].includes(authState.role));
+const hasWriteAccess = computed(() => Boolean(authState.accessToken) && authState.role !== 'readonly');
 const isLoggedIn = computed(() => isAuthenticated());
 
 const categories = ref<Category[]>([]);

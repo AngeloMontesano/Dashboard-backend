@@ -76,14 +76,15 @@ class TenantUserOut(BaseModel):
 class TenantUserCreate(BaseModel):
     email: EmailStr
     role: str = Field(..., min_length=1)
-    password: str | None = Field(default=None, min_length=8, max_length=128)
+    # Dev/Support: erlauben kurze Test-Passwörter (min. 4), Backend erzwingt Hash.
+    password: str | None = Field(default=None, min_length=4, max_length=128)
     user_is_active: bool = True
     membership_is_active: bool = True
 
 
 class TenantUserUpdate(BaseModel):
     role: str | None = None
-    password: str | None = Field(default=None, min_length=8, max_length=128)
+    password: str | None = Field(default=None, min_length=4, max_length=128)
     user_is_active: bool | None = None
     membership_is_active: bool | None = None
 

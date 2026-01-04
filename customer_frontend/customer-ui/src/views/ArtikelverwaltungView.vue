@@ -531,90 +531,6 @@ function closeCreateCard() {
   nextTick(() => quickScanInput.value?.focus());
 }
 
-const onRowSelect = (item: Item) => {
-  showCreate.value = false;
-  selectedArticleId.value = item.id;
-  hydrateFormFromItem(item, editForm);
-  banner.message = '';
-  banner.error = '';
-};
-
-const navigateToCategories = () => {
-  router.push('/kategorien');
-};
-
-function focusCreateBarcode() {
-  if (showCreateCard.value) {
-    nextTick(() => focusInputElement(createBarcodeInput.value));
-  } else {
-    quickScanInput.value?.focus();
-  }
-}
-
-function focusInputElement(comp: any) {
-  if (comp?.focus) {
-    comp.focus();
-    return;
-  }
-  const el: HTMLInputElement | HTMLTextAreaElement | null | undefined =
-    comp?.$el?.querySelector?.('input,textarea');
-  el?.focus();
-}
-
-function closeCreateCard() {
-  showCreate.value = false;
-  resetCreateForm();
-  nextTick(() => quickScanInput.value?.focus());
-}
-
-const onRowSelect = (item: Item) => {
-  showCreate.value = false;
-  selectedArticleId.value = item.id;
-  hydrateFormFromItem(item, editForm);
-  banner.message = '';
-  banner.error = '';
-};
-
-const navigateToCategories = () => {
-  router.push('/kategorien');
-};
-
-function focusCreateBarcode() {
-  if (showCreateCard.value) {
-    nextTick(() => focusPrimeInput(createBarcodeInput.value));
-  } else {
-    quickScanInput.value?.focus();
-  }
-}
-
-function focusPrimeInput(comp: any) {
-  if (comp?.focus) {
-    comp.focus();
-    return;
-  }
-  const el: HTMLInputElement | HTMLTextAreaElement | null | undefined =
-    comp?.$el?.querySelector?.('input,textarea');
-  el?.focus();
-}
-
-function closeCreateCard() {
-  showCreate.value = false;
-  resetCreateForm();
-  nextTick(() => quickScanInput.value?.focus());
-}
-
-function focusPrimeInput(comp: any) {
-  const el: HTMLInputElement | HTMLTextAreaElement | null | undefined =
-    comp?.$el?.querySelector?.('input,textarea');
-  el?.focus();
-}
-
-function closeCreateCard() {
-  showCreate.value = false;
-  resetCreateForm();
-  nextTick(() => quickScanInput.value?.focus());
-}
-
 onMounted(async () => {
   if (!isLoggedIn.value) return;
   await loadCategories();
@@ -634,7 +550,7 @@ watch(
       items.value = [];
     }
   }
-);
+}
 
 let searchTimer: number | undefined;
 watch(

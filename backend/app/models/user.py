@@ -3,10 +3,9 @@ from __future__ import annotations
 import uuid
 
 from sqlalchemy import Boolean, String
-from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy.dialects.postgresql import CITEXT
 
+from app.core.db_types import CIText, GUID
 from app.models.base import Base
 
 
@@ -15,14 +14,14 @@ class User(Base):
 
     # Technischer Primärschlüssel
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        GUID(),
         primary_key=True,
         default=uuid.uuid4,
     )
 
     # Login Identifier (Admin Build, später auch Customer möglich)
     email: Mapped[str] = mapped_column(
-        CITEXT(),
+        CIText(length=255),
         unique=True,
         index=True,
         nullable=False,

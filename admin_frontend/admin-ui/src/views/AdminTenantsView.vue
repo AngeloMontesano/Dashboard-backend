@@ -109,18 +109,31 @@
     <div v-if="selectedTenant" class="detailCard">
       <div class="detailHeader">
         <div class="detailTitles">
-          <div class="detailTitleRow">
-            <div class="detailTitle">{{ selectedTenant.name }}</div>
+          <div class="detailLine">
+            <div class="lineMain">
+              <span class="detailTitle">{{ selectedTenant.name }}</span>
+              <span class="dotSep">·</span>
+              <span class="mono">{{ selectedTenant.id }}</span>
+            </div>
+            <button
+              class="link tiny"
+              type="button"
+              title="In Zwischenablage kopieren"
+              @click="copyValue(selectedTenant.id, 'Tenant ID')"
+            >
+              kopieren
+            </button>
           </div>
-          <div class="detailMeta">
-            <span class="mono">{{ selectedTenant.slug }}</span>
-            <span class="dotSep">·</span>
-            <span class="mono">{{ selectedTenant.id }}</span>
-            <button class="link tiny" type="button" @click="copyValue(selectedTenant.id, 'Tenant ID')">kopieren</button>
-          </div>
-          <div class="detailMeta hostRow">
-            <span class="mono hostValue">{{ `${selectedTenant.slug}.${baseDomain}` }}</span>
-            <button class="link tiny" type="button" @click="copyValue(tenantHost, 'Tenant Host')">kopieren</button>
+          <div class="detailLine hostRow">
+            <span class="mono hostValue">{{ tenantHost }}</span>
+            <button
+              class="link tiny"
+              type="button"
+              title="In Zwischenablage kopieren"
+              @click="copyValue(tenantHost, 'Tenant Host')"
+            >
+              kopieren
+            </button>
           </div>
         </div>
       </div>
@@ -134,11 +147,11 @@
           <div class="boxLabel">URL-Kürzel</div>
           <div class="boxValue mono">{{ selectedTenant.slug }}</div>
         </div>
-        <div class="detailBox wide">
+        <div class="detailBox medium">
           <div class="boxLabel">Tenant ID</div>
           <div class="boxValue mono">{{ selectedTenant.id }}</div>
         </div>
-        <div class="detailBox wide">
+        <div class="detailBox hostBox">
           <div class="boxLabel">Tenant Host</div>
           <div class="boxValue mono hostValue">{{ tenantHost }}</div>
         </div>
@@ -677,17 +690,29 @@ watch(
   align-items: center;
 }
 
-.detailTitle {
-  font-size: 16px;
-  font-weight: 800;
+.detailTitles {
+  display: grid;
+  gap: 8px;
+  width: 100%;
 }
 
-.detailMeta {
+.detailLine {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.lineMain {
   display: flex;
   gap: 6px;
   align-items: center;
   flex-wrap: wrap;
-  color: var(--muted);
+}
+
+.detailTitle {
+  font-size: 16px;
+  font-weight: 800;
 }
 
 .hostRow {
@@ -695,8 +720,8 @@ watch(
 }
 
 .hostValue {
-  word-break: normal;
   white-space: nowrap;
+  overflow-x: auto;
 }
 
 .dotSep {
@@ -705,8 +730,9 @@ watch(
 
 .detailGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  grid-template-columns: 1fr 1fr 2fr 3fr;
   gap: 10px;
+  align-items: stretch;
 }
 
 .detailBox {
@@ -727,11 +753,15 @@ watch(
 }
 
 .detailBox.tight {
-  min-width: 150px;
+  min-width: 120px;
 }
 
-.detailBox.wide {
-  min-width: 260px;
+.detailBox.medium {
+  min-width: 200px;
+}
+
+.detailBox.hostBox {
+  min-width: 320px;
 }
 
 .detailActions {
@@ -770,9 +800,20 @@ watch(
   }
 }
 
+@media (max-width: 1024px) {
+  .detailGrid {
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  }
+}
+
 @media (max-width: 860px) {
   .searchCard {
     grid-template-columns: 1fr;
+  }
+
+  .hostValue {
+    white-space: nowrap;
+    overflow-x: auto;
   }
 }
 </style>

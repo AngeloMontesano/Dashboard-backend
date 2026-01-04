@@ -5,34 +5,41 @@
     - Workspace zeigt nur relevante Infos + Aktionen zum ausgewählten Tenant
   -->
   <section class="card">
-    <header class="cardHeader">
+    <header class="cardHeader tight">
       <div>
         <div class="cardTitle">Kunden</div>
-        <div class="cardHint">Tenants suchen, anlegen, Details & Tenant-User verwalten</div>
+        <div class="cardHint">Tenants suchen, auswählen, Details & Aktionen</div>
       </div>
       <div class="cardHeaderActions">
         <button class="btnGhost" @click="openCreateModal">Tenant anlegen</button>
         <button class="btnPrimary" :disabled="busy.list" @click="loadTenants">
-          {{ busy.list ? "lade..." : "Neu laden" }}
+          <span v-if="busy.list" class="dotSpinner" aria-hidden="true"></span>
+          {{ busy.list ? "lädt..." : "Neu laden" }}
         </button>
       </div>
     </header>
 
-    <div class="grid2" style="align-items: start; gap: 16px;">
+    <div class="grid2" style="align-items: stretch; gap: 16px;">
       <!-- Liste + Suche -->
       <div class="box">
-        <div class="row gap8 wrap" style="margin-bottom: 10px;">
-          <input class="input" v-model.trim="q" placeholder="Suche: Name, Slug" @keyup.enter="loadTenants" />
-          <select class="input" v-model="statusFilter">
-            <option value="all">Alle</option>
-            <option value="active">Aktiv</option>
-            <option value="disabled">Deaktiviert</option>
-          </select>
-        </div>
-        <div class="meta" style="margin-bottom: 8px;">
-          <div class="muted">Treffer: {{ filteredTenants.length }}</div>
-          <div class="muted">
-            Ausgewählt: <span class="mono">{{ selectedTenant ? selectedTenant.slug : "-" }}</span>
+        <div class="controlBar">
+          <div class="controlLeft">
+            <input
+              class="input"
+              v-model.trim="q"
+              placeholder="Name oder URL-Kürzel suchen"
+              @keyup.enter="loadTenants"
+              aria-label="Tenant suchen"
+            />
+            <select class="input" v-model="statusFilter" aria-label="Status filtern">
+              <option value="all">Alle</option>
+              <option value="active">Aktiv</option>
+              <option value="disabled">Deaktiviert</option>
+            </select>
+          </div>
+          <div class="controlRight">
+            <span class="muted smallText">Treffer: {{ filteredTenants.length }}</span>
+            <span class="muted smallText">Auswahl: {{ selectedTenant ? selectedTenant.slug : "-" }}</span>
           </div>
         </div>
 
@@ -46,6 +53,17 @@
           @toggle="toggleTenant"
           @delete="deleteTenant"
         />
+
+        <div v-if="!busy.list && filteredTenants.length === 0" class="emptyState">
+          <div class="emptyTitle">Keine Tenants gefunden</div>
+          <div class="emptyBody">Lege den ersten Tenant an oder passe Suche/Filter an.</div>
+          <div class="row gap8 wrap">
+            <button class="btnPrimary small" @click="openCreateModal">Ersten Tenant anlegen</button>
+            <button class="btnGhost small" @click="resetFilters">Filter zurücksetzen</button>
+          </div>
+        </div>
+
+        <div v-if="busy.error" class="errorText">Fehler: {{ busy.error }}</div>
 
         <div class="hintBox">
           Tipp: Suche via <span class="mono">GET /admin/tenants?q=...</span>. Enter startet den Call.
@@ -75,7 +93,7 @@
           </div>
 
           <div class="kv">
-            <div class="k">Slug</div>
+            <div class="k">URL-Kürzel</div>
             <div class="v mono">{{ selectedTenant.slug }}</div>
           </div>
 
@@ -183,10 +201,12 @@ const props = defineProps<{
   actor: string;
   apiOk: boolean;
   dbOk: boolean;
+  selectedTenantId?: string;
 }>();
 
 const emit = defineEmits<{
   (e: "openMemberships", tenantId: string): void;
+  (e: "tenantSelected", payload: { id: string; name: string; slug: string } | null): void;
 }>();
 
 const { toast } = useToast();
@@ -203,6 +223,7 @@ const busy = reactive({
   create: false,
   toggleId: "" as string,
   deleteId: "" as string,
+  error: "",
 });
 
 /* Drawer State */
@@ -237,6 +258,7 @@ const filteredTenants = computed(() => {
 async function loadTenants() {
   if (!ensureAdminKey()) return;
   busy.list = true;
+  busy.error = "";
   try {
     const res = await adminListTenants(props.adminKey, props.actor, {
       q: q.value || undefined,
@@ -246,16 +268,28 @@ async function loadTenants() {
       tenants.value = res;
 
       /* Selection stabil halten oder erste wählen */
+      const preferredId =
+        props.selectedTenantId ||
+        localStorage.getItem("adminSelectedTenantId") ||
+        sessionStorage.getItem("adminSelectedTenantId") ||
+        "";
+
       if (selectedTenant.value) {
         selectedTenant.value = res.find((t) => t.id === selectedTenant.value!.id) ?? null;
+      }
+      if (!selectedTenant.value && preferredId) {
+        selectedTenant.value = res.find((t) => t.id === preferredId) ?? null;
       }
       if (!selectedTenant.value && res.length > 0) {
         selectedTenant.value = res[0];
       }
 
+      emitSelectedTenant();
+
     toast(`Tenants geladen: ${res.length}`);
   } catch (e: any) {
-    toast(`Fehler beim Laden: ${stringifyError(e)}`);
+    busy.error = stringifyError(e);
+    toast(`Fehler beim Laden: ${busy.error}`);
   } finally {
     busy.list = false;
   }
@@ -268,7 +302,12 @@ async function createTenant() {
   const slug = modal.slug.trim().toLowerCase();
 
   if (!name || !slug) {
-    toast("Name und Slug sind Pflicht");
+    toast("Name und URL-Kürzel sind Pflicht");
+    return;
+  }
+
+  if (!/^[a-z0-9-]+$/.test(slug)) {
+    toast("URL-Kürzel: nur Kleinbuchstaben, Zahlen und Bindestriche erlaubt");
     return;
   }
 
@@ -318,6 +357,7 @@ async function toggleTenant(t: TenantOut) {
 /* UI actions */
 function selectTenant(t: TenantOut) {
   selectedTenant.value = t;
+  emitSelectedTenant();
 }
 
 function openDrawer(t: TenantOut) {
@@ -343,15 +383,40 @@ function closeCreateModal() {
 }
 
 function openMemberships(tenantId: string) {
-  sessionStorage.setItem("adminSelectedTenantId", tenantId);
+  localStorage.setItem("adminSelectedTenantId", tenantId);
   emit("openMemberships", tenantId);
+}
+
+function resetFilters() {
+  q.value = "";
+  statusFilter.value = "all";
+  loadTenants();
 }
 
 watch(
   () => selectedTenant.value?.id,
   (id) => {
     if (id) {
-      sessionStorage.setItem("adminSelectedTenantId", id);
+      localStorage.setItem("adminSelectedTenantId", id);
+    } else {
+      localStorage.removeItem("adminSelectedTenantId");
+    }
+  }
+);
+watch(
+  () => props.selectedTenantId,
+  (id) => {
+    if (!id) {
+      selectedTenant.value = null;
+      emitSelectedTenant();
+      return;
+    }
+    if (!tenants.value.length) return;
+    if (selectedTenant.value?.id === id) return;
+    const match = tenants.value.find((t) => t.id === id);
+    if (match) {
+      selectedTenant.value = match;
+      emitSelectedTenant();
     }
   }
 );
@@ -385,6 +450,18 @@ async function deleteTenant(t: TenantOut) {
 }
 
 /* Helpers */
+function emitSelectedTenant() {
+  if (selectedTenant.value) {
+    emit("tenantSelected", {
+      id: selectedTenant.value.id,
+      name: selectedTenant.value.name,
+      slug: selectedTenant.value.slug,
+    });
+  } else {
+    emit("tenantSelected", null);
+  }
+}
+
 function stringifyError(e: any): string {
   if (!e) return "unknown";
   if (typeof e === "string") return e;
@@ -408,3 +485,75 @@ watch(
   { immediate: true }
 );
 </script>
+
+<style scoped>
+.controlBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.controlLeft {
+  display: flex;
+  gap: 8px;
+  flex: 1;
+}
+
+.controlLeft .input {
+  flex: 1;
+}
+
+.controlRight {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+.smallText {
+  font-size: 12px;
+}
+
+.emptyState {
+  margin-top: 8px;
+  padding: 12px;
+  border: 1px dashed var(--border, #dcdcdc);
+  border-radius: 10px;
+  background: var(--surface-2, #f9fafb);
+}
+
+.emptyTitle {
+  font-weight: 600;
+}
+
+.emptyBody {
+  color: var(--muted);
+  margin: 4px 0 8px 0;
+}
+
+.errorText {
+  color: var(--danger, #c53030);
+  margin-top: 8px;
+  font-size: 13px;
+}
+
+.dotSpinner {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid var(--muted);
+  border-top-color: transparent;
+  display: inline-block;
+  margin-right: 6px;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+</style>

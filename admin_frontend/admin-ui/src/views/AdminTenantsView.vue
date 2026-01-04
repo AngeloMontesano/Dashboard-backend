@@ -652,6 +652,17 @@ watch(
 .detailHeader {
   display: flex;
   justify-content: space-between;
+  align-items: flex-start;
+}
+
+.detailTitles {
+  display: grid;
+  gap: 6px;
+}
+
+.detailTitleRow {
+  display: flex;
+  gap: 8px;
   align-items: center;
 }
 

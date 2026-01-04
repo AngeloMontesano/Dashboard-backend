@@ -101,18 +101,21 @@
         ========================================================== -->
         <main class="main">
           <!-- Topbar -->
-          <header class="topbar">
+          <header :class="['topbar', ui.section === 'kunden' ? 'topbar-flat' : '']">
             <div class="topLeft">
-            <div class="titleRow">
-              <div class="pageTitle">{{ pageTitle }}</div>
-              <div class="crumbs">{{ pageSubtitle }}</div>
-            </div>
+              <div class="titleRow">
+                <div class="pageTitle">{{ pageTitle }}</div>
+                <div class="crumbs">{{ breadcrumb }}</div>
+              </div>
+              <div class="pageHint">{{ pageSubtitle }}</div>
             </div>
 
             <div class="topRight">
-              <button class="btnGhost" @click="quickRefresh" :disabled="busy.refresh">
-                {{ busy.refresh ? "..." : "Refresh" }}
-              </button>
+              <div class="topActions">
+                <button class="btnGhost small" @click="quickRefresh" :disabled="busy.refresh">
+                  {{ busy.refresh ? "..." : "Refresh" }}
+                </button>
+              </div>
             </div>
           </header>
 
@@ -125,7 +128,9 @@
               :actor="ui.actor"
               :apiOk="api.ok"
               :dbOk="db.ok"
+              :selectedTenantId="tenantContext.id"
               @openMemberships="openMemberships"
+              @tenantSelected="setTenantContext"
             />
 
           <!-- SECTION: Users -->
@@ -144,6 +149,8 @@
               :actor="ui.actor"
               :apiOk="api.ok"
               :dbOk="db.ok"
+              :selectedTenantId="tenantContext.id"
+              @tenantSelected="setTenantContext"
             />
 
           <!-- SECTION: Audit -->
@@ -238,6 +245,12 @@ const ui = reactive({
   section: "kunden" as SectionId,
 });
 
+const tenantContext = reactive({
+  id: localStorage.getItem("adminSelectedTenantId") || "",
+  name: localStorage.getItem("adminSelectedTenantName") || "",
+  slug: localStorage.getItem("adminSelectedTenantSlug") || "",
+});
+
 /* Busy Flags */
 const busy = reactive({
   refresh: false,
@@ -250,6 +263,26 @@ const db = reactive({ ok: false, busy: false });
 /* Navigation */
 function goSection(sectionId: SectionId) {
   ui.section = sectionId;
+}
+
+function setTenantContext(payload: { id: string; name: string; slug: string } | null) {
+  tenantContext.id = payload?.id || "";
+  tenantContext.name = payload?.name || "";
+  tenantContext.slug = payload?.slug || "";
+  if (payload?.id) {
+    localStorage.setItem("adminSelectedTenantId", payload.id);
+    localStorage.setItem("adminSelectedTenantName", payload.name || "");
+    localStorage.setItem("adminSelectedTenantSlug", payload.slug || "");
+  } else {
+    localStorage.removeItem("adminSelectedTenantId");
+    localStorage.removeItem("adminSelectedTenantName");
+    localStorage.removeItem("adminSelectedTenantSlug");
+  }
+}
+
+function clearTenantContext() {
+  setTenantContext(null);
+  toast("Tenant Auswahl entfernt");
 }
 
 function applyLogin(payload: { adminKey: string; actor: string }) {
@@ -277,12 +310,19 @@ const pageTitle = computed(() => {
 });
 
 const pageSubtitle = computed(() => {
-  if (ui.section === "kunden") return "Tenants verwalten, aktivieren, Details";
+  if (ui.section === "kunden") return "Tenants suchen, auswählen, Details & Aktionen";
   if (ui.section === "users") return "Globale Benutzer verwalten";
   if (ui.section === "memberships") return "User mit Tenants verknüpfen und Rollen setzen";
   if (ui.section === "audit") return "Audit Log durchsuchen, filtern, exportieren";
   if (ui.section === "diagnostics") return "Health, Admin Checks, Snapshot";
   return "Security, Theme, Feature Flags";
+});
+
+const breadcrumb = computed(() => {
+  if (tenantContext.slug) {
+    return `${pageTitle.value} / ${tenantContext.slug}`;
+  }
+  return pageTitle.value;
 });
 
 /* Checks */
@@ -363,7 +403,52 @@ function setTheme(themeId: string) {
 
 function openMemberships(tenantId: string) {
   ui.section = "memberships";
-  if (tenantId) sessionStorage.setItem("adminSelectedTenantId", tenantId);
+  if (tenantId) localStorage.setItem("adminSelectedTenantId", tenantId);
   toast("Wechsle zu Tenant-User Verwaltung");
 }
 </script>
+
+<style>
+.topbar-flat {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  margin: 0 0 4px 0;
+}
+
+.topbar-flat .topRight {
+  align-items: center;
+}
+
+.topActions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.pageHint {
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+/* Sidebar kompakter */
+.shell {
+  align-items: start;
+}
+
+.sidebar {
+  height: auto;
+  position: sticky;
+  top: 12px;
+  align-self: start;
+}
+
+.nav {
+  align-self: start;
+}
+
+.sideBottom {
+  align-self: start;
+}
+</style>

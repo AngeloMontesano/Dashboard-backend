@@ -1,8 +1,11 @@
 <script setup lang="ts">
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { computed } from 'vue';
+import { useAuth } from '@/composables/useAuth';
 
 const route = useRoute();
+const router = useRouter();
+const { logout } = useAuth();
 
 const title = computed(() => {
   switch (route.name) {
@@ -23,6 +26,11 @@ const title = computed(() => {
       return 'Dashboard';
   }
 });
+
+function handleLogout() {
+  logout();
+  router.push({ name: 'login' });
+}
 </script>
 
 <template>
@@ -33,7 +41,7 @@ const title = computed(() => {
     </div>
     <div class="topbar__actions">
       <button type="button" class="button button--ghost">Hilfe</button>
-      <button type="button" class="button button--primary">Abmelden</button>
+      <button type="button" class="button button--primary" @click="handleLogout">Abmelden</button>
     </div>
   </header>
 </template>

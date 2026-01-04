@@ -417,7 +417,7 @@ function emitSelectedTenant() {
   padding: 12px;
   border: 1px dashed var(--border, #dcdcdc);
   border-radius: 10px;
-  background: var(--surface-2, #f9fafb);
+  background: var(--surface2);
 }
 
 .emptyTitle {

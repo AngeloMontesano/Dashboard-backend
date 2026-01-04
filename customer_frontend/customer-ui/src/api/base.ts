@@ -10,7 +10,24 @@ const runtimeHost = typeof window !== "undefined" ? window.location.hostname : "
 const runtimeProtocol = typeof window !== "undefined" ? window.location.protocol.replace(":", "") : "";
 const runtimePort = typeof window !== "undefined" ? window.location.port : "";
 
+function replaceHost(url: string, host: string): string | null {
+  try {
+    const parsed = new URL(url);
+    parsed.host = host;
+    return parsed.toString().replace(/\/$/, "");
+  } catch {
+    return null;
+  }
+}
+
 export function getBaseURL(): string {
+  // If an explicit base is set but we are on a tenant host of the same base domain,
+  // prefer the current host to preserve the tenant slug (avoids 404 from missing slug).
+  if (explicitApiBase && baseDomain && runtimeHost && runtimeHost.endsWith(`.${baseDomain}`)) {
+    const adjusted = replaceHost(explicitApiBase, runtimeHost + (runtimePort ? `:${runtimePort}` : ""));
+    if (adjusted) return adjusted;
+    return explicitApiBase;
+  }
   if (explicitApiBase) return explicitApiBase;
   if (apiHost) {
     const portPart = apiPort ? `:${apiPort}` : "";

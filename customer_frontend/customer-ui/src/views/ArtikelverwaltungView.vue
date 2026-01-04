@@ -415,7 +415,7 @@ function openCreateCard() {
   showCreate.value = true;
   nextTick(() => {
     createCardRef.value?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    focusPrimeInput(createBarcodeInput.value);
+    focusInputElement(createBarcodeInput.value);
   });
 }
 
@@ -493,6 +493,42 @@ async function startImport() {
   } finally {
     importLoading.value = false;
   }
+}
+
+const onRowSelect = (item: Item) => {
+  showCreate.value = false;
+  selectedArticleId.value = item.id;
+  hydrateFormFromItem(item, editForm);
+  banner.message = '';
+  banner.error = '';
+};
+
+const navigateToCategories = () => {
+  router.push('/kategorien');
+};
+
+function focusCreateBarcode() {
+  if (showCreateCard.value) {
+    nextTick(() => focusInputElement(createBarcodeInput.value));
+  } else {
+    quickScanInput.value?.focus();
+  }
+}
+
+function focusInputElement(comp: any) {
+  if (comp?.focus) {
+    comp.focus();
+    return;
+  }
+  const el: HTMLInputElement | HTMLTextAreaElement | null | undefined =
+    comp?.$el?.querySelector?.('input,textarea');
+  el?.focus();
+}
+
+function closeCreateCard() {
+  showCreate.value = false;
+  resetCreateForm();
+  nextTick(() => quickScanInput.value?.focus());
 }
 
 const onRowSelect = (item: Item) => {
@@ -860,7 +896,7 @@ watch(
         </BaseField>
 
         <BaseField label="Barcode" :required="true" :error="!createForm.barcode ? 'Barcode ist erforderlich.' : ''" hint="Scanner benutzen oder eintippen.">
-          <BaseInput ref="createBarcodeInput" v-model="createForm.barcode" @keydown.enter.prevent="focusPrimeInput(createUnitInput)" />
+          <BaseInput ref="createBarcodeInput" v-model="createForm.barcode" @keydown.enter.prevent="focusInputElement(createUnitInput)" />
         </BaseField>
 
         <BaseField label="Einheit" :required="true" :error="!createForm.unit ? 'Einheit ist erforderlich.' : ''">

@@ -12,6 +12,7 @@ type LoginResponse = {
 
 export async function authLogin(email: string, password: string) {
   const baseURL = getBaseURL();
+  const tenantSlug = getTenantSlug();
   const client = axios.create({
     baseURL,
     timeout: 15000,

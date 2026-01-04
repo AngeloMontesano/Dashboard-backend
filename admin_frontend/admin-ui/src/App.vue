@@ -486,4 +486,24 @@ function openMemberships(tenantId: string) {
   color: var(--muted);
   margin-top: 4px;
 }
+
+/* Sidebar kompakter */
+.shell {
+  align-items: start;
+}
+
+.sidebar {
+  height: auto;
+  position: sticky;
+  top: 12px;
+  align-self: start;
+}
+
+.nav {
+  align-self: start;
+}
+
+.sideBottom {
+  align-self: start;
+}
 </style>

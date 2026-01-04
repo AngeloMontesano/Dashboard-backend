@@ -1,6 +1,7 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { openDB, type IDBPDatabase } from 'idb';
 import { postInventoryMovement, type MovementPayload } from '@/api/inventory';
+import { useAuth } from './useAuth';
 import { useToast } from './useToast';
 
 export type MovementStatus = 'queued' | 'sending' | 'sent' | 'failed';
@@ -54,6 +55,8 @@ export function useMovementQueue() {
   const lastSyncError = ref<string | null>(null);
   const syncInterval = ref<number | null>(null);
   const { push: pushToast } = useToast();
+  const { state: authState } = useAuth();
+  const hasWriteAccess = computed(() => ['owner', 'admin'].includes(authState.role));
 
   const loadRecords = async () => {
     const db = await openDatabase();
@@ -100,6 +103,18 @@ export function useMovementQueue() {
   const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
   const sendEntry = async (entry: MovementRecord) => {
+    if (!authState.accessToken || !hasWriteAccess.value) {
+      const retries = Math.min(MAX_RETRIES, entry.retries + 1);
+      const failed: MovementRecord = {
+        ...entry,
+        status: 'failed',
+        retries,
+        last_error: !authState.accessToken ? 'Keine aktive Anmeldung' : 'Keine Berechtigung'
+      };
+      await updateRecord(failed);
+      return false;
+    }
+
     const payload: MovementPayload = {
       client_tx_id: entry.id,
       type: entry.type,
@@ -113,7 +128,7 @@ export function useMovementQueue() {
     await updateRecord(sending);
 
     try {
-      await postInventoryMovement(payload);
+      await postInventoryMovement(authState.accessToken, payload);
       const sent: MovementRecord = {
         ...sending,
         status: 'sent',

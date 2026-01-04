@@ -25,7 +25,7 @@ from app.modules.auth.routes import router as auth_router
 
 OPENAPI_TAGS = [
     {"name": "platform", "description": "Basis Endpunkte für Health, Meta und DB Readiness."},
-    {"name": "inventory", "description": "Tenant Kontext nur für /inventory/ping."},
+    {"name": "inventory", "description": "Inventory Endpoints mit Tenant-Kontext und Rollen-Checks."},
     {"name": "admin", "description": "Admin Endpunkte. Zugriff nur mit X-Admin-Key."},
     {"name": "admin-tenants", "description": "Tenant Verwaltung für Admin."},
     {"name": "admin-users", "description": "User Verwaltung für Admin."},

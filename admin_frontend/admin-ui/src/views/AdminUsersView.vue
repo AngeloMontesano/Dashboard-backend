@@ -9,7 +9,7 @@
         <button class="btnGhost small" :disabled="busy.list" @click="loadUsers">
           {{ busy.list ? "lädt..." : "Neu laden" }}
         </button>
-        <button class="btnPrimary small" @click="openCreateModal">Neuen Benutzer anlegen</button>
+        <button class="btnPrimary small" @click="openCreateCard">Neuen Benutzer anlegen</button>
       </div>
     </header>
 
@@ -131,14 +131,16 @@
       </div>
     </div>
 
-    <UserCreateModal
-      :open="modalCreate.open"
-      :busy="busy.create"
-      v-model:email="modalCreate.email"
-      v-model:password="modalCreate.password"
-      @close="closeCreateModal"
-      @create="createUser"
-    />
+    <div v-if="createForm.open" ref="createCardRef">
+      <UserCreateCard
+        :open="createForm.open"
+        :busy="busy.create"
+        v-model:email="createForm.email"
+        v-model:password="createForm.password"
+        @close="closeCreateCard"
+        @create="createUser"
+      />
+    </div>
 
     <PasswordModal
       :open="modalPassword.open"
@@ -152,12 +154,12 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, ref, watch } from "vue";
+import { computed, nextTick, reactive, ref, watch } from "vue";
 import { adminCreateUser, adminListUsers, adminUpdateUser } from "../api/admin";
 import type { UserOut } from "../types";
 import { useToast } from "../composables/useToast";
 
-import UserCreateModal from "../components/users/UserCreateModal.vue";
+import UserCreateCard from "../components/users/UserCreateCard.vue";
 import PasswordModal from "../components/users/UserPasswordModal.vue";
 
 const props = defineProps<{
@@ -173,11 +175,13 @@ const users = ref<UserOut[]>([]);
 const selectedUser = ref<UserOut | null>(null);
 const search = ref("");
 
-const modalCreate = reactive({
+const createForm = reactive({
   open: false,
   email: "",
   password: "",
 });
+
+const createCardRef = ref<HTMLElement | null>(null);
 
 const modalPassword = reactive({
   open: false,
@@ -212,10 +216,10 @@ async function loadUsers() {
     if (selectedUser.value) {
       selectedUser.value = res.find((u) => u.id === selectedUser.value?.id) ?? null;
     }
-    toast(`Benutzer geladen: ${res.length}`);
+    toast(`Benutzer geladen: ${res.length}`, "success");
   } catch (e: any) {
     busy.error = stringifyError(e);
-    toast(`Fehler beim Laden: ${busy.error}`);
+    toast(`Fehler beim Laden: ${busy.error}`, "danger");
   } finally {
     busy.list = false;
   }
@@ -223,23 +227,27 @@ async function loadUsers() {
 
 async function createUser() {
   if (!ensureAdminKey()) return;
-  const email = modalCreate.email.trim().toLowerCase();
-  const password = modalCreate.password.trim();
+  const email = createForm.email.trim().toLowerCase();
+  const password = createForm.password.trim();
 
   if (!email) {
-    toast("E-Mail ist Pflicht");
+    toast("E-Mail ist Pflicht", "warning");
+    return;
+  }
+  if (!password || password.length < 8) {
+    toast("Passwort muss mindestens 8 Zeichen haben", "warning");
     return;
   }
 
   busy.create = true;
   try {
-    const created = await adminCreateUser(props.adminKey, props.actor, { email, password: password || null });
+    const created = await adminCreateUser(props.adminKey, props.actor, { email, password });
     users.value = [created, ...users.value];
     selectedUser.value = created;
-    toast("Benutzer angelegt");
-    closeCreateModal();
+    toast("Benutzer angelegt", "success");
+    closeCreateCard();
   } catch (e: any) {
-    toast(`Fehler beim Anlegen: ${stringifyError(e)}`);
+    toast(`Fehler beim Anlegen: ${stringifyError(e)}`, "danger");
   } finally {
     busy.create = false;
   }
@@ -256,9 +264,9 @@ async function toggleActive(u: UserOut) {
     const updated = await adminUpdateUser(props.adminKey, props.actor, u.id, { is_active: !u.is_active });
     users.value = users.value.map((x) => (x.id === updated.id ? updated : x));
     if (selectedUser.value?.id === updated.id) selectedUser.value = updated;
-    toast(updated.is_active ? "Benutzer aktiviert" : "Benutzer deaktiviert");
+    toast(updated.is_active ? "Benutzer aktiviert" : "Benutzer deaktiviert", "success");
   } catch (e: any) {
-    toast(`Fehler beim Update: ${stringifyError(e)}`);
+    toast(`Fehler beim Update: ${stringifyError(e)}`, "danger");
   } finally {
     busy.toggleId = "";
   }
@@ -279,7 +287,7 @@ async function savePassword() {
   if (!ensureAdminKey() || !selectedUser.value) return;
   const pw = modalPassword.password.trim();
   if (!pw || pw.length < 8) {
-    toast("Passwort muss mindestens 8 Zeichen haben");
+    toast("Passwort muss mindestens 8 Zeichen haben", "warning");
     return;
   }
 
@@ -288,10 +296,10 @@ async function savePassword() {
     const updated = await adminUpdateUser(props.adminKey, props.actor, selectedUser.value.id, { password: pw });
     users.value = users.value.map((x) => (x.id === updated.id ? updated : x));
     selectedUser.value = updated;
-    toast("Passwort gesetzt");
+    toast("Passwort gesetzt", "success");
     closePasswordModal();
   } catch (e: any) {
-    toast(`Fehler beim Setzen: ${stringifyError(e)}`);
+    toast(`Fehler beim Setzen: ${stringifyError(e)}`, "danger");
   } finally {
     busy.password = false;
   }
@@ -305,16 +313,18 @@ function resetFilters() {
   search.value = "";
 }
 
-function openCreateModal() {
-  modalCreate.open = true;
-  modalCreate.email = "";
-  modalCreate.password = "";
+async function openCreateCard() {
+  createForm.open = true;
+  createForm.email = "";
+  createForm.password = "";
+  await nextTick();
+  createCardRef.value?.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
-function closeCreateModal() {
-  modalCreate.open = false;
-  modalCreate.email = "";
-  modalCreate.password = "";
+function closeCreateCard() {
+  createForm.open = false;
+  createForm.email = "";
+  createForm.password = "";
 }
 
 function stringifyError(e: any): string {
@@ -331,7 +341,7 @@ function stringifyError(e: any): string {
 
 function ensureAdminKey(): boolean {
   if (!props.adminKey) {
-    toast("Bitte Admin Key setzen");
+    toast("Bitte Admin Key setzen", "warning");
     return false;
   }
   return true;
@@ -339,7 +349,7 @@ function ensureAdminKey(): boolean {
 
 function exportCsv() {
   if (!filteredUsers.value.length) {
-    toast("Keine Benutzer zum Export");
+    toast("Keine Benutzer zum Export", "warning");
     return;
   }
 
@@ -365,7 +375,7 @@ function exportCsv() {
   link.download = filename;
   link.click();
   URL.revokeObjectURL(url);
-  toast("Export erstellt");
+  toast("Export erstellt", "success");
 }
 
 watch(
@@ -418,11 +428,8 @@ watch(
 }
 
 .toolbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
+  display: grid;
+  gap: 10px;
 }
 
 .chips {
@@ -435,7 +442,7 @@ watch(
   padding: 8px 10px;
   border: 1px solid var(--border);
   border-radius: 10px;
-  background: var(--surface-2, #f8fafc);
+  background: var(--surface2);
   min-width: 120px;
 }
 
@@ -461,6 +468,7 @@ watch(
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
+  justify-content: flex-start;
 }
 
 .searchCard {
@@ -469,8 +477,8 @@ watch(
   padding: 12px;
   background: var(--surface);
   display: grid;
-  grid-template-columns: 1fr 200px;
-  gap: 12px;
+  grid-template-columns: 1fr;
+  gap: 10px;
 }
 
 .fieldLabel {
@@ -493,7 +501,7 @@ watch(
   display: grid;
   gap: 8px;
   align-content: start;
-  justify-items: end;
+  justify-items: start;
 }
 
 .smallText {
@@ -528,14 +536,14 @@ watch(
 }
 
 .table tbody tr.rowActive {
-  background: var(--surface-2, #f8fafc);
+  background: var(--table-row-active);
 }
 
 .detailCard {
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 12px;
-  background: var(--surface);
+  background: var(--panel);
   color: var(--text, #0f172a);
   display: grid;
   gap: 10px;
@@ -552,7 +560,7 @@ watch(
   border: 1px solid var(--border);
   border-radius: 10px;
   padding: 10px;
-  background: var(--surface-2, #f8fafc);
+  background: var(--surface2);
 }
 
 .boxLabel {
@@ -580,8 +588,8 @@ watch(
 }
 
 @media (max-width: 860px) {
-  .searchCard {
-    grid-template-columns: 1fr;
+  .toolbar {
+    gap: 8px;
   }
 }
 </style>

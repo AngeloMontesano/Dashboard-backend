@@ -203,8 +203,7 @@
   border: 1px solid var(--border);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
-  padding: 14px;
-  min-height: 520px;
+  padding: 16px;
 }
 
 .cardHeader{
@@ -303,6 +302,110 @@
   padding: 8px 10px;
   font-size: 12px;
 }
+
+/* Tags / Chips */
+.tag{
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  font-size: 12px;
+}
+.tag.ok{ color: var(--ok); border-color: rgba(22, 163, 74, 0.35); background: rgba(22, 163, 74, 0.06); }
+.tag.bad{ color: var(--bad); border-color: rgba(220, 38, 38, 0.35); background: rgba(220, 38, 38, 0.06); }
+.tag.warn{ color: #d97706; border-color: rgba(217, 119, 6, 0.35); background: rgba(217, 119, 6, 0.06); }
+.tag.neutral{ color: var(--neutral); }
+
+/* Tables */
+.tableWrap{
+  border: 1px solid var(--border);
+  border-radius: var(--radius2);
+  overflow: auto;
+  background: var(--surface);
+}
+
+.table{
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.table th,
+.table td{
+  text-align: left;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.table thead th{
+  font-weight: 800;
+  color: var(--muted);
+  background: var(--surface2);
+}
+
+.table tbody tr:hover{
+  background: var(--surface2);
+}
+
+.table td.right,
+.table th.right{
+  text-align: right;
+}
+
+.table .mutedPad{
+  text-align: center;
+  color: var(--muted);
+  padding: 16px;
+}
+
+.rowActive{
+  background: var(--surface2);
+}
+
+/* Flex-Table Variante (div.table) */
+.table:not(table){
+  border: 1px solid var(--border);
+  border-radius: var(--radius2);
+  background: var(--surface);
+}
+
+.table:not(table) .thead{
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: 10px;
+  padding: 10px 12px;
+  font-weight: 800;
+  color: var(--muted);
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+}
+
+.table:not(table) .trow{
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: 10px;
+  padding: 10px 12px;
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+}
+
+.table:not(table) .trow:hover{
+  background: var(--surface2);
+}
+
+/* Links */
+.link{
+  background: transparent;
+  border: none;
+  color: var(--primary);
+  font-weight: 800;
+  cursor: pointer;
+  padding: 0 6px;
+}
+.link.danger{ color: var(--bad); }
 
 /* Utility */
 .mono{ font-family: var(--mono); }

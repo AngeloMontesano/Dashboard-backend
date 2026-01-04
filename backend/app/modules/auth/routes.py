@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Request, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import get_db
@@ -22,18 +22,33 @@ async def login(
     tenant_ctx: TenantContext = Depends(get_tenant_context),
     db: AsyncSession = Depends(get_db),
 ) -> TokenResponse:
+    tenant_id = str(tenant_ctx.tenant.id)
+    request_id = getattr(request.state, "request_id", "-")
     logger.info(
-        "auth.login attempt email=%s tenant_id=%s host=%s",
+        "auth.login attempt email=%s tenant_id=%s host=%s request_id=%s",
         payload.email,
-        tenant_ctx.tenant.id if tenant_ctx else "-",
+        tenant_id,
         request.headers.get("host", "-"),
+        request_id,
     )
-    access_token, refresh_token, expires_in, role, user_id = await service.login(
-        db=db,
-        tenant_id=str(tenant_ctx.tenant.id),
-        email=payload.email,
-        password=payload.password,
-    )
+    try:
+        access_token, refresh_token, expires_in, role, user_id = await service.login(
+            db=db,
+            tenant_id=tenant_id,
+            email=payload.email,
+            password=payload.password,
+        )
+    except HTTPException as exc:
+        detail = exc.detail if isinstance(exc.detail, dict) else {"message": str(exc.detail)}
+        logger.warning(
+            "auth.login failed email=%s tenant_id=%s status=%s code=%s request_id=%s",
+            payload.email,
+            tenant_id,
+            exc.status_code,
+            detail.get("error", {}).get("code") if isinstance(detail, dict) else None,
+            request_id,
+        )
+        raise
 
     return TokenResponse(
         access_token=access_token,

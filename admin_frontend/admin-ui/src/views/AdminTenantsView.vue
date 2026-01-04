@@ -4,151 +4,178 @@
     - Kompaktere Ansicht: Suche + Anlage links, Details rechts
     - Workspace zeigt nur relevante Infos + Aktionen zum ausgewählten Tenant
   -->
-  <section class="card">
-    <header class="cardHeader tight">
-      <div>
-        <div class="cardTitle">Kunden</div>
-        <div class="cardHint">Tenants suchen, auswählen, Details & Aktionen</div>
-      </div>
-      <div class="cardHeaderActions">
-        <button class="btnGhost" @click="openCreateModal">Tenant anlegen</button>
-        <button class="btnPrimary" :disabled="busy.list" @click="loadTenants">
-          <span v-if="busy.list" class="dotSpinner" aria-hidden="true"></span>
-          {{ busy.list ? "lädt..." : "Neu laden" }}
-        </button>
-      </div>
-    </header>
-
-    <div class="grid2" style="align-items: stretch; gap: 16px;">
-      <!-- Liste + Suche -->
-      <div class="box">
-        <div class="controlBar">
-          <div class="controlLeft">
-            <input
-              class="input"
-              v-model.trim="q"
-              placeholder="Name oder URL-Kürzel suchen"
-              @keyup.enter="loadTenants"
-              aria-label="Tenant suchen"
-            />
-            <select class="input" v-model="statusFilter" aria-label="Status filtern">
-              <option value="all">Alle</option>
-              <option value="active">Aktiv</option>
-              <option value="disabled">Deaktiviert</option>
-            </select>
-          </div>
-          <div class="controlRight">
-            <span class="muted smallText">Treffer: {{ filteredTenants.length }}</span>
-            <span class="muted smallText">Auswahl: {{ selectedTenant ? selectedTenant.slug : "-" }}</span>
-          </div>
-        </div>
-
-        <TenantTable
-          :tenants="filteredTenants"
-          :selectedId="selectedTenant?.id || ''"
-          :busyToggleId="busy.toggleId"
-          :busyList="busy.list"
-          @select="selectTenant"
-          @details="openDrawer"
-          @toggle="toggleTenant"
-          @delete="deleteTenant"
-        />
-
-        <div v-if="!busy.list && filteredTenants.length === 0" class="emptyState">
-          <div class="emptyTitle">Keine Tenants gefunden</div>
-          <div class="emptyBody">Lege den ersten Tenant an oder passe Suche/Filter an.</div>
-          <div class="row gap8 wrap">
-            <button class="btnPrimary small" @click="openCreateModal">Ersten Tenant anlegen</button>
-            <button class="btnGhost small" @click="resetFilters">Filter zurücksetzen</button>
-          </div>
-        </div>
-
-        <div v-if="busy.error" class="errorText">Fehler: {{ busy.error }}</div>
-
-        <div class="hintBox">
-          Tipp: Suche via <span class="mono">GET /admin/tenants?q=...</span>. Enter startet den Call.
+  <section class="sectionShell">
+    <div class="sectionHeader">
+      <div class="sectionTitleWrap">
+        <div class="sectionLabel">Bereich Kunden</div>
+        <div class="sectionTitle">Kunden</div>
+        <div class="sectionSubtitle">Tenants suchen, auswählen, Details & Aktionen</div>
+        <div class="sectionMeta">
+          Aktueller Tenant: <span class="mono">{{ selectedTenant?.slug || "–" }}</span>
         </div>
       </div>
-
-      <!-- Details + Aktionen -->
-      <div class="box">
-        <header class="row" style="justify-content: space-between; align-items: center; margin-bottom: 8px;">
-          <div>
-            <div class="cardTitle" style="margin: 0;">Tenant Details</div>
-            <div class="cardHint" style="margin: 0;">Status, Host, User-Verwaltung</div>
-          </div>
-          <button class="btnGhost small" :disabled="!selectedTenant" @click="selectedTenant && openDrawer(selectedTenant)">
-            Details
-          </button>
-        </header>
-
-        <div v-if="!selectedTenant" class="muted">
-          Kein Tenant ausgewählt. Wähle links einen Kunden aus oder lege einen neuen an.
+      <div class="sectionStats">
+        <div class="stat">
+          <div class="statNumber">{{ totalTenants }}</div>
+          <div class="statLabel">Tenants gesamt</div>
         </div>
-
-        <div v-else class="kvGrid">
-          <div class="kv">
-            <div class="k">Name</div>
-            <div class="v">{{ selectedTenant.name }}</div>
-          </div>
-
-          <div class="kv">
-            <div class="k">URL-Kürzel</div>
-            <div class="v mono">{{ selectedTenant.slug }}</div>
-          </div>
-
-          <div class="kv">
-            <div class="k">Status</div>
-            <div class="v">
-              <span class="tag" :class="selectedTenant.is_active ? 'ok' : 'bad'">
-                {{ selectedTenant.is_active ? "aktiv" : "deaktiviert" }}
-              </span>
-            </div>
-          </div>
-
-          <div class="kv">
-            <div class="k">Tenant ID</div>
-            <div class="v mono">{{ selectedTenant.id }}</div>
-          </div>
-
-          <div class="kv">
-            <div class="k">Tenant Host</div>
-            <div class="v mono">{{ `${selectedTenant.slug}.${baseDomain}` }}</div>
-          </div>
+        <div class="stat">
+          <div class="statNumber success">{{ activeTenants }}</div>
+          <div class="statLabel">aktiv</div>
         </div>
-
-        <div class="row gap8 wrap" style="margin-top: 12px;">
-          <button
-            class="btnGhost small"
-            :disabled="!selectedTenant || busy.toggleId === selectedTenant?.id"
-            @click="selectedTenant && toggleTenant(selectedTenant)"
-          >
-            {{ busy.toggleId === selectedTenant?.id ? "..." : selectedTenant?.is_active ? "Deaktivieren" : "Aktivieren" }}
-          </button>
-          <button
-            class="btnGhost small danger"
-            :disabled="!selectedTenant || busy.deleteId === selectedTenant?.id"
-            @click="selectedTenant && deleteTenant(selectedTenant)"
-          >
-            {{ busy.deleteId === selectedTenant?.id ? "löscht..." : "Tenant löschen" }}
-          </button>
-          <button
-            class="btnPrimary small"
-            :disabled="!selectedTenant"
-            @click="selectedTenant && openMemberships(selectedTenant.id)"
-          >
-            Tenant-User verwalten
-          </button>
-        </div>
-
-        <div class="hintBox" style="margin-top: 10px;">
-          Tenant-User Verwaltung öffnet den Tab <span class="mono">Tenant-User</span> und übernimmt den ausgewählten Kunden.
-          <div v-if="!hasTenants" class="muted" style="margin-top: 4px;">
-            Noch keine Kunden vorhanden – lege zuerst einen Tenant an.
-          </div>
+        <div class="stat">
+          <div class="statNumber danger">{{ inactiveTenants }}</div>
+          <div class="statLabel">deaktiviert</div>
         </div>
       </div>
     </div>
+
+    <section class="card">
+      <header class="cardHeader tight">
+        <div>
+          <div class="cardTitle">Kunden suchen</div>
+          <div class="cardHint">Mit Enter bestätigen; Treffer sofort auswählbar</div>
+        </div>
+        <div class="cardHeaderActions">
+          <button class="btnGhost" @click="openCreateModal">Neuen Kunden anlegen</button>
+          <button class="btnPrimary" :disabled="busy.list" @click="loadTenants">
+            <span v-if="busy.list" class="dotSpinner" aria-hidden="true"></span>
+            {{ busy.list ? "lädt..." : "Neu laden" }}
+          </button>
+        </div>
+      </header>
+
+      <div class="grid2" style="align-items: stretch; gap: 16px;">
+        <!-- Liste + Suche -->
+        <div class="box">
+          <div class="controlBar">
+            <div class="controlLeft">
+              <input
+                class="input"
+                v-model.trim="q"
+                placeholder="Name oder URL-Kürzel suchen"
+                @keyup.enter="loadTenants"
+                aria-label="Tenant suchen"
+              />
+              <select class="input" v-model="statusFilter" aria-label="Status filtern">
+                <option value="all">Alle</option>
+                <option value="active">Aktiv</option>
+                <option value="disabled">Deaktiviert</option>
+              </select>
+            </div>
+            <div class="controlRight">
+              <span class="muted smallText">Treffer: {{ filteredTenants.length }}</span>
+              <span class="muted smallText">Auswahl: {{ selectedTenant ? selectedTenant.slug : "-" }}</span>
+            </div>
+          </div>
+
+          <TenantTable
+            :tenants="filteredTenants"
+            :selectedId="selectedTenant?.id || ''"
+            :busyToggleId="busy.toggleId"
+            :busyList="busy.list"
+            @select="selectTenant"
+            @details="openDrawer"
+            @toggle="toggleTenant"
+            @delete="deleteTenant"
+          />
+
+          <div v-if="!busy.list && filteredTenants.length === 0" class="emptyState">
+            <div class="emptyTitle">Keine Tenants gefunden</div>
+            <div class="emptyBody">Lege den ersten Tenant an oder passe Suche/Filter an.</div>
+            <div class="row gap8 wrap">
+              <button class="btnPrimary small" @click="openCreateModal">Ersten Tenant anlegen</button>
+              <button class="btnGhost small" @click="resetFilters">Filter zurücksetzen</button>
+            </div>
+          </div>
+
+          <div v-if="busy.error" class="errorText">Fehler: {{ busy.error }}</div>
+
+          <div class="hintBox">
+            Tipp: Suche via <span class="mono">GET /admin/tenants?q=...</span>. Enter startet den Call.
+          </div>
+        </div>
+
+        <!-- Details + Aktionen -->
+        <div class="box">
+          <header class="row" style="justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <div>
+              <div class="cardTitle" style="margin: 0;">Ausgewählter Kunde</div>
+              <div class="cardHint" style="margin: 0;">Kundendetails & Aktionen</div>
+            </div>
+            <button class="btnGhost small" :disabled="!selectedTenant" @click="selectedTenant && openDrawer(selectedTenant)">
+              Details
+            </button>
+          </header>
+
+          <div v-if="!selectedTenant" class="muted">
+            Kein Tenant ausgewählt. Wähle links einen Kunden aus oder lege einen neuen an.
+          </div>
+
+          <div v-else class="kvGrid">
+            <div class="kv">
+              <div class="k">Name</div>
+              <div class="v">{{ selectedTenant.name }}</div>
+            </div>
+
+            <div class="kv">
+              <div class="k">URL-Kürzel</div>
+              <div class="v mono">{{ selectedTenant.slug }}</div>
+            </div>
+
+            <div class="kv">
+              <div class="k">Status</div>
+              <div class="v">
+                <span class="tag" :class="selectedTenant.is_active ? 'ok' : 'bad'">
+                  {{ selectedTenant.is_active ? "aktiv" : "deaktiviert" }}
+                </span>
+              </div>
+            </div>
+
+            <div class="kv">
+              <div class="k">Tenant ID</div>
+              <div class="v mono">{{ selectedTenant.id }}</div>
+            </div>
+
+            <div class="kv">
+              <div class="k">Tenant Host</div>
+              <div class="v mono">{{ `${selectedTenant.slug}.${baseDomain}` }}</div>
+            </div>
+          </div>
+
+          <div class="row gap8 wrap" style="margin-top: 12px;">
+            <button
+              class="btnGhost small"
+              :disabled="!selectedTenant || busy.toggleId === selectedTenant?.id"
+              @click="selectedTenant && toggleTenant(selectedTenant)"
+            >
+              {{ busy.toggleId === selectedTenant?.id ? "..." : selectedTenant?.is_active ? "Deaktivieren" : "Aktivieren" }}
+            </button>
+            <button
+              class="btnGhost small danger"
+              :disabled="!selectedTenant || busy.deleteId === selectedTenant?.id"
+              @click="selectedTenant && deleteTenant(selectedTenant)"
+            >
+              {{ busy.deleteId === selectedTenant?.id ? "löscht..." : "Tenant löschen" }}
+            </button>
+            <button
+              class="btnPrimary small"
+              :disabled="!selectedTenant"
+              @click="selectedTenant && openMemberships(selectedTenant.id)"
+            >
+              Tenant-User verwalten
+            </button>
+          </div>
+
+          <div class="hintBox" style="margin-top: 10px;">
+            Tenant-User Verwaltung öffnet den Tab <span class="mono">Tenant-User</span> und übernimmt den ausgewählten Kunden.
+            <div v-if="!hasTenants" class="muted" style="margin-top: 4px;">
+              Noch keine Kunden vorhanden – lege zuerst einen Tenant an.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
 
     <!-- Drawer -->
     <TenantDrawer
@@ -217,6 +244,10 @@ const selectedTenant = ref<TenantOut | null>(null);
 
 const q = ref("");
 const statusFilter = ref<"all" | "active" | "disabled">("all");
+
+const totalTenants = computed(() => tenants.value.length);
+const activeTenants = computed(() => tenants.value.filter((t) => t.is_active).length);
+const inactiveTenants = computed(() => tenants.value.filter((t) => !t.is_active).length);
 
 const busy = reactive({
   list: false,
@@ -487,6 +518,84 @@ watch(
 </script>
 
 <style scoped>
+.sectionShell {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border: 1px solid var(--border, #dcdcdc);
+  border-radius: 12px;
+  background: var(--surface, #fff);
+}
+
+.sectionTitleWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sectionLabel {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--muted);
+}
+
+.sectionTitle {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.sectionSubtitle {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.sectionMeta {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.sectionStats {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.stat {
+  min-width: 110px;
+  padding: 8px 10px;
+  border: 1px solid var(--border, #dcdcdc);
+  border-radius: 10px;
+  background: var(--surface-2, #f8fafc);
+  text-align: center;
+}
+
+.statNumber {
+  font-weight: 700;
+  font-size: 18px;
+}
+
+.statNumber.success {
+  color: var(--success, #22c55e);
+}
+
+.statNumber.danger {
+  color: var(--danger, #c53030);
+}
+
+.statLabel {
+  font-size: 12px;
+  color: var(--muted);
+}
+
 .controlBar {
   display: flex;
   align-items: center;

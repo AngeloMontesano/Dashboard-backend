@@ -54,9 +54,30 @@ export type ItemsPage = {
   page_size: number;
 };
 
+export type MovementPayload = {
+  client_tx_id: string;
+  type: 'IN' | 'OUT';
+  barcode: string;
+  qty: number;
+  note?: string;
+  created_at?: string;
+};
+
 export async function fetchCategories(token: string) {
   const client = buildClient(token);
   const res = await client.get<Category[]>('/inventory/categories');
+  return res.data;
+}
+
+export async function createCategory(token: string, payload: { name: string; is_active?: boolean }) {
+  const client = buildClient(token);
+  const res = await client.post<Category>('/inventory/categories', payload);
+  return res.data;
+}
+
+export async function updateCategory(token: string, id: string, payload: { name?: string; is_active?: boolean }) {
+  const client = buildClient(token);
+  const res = await client.patch<Category>(`/inventory/categories/${id}`, payload);
   return res.data;
 }
 
@@ -130,4 +151,10 @@ export async function exportItems(token: string) {
   const client = buildClient(token);
   const res = await client.get<{ csv: string }>('/inventory/items/export');
   return res.data.csv;
+}
+
+export async function postInventoryMovement(token: string, payload: MovementPayload) {
+  const client = buildClient(token);
+  const res = await client.post('/inventory/movements', payload);
+  return res.data;
 }

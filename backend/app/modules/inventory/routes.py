@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from typing import Any
 
 from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
@@ -12,6 +13,7 @@ from app.core.deps_tenant import get_tenant_context
 from app.core.tenant import TenantContext
 from app.models.category import Category
 from app.models.item import Item
+from app.models.movement import InventoryMovement
 from app.modules.inventory.schemas import (
     CategoryCreate,
     CategoryOut,
@@ -20,6 +22,7 @@ from app.modules.inventory.schemas import (
     ItemOut,
     ItemUpdate,
     ItemsPage,
+    MovementPayload,
     SKUExistsResponse,
     TenantPingResponse,
     TenantOutPing,
@@ -397,6 +400,62 @@ async def update_item(
         category = await db.get(Category, item.category_id)
 
     return _item_out(item, category)
+
+
+# ----------------------
+# Bewegungen (Bestandsbuchungen)
+# ----------------------
+@router.post("/movements", dependencies=[Depends(require_owner_or_admin)])
+async def create_movement(
+    payload: MovementPayload,
+    ctx: TenantContext = Depends(get_tenant_context),
+    db: AsyncSession = Depends(get_db),
+):
+    item = await db.scalar(
+        select(Item).where(Item.tenant_id == ctx.tenant.id, Item.barcode == payload.barcode.strip())
+    )
+    if item is None:
+        raise HTTPException(
+            status_code=404,
+            detail={"error": {"code": "item_not_found", "message": "Artikel zum Barcode nicht gefunden"}},
+        )
+
+    existing = await db.scalar(
+        select(InventoryMovement).where(
+            InventoryMovement.tenant_id == ctx.tenant.id,
+            InventoryMovement.client_tx_id == payload.client_tx_id,
+        )
+    )
+    if existing:
+        category = await db.get(Category, item.category_id) if item.category_id else None
+        return {"ok": True, "item": _item_out(item, category), "movement_id": str(existing.id), "duplicate": True}
+
+    delta = payload.qty if payload.type == "IN" else -payload.qty
+    new_qty = item.quantity + delta
+    if new_qty < 0:
+        raise HTTPException(
+            status_code=400,
+            detail={"error": {"code": "qty_negative", "message": "Bestand würde negativ werden"}},
+        )
+
+    item.quantity = new_qty
+    movement = InventoryMovement(
+        tenant_id=ctx.tenant.id,
+        item_id=item.id,
+        client_tx_id=payload.client_tx_id,
+        type=payload.type,
+        barcode=item.barcode,
+        qty=payload.qty,
+        note=payload.note,
+        created_at=payload.created_at or datetime.now(timezone.utc),
+    )
+    db.add(movement)
+    await db.commit()
+    await db.refresh(item)
+    await db.refresh(movement)
+
+    category = await db.get(Category, item.category_id) if item.category_id else None
+    return {"ok": True, "item": _item_out(item, category), "movement_id": str(movement.id), "duplicate": False}
 
 
 # ----------------------

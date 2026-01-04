@@ -5,8 +5,10 @@ const apiHost = import.meta.env.VITE_API_HOST || "";
 const apiPort = import.meta.env.VITE_API_PORT || "";
 const tenantSlug = import.meta.env.VITE_TENANT_SLUG || "";
 const explicitApiBase = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_BASE;
-const allowRuntimeHost = (import.meta.env.VITE_ALLOW_RUNTIME_HOST || "true").toLowerCase() === "true";
-const apiPrefix = normalizePrefix(import.meta.env.VITE_API_PREFIX ?? "/api");
+// Default to the dedicated API host (api.<baseDomain>). Opt-in to the runtime host via VITE_ALLOW_RUNTIME_HOST=true.
+const allowRuntimeHost = (import.meta.env.VITE_ALLOW_RUNTIME_HOST || "false").toLowerCase() === "true";
+// Backend serves routes at the root (e.g. /auth/login, /inventory/items). Prefix can still be added via env if needed.
+const apiPrefix = normalizePrefix(import.meta.env.VITE_API_PREFIX ?? "");
 
 const runtimeHost = typeof window !== "undefined" ? window.location.hostname : "";
 const runtimeProtocol = typeof window !== "undefined" ? window.location.protocol.replace(":", "") : "";
@@ -50,7 +52,7 @@ export function getBaseURL(): string {
     return applyPrefix(`${apiProtocol}://${apiHost}${portPart}`);
   }
   // Prefer the current host if it already matches the base domain (keeps tenant slug)
-  if (baseDomain && runtimeHost && runtimeHost.endsWith(`.${baseDomain}`)) {
+  if (allowRuntimeHost && baseDomain && runtimeHost && runtimeHost.endsWith(`.${baseDomain}`)) {
     const portPart = runtimePort ? `:${runtimePort}` : "";
     const protocol = runtimeProtocol || apiProtocol;
     return applyPrefix(`${protocol}://${runtimeHost}${portPart}`);

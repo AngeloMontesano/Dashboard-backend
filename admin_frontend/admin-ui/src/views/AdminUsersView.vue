@@ -119,7 +119,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from "vue";
+import { computed, reactive, ref, watch } from "vue";
 import { adminCreateUser, adminListUsers, adminUpdateUser } from "../api/admin";
 import type { UserOut } from "../types";
 import { useToast } from "../composables/useToast";
@@ -250,7 +250,13 @@ function ensureAdminKey(): boolean {
   return true;
 }
 
-onMounted(() => {
-  loadUsers();
-});
+watch(
+  () => props.adminKey,
+  (key, prev) => {
+    if (key && key !== prev) {
+      loadUsers();
+    }
+  },
+  { immediate: true }
+);
 </script>

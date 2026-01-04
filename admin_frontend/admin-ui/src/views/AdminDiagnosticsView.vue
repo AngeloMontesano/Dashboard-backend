@@ -90,7 +90,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, ref } from "vue";
+import { computed, reactive, ref, watch } from "vue";
 import { platformHealth, platformHealthDb } from "../api/platform";
 import { getBaseURL } from "../api/base";
 import { adminPing, adminDiagnostics } from "../api/admin";
@@ -207,4 +207,14 @@ async function copySnapshot() {
     busy.snapshot = false;
   }
 }
+
+watch(
+  () => props.adminKey,
+  (key, prev) => {
+    if (key && key !== prev) {
+      runAdminChecks();
+    }
+  },
+  { immediate: true }
+);
 </script>

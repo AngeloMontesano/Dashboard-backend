@@ -61,9 +61,9 @@
 
 <script setup lang="ts">
 import { onMounted, reactive, ref } from "vue";
-import type { AuditOut } from "../types";
 import { adminGetAudit } from "../api/admin";
 import { useToast } from "../composables/useToast";
+import { AuditDisplayRow, toDisplayRow } from "../components/audit/format";
 
 import AuditFiltersBar from "../components/audit/AuditFiltersBar.vue";
 import AuditTable from "../components/audit/AuditTable.vue";
@@ -89,11 +89,11 @@ const filters = reactive({
   offset: 0,
 });
 
-const rows = ref<AuditOut[]>([]);
+const rows = ref<AuditDisplayRow[]>([]);
 
 const drawer = reactive({
   open: false,
-  row: null as AuditOut | null,
+  row: null as AuditDisplayRow | null,
 });
 
 function resetFilters() {
@@ -127,7 +127,7 @@ async function load() {
       offset: filters.offset,
     });
 
-    rows.value = res;
+    rows.value = res.map(toDisplayRow);
     toast(`Audit geladen: ${res.length}`);
   } catch (e: any) {
     toast(`Fehler: ${stringifyError(e)}`);
@@ -146,7 +146,7 @@ function prevPage() {
   load();
 }
 
-function openDrawer(row: AuditOut) {
+function openDrawer(row: AuditDisplayRow) {
   drawer.open = true;
   drawer.row = row;
 }

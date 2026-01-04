@@ -78,29 +78,15 @@ export function getTenantHost(): string | null {
   return null;
 }
 
-export function getTenantForwardHeader(): Record<string, string> {
+export function getTenantHeaders(): Record<string, string> {
   const tenantHost = getTenantHost();
-  if (tenantHost) {
-    return { "X-Forwarded-Host": tenantHost };
-  }
-  return {};
-}
+  const slugFromHost = tenantHost ? tenantHost.split(":")[0]?.split(".")[0] : "";
+  const slug = slugFromHost || tenantSlug || "";
 
-export function getTenantSlug(): string {
-  if (tenantSlug) return tenantSlug;
-  if (baseDomain && runtimeHost && runtimeHost.endsWith(`.${baseDomain}`)) {
-    // runtimeHost = <slug>.<baseDomain>
-    const withoutBase = runtimeHost.slice(0, runtimeHost.length - baseDomain.length - 1);
-    if (withoutBase && !withoutBase.includes(".")) {
-      return withoutBase;
-    }
-  }
-  return "";
-}
-
-export function getTenantForwardHeader(): Record<string, string> {
-  const slug = getTenantSlug();
-  return slug ? { "X-Tenant-Slug": slug } : {};
+  const headers: Record<string, string> = {};
+  if (tenantHost) headers["X-Forwarded-Host"] = tenantHost;
+  if (slug) headers["X-Tenant-Slug"] = slug;
+  return headers;
 }
 
 // Helpful console output for debugging connectivity

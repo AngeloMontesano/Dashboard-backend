@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { getBaseURL, getTenantForwardHeader } from './base';
+import { getBaseURL, getTenantHeaders } from './base';
 
 type LoginResponse = {
   access_token: string;
@@ -18,7 +18,7 @@ export async function authLogin(email: string, password: string) {
     timeout: 15000,
     headers: {
       'Content-Type': 'application/json',
-      ...getTenantForwardHeader()
+      ...getTenantHeaders()
     }
   });
   try {

@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { getBaseURL, getTenantForwardHeader } from './base';
+import { getBaseURL, getTenantHeaders } from './base';
 
 export type MovementPayload = {
   client_tx_id: string;
@@ -14,7 +14,7 @@ const client = axios.create({
   baseURL: getBaseURL(),
   timeout: 8000,
   headers: {
-    ...getTenantForwardHeader()
+    ...getTenantHeaders()
   }
 });
 

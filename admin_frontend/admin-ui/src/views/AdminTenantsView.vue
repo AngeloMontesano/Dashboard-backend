@@ -111,9 +111,6 @@
         <div class="detailTitles">
           <div class="detailTitleRow">
             <div class="detailTitle">{{ selectedTenant.name }}</div>
-            <span class="tag" :class="selectedTenant.is_active ? 'ok' : 'bad'">
-              {{ selectedTenant.is_active ? "aktiv" : "deaktiviert" }}
-            </span>
           </div>
           <div class="detailMeta">
             <span class="mono">{{ selectedTenant.slug }}</span>
@@ -144,10 +141,6 @@
         <div class="detailBox wide">
           <div class="boxLabel">Tenant Host</div>
           <div class="boxValue mono hostValue">{{ tenantHost }}</div>
-        </div>
-        <div class="detailBox wide">
-          <div class="boxLabel">Status</div>
-          <div class="boxValue">{{ selectedTenant.is_active ? "aktiv" : "deaktiviert" }}</div>
         </div>
       </div>
 
@@ -673,6 +666,17 @@ watch(
   align-items: center;
 }
 
+.detailTitles {
+  display: grid;
+  gap: 6px;
+}
+
+.detailTitleRow {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
 .detailTitle {
   font-size: 16px;
   font-weight: 800;
@@ -691,7 +695,8 @@ watch(
 }
 
 .hostValue {
-  word-break: break-all;
+  word-break: normal;
+  white-space: nowrap;
 }
 
 .dotSep {
@@ -722,11 +727,11 @@ watch(
 }
 
 .detailBox.tight {
-  min-width: 180px;
+  min-width: 150px;
 }
 
 .detailBox.wide {
-  min-width: 220px;
+  min-width: 260px;
 }
 
 .detailActions {

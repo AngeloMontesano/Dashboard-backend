@@ -1,20 +1,19 @@
 <template>
-  <section class="card minimalHeader">
-    <header class="cardHeader tight">
-      <div>
-        <div class="cardTitle">Kunden</div>
-        <div class="cardHint">Kunden suchen und auswählen</div>
+  <section class="tenantsView">
+    <header class="viewHeader">
+      <div class="headTitles">
+        <div class="headTitle">Kunden</div>
+        <div class="headSubtitle">Kunden suchen und auswählen</div>
       </div>
-      <div class="cardHeaderActions">
-        <button class="btnGhost" @click="openCreateModal">Neuen Kunden anlegen</button>
-        <button class="btnPrimary" :disabled="busy.list" @click="loadTenants">
+      <div class="headActions">
+        <button class="btnGhost small" @click="openCreateModal">Neuen Kunden anlegen</button>
+        <button class="btnGhost small" :disabled="busy.list" @click="loadTenants">
           <span v-if="busy.list" class="dotSpinner" aria-hidden="true"></span>
           {{ busy.list ? "lädt..." : "Neu laden" }}
         </button>
       </div>
     </header>
 
-    <!-- Toolbar mit KPIs + Export -->
     <div class="toolbar">
       <div class="chips">
         <div class="chip">
@@ -31,24 +30,28 @@
         </div>
       </div>
       <div class="toolbarActions">
-        <button class="btnGhost" :disabled="!filteredTenants.length" @click="exportCsv">Kunden exportieren CSV</button>
-        <button class="btnGhost" :disabled="busy.list" @click="loadTenants">Neu laden</button>
+        <button class="btnGhost small" :disabled="!filteredTenants.length" @click="exportCsv">
+          Kunden exportieren CSV
+        </button>
+        <button class="btnGhost small" :disabled="busy.list" @click="loadTenants">Neu laden</button>
       </div>
     </div>
 
-    <!-- Suche -->
     <div class="searchCard">
-      <label class="fieldLabel" for="kunden-search">Suche</label>
-      <input
-        id="kunden-search"
-        class="input"
-        v-model.trim="q"
-        placeholder="Name oder URL-Kürzel eingeben"
-        aria-label="Kunden suchen"
-      />
-      <div class="hint">Tippen zum Filtern. Groß und Kleinschreibung egal. Prefix-Treffer zuerst.</div>
-      <div class="filterRow">
-        <select class="input" v-model="statusFilter" aria-label="Status filtern">
+      <div class="searchLeft">
+        <label class="fieldLabel" for="kunden-search">Suche</label>
+        <input
+          id="kunden-search"
+          class="input"
+          v-model.trim="q"
+          placeholder="Name oder URL-Kürzel eingeben"
+          aria-label="Kunden suchen"
+        />
+        <div class="hint">Tippen zum Filtern. Groß und Kleinschreibung egal. Prefix zuerst, sonst enthält.</div>
+      </div>
+      <div class="searchRight">
+        <label class="fieldLabel" for="kunden-status">Status</label>
+        <select id="kunden-status" class="input" v-model="statusFilter" aria-label="Status filtern">
           <option value="all">Alle</option>
           <option value="active">Aktiv</option>
           <option value="disabled">Deaktiviert</option>
@@ -57,7 +60,6 @@
       </div>
     </div>
 
-    <!-- Tabelle -->
     <div class="tableCard">
       <div class="tableHeader">
         <div class="tableTitle">Kundenliste</div>
@@ -67,7 +69,7 @@
         <table class="table">
           <thead>
             <tr>
-              <th></th>
+              <th class="narrowCol"></th>
               <th>Slug</th>
               <th>Name</th>
               <th>Status</th>
@@ -104,59 +106,80 @@
       </div>
     </div>
 
-    <!-- Details -->
     <div v-if="selectedTenant" class="detailCard">
-      <div class="detailHeader">
-        <div>
-          <div class="detailTitle">{{ selectedTenant.name }}</div>
-          <div class="detailSub mono">{{ selectedTenant.slug }} · {{ selectedTenant.id }}</div>
+      <div class="detailGrid">
+        <div class="detailBox tight">
+          <div class="boxLabel">Name</div>
+          <div class="boxValue">{{ selectedTenant.name }}</div>
         </div>
-        <div class="detailStatus">
-          <span class="tag" :class="selectedTenant.is_active ? 'ok' : 'bad'">
-            {{ selectedTenant.is_active ? "aktiv" : "deaktiviert" }}
-          </span>
+        <div class="detailBox tight">
+          <div class="boxLabel copyLabel">
+            <span>URL-Kürzel</span>
+            <button
+              class="iconBtn"
+              type="button"
+              aria-label="In Zwischenablage kopieren"
+              title="In Zwischenablage kopieren"
+              @click.stop="copyValue(selectedTenant.slug, 'URL-Kürzel')"
+            >
+              📋
+            </button>
+          </div>
+          <div class="boxValue mono">{{ selectedTenant.slug }}</div>
+        </div>
+        <div class="detailBox medium">
+          <div class="boxLabel copyLabel">
+            <span>Tenant ID</span>
+            <button
+              class="iconBtn"
+              type="button"
+              aria-label="In Zwischenablage kopieren"
+              title="In Zwischenablage kopieren"
+              @click.stop="copyValue(selectedTenant.id, 'Tenant ID')"
+            >
+              📋
+            </button>
+          </div>
+          <div class="boxValue mono">{{ selectedTenant.id }}</div>
+        </div>
+        <div class="detailBox hostBox">
+          <div class="boxLabel copyLabel">
+            <span>Tenant Host</span>
+            <button
+              class="iconBtn"
+              type="button"
+              aria-label="In Zwischenablage kopieren"
+              title="In Zwischenablage kopieren"
+              @click.stop="copyValue(tenantHost, 'Tenant Host')"
+            >
+              📋
+            </button>
+          </div>
+          <div class="boxValue mono hostValue">{{ tenantHost }}</div>
         </div>
       </div>
 
-      <div class="kvGrid">
-        <div class="kv">
-          <div class="k">Name</div>
-          <div class="v">{{ selectedTenant.name }}</div>
+      <div class="detailActions">
+        <div class="row gap8 wrap">
+          <button
+            class="btnGhost small"
+            :disabled="busy.toggleId === selectedTenant.id"
+            @click="toggleTenant(selectedTenant)"
+          >
+            {{ busy.toggleId === selectedTenant.id ? "..." : selectedTenant.is_active ? "Deaktivieren" : "Aktivieren" }}
+          </button>
+          <button
+            class="btnGhost small danger"
+            :disabled="busy.deleteId === selectedTenant.id"
+            @click="deleteTenant(selectedTenant)"
+          >
+            {{ busy.deleteId === selectedTenant.id ? "löscht..." : "Kunde löschen" }}
+          </button>
         </div>
-        <div class="kv">
-          <div class="k">URL-Kürzel</div>
-          <div class="v mono">{{ selectedTenant.slug }}</div>
-        </div>
-        <div class="kv">
-          <div class="k">Tenant ID</div>
-          <div class="v mono">{{ selectedTenant.id }}</div>
-        </div>
-        <div class="kv">
-          <div class="k">Tenant Host</div>
-          <div class="v mono">{{ `${selectedTenant.slug}.${baseDomain}` }}</div>
-        </div>
-      </div>
-
-      <div class="row gap8 wrap" style="margin-top: 12px;">
-        <button
-          class="btnGhost small"
-          :disabled="busy.toggleId === selectedTenant.id"
-          @click="toggleTenant(selectedTenant)"
-        >
-          {{ busy.toggleId === selectedTenant.id ? "..." : selectedTenant.is_active ? "Deaktivieren" : "Aktivieren" }}
-        </button>
-        <button
-          class="btnGhost small danger"
-          :disabled="busy.deleteId === selectedTenant.id"
-          @click="deleteTenant(selectedTenant)"
-        >
-          {{ busy.deleteId === selectedTenant.id ? "löscht..." : "Kunde löschen" }}
-        </button>
         <button class="btnPrimary small" @click="openMemberships(selectedTenant.id)">Tenant User verwalten</button>
       </div>
     </div>
 
-    <!-- Create Modal -->
     <TenantCreateModal
       :open="modal.open"
       :busy="busy.create"
@@ -226,6 +249,7 @@ const modal = reactive({
 });
 
 const baseDomain = import.meta.env.VITE_BASE_DOMAIN || "test.myitnetwork.de";
+const tenantHost = computed(() => (selectedTenant.value ? `${selectedTenant.value.slug}.${baseDomain}` : ""));
 
 /* Filter */
 const filteredTenants = computed(() => {
@@ -303,6 +327,10 @@ async function toggleTenant(t: TenantOut) {
   if (!ensureAdminKey()) return;
   if (!t) return;
 
+  const actionLabel = t.is_active ? "deaktivieren" : "aktivieren";
+  const ok = window.confirm(`Kunde ${t.slug} wirklich ${actionLabel}?`);
+  if (!ok) return;
+
   busy.toggleId = t.id;
   try {
     const updated = await adminUpdateTenant(props.adminKey, props.actor, t.id, {
@@ -321,8 +349,15 @@ async function toggleTenant(t: TenantOut) {
 async function deleteTenant(t: TenantOut) {
   if (!ensureAdminKey()) return;
   if (!t) return;
-  const confirmDelete = window.confirm(`Kunde ${t.slug} wirklich löschen? Diese Aktion ist irreversibel.`);
-  if (!confirmDelete) return;
+  const confirmed = window.confirm(`Kunde ${t.slug} wirklich löschen? Diese Aktion ist irreversibel.`);
+  if (!confirmed) return;
+  const check = window.prompt(
+    `Bitte Tenant ID zur Bestätigung eingeben:\n${t.id}\nLöschen kann nicht rückgängig gemacht werden.`
+  );
+  if (!check || check.trim() !== t.id) {
+    toast("Löschen abgebrochen: Tenant ID stimmt nicht.");
+    return;
+  }
 
   busy.deleteId = t.id;
   try {
@@ -360,6 +395,15 @@ function openMemberships(tenantId: string) {
 function resetFilters() {
   q.value = "";
   statusFilter.value = "all";
+}
+
+async function copyValue(value: string, label: string) {
+  try {
+    await navigator.clipboard.writeText(value);
+    toast(`${label} kopiert`);
+  } catch {
+    toast(`${label} konnte nicht kopiert werden`);
+  }
 }
 
 function ensureAdminKey(): boolean {
@@ -438,10 +482,41 @@ watch(
 </script>
 
 <style scoped>
-.minimalHeader {
+.tenantsView {
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+.viewHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0 12px;
+  border-bottom: 1px solid var(--border);
+  min-height: 56px;
+}
+
+.headTitles {
+  display: grid;
+  gap: 4px;
+}
+
+.headTitle {
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.headSubtitle {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.headActions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
 }
 
 .toolbar {
@@ -462,7 +537,7 @@ watch(
   padding: 8px 10px;
   border: 1px solid var(--border);
   border-radius: 10px;
-  background: var(--surface-2, #f8fafc);
+  background: var(--surface2);
   min-width: 120px;
 }
 
@@ -496,7 +571,8 @@ watch(
   padding: 12px;
   background: var(--surface);
   display: grid;
-  gap: 8px;
+  grid-template-columns: 1fr 220px;
+  gap: 12px;
 }
 
 .fieldLabel {
@@ -507,14 +583,22 @@ watch(
 .hint {
   font-size: 12px;
   color: var(--muted);
+  margin-top: 6px;
 }
 
-.filterRow {
-  display: flex;
-  align-items: center;
+.searchLeft {
+  display: grid;
+  gap: 6px;
+}
+
+.searchRight {
+  display: grid;
   gap: 8px;
-  justify-content: space-between;
-  flex-wrap: wrap;
+  align-content: start;
+}
+
+.smallText {
+  font-size: 12px;
 }
 
 .tableCard {
@@ -544,6 +628,10 @@ watch(
   width: 32px;
 }
 
+.narrowCol {
+  width: 32px;
+}
+
 .dot {
   width: 10px;
   height: 10px;
@@ -557,55 +645,102 @@ watch(
   background: var(--primary);
 }
 
+.table tbody tr {
+  cursor: pointer;
+}
+
+.table tbody tr.rowActive {
+  background: var(--table-row-active);
+}
+
 .detailCard {
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 12px;
   background: var(--surface);
+  color: var(--text, #0f172a);
   display: grid;
   gap: 10px;
-  margin-top: 10px;
+  margin-top: 4px;
 }
 
-.detailHeader {
+.detailGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 2fr 3fr;
+  gap: 10px;
+  align-items: stretch;
+}
+
+.detailBox {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px;
+  background: var(--surface2);
+}
+
+.boxLabel {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.copyLabel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.iconBtn {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  border-radius: 6px;
+  padding: 2px 6px;
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--muted);
+}
+
+.iconBtn:hover,
+.iconBtn:focus-visible {
+  color: var(--text);
+  border-color: var(--primary);
+  outline: none;
+}
+
+.boxValue {
+  font-weight: 700;
+  margin-top: 4px;
+}
+
+.detailBox.tight {
+  min-width: 120px;
+}
+
+.detailBox.medium {
+  min-width: 200px;
+}
+
+.detailBox.hostBox {
+  min-width: 320px;
+}
+
+.hostValue {
+  white-space: nowrap;
+  overflow-x: auto;
+}
+
+.detailActions {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
-.detailTitle {
-  font-size: 16px;
-  font-weight: 800;
-}
-
-.detailSub {
-  color: var(--muted);
-  font-size: 12px;
-}
-
-.detailStatus {
-  display: flex;
-}
-
-.smallText {
-  font-size: 12px;
-}
-
-.emptyState {
-  margin-top: 8px;
-  padding: 12px;
-  border: 1px dashed var(--border, #dcdcdc);
-  border-radius: 10px;
-  background: var(--surface-2, #f9fafb);
-}
-
-.emptyTitle {
-  font-weight: 600;
-}
-
-.emptyBody {
-  color: var(--muted);
-  margin: 4px 0 8px 0;
+.tiny {
+  font-size: 11px;
+  padding: 0;
 }
 
 .errorText {
@@ -628,6 +763,23 @@ watch(
 @keyframes spin {
   to {
     transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 1024px) {
+  .detailGrid {
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  }
+}
+
+@media (max-width: 860px) {
+  .searchCard {
+    grid-template-columns: 1fr;
+  }
+
+  .hostValue {
+    white-space: nowrap;
+    overflow-x: auto;
   }
 }
 </style>

@@ -76,23 +76,6 @@
               <input type="checkbox" :checked="ui.theme === 'theme-dark'" @change="toggleSidebarTheme" />
               <span>Darkmode</span>
             </label>
-
-            <!-- Admin Context -->
-            <div class="sideFields">
-              <div class="field">
-                <div class="label">Actor</div>
-                <input class="input" v-model.trim="ui.actor" placeholder="admin" />
-              </div>
-
-              <div class="field">
-                <div class="label">Admin Key</div>
-                <input class="input" v-model.trim="ui.adminKey" placeholder="X-Admin-Key" type="password" />
-              </div>
-            </div>
-
-            <div class="hintBox">
-              Admin Endpunkte benötigen <span class="mono">X-Admin-Key</span>. Key wird nur im Memory gehalten.
-            </div>
           </div>
         </aside>
 
@@ -111,26 +94,11 @@
             </div>
 
             <div class="topRight">
-              <div class="tenantContext" role="status" aria-live="polite">
-                <div v-if="tenantContext.id" class="tenantBadge">
-                  <div class="tenantLabel">Aktiver Tenant</div>
-                  <div class="tenantValue">
-                    <span class="mono">{{ tenantContext.slug }}</span>
-                    <span class="muted">({{ tenantContext.name }})</span>
-                  </div>
-                  <div class="tenantActions">
-                    <button class="btnGhost small" @click="goSection('kunden')">Tenant wechseln</button>
-                    <button class="btnGhost small" @click="clearTenantContext">Entfernen</button>
-                  </div>
-                </div>
-                <div v-else class="muted">
-                  Kein Tenant gewählt – bitte unter „Kunden“ auswählen.
-                </div>
-              </div>
               <div class="topActions">
                 <button class="btnGhost small" @click="quickRefresh" :disabled="busy.refresh">
                   {{ busy.refresh ? "..." : "Refresh" }}
                 </button>
+                <button class="btnGhost small" @click="logout">Abmelden</button>
               </div>
             </div>
           </header>
@@ -202,9 +170,9 @@
     <!-- =========================================================
          ZENTRALER TOAST
          - Alle Views nutzen useToast().toast(...)
-         - Nur App.vue rendert toastState
+         - Nur App.vue rendert ToastHost
     ========================================================== -->
-    <div class="toast" v-if="toastState.open">{{ toastState.text }}</div>
+    <ToastHost />
   </div>
 </template>
 
@@ -214,7 +182,7 @@
   Architektur Entscheidungen
   - Layout/Design über globale CSS Dateien (tokens.css, base.css, layout.css)
   - App.vue enthält KEIN <style scoped>
-  - Toast ist zentral (kein Toast Markup in Views)
+  - Toast ist zentral (kein Toast Markup in Views, ToastHost am Root)
   - Checks laufen über platform endpoints:
       GET /health
       GET /health/db
@@ -234,28 +202,30 @@ import AdminAuditView from "./views/AdminAuditView.vue";
 import AdminDiagnosticsView from "./views/AdminDiagnosticsView.vue";
 import AdminSettingsView from "./views/AdminSettingsView.vue";
 import AdminLoginView from "./views/AdminLoginView.vue";
+import ToastHost from "./components/common/ToastHost.vue";
 
 /* Zentraler Toast State */
-const { toastState, toast } = useToast();
+const { toast } = useToast();
 const baseDomain = getBaseDomain();
 const apiBase = getBaseURL();
 
 /* Sidebar Sections */
 const sections = [
   { id: "kunden", label: "Kunden", icon: "👥" },
-  { id: "users", label: "Benutzer", icon: "👤" },
   { id: "memberships", label: "Tenant-User", icon: "🧩" },
   { id: "audit", label: "Audit", icon: "🧾" },
   { id: "diagnostics", label: "Diagnostics", icon: "🩺" },
+  { id: "users", label: "Benutzer", icon: "👤" },
   { id: "settings", label: "Einstellungen", icon: "⚙️" },
 ] as const;
 
 type SectionId = (typeof sections)[number]["id"];
 
 /* UI State */
+// TODO: Entfernen, sobald Admin-APIs ohne expliziten adminKey/actor auskommen.
 const ui = reactive({
   theme: "theme-classic",
-  actor: "admin",
+  actor: "",
   adminKey: "",
   authenticated: false,
   section: "kunden" as SectionId,
@@ -305,9 +275,6 @@ function applyLogin(payload: { adminKey: string; actor: string }) {
   ui.adminKey = payload.adminKey;
   ui.actor = payload.actor || "admin";
   ui.authenticated = true;
-  sessionStorage.setItem("adminKey", ui.adminKey);
-  sessionStorage.setItem("adminActor", ui.actor);
-  sessionStorage.setItem("adminTheme", ui.theme);
   toast("Admin Login erfolgreich, lade Portal...");
   quickRefresh();
 }
@@ -327,7 +294,7 @@ const pageTitle = computed(() => {
 
 const pageSubtitle = computed(() => {
   if (ui.section === "kunden") return "Tenants suchen, auswählen, Details & Aktionen";
-  if (ui.section === "users") return "Globale Benutzer verwalten";
+  if (ui.section === "users") return "Admin-Portal Benutzer verwalten";
   if (ui.section === "memberships") return "User mit Tenants verknüpfen und Rollen setzen";
   if (ui.section === "audit") return "Audit Log durchsuchen, filtern, exportieren";
   if (ui.section === "diagnostics") return "Health, Admin Checks, Snapshot";
@@ -383,23 +350,14 @@ async function quickRefresh() {
 
 function resetContext() {
   ui.adminKey = "";
-  ui.actor = "admin";
+  ui.actor = "";
   ui.authenticated = false;
   toast("Admin Context zurückgesetzt");
-  sessionStorage.removeItem("adminKey");
-  sessionStorage.removeItem("adminActor");
 }
 
 /* Boot */
 onMounted(async () => {
-  const savedKey = sessionStorage.getItem("adminKey");
-  const savedActor = sessionStorage.getItem("adminActor");
   const savedTheme = sessionStorage.getItem("adminTheme");
-  if (savedKey) {
-    ui.adminKey = savedKey;
-    ui.actor = savedActor || "admin";
-    ui.authenticated = true;
-  }
   if (savedTheme) {
     ui.theme = savedTheme;
   }
@@ -422,41 +380,18 @@ function openMemberships(tenantId: string) {
   if (tenantId) localStorage.setItem("adminSelectedTenantId", tenantId);
   toast("Wechsle zu Tenant-User Verwaltung");
 }
+
+function logout() {
+  ui.adminKey = "";
+  ui.actor = "";
+  ui.authenticated = false;
+  ui.section = "kunden";
+  toast("Abgemeldet", "info");
+  window.history.pushState({}, "", "/login");
+}
 </script>
 
 <style>
-.tenantContext {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-right: 8px;
-}
-
-.tenantBadge {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  text-align: right;
-}
-
-.tenantLabel {
-  font-size: 12px;
-  color: var(--muted);
-}
-
-.tenantValue {
-  display: flex;
-  gap: 6px;
-  align-items: baseline;
-  justify-content: flex-end;
-}
-
-.tenantActions {
-  display: flex;
-  gap: 6px;
-  justify-content: flex-end;
-}
-
 .topbar-flat {
   background: transparent;
   border: none;
@@ -467,13 +402,6 @@ function openMemberships(tenantId: string) {
 
 .topbar-flat .topRight {
   align-items: center;
-}
-
-.topbar-flat .tenantContext {
-  padding: 6px 10px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--surface);
 }
 
 .topActions {
@@ -493,17 +421,27 @@ function openMemberships(tenantId: string) {
 }
 
 .sidebar {
-  height: auto;
+  height: fit-content;
   position: sticky;
   top: 12px;
   align-self: start;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .nav {
   align-self: start;
+  height: fit-content;
 }
 
 .sideBottom {
   align-self: start;
+  margin-top: 4px;
+}
+
+.topbar.topbar-flat {
+  padding: 10px 12px 12px;
+  min-height: unset;
 }
 </style>

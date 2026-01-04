@@ -227,10 +227,10 @@ const apiBase = getBaseURL();
 /* Sidebar Sections */
 const sections = [
   { id: "kunden", label: "Kunden", icon: "👥" },
-  { id: "users", label: "Benutzer", icon: "👤" },
   { id: "memberships", label: "Tenant-User", icon: "🧩" },
   { id: "audit", label: "Audit", icon: "🧾" },
   { id: "diagnostics", label: "Diagnostics", icon: "🩺" },
+  { id: "users", label: "Benutzer", icon: "👤" },
   { id: "settings", label: "Einstellungen", icon: "⚙️" },
 ] as const;
 
@@ -311,7 +311,7 @@ const pageTitle = computed(() => {
 
 const pageSubtitle = computed(() => {
   if (ui.section === "kunden") return "Tenants suchen, auswählen, Details & Aktionen";
-  if (ui.section === "users") return "Globale Benutzer verwalten";
+  if (ui.section === "users") return "Admin-Portal Benutzer verwalten";
   if (ui.section === "memberships") return "User mit Tenants verknüpfen und Rollen setzen";
   if (ui.section === "audit") return "Audit Log durchsuchen, filtern, exportieren";
   if (ui.section === "diagnostics") return "Health, Admin Checks, Snapshot";
@@ -438,17 +438,27 @@ function openMemberships(tenantId: string) {
 }
 
 .sidebar {
-  height: auto;
+  height: fit-content;
   position: sticky;
   top: 12px;
   align-self: start;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .nav {
   align-self: start;
+  height: fit-content;
 }
 
 .sideBottom {
   align-self: start;
+  margin-top: 4px;
+}
+
+.topbar.topbar-flat {
+  padding: 10px 12px 12px;
+  min-height: unset;
 }
 </style>

@@ -75,16 +75,17 @@ async def resolve_tenant(
         allowed_bases=[base_domain, *fallback_domains],
     )
 
-    header_slug = request.headers.get("x-tenant-slug")
+    header_slug_raw = request.headers.get("x-tenant-slug")
+    header_slug = header_slug_raw.strip().lower() if header_slug_raw else None
 
-    # Fallback: Header-Slug nutzen, falls wir über einen zentralen API-Host ohne Subdomain gehen
-    if not slug and header_slug:
-        slug = header_slug.strip().lower()
+    # Falls ein expliziter Header gesetzt ist, hat dieser Vorrang (wichtig bei zentralem API-Host ohne Tenant-Subdomain)
+    if header_slug:
+        slug = header_slug
         request_logger.debug(
-            "tenant resolve via header",
+            "tenant resolve via header override",
             extra={
                 "host": host,
-                "header_slug": slug,
+                "header_slug": header_slug,
                 "base_domain": base_domain,
                 "fallback_domains": list(fallback_domains),
             },

@@ -1,79 +1,72 @@
 <template>
   <!--
     AdminTenantsView
-    - Orchestrator für Tenant Verwaltung
-    - Rendert: Liste links, Workspace rechts
-    - Öffnet Drawer + Modal, macht API Calls
+    - Kompaktere Ansicht: Suche + Anlage links, Details rechts
+    - Workspace zeigt nur relevante Infos + Aktionen zum ausgewählten Tenant
   -->
-  <div class="grid2">
-    <!-- LEFT: Tenant Liste -->
-    <section class="card">
-      <header class="cardHeader">
-        <div>
-          <div class="cardTitle">Kunden</div>
-          <div class="cardHint">Tenants auswählen und verwalten</div>
+  <section class="card">
+    <header class="cardHeader">
+      <div>
+        <div class="cardTitle">Kunden</div>
+        <div class="cardHint">Tenants suchen, anlegen, Details & Tenant-User verwalten</div>
+      </div>
+      <div class="cardHeaderActions">
+        <button class="btnGhost" @click="openCreateModal">Tenant anlegen</button>
+        <button class="btnPrimary" :disabled="busy.list" @click="loadTenants">
+          {{ busy.list ? "lade..." : "Neu laden" }}
+        </button>
+      </div>
+    </header>
+
+    <div class="grid2" style="align-items: start; gap: 16px;">
+      <!-- Liste + Suche -->
+      <div class="box">
+        <div class="row gap8 wrap" style="margin-bottom: 10px;">
+          <input class="input" v-model.trim="q" placeholder="Suche: Name, Slug" @keyup.enter="loadTenants" />
+          <select class="input" v-model="statusFilter">
+            <option value="all">Alle</option>
+            <option value="active">Aktiv</option>
+            <option value="disabled">Deaktiviert</option>
+          </select>
+        </div>
+        <div class="meta" style="margin-bottom: 8px;">
+          <div class="muted">Treffer: {{ filteredTenants.length }}</div>
+          <div class="muted">
+            Ausgewählt: <span class="mono">{{ selectedTenant ? selectedTenant.slug : "-" }}</span>
+          </div>
         </div>
 
-        <div class="cardHeaderActions">
-          <button class="btnGhost" @click="openCreateModal">Tenant anlegen</button>
-          <button class="btnPrimary" :disabled="busy.list" @click="loadTenants">
-            {{ busy.list ? "lade..." : "Neu laden" }}
-          </button>
-        </div>
-      </header>
+        <TenantTable
+          :tenants="filteredTenants"
+          :selectedId="selectedTenant?.id || ''"
+          :busyToggleId="busy.toggleId"
+          :busyList="busy.list"
+          @select="selectTenant"
+          @details="openDrawer"
+          @toggle="toggleTenant"
+          @delete="deleteTenant"
+        />
 
-      <!-- Controls -->
-      <div class="controls">
-        <input class="input" v-model.trim="q" placeholder="Suche: Name, Slug" @keyup.enter="loadTenants" />
-        <select class="input" v-model="statusFilter">
-          <option value="all">Alle</option>
-          <option value="active">Aktiv</option>
-          <option value="disabled">Deaktiviert</option>
-        </select>
+        <div class="hintBox">
+          Tipp: Suche via <span class="mono">GET /admin/tenants?q=...</span>. Enter startet den Call.
+        </div>
       </div>
 
-      <div class="meta">
-        <div class="muted">Treffer: {{ filteredTenants.length }}</div>
-        <div class="muted">
-          Ausgewählt:
-          <span class="mono">{{ selectedTenant ? selectedTenant.slug : "-" }}</span>
-        </div>
-      </div>
-
-      <!-- Table Component -->
-      <TenantTable
-        :tenants="filteredTenants"
-        :selectedId="selectedTenant?.id || ''"
-        :busyToggleId="busy.toggleId"
-        :busyList="busy.list"
-        @select="selectTenant"
-        @details="openDrawer"
-        @toggle="toggleTenant"
-        @delete="deleteTenant"
-      />
-
-      <div class="hintBox">
-        Tipp: Suche via <span class="mono">GET /admin/tenants?q=...</span>. Enter startet den Call.
-      </div>
-    </section>
-
-    <!-- RIGHT: Workspace -->
-    <section class="card">
-      <header class="cardHeader">
-        <div>
-          <div class="cardTitle">Workspace</div>
-          <div class="cardHint">Ausgewählter Tenant</div>
-        </div>
-
-        <div class="cardHeaderActions">
-          <button class="btnGhost" :disabled="!selectedTenant" @click="openDrawer(selectedTenant!)">
+      <!-- Details + Aktionen -->
+      <div class="box">
+        <header class="row" style="justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <div>
+            <div class="cardTitle" style="margin: 0;">Tenant Details</div>
+            <div class="cardHint" style="margin: 0;">Status, Host, User-Verwaltung</div>
+          </div>
+          <button class="btnGhost small" :disabled="!selectedTenant" @click="selectedTenant && openDrawer(selectedTenant)">
             Details
           </button>
-        </div>
-      </header>
+        </header>
 
-      <div class="box">
-        <div v-if="!selectedTenant" class="muted">Kein Tenant ausgewählt.</div>
+        <div v-if="!selectedTenant" class="muted">
+          Kein Tenant ausgewählt. Wähle links einen Kunden aus oder lege einen neuen an.
+        </div>
 
         <div v-else class="kvGrid">
           <div class="kv">
@@ -99,21 +92,42 @@
             <div class="k">Tenant ID</div>
             <div class="v mono">{{ selectedTenant.id }}</div>
           </div>
+
+          <div class="kv">
+            <div class="k">Tenant Host</div>
+            <div class="v mono">{{ `${selectedTenant.slug}.${baseDomain}` }}</div>
+          </div>
+        </div>
+
+        <div class="row gap8 wrap" style="margin-top: 12px;">
+          <button
+            class="btnGhost small"
+            :disabled="!selectedTenant || busy.toggleId === selectedTenant?.id"
+            @click="selectedTenant && toggleTenant(selectedTenant)"
+          >
+            {{ busy.toggleId === selectedTenant?.id ? "..." : selectedTenant?.is_active ? "Deaktivieren" : "Aktivieren" }}
+          </button>
+          <button
+            class="btnGhost small danger"
+            :disabled="!selectedTenant || busy.deleteId === selectedTenant?.id"
+            @click="selectedTenant && deleteTenant(selectedTenant)"
+          >
+            {{ busy.deleteId === selectedTenant?.id ? "löscht..." : "Tenant löschen" }}
+          </button>
+          <button
+            class="btnPrimary small"
+            :disabled="!selectedTenant"
+            @click="selectedTenant && openMemberships(selectedTenant.id)"
+          >
+            Tenant-User verwalten
+          </button>
+        </div>
+
+        <div class="hintBox" style="margin-top: 10px;">
+          Tenant-User Verwaltung öffnet den Tab <span class="mono">Tenant-User</span> und übernimmt den ausgewählten Kunden.
         </div>
       </div>
-
-      <div class="hintBox" style="margin-top: 10px;">
-        Tenant Host: <span class="mono" v-if="selectedTenant">{{ `${selectedTenant.slug}.${baseDomain}` }}</span>
-        <span v-else class="muted">Kein Tenant ausgewählt.</span>
-      </div>
-
-      <div class="row gap8 wrap">
-        <button class="btnGhost danger" :disabled="!selectedTenant || busy.deleteId === selectedTenant?.id" @click="selectedTenant && deleteTenant(selectedTenant)">
-          {{ busy.deleteId === selectedTenant?.id ? "löscht..." : "Tenant löschen" }}
-        </button>
-        <div class="muted">Löscht Tenant via DELETE /admin/tenants/{id}?confirm=true</div>
-      </div>
-    </section>
+    </div>
 
     <!-- Drawer -->
     <TenantDrawer
@@ -137,7 +151,7 @@
       @close="closeCreateModal"
       @create="createTenant"
     />
-  </div>
+  </section>
 </template>
 
 <script setup lang="ts">
@@ -166,6 +180,10 @@ const props = defineProps<{
   actor: string;
   apiOk: boolean;
   dbOk: boolean;
+}>();
+
+const emit = defineEmits<{
+  (e: "openMemberships", tenantId: string): void;
 }>();
 
 const { toast } = useToast();
@@ -314,6 +332,11 @@ function openCreateModal() {
 
 function closeCreateModal() {
   modal.open = false;
+}
+
+function openMemberships(tenantId: string) {
+  sessionStorage.setItem("adminSelectedTenantId", tenantId);
+  emit("openMemberships", tenantId);
 }
 
 function ensureAdminKey(): boolean {

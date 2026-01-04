@@ -190,7 +190,10 @@ async function loadTenants() {
   busy.tenants = true;
   try {
     tenants.value = await adminListTenants(props.adminKey, props.actor, { limit: 200, offset: 0 });
-    if (!selectedTenantId.value && tenants.value.length > 0) {
+    const stored = sessionStorage.getItem("adminSelectedTenantId");
+    if (!selectedTenantId.value && stored && tenants.value.some((t) => t.id === stored)) {
+      selectedTenantId.value = stored;
+    } else if (!selectedTenantId.value && tenants.value.length > 0) {
       selectedTenantId.value = tenants.value[0].id;
     }
     toast(`Tenants geladen: ${tenants.value.length}`);
@@ -357,5 +360,16 @@ watch(
     }
   },
   { immediate: true }
+);
+
+watch(
+  () => selectedTenantId.value,
+  (id) => {
+    if (id) {
+      sessionStorage.setItem("adminSelectedTenantId", id);
+    } else {
+      sessionStorage.removeItem("adminSelectedTenantId");
+    }
+  }
 );
 </script>

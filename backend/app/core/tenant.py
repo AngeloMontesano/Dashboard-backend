@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from typing import Iterable
 
@@ -8,6 +9,8 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.tenant import Tenant
+
+request_logger = logging.getLogger("app.request")
 
 
 @dataclass(frozen=True)
@@ -73,18 +76,57 @@ async def resolve_tenant(
     )
 
     if not slug:
+        request_logger.warning(
+            "tenant resolve failed (no slug)",
+            extra={
+                "host": host,
+                "base_domain": base_domain,
+                "fallback_domains": list(fallback_domains),
+            },
+        )
         raise HTTPException(
             status_code=404,
-            detail={"error": {"code": "tenant_not_found", "message": "Tenant not found"}},
+            detail={
+                "error": {
+                    "code": "tenant_not_found",
+                    "message": "Tenant not found",
+                    "host": host,
+                }
+            },
         )
 
     result = await db.execute(select(Tenant).where(Tenant.slug == slug))
     tenant = result.scalar_one_or_none()
 
     if tenant is None or not tenant.is_active:
+        request_logger.warning(
+            "tenant resolve failed (not found or inactive)",
+            extra={
+                "host": host,
+                "slug": slug,
+                "base_domain": base_domain,
+                "fallback_domains": list(fallback_domains),
+            },
+        )
         raise HTTPException(
             status_code=404,
-            detail={"error": {"code": "tenant_not_found", "message": "Tenant not found"}},
+            detail={
+                "error": {
+                    "code": "tenant_not_found",
+                    "message": "Tenant not found",
+                    "host": host,
+                    "slug": slug,
+                }
+            },
         )
+
+    request_logger.debug(
+        "tenant resolve ok",
+        extra={
+            "host": host,
+            "slug": slug,
+            "tenant_id": str(tenant.id),
+        },
+    )
 
     return TenantContext(tenant=tenant, slug=slug)

@@ -40,7 +40,7 @@
 }
 
 /* Dark Theme Overrides */
-.dark{
+.theme-dark{
   --bg: #060a12;
   --panel: #0f172a;
   --text: #e5e7eb;
@@ -53,4 +53,20 @@
   --surface: rgba(255, 255, 255, 0.06);
   --surface2: rgba(255, 255, 255, 0.08);
   --surface3: rgba(255, 255, 255, 0.10);
+}
+
+/* Ocean Theme */
+.theme-ocean{
+  --bg: #051726;
+  --panel: #0b2438;
+  --text: #e0f2fe;
+  --muted: #94a3af;
+  --border: rgba(148, 163, 184, 0.22);
+
+  --shadow: 0 14px 36px rgba(3, 7, 18, 0.55);
+  --shadow2: 0 10px 26px rgba(3, 7, 18, 0.40);
+
+  --surface: rgba(14, 165, 233, 0.06);
+  --surface2: rgba(14, 165, 233, 0.10);
+  --surface3: rgba(14, 165, 233, 0.16);
 }

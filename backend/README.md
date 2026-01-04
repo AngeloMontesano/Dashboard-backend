@@ -43,6 +43,13 @@ Tenant-Kontext wird zentral in `app/core/tenant.py` / `get_tenant_context` gelö
 - `Membership`: verbindet User <-> Tenant mit Rolle und Aktiv-Flag.
 - `RefreshSession`: Refresh Token Hash, Tenant/User, Ablauf/Revocation, `last_used_at`.
 
+
+## Datenmodell (relevant für Auth)
+- `Tenant`: slug, name, aktiv-Flag.
+- `User`: global eindeutige Email, `password_hash`, aktiv-Flag.
+- `Membership`: verbindet User <-> Tenant mit Rolle und Aktiv-Flag.
+- `RefreshSession`: Refresh Token Hash, Tenant/User, Ablauf/Revocation, `last_used_at`.
+
 ## Logging & Observability
 - **Logger-Namen:** `app.request` (Request/Metrics), `app.auth` (Auth-Flows), `app` (Exception-Handler). Konsumierbar in Docker-Logs.
 - **Validation Logs:** 422-Validation-Errors loggen Path + Fehlerdetails + Request-ID für schnellere Ursachefindung.【F:backend/app/core/errors.py†L75-L93】
@@ -69,6 +76,25 @@ docker compose up -d --build
 - `uvicorn` läuft ohne Reload (prod-orientiert). Für Dev kann `--reload` im Entrypoint ergänzt werden.
 
 ## Seeding
+- Automatisch, falls DB leer (`app/scripts/seed_initial.py`).
+- Defaults: `SEED_TENANT_SLUG=kunde1`, `SEED_ADMIN_EMAIL=admin@test.myitnetwork.de`, `SEED_ADMIN_PASSWORD=admin`, Rolle `owner`.
+- Override via `SEED_*` Variablen in `.env`. Seed legt Tenant, User und Membership an.【F:backend/app/scripts/seed_initial.py†L1-L54】
+
+## Fehlerformate (für Frontend)
+- Standard: `{ "error": { "code": "<string>", "message": "<string>", "details": <optional> } }`
+- Validation: Code `validation_error`, `details` enthält Pydantic-Fehlerliste (Frontends können `details[0].msg` / `details[0].loc` anzeigen).【F:backend/app/core/errors.py†L75-L93】
+- Tenant-Fehler: 404 `tenant_not_found` mit Host/Slug-Infos (hilfreich für falsche Subdomains/Headers).【F:backend/app/core/tenant.py†L80-L117】
+
+## Troubleshooting
+- **Login 401/403:** Prüfe Membership des Users im Tenant und Passwort-Hash. Logs in `app.auth` zeigen Code/Status + Request-ID.
+- **Login 422:** Validation-Details im Response (`validation_error`), Logs enthalten Path + Details. Häufig: Passwort zu kurz.
+- **Tenant 404:** Stimmt Subdomain mit `BASE_DOMAIN` überein? Wird `X-Tenant-Slug` gesetzt? Ports/Kommas entfernt?
+- **Cross-Origin:** Falls Browser blockt, `CORSMiddleware` konfigurieren (allow_origins einschränken oder erweitern).
+
+## Erweiterungshinweise
+- Zusätzliche Module sollten `get_tenant_context` als Dependency nutzen, wenn Daten tenant-spezifisch sind.
+- Für Admin-Only Routen `X-Admin-Key` Header erzwingen (siehe bestehende Admin-Router).
+- Neue Hintergrundjobs sollten Request-ID/Context nicht voraussetzen; Logs mit klaren Labels schreiben.
 - Läuft automatisch, wenn die DB leer ist.
 - Werte können via `SEED_*` Variablen in `.env` überschrieben werden.
 

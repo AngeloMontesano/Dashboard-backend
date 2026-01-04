@@ -125,6 +125,9 @@
 
         <div class="hintBox" style="margin-top: 10px;">
           Tenant-User Verwaltung öffnet den Tab <span class="mono">Tenant-User</span> und übernimmt den ausgewählten Kunden.
+          <div v-if="!hasTenants" class="muted" style="margin-top: 4px;">
+            Noch keine Kunden vorhanden – lege zuerst einen Tenant an.
+          </div>
         </div>
       </div>
     </div>
@@ -218,6 +221,8 @@ const modal = reactive({
 
 const baseDomain = import.meta.env.VITE_BASE_DOMAIN || "test.myitnetwork.de";
 
+const hasTenants = computed(() => tenants.value.length > 0);
+
 /* Derived: Filter nach Status (Suche ist serverseitig via q) */
 const filteredTenants = computed(() => {
   let list = tenants.value.slice();
@@ -240,9 +245,12 @@ async function loadTenants() {
       });
       tenants.value = res;
 
-      /* Selection stabil halten */
+      /* Selection stabil halten oder erste wählen */
       if (selectedTenant.value) {
         selectedTenant.value = res.find((t) => t.id === selectedTenant.value!.id) ?? null;
+      }
+      if (!selectedTenant.value && res.length > 0) {
+        selectedTenant.value = res[0];
       }
 
     toast(`Tenants geladen: ${res.length}`);
@@ -338,6 +346,15 @@ function openMemberships(tenantId: string) {
   sessionStorage.setItem("adminSelectedTenantId", tenantId);
   emit("openMemberships", tenantId);
 }
+
+watch(
+  () => selectedTenant.value?.id,
+  (id) => {
+    if (id) {
+      sessionStorage.setItem("adminSelectedTenantId", id);
+    }
+  }
+);
 
 function ensureAdminKey(): boolean {
   if (!props.adminKey) {

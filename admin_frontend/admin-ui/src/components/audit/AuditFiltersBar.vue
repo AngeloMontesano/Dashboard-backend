@@ -2,17 +2,17 @@
   <div class="box">
     <div class="formGrid">
       <div class="field">
-        <div class="label">Actor</div>
+        <div class="label">Actor (optional)</div>
         <input class="input" :value="actor" @input="$emit('update:actor', ($event.target as HTMLInputElement).value)" @keyup.enter="$emit('enter')" />
       </div>
 
       <div class="field">
-        <div class="label">Action</div>
+        <div class="label">Aktion (create/update/delete)</div>
         <input class="input" :value="action" @input="$emit('update:action', ($event.target as HTMLInputElement).value)" @keyup.enter="$emit('enter')" />
       </div>
 
       <div class="field">
-        <div class="label">Entity Type</div>
+        <div class="label">Entity Typ (z.B. user/tenant)</div>
         <input class="input" :value="entityType" @input="$emit('update:entityType', ($event.target as HTMLInputElement).value)" @keyup.enter="$emit('enter')" />
       </div>
 
@@ -24,12 +24,12 @@
 
     <div class="formGrid" style="margin-top: 10px;">
       <div class="field">
-        <div class="label">Created From (ISO)</div>
+        <div class="label">Von (ISO)</div>
         <input class="input" placeholder="2026-01-02T10:00:00Z" :value="createdFrom" @input="$emit('update:createdFrom', ($event.target as HTMLInputElement).value)" @keyup.enter="$emit('enter')" />
       </div>
 
       <div class="field">
-        <div class="label">Created To (ISO)</div>
+        <div class="label">Bis (ISO)</div>
         <input class="input" placeholder="2026-01-02T12:00:00Z" :value="createdTo" @input="$emit('update:createdTo', ($event.target as HTMLInputElement).value)" @keyup.enter="$emit('enter')" />
       </div>
 

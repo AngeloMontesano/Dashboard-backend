@@ -99,7 +99,17 @@ export async function adminListTenantUsers(
 ) {
   const api = apiClient(adminKey, actor);
   const res = await api.get(`/admin/tenants/${tenantId}/users`, { params });
-  return res.data as TenantUserOut[];
+  const data = res.data as any[];
+  return data.map((u) => ({
+    id: u.id ?? u.user_id ?? u.membership_id,
+    tenant_id: u.tenant_id,
+    user_id: u.user_id,
+    email: u.email,
+    role: u.role,
+    is_active: u.is_active ?? u.user_is_active ?? u.membership_is_active ?? false,
+    has_password: u.has_password ?? u.password_set ?? false,
+    updated_at: u.updated_at ?? u.modified_at ?? u.last_changed,
+  })) as TenantUserOut[];
 }
 
 export async function adminCreateTenantUser(
@@ -110,30 +120,72 @@ export async function adminCreateTenantUser(
 ) {
   const api = apiClient(adminKey, actor);
   const res = await api.post(`/admin/tenants/${tenantId}/users`, payload);
-  return res.data as TenantUserOut;
+  const u = res.data as any;
+  return {
+    id: u.id ?? u.user_id ?? u.membership_id,
+    tenant_id: u.tenant_id,
+    user_id: u.user_id,
+    email: u.email,
+    role: u.role,
+    is_active: u.is_active ?? u.user_is_active ?? u.membership_is_active ?? false,
+    has_password: u.has_password ?? u.password_set ?? false,
+    updated_at: u.updated_at ?? u.modified_at ?? u.last_changed,
+  } as TenantUserOut;
 }
 
 export async function adminUpdateTenantUser(
   adminKey: string,
   actor: string | undefined,
   tenantId: string,
-  membershipId: string,
+  userId: string,
   payload: TenantUserUpdate
 ) {
   const api = apiClient(adminKey, actor);
-  const res = await api.patch(`/admin/tenants/${tenantId}/users/${membershipId}`, payload);
-  return res.data as TenantUserOut;
+  const res = await api.patch(`/admin/tenants/${tenantId}/users/${userId}`, payload);
+  const u = res.data as any;
+  return {
+    id: u.id ?? u.user_id ?? u.membership_id,
+    tenant_id: u.tenant_id,
+    user_id: u.user_id,
+    email: u.email,
+    role: u.role,
+    is_active: u.is_active ?? u.user_is_active ?? u.membership_is_active ?? false,
+    has_password: u.has_password ?? u.password_set ?? false,
+    updated_at: u.updated_at ?? u.modified_at ?? u.last_changed,
+  } as TenantUserOut;
 }
 
 export async function adminDeleteTenantUser(
   adminKey: string,
   actor: string | undefined,
   tenantId: string,
-  membershipId: string
+  userId: string
 ) {
   const api = apiClient(adminKey, actor);
-  await api.delete(`/admin/tenants/${tenantId}/users/${membershipId}`);
+  await api.delete(`/admin/tenants/${tenantId}/users/${userId}`);
   return true;
+}
+
+export async function adminSetTenantUserPassword(
+  adminKey: string,
+  actor: string | undefined,
+  tenantId: string,
+  userId: string,
+  password: string
+) {
+  const api = apiClient(adminKey, actor);
+  const res = await api.post(`/admin/tenants/${tenantId}/users/${userId}/set-password`, { password });
+  const u = res.data as any;
+  return {
+    id: u.id ?? u.user_id ?? u.membership_id,
+    tenant_id: u.tenant_id,
+    user_id: u.user_id,
+    email: u.email,
+    role: u.role,
+    is_active: u.is_active ?? u.user_is_active ?? u.membership_is_active ?? false,
+    has_password: u.has_password ?? u.password_set ?? true,
+    updated_at: u.updated_at ?? u.modified_at ?? u.last_changed,
+  } as TenantUserOut;
 }
 
 /* Memberships */

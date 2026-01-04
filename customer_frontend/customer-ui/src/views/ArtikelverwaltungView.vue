@@ -550,7 +550,7 @@ watch(
       items.value = [];
     }
   }
-);
+}
 
 let searchTimer: number | undefined;
 watch(

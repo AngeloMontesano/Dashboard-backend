@@ -438,17 +438,27 @@ function openMemberships(tenantId: string) {
 }
 
 .sidebar {
-  height: auto;
+  height: fit-content;
   position: sticky;
   top: 12px;
   align-self: start;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .nav {
   align-self: start;
+  height: fit-content;
 }
 
 .sideBottom {
   align-self: start;
+  margin-top: 4px;
+}
+
+.topbar.topbar-flat {
+  padding: 6px 0 10px;
+  min-height: unset;
 }
 </style>

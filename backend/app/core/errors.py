@@ -78,6 +78,12 @@ def register_exception_handlers(app: FastAPI) -> None:
         Body, Query, Path Validierungsfehler.
         Details werden zurückgegeben, da sie keine sensiblen Daten enthalten sollen.
         """
+        logger.warning(
+            "validation error path=%s errors=%s request_id=%s",
+            request.url.path,
+            exc.errors(),
+            _get_request_id(request),
+        )
         return _error_response(
             request=request,
             status_code=422,

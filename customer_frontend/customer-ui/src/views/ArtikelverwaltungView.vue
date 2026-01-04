@@ -483,7 +483,7 @@ async function startImport() {
   }
 }
 
-const handleRowSelect = (item: Item) => {
+const onRowSelect = (item: Item) => {
   selectedArticleId.value = item.id;
   hydrateFormFromItem(item, editForm);
   banner.message = '';
@@ -667,7 +667,7 @@ watch(
               v-for="item in items"
               :key="item.id"
               :class="{ 'table-row--active': selectedArticleId === item.id }"
-              @click="handleRowSelect(item)"
+              @click="onRowSelect(item)"
             >
               <td>{{ item.sku }}</td>
               <td>{{ item.name }}</td>

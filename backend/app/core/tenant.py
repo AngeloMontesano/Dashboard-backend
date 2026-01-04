@@ -75,11 +75,27 @@ async def resolve_tenant(
         allowed_bases=[base_domain, *fallback_domains],
     )
 
+    header_slug = request.headers.get("x-tenant-slug")
+
+    # Fallback: Header-Slug nutzen, falls wir über einen zentralen API-Host ohne Subdomain gehen
+    if not slug and header_slug:
+        slug = header_slug.strip().lower()
+        request_logger.debug(
+            "tenant resolve via header",
+            extra={
+                "host": host,
+                "header_slug": slug,
+                "base_domain": base_domain,
+                "fallback_domains": list(fallback_domains),
+            },
+        )
+
     if not slug:
         request_logger.warning(
             "tenant resolve failed (no slug)",
             extra={
                 "host": host,
+                "header_slug": header_slug,
                 "base_domain": base_domain,
                 "fallback_domains": list(fallback_domains),
             },
@@ -91,6 +107,7 @@ async def resolve_tenant(
                     "code": "tenant_not_found",
                     "message": "Tenant not found",
                     "host": host,
+                    "header_slug": header_slug,
                 }
             },
         )
@@ -104,6 +121,7 @@ async def resolve_tenant(
             extra={
                 "host": host,
                 "slug": slug,
+                "header_slug": header_slug,
                 "base_domain": base_domain,
                 "fallback_domains": list(fallback_domains),
             },
@@ -116,6 +134,7 @@ async def resolve_tenant(
                     "message": "Tenant not found",
                     "host": host,
                     "slug": slug,
+                    "header_slug": header_slug,
                 }
             },
         )
@@ -125,6 +144,7 @@ async def resolve_tenant(
         extra={
             "host": host,
             "slug": slug,
+            "header_slug": header_slug,
             "tenant_id": str(tenant.id),
         },
     )

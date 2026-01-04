@@ -6,7 +6,9 @@ from pydantic import BaseModel, EmailStr, Field
 
 class LoginRequest(BaseModel):
     email: EmailStr
-    password: str = Field(min_length=6, max_length=200)
+    # Dev-Seed nutzt aktuell ein 5-stelliges Passwort ("admin").
+    # Wir erlauben bewusst kürzere Passwörter, validieren die Stärke später.
+    password: str = Field(min_length=4, max_length=200)
 
 
 class TokenResponse(BaseModel):

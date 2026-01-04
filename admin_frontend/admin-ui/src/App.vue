@@ -111,22 +111,6 @@
             </div>
 
             <div class="topRight">
-              <div class="tenantContext" role="status" aria-live="polite">
-                <div v-if="tenantContext.id" class="tenantBadge">
-                  <div class="tenantLabel">Aktiver Tenant</div>
-                  <div class="tenantValue">
-                    <span class="mono">{{ tenantContext.slug }}</span>
-                    <span class="muted">({{ tenantContext.name }})</span>
-                  </div>
-                  <div class="tenantActions">
-                    <button class="btnGhost small" @click="goSection('kunden')">Tenant wechseln</button>
-                    <button class="btnGhost small" @click="clearTenantContext">Entfernen</button>
-                  </div>
-                </div>
-                <div v-else class="muted">
-                  Kein Tenant gewählt – bitte unter „Kunden“ auswählen.
-                </div>
-              </div>
               <div class="topActions">
                 <button class="btnGhost small" @click="quickRefresh" :disabled="busy.refresh">
                   {{ busy.refresh ? "..." : "Refresh" }}
@@ -243,10 +227,10 @@ const apiBase = getBaseURL();
 /* Sidebar Sections */
 const sections = [
   { id: "kunden", label: "Kunden", icon: "👥" },
-  { id: "users", label: "Benutzer", icon: "👤" },
   { id: "memberships", label: "Tenant-User", icon: "🧩" },
   { id: "audit", label: "Audit", icon: "🧾" },
   { id: "diagnostics", label: "Diagnostics", icon: "🩺" },
+  { id: "users", label: "Benutzer", icon: "👤" },
   { id: "settings", label: "Einstellungen", icon: "⚙️" },
 ] as const;
 
@@ -327,7 +311,7 @@ const pageTitle = computed(() => {
 
 const pageSubtitle = computed(() => {
   if (ui.section === "kunden") return "Tenants suchen, auswählen, Details & Aktionen";
-  if (ui.section === "users") return "Globale Benutzer verwalten";
+  if (ui.section === "users") return "Admin-Portal Benutzer verwalten";
   if (ui.section === "memberships") return "User mit Tenants verknüpfen und Rollen setzen";
   if (ui.section === "audit") return "Audit Log durchsuchen, filtern, exportieren";
   if (ui.section === "diagnostics") return "Health, Admin Checks, Snapshot";
@@ -425,38 +409,6 @@ function openMemberships(tenantId: string) {
 </script>
 
 <style>
-.tenantContext {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-right: 8px;
-}
-
-.tenantBadge {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  text-align: right;
-}
-
-.tenantLabel {
-  font-size: 12px;
-  color: var(--muted);
-}
-
-.tenantValue {
-  display: flex;
-  gap: 6px;
-  align-items: baseline;
-  justify-content: flex-end;
-}
-
-.tenantActions {
-  display: flex;
-  gap: 6px;
-  justify-content: flex-end;
-}
-
 .topbar-flat {
   background: transparent;
   border: none;
@@ -467,13 +419,6 @@ function openMemberships(tenantId: string) {
 
 .topbar-flat .topRight {
   align-items: center;
-}
-
-.topbar-flat .tenantContext {
-  padding: 6px 10px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--surface);
 }
 
 .topActions {
@@ -493,17 +438,27 @@ function openMemberships(tenantId: string) {
 }
 
 .sidebar {
-  height: auto;
+  height: fit-content;
   position: sticky;
   top: 12px;
   align-self: start;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .nav {
   align-self: start;
+  height: fit-content;
 }
 
 .sideBottom {
   align-self: start;
+  margin-top: 4px;
+}
+
+.topbar.topbar-flat {
+  padding: 10px 12px 12px;
+  min-height: unset;
 }
 </style>

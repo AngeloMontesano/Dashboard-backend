@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router';
+import { useAuth } from '@/composables/useAuth';
 
 import DashboardView from '@/views/DashboardView.vue';
 import ArtikelverwaltungView from '@/views/ArtikelverwaltungView.vue';
@@ -7,8 +8,10 @@ import InventurView from '@/views/InventurView.vue';
 import BerichteAnalysenView from '@/views/BerichteAnalysenView.vue';
 import BestellungenView from '@/views/BestellungenView.vue';
 import EinstellungenView from '@/views/EinstellungenView.vue';
+import LoginView from '@/views/LoginView.vue';
 
 const routes: RouteRecordRaw[] = [
+  { path: '/login', name: 'login', component: LoginView, meta: { public: true } },
   { path: '/', name: 'dashboard', component: DashboardView },
   { path: '/artikelverwaltung', name: 'artikelverwaltung', component: ArtikelverwaltungView },
   { path: '/lagerbewegungen', name: 'lagerbewegungen', component: LagerbewegungenView },
@@ -21,6 +24,18 @@ const routes: RouteRecordRaw[] = [
 const router = createRouter({
   history: createWebHistory(),
   routes
+});
+
+router.beforeEach((to) => {
+  const { isAuthenticated } = useAuth();
+  if (to.meta.public && isAuthenticated()) {
+    return { name: 'dashboard' };
+  }
+  if (to.meta.public) return true;
+  if (!isAuthenticated()) {
+    return { name: 'login', query: { redirect: to.fullPath } };
+  }
+  return true;
 });
 
 export default router;

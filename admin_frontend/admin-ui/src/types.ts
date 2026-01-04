@@ -53,6 +53,7 @@ export type TenantUserOut = {
   role: string;
   user_is_active: boolean;
   membership_is_active: boolean;
+  updated_at?: string;
 };
 
 export type TenantUserCreate = {

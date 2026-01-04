@@ -138,6 +138,10 @@ export async function importItems(token: string, file: File, mapping?: Record<st
   if (mapping) {
     form.append('mapping', JSON.stringify(mapping));
   }
+  // Debug log (no token) to verify headers during import troubleshooting
+  console.debug('[inventory/import] url', `${client.defaults.baseURL}/inventory/items/import`, {
+    hasAuthHeader: Boolean(token)
+  });
   const res = await client.post<{ imported: number; updated: number; errors: Array<{ row: string; error: string }> }>(
     '/inventory/items/import',
     form,

@@ -60,7 +60,8 @@ const editForm = reactive({
   is_active: true
 });
 
-const createModalOpen = ref(false);
+const createMode = ref(false);
+const createBarcodeInput = ref<HTMLInputElement | null>(null);
 const createForm = reactive({
   sku: '',
   barcode: '',
@@ -78,6 +79,7 @@ const createForm = reactive({
 });
 const createSkuHint = ref<string | null>(null);
 const createFeedback = reactive({ error: '', hint: '' });
+const showMoreCreateFields = ref(false);
 
 const importModalOpen = ref(false);
 const importStep = ref<1 | 2 | 3>(1);
@@ -114,6 +116,7 @@ const isEditValid = computed(
 const isCreateValid = computed(
   () => !!createForm.sku.trim() && !!createForm.barcode.trim() && !!createForm.name.trim() && !!createForm.unit.trim()
 );
+const showCreateCard = computed(() => createMode.value || !selectedArticle.value);
 
 function resetCreateForm() {
   createForm.sku = '';
@@ -132,6 +135,7 @@ function resetCreateForm() {
   createSkuHint.value = null;
   createFeedback.error = '';
   createFeedback.hint = '';
+  showMoreCreateFields.value = false;
 }
 
 function resetEditForm() {
@@ -279,7 +283,7 @@ async function handleCreate() {
       category_id: createForm.category_id || null
     });
     banner.message = 'Artikel angelegt.';
-    createModalOpen.value = false;
+    createMode.value = false;
     resetCreateForm();
     await loadItems();
     selectedArticleId.value = created.id;
@@ -387,7 +391,7 @@ async function handleExportAll() {
     link.setAttribute('download', filename);
     link.click();
     window.URL.revokeObjectURL(url);
-    banner.message = 'CSV Export erstellt (alle Artikel).';
+    banner.message = '';
   } catch (err: any) {
     if (handleAuthError(err)) return;
     banner.error = err?.message || 'Export fehlgeschlagen.';
@@ -399,7 +403,8 @@ async function handleExportAll() {
 function openCreateModal() {
   resetCreateForm();
   createFeedback.error = '';
-  createModalOpen.value = true;
+  createMode.value = true;
+  nextTick(() => createBarcodeInput.value?.focus());
 }
 
 function openImportModal() {
@@ -475,6 +480,25 @@ async function startImport() {
     importError.value = err?.response?.data?.error?.message || err?.message || 'Import fehlgeschlagen.';
   } finally {
     importLoading.value = false;
+  }
+}
+
+function handleRowSelect(item: Item) {
+  selectedArticleId.value = item.id;
+  hydrateFormFromItem(item, editForm);
+  banner.message = '';
+  banner.error = '';
+}
+
+function goToCategories() {
+  router.push('/kategorien');
+}
+
+function focusCreateBarcode() {
+  if (showCreateCard.value) {
+    nextTick(() => createBarcodeInput.value?.focus());
+  } else {
+    quickScanInput.value?.focus();
   }
 }
 
@@ -588,6 +612,9 @@ watch(
         <span class="toolbar__label sr-only">Suche</span>
         <input v-model="searchTerm" type="search" placeholder="Suche SKU, Barcode, Name" />
       </label>
+      <button class="button button--ghost toolbar__focus" type="button" @click="focusCreateBarcode">
+        Fokus auf Barcode
+      </button>
       <label class="toolbar__field select-field">
         <span class="toolbar__label">Kategorie</span>
         <select v-model="filters.category_id">
@@ -659,7 +686,7 @@ watch(
       </div>
       <div v-else class="placeholder">
         <p v-if="isLoading">Lade Artikel...</p>
-        <p v-else>Keine Artikel gefunden.</p>
+        <p v-else>Keine Artikel gefunden. Nutze "Neuen Artikel anlegen" oder importiere per CSV.</p>
       </div>
       <div class="pagination">
         <button class="button button--ghost" type="button" :disabled="filters.page <= 1" @click="filters.page -= 1">
@@ -770,27 +797,30 @@ watch(
       </div>
     </section>
 
-    <div v-else class="placeholder" style="margin-top: 16px">
-      <p>Wähle einen Artikel aus der Tabelle, um Details zu sehen.</p>
-    </div>
-  </section>
-
-  <div v-if="createModalOpen" class="modal-backdrop">
-    <div class="modal">
-      <header class="modal__header">
+    <section v-if="showCreateCard" class="card create-card">
+      <header class="detail-card__header">
         <div>
-          <p class="eyebrow">Artikel</p>
-          <h3>Neuen Artikel anlegen</h3>
+          <p class="eyebrow">Neu</p>
+          <h3 class="card__title">Neuen Artikel anlegen</h3>
+          <p class="card__hint">Pflichtfelder: Artikelnummer, Name, Barcode, Einheit.</p>
         </div>
-        <button class="button button--ghost" type="button" @click="createModalOpen = false">Schließen</button>
+        <div class="detail-card__actions">
+          <button class="button button--ghost" type="button" @click="resetCreateForm">Zurücksetzen</button>
+          <button class="button button--ghost" type="button" @click="createMode = false">Abbrechen</button>
+          <button class="button button--primary" type="button" :disabled="!isCreateValid || isSaving" @click="handleCreate">
+            {{ isSaving ? 'Speichert...' : 'Speichern' }}
+          </button>
+        </div>
       </header>
+
       <div v-if="createFeedback.error" class="alert alert--error">{{ createFeedback.error }}</div>
-      <form class="form-grid two-col" @submit.prevent="handleCreate">
+
+      <div class="form-grid two-col">
         <label>
-          <span>SKU *</span>
+          <span>Artikelnummer *</span>
           <input v-model="createForm.sku" required @blur="handleCreateSkuBlur" />
           <small v-if="createSkuHint">{{ createSkuHint }}</small>
-          <small v-else-if="!createForm.sku">SKU ist erforderlich.</small>
+          <small v-else-if="!createForm.sku">Interne Artikelnummer, z.B. A-10023.</small>
         </label>
         <label>
           <span>Name *</span>
@@ -799,8 +829,8 @@ watch(
         </label>
         <label>
           <span>Barcode *</span>
-          <input v-model="createForm.barcode" required />
-          <small v-if="!createForm.barcode">Barcode ist erforderlich.</small>
+          <input ref="createBarcodeInput" v-model="createForm.barcode" required />
+          <small v-if="!createForm.barcode">Scanner benutzen oder eintippen.</small>
         </label>
         <label>
           <span>Kategorie</span>
@@ -809,57 +839,61 @@ watch(
             <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
           </select>
         </label>
-        <label class="full-width">
-          <span>Beschreibung</span>
-          <textarea v-model="createForm.description" rows="3" />
-        </label>
-        <label>
-          <span>Bestand</span>
-          <input type="number" min="0" v-model.number="createForm.quantity" />
-        </label>
         <label>
           <span>Einheit *</span>
           <input v-model="createForm.unit" required />
           <small v-if="!createForm.unit">Einheit ist erforderlich.</small>
         </label>
-        <label>
-          <span>Min-Bestand</span>
-          <input type="number" min="0" v-model.number="createForm.min_stock" />
-        </label>
-        <label>
-          <span>Max-Bestand</span>
-          <input type="number" min="0" v-model.number="createForm.max_stock" />
-        </label>
-        <label>
-          <span>Soll-Bestand</span>
-          <input type="number" min="0" v-model.number="createForm.target_stock" />
-        </label>
-        <label>
-          <span>Empfohlen</span>
-          <input type="number" min="0" v-model.number="createForm.recommended_stock" />
-        </label>
-        <label>
-          <span>Bestell-Modus</span>
-          <select v-model.number="createForm.order_mode">
-            <option :value="0">0 - Kein Alarm</option>
-            <option :value="1">1 - Alarm bei Unterschreitung</option>
-            <option :value="2">2 - In Bestellliste aufnehmen</option>
-            <option :value="3">3 - Automatisch nachbestellen</option>
-          </select>
-        </label>
         <label class="checkbox">
           <input type="checkbox" v-model="createForm.is_active" />
-          <span>Aktiv</span>
+          <div>
+            <span>Artikel ist aktiv</span>
+            <small>Inaktive Artikel werden nicht in Auswahl und Buchungen angeboten.</small>
+          </div>
         </label>
-        <div class="form-actions full-width">
-          <button class="button button--ghost" type="button" @click="resetCreateForm">Abbrechen</button>
-          <button class="button button--primary" type="submit" :disabled="!isCreateValid || isSaving">
-            {{ isSaving ? 'Speichert...' : 'Anlegen' }}
-          </button>
+
+        <label class="full-width">
+          <span>Artikelbeschreibung</span>
+          <textarea v-model="createForm.description" rows="2" />
+        </label>
+      </div>
+
+      <details class="more-fields" :open="showMoreCreateFields" @toggle="showMoreCreateFields = ($event.target as HTMLDetailsElement).open">
+        <summary>Weitere Felder</summary>
+        <div class="form-grid two-col" style="margin-top: 12px">
+          <label>
+            <span>Bestand</span>
+            <input type="number" min="0" v-model.number="createForm.quantity" />
+          </label>
+          <label>
+            <span>Min-Bestand</span>
+            <input type="number" min="0" v-model.number="createForm.min_stock" />
+          </label>
+          <label>
+            <span>Max-Bestand</span>
+            <input type="number" min="0" v-model.number="createForm.max_stock" />
+          </label>
+          <label>
+            <span>Soll-Bestand</span>
+            <input type="number" min="0" v-model.number="createForm.target_stock" />
+          </label>
+          <label>
+            <span>Empfohlen</span>
+            <input type="number" min="0" v-model.number="createForm.recommended_stock" />
+          </label>
+          <label>
+            <span>Bestell-Modus</span>
+            <select v-model.number="createForm.order_mode">
+              <option :value="0">0 - Kein Alarm</option>
+              <option :value="1">1 - Alarm bei Unterschreitung</option>
+              <option :value="2">2 - In Bestellliste aufnehmen</option>
+              <option :value="3">3 - Automatisch nachbestellen</option>
+            </select>
+          </label>
         </div>
-      </form>
-    </div>
-  </div>
+      </details>
+    </section>
+  </section>
 
   <div v-if="importModalOpen" class="modal-backdrop">
     <div class="modal modal--large">
@@ -993,6 +1027,10 @@ watch(
   color: var(--color-text-muted);
   font-size: 13px;
 }
+.toolbar__focus {
+  height: 100%;
+  align-self: flex-end;
+}
 
 .table-card {
   padding: 16px;
@@ -1026,6 +1064,13 @@ watch(
   align-items: center;
   justify-content: flex-end;
   padding-top: 12px;
+}
+
+.create-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 16px;
 }
 
 .detail-card__header {
@@ -1143,5 +1188,10 @@ watch(
 .alert--muted {
   background: var(--color-surface-muted);
   color: var(--color-text-muted);
+}
+
+.more-fields summary {
+  cursor: pointer;
+  font-weight: 600;
 }
 </style>

@@ -15,7 +15,7 @@
       </header>
 
       <div class="controls">
-        <select class="input" v-model="selectedTenantId" @change="loadTenantUsers">
+        <select class="input" v-model="selectedTenantId">
           <option value="">Tenant auswählen</option>
           <option v-for="t in tenants" :key="t.id" :value="t.id">
             {{ t.name }} ({{ t.slug }})
@@ -136,7 +136,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from "vue";
+import { computed, reactive, ref, watch } from "vue";
 import {
   adminCreateTenantUser,
   adminListTenantUsers,
@@ -153,6 +153,7 @@ const props = defineProps<{
   dbOk: boolean;
   actor: string;
   adminKey: string;
+  selectedTenantId?: string;
 }>();
 
 const { toast } = useToast();
@@ -190,11 +191,14 @@ async function loadTenants() {
   busy.tenants = true;
   try {
     tenants.value = await adminListTenants(props.adminKey, props.actor, { limit: 200, offset: 0 });
-    if (!selectedTenantId.value && tenants.value.length > 0) {
+    const stored = props.selectedTenantId || sessionStorage.getItem("adminSelectedTenantId") || "";
+    if (!selectedTenantId.value && stored && tenants.value.some((t) => t.id === stored)) {
+      selectedTenantId.value = stored;
+    } else if (!selectedTenantId.value && tenants.value.length > 0) {
       selectedTenantId.value = tenants.value[0].id;
     }
+    emitSelectedTenant();
     toast(`Tenants geladen: ${tenants.value.length}`);
-    await loadTenantUsers();
   } catch (e: any) {
     toast(`Fehler beim Laden: ${stringifyError(e)}`);
   } finally {
@@ -348,8 +352,35 @@ function ensureAdminKey(): boolean {
   return true;
 }
 
-onMounted(async () => {
-  await loadRoles();
-  await loadTenants();
-});
+watch(
+  () => props.adminKey,
+  async (key, prev) => {
+    if (key && key !== prev) {
+      await loadRoles();
+      await loadTenants();
+    }
+  },
+  { immediate: true }
+);
+
+watch(
+  () => selectedTenantId.value,
+  (id) => {
+    if (id) {
+      sessionStorage.setItem("adminSelectedTenantId", id);
+    } else {
+      sessionStorage.removeItem("adminSelectedTenantId");
+    }
+  }
+);
+
+watch(
+  () => props.selectedTenantId,
+  (id) => {
+    if (id && tenants.value.some((t) => t.id === id)) {
+      selectedTenantId.value = id;
+      loadTenantUsers();
+    }
+  }
+);
 </script>

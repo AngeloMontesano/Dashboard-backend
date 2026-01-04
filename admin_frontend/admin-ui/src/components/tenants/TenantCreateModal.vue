@@ -27,15 +27,15 @@
           </div>
 
           <div class="field">
-            <div class="label">Slug</div>
+            <div class="label">Subdomain (Slug)</div>
             <input
               class="input"
               :value="slug"
               @input="$emit('update:slug', ($event.target as HTMLInputElement).value)"
-              placeholder="baeckerei-muster"
+              placeholder="z. B. baeckerei-muster"
             />
             <div class="muted" style="margin-top: 4px;">
-              Subdomain: <span class="mono">{{ slugPreview }}</span>
+              Wird zur Subdomain: <span class="mono">{{ slugPreview }}</span>
             </div>
           </div>
         </div>

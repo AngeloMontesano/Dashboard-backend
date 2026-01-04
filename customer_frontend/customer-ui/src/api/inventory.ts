@@ -1,41 +1,133 @@
 import axios from 'axios';
-import { getBaseURL } from './base';
+import { getBaseURL, getTenantHeaders } from './base';
 
-export type MovementPayload = {
-  client_tx_id: string;
-  type: 'IN' | 'OUT';
-  barcode: string;
-  qty: number;
-  note?: string;
-  created_at: string;
+const baseURL = getBaseURL();
+
+type AuthHeaders = {
+  Authorization?: string;
 };
 
-const client = axios.create({
-  baseURL: getBaseURL(),
-  timeout: 8000
-});
+function buildClient(token?: string) {
+  const authHeaders: AuthHeaders = {};
+  if (token) authHeaders.Authorization = `Bearer ${token}`;
 
-const mockPost = async (payload: MovementPayload) => {
-  await new Promise((resolve) => setTimeout(resolve, 400));
-  return {
-    ok: true,
-    data: {
-      ...payload,
-      mocked: true
+  return axios.create({
+    baseURL,
+    timeout: 15000,
+    headers: {
+      'Content-Type': 'application/json',
+      ...getTenantHeaders(),
+      ...authHeaders
     }
-  };
+  });
+}
+
+export type Category = {
+  id: string;
+  name: string;
+  is_system: boolean;
+  is_active: boolean;
 };
 
-export async function postInventoryMovement(payload: MovementPayload) {
-  if (typeof navigator !== 'undefined' && !navigator.onLine) {
-    throw new Error('Offline - kann Bewegung nicht senden');
-  }
+export type Item = {
+  id: string;
+  sku: string;
+  barcode: string;
+  name: string;
+  description: string;
+  quantity: number;
+  unit: string;
+  is_active: boolean;
+  category_id?: string | null;
+  category_name?: string | null;
+  min_stock: number;
+  max_stock: number;
+  target_stock: number;
+  recommended_stock: number;
+  order_mode: number;
+};
 
-  try {
-    const response = await client.post('/inventory/movements', payload);
-    return response.data;
-  } catch (error) {
-    // Fallback Mock, damit Frontend weiter funktioniert bis API verfügbar ist.
-    return mockPost(payload);
-  }
+export type ItemsPage = {
+  items: Item[];
+  total: number;
+  page: number;
+  page_size: number;
+};
+
+export async function fetchCategories(token: string) {
+  const client = buildClient(token);
+  const res = await client.get<Category[]>('/inventory/categories');
+  return res.data;
+}
+
+export async function fetchItems(params: {
+  token: string;
+  q?: string;
+  category_id?: string | null;
+  active?: boolean | null;
+  page?: number;
+  page_size?: number;
+}) {
+  const { token, ...query } = params;
+  const client = buildClient(token);
+  const res = await client.get<ItemsPage>('/inventory/items', { params: query });
+  return res.data;
+}
+
+export async function checkSkuExists(token: string, sku: string) {
+  const client = buildClient(token);
+  const res = await client.get<{ exists: boolean; normalized_sku: string }>(
+    `/inventory/items/sku/${encodeURIComponent(sku)}/exists`
+  );
+  return res.data;
+}
+
+export type ItemCreatePayload = {
+  sku: string;
+  barcode: string;
+  name: string;
+  description?: string;
+  quantity?: number;
+  unit?: string;
+  is_active?: boolean;
+  category_id?: string | null;
+  min_stock?: number;
+  max_stock?: number;
+  target_stock?: number;
+  recommended_stock?: number;
+  order_mode?: number;
+};
+
+export async function createItem(token: string, payload: ItemCreatePayload) {
+  const client = buildClient(token);
+  const res = await client.post<Item>('/inventory/items', payload);
+  return res.data;
+}
+
+export async function updateItem(token: string, id: string, payload: Partial<ItemCreatePayload>) {
+  const client = buildClient(token);
+  const res = await client.patch<Item>(`/inventory/items/${id}`, payload);
+  return res.data;
+}
+
+export async function importItems(token: string, file: File) {
+  const client = buildClient(token);
+  const form = new FormData();
+  form.append('file', file);
+  const res = await client.post<{ imported: number; updated: number; errors: Array<{ row: string; error: string }> }>(
+    '/inventory/items/import',
+    form,
+    {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    }
+  );
+  return res.data;
+}
+
+export async function exportItems(token: string) {
+  const client = buildClient(token);
+  const res = await client.get<{ csv: string }>('/inventory/items/export');
+  return res.data.csv;
 }

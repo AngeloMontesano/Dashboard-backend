@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { getBaseURL } from './base';
+import { getBaseURL, getTenantHeaders } from './base';
 
 type LoginResponse = {
   access_token: string;
@@ -15,7 +15,10 @@ export async function authLogin(email: string, password: string) {
   const client = axios.create({
     baseURL,
     timeout: 15000,
-    headers: { 'Content-Type': 'application/json' }
+    headers: {
+      'Content-Type': 'application/json',
+      ...getTenantHeaders()
+    }
   });
   try {
     const res = await client.post<LoginResponse>('/auth/login', { email, password });

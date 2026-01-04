@@ -264,7 +264,6 @@ const memberships = ref<TenantUserOut[]>([]);
 const selectedTenant = ref<TenantOut | null>(null);
 const selectedMembership = ref<TenantUserOut | null>(null);
 
-const selectedTenant = ref<TenantOut | null>(null);
 const selectedUser = ref<TenantUserOut | null>(null);
 
 const filters = reactive({

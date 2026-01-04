@@ -103,10 +103,11 @@
           <!-- Topbar -->
           <header class="topbar">
             <div class="topLeft">
-            <div class="titleRow">
-              <div class="pageTitle">{{ pageTitle }}</div>
-              <div class="crumbs">{{ pageSubtitle }}</div>
-            </div>
+              <div class="titleRow">
+                <div class="pageTitle">{{ pageTitle }}</div>
+                <div class="crumbs">{{ breadcrumb }}</div>
+              </div>
+              <div class="pageHint">{{ pageSubtitle }}</div>
             </div>
 
             <div class="topRight">
@@ -126,9 +127,11 @@
                   Kein Tenant gewählt – bitte unter „Kunden“ auswählen.
                 </div>
               </div>
-              <button class="btnGhost" @click="quickRefresh" :disabled="busy.refresh">
-                {{ busy.refresh ? "..." : "Refresh" }}
-              </button>
+              <div class="topActions">
+                <button class="btnGhost small" @click="quickRefresh" :disabled="busy.refresh">
+                  {{ busy.refresh ? "..." : "Refresh" }}
+                </button>
+              </div>
             </div>
           </header>
 
@@ -141,9 +144,9 @@
               :actor="ui.actor"
               :apiOk="api.ok"
               :dbOk="db.ok"
-              :selectedTenantId="ui.selectedTenantId"
+              :selectedTenantId="tenantContext.id"
               @openMemberships="openMemberships"
-              @selectTenant="setSelectedTenant"
+              @tenantSelected="setTenantContext"
             />
 
           <!-- SECTION: Users -->
@@ -162,7 +165,8 @@
               :actor="ui.actor"
               :apiOk="api.ok"
               :dbOk="db.ok"
-              :selectedTenantId="ui.selectedTenantId"
+              :selectedTenantId="tenantContext.id"
+              @tenantSelected="setTenantContext"
             />
 
           <!-- SECTION: Audit -->
@@ -255,7 +259,6 @@ const ui = reactive({
   adminKey: "",
   authenticated: false,
   section: "kunden" as SectionId,
-  selectedTenantId: "",
 });
 
 const tenantContext = reactive({
@@ -304,9 +307,6 @@ function applyLogin(payload: { adminKey: string; actor: string }) {
   ui.authenticated = true;
   sessionStorage.setItem("adminKey", ui.adminKey);
   sessionStorage.setItem("adminActor", ui.actor);
-  if (ui.selectedTenantId) {
-    sessionStorage.setItem("adminSelectedTenantId", ui.selectedTenantId);
-  }
   sessionStorage.setItem("adminTheme", ui.theme);
   toast("Admin Login erfolgreich, lade Portal...");
   quickRefresh();
@@ -326,12 +326,19 @@ const pageTitle = computed(() => {
 });
 
 const pageSubtitle = computed(() => {
-  if (ui.section === "kunden") return "Tenants verwalten, aktivieren, Details";
+  if (ui.section === "kunden") return "Tenants suchen, auswählen, Details & Aktionen";
   if (ui.section === "users") return "Globale Benutzer verwalten";
   if (ui.section === "memberships") return "User mit Tenants verknüpfen und Rollen setzen";
   if (ui.section === "audit") return "Audit Log durchsuchen, filtern, exportieren";
   if (ui.section === "diagnostics") return "Health, Admin Checks, Snapshot";
   return "Security, Theme, Feature Flags";
+});
+
+const breadcrumb = computed(() => {
+  if (tenantContext.slug) {
+    return `${pageTitle.value} / ${tenantContext.slug}`;
+  }
+  return pageTitle.value;
 });
 
 /* Checks */
@@ -388,14 +395,10 @@ onMounted(async () => {
   const savedKey = sessionStorage.getItem("adminKey");
   const savedActor = sessionStorage.getItem("adminActor");
   const savedTheme = sessionStorage.getItem("adminTheme");
-  const savedTenant = sessionStorage.getItem("adminSelectedTenantId");
   if (savedKey) {
     ui.adminKey = savedKey;
     ui.actor = savedActor || "admin";
     ui.authenticated = true;
-  }
-  if (savedTenant) {
-    ui.selectedTenantId = savedTenant;
   }
   if (savedTheme) {
     ui.theme = savedTheme;
@@ -416,17 +419,8 @@ function setTheme(themeId: string) {
 
 function openMemberships(tenantId: string) {
   ui.section = "memberships";
-  if (tenantId) sessionStorage.setItem("adminSelectedTenantId", tenantId);
+  if (tenantId) localStorage.setItem("adminSelectedTenantId", tenantId);
   toast("Wechsle zu Tenant-User Verwaltung");
-}
-
-function setSelectedTenant(tenantId: string) {
-  ui.selectedTenantId = tenantId;
-  if (tenantId) {
-    sessionStorage.setItem("adminSelectedTenantId", tenantId);
-  } else {
-    sessionStorage.removeItem("adminSelectedTenantId");
-  }
 }
 </script>
 
@@ -435,7 +429,7 @@ function setSelectedTenant(tenantId: string) {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-right: 12px;
+  margin-right: 8px;
 }
 
 .tenantBadge {
@@ -461,5 +455,16 @@ function setSelectedTenant(tenantId: string) {
   display: flex;
   gap: 6px;
   justify-content: flex-end;
+}
+
+.topActions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.pageHint {
+  color: var(--muted);
+  margin-top: 4px;
 }
 </style>

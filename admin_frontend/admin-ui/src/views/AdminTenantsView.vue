@@ -22,7 +22,13 @@
       <!-- Liste + Suche -->
       <div class="box">
         <div class="row gap8 wrap" style="margin-bottom: 10px;">
-          <input class="input" v-model.trim="q" placeholder="Suche: Name, Slug" @keyup.enter="loadTenants" />
+          <input
+            class="input"
+            v-model.trim="q"
+            placeholder="Suche: Name oder URL-Kürzel"
+            @keyup.enter="loadTenants"
+            aria-label="Tenant suchen"
+          />
           <select class="input" v-model="statusFilter">
             <option value="all">Alle</option>
             <option value="active">Aktiv</option>
@@ -75,7 +81,7 @@
           </div>
 
           <div class="kv">
-            <div class="k">Slug</div>
+            <div class="k">URL-Kürzel</div>
             <div class="v mono">{{ selectedTenant.slug }}</div>
           </div>
 
@@ -183,10 +189,12 @@ const props = defineProps<{
   actor: string;
   apiOk: boolean;
   dbOk: boolean;
+  selectedTenantId?: string;
 }>();
 
 const emit = defineEmits<{
   (e: "openMemberships", tenantId: string): void;
+  (e: "tenantSelected", payload: { id: string; name: string; slug: string } | null): void;
 }>();
 
 const { toast } = useToast();
@@ -246,12 +254,23 @@ async function loadTenants() {
       tenants.value = res;
 
       /* Selection stabil halten oder erste wählen */
+      const preferredId =
+        props.selectedTenantId ||
+        localStorage.getItem("adminSelectedTenantId") ||
+        sessionStorage.getItem("adminSelectedTenantId") ||
+        "";
+
       if (selectedTenant.value) {
         selectedTenant.value = res.find((t) => t.id === selectedTenant.value!.id) ?? null;
+      }
+      if (!selectedTenant.value && preferredId) {
+        selectedTenant.value = res.find((t) => t.id === preferredId) ?? null;
       }
       if (!selectedTenant.value && res.length > 0) {
         selectedTenant.value = res[0];
       }
+
+      emitSelectedTenant();
 
     toast(`Tenants geladen: ${res.length}`);
   } catch (e: any) {
@@ -268,7 +287,12 @@ async function createTenant() {
   const slug = modal.slug.trim().toLowerCase();
 
   if (!name || !slug) {
-    toast("Name und Slug sind Pflicht");
+    toast("Name und URL-Kürzel sind Pflicht");
+    return;
+  }
+
+  if (!/^[a-z0-9-]+$/.test(slug)) {
+    toast("URL-Kürzel: nur Kleinbuchstaben, Zahlen und Bindestriche erlaubt");
     return;
   }
 
@@ -318,6 +342,7 @@ async function toggleTenant(t: TenantOut) {
 /* UI actions */
 function selectTenant(t: TenantOut) {
   selectedTenant.value = t;
+  emitSelectedTenant();
 }
 
 function openDrawer(t: TenantOut) {
@@ -343,7 +368,7 @@ function closeCreateModal() {
 }
 
 function openMemberships(tenantId: string) {
-  sessionStorage.setItem("adminSelectedTenantId", tenantId);
+  localStorage.setItem("adminSelectedTenantId", tenantId);
   emit("openMemberships", tenantId);
 }
 
@@ -351,7 +376,26 @@ watch(
   () => selectedTenant.value?.id,
   (id) => {
     if (id) {
-      sessionStorage.setItem("adminSelectedTenantId", id);
+      localStorage.setItem("adminSelectedTenantId", id);
+    } else {
+      localStorage.removeItem("adminSelectedTenantId");
+    }
+  }
+);
+watch(
+  () => props.selectedTenantId,
+  (id) => {
+    if (!id) {
+      selectedTenant.value = null;
+      emitSelectedTenant();
+      return;
+    }
+    if (!tenants.value.length) return;
+    if (selectedTenant.value?.id === id) return;
+    const match = tenants.value.find((t) => t.id === id);
+    if (match) {
+      selectedTenant.value = match;
+      emitSelectedTenant();
     }
   }
 );
@@ -385,6 +429,18 @@ async function deleteTenant(t: TenantOut) {
 }
 
 /* Helpers */
+function emitSelectedTenant() {
+  if (selectedTenant.value) {
+    emit("tenantSelected", {
+      id: selectedTenant.value.id,
+      name: selectedTenant.value.name,
+      slug: selectedTenant.value.slug,
+    });
+  } else {
+    emit("tenantSelected", null);
+  }
+}
+
 function stringifyError(e: any): string {
   if (!e) return "unknown";
   if (typeof e === "string") return e;

@@ -49,3 +49,17 @@ docker compose up -d --build
 ## Seeding
 - Läuft automatisch, wenn die DB leer ist.
 - Werte können via `SEED_*` Variablen in `.env` überschrieben werden.
+
+## Multi-Tenant Inventar/Artikel (Stand)
+- **Tenant-Isolation**: Alle Inventar-Endpoints filtern strikt per `tenant_id` aus dem Host/Subdomain-Kontext (`X-Forwarded-Host`/`Host`). Ohne gültigen Tenant gibt es 404.
+- **Rollen**: Lesen für alle aktiven Memberships; Schreiben (Artikel/Kategorien anlegen, ändern, importieren) nur für `owner` und `admin`.
+- **SKU-Eindeutigkeit**: Unique pro Tenant (DB-Constraint). Eingaben werden zu `z_<eingabe>` normalisiert, falls nicht bereits mit `z_` beginnen.
+- **Kategorien**: Separate Tabelle, global (systemweit) oder tenant-spezifisch; Artikel referenzieren Kategorien per ID. Systemkategorien sind schreibgeschützt, eigene Kategorien können angelegt/umbenannt/deaktiviert werden.
+- **Artikel-Felder**:
+  - Pflicht: `sku`, `barcode`, `name`
+  - Bestandsfelder: `quantity`, `min_stock`, `max_stock`, `target_stock`, `recommended_stock`
+  - Bestellung/Alarm: `order_mode` (0=kein Alarm, 1=Alarm, 2=Bestellliste mit Empfehlung, 3=automatisch bestellen)
+  - Weitere: `description`, `unit` (Default `pcs`), `is_active`, `category_id` (optional)
+- **CSV-Import/Export**:
+  - Spalten: `sku`, `barcode`, `name`, `description`, `qty`, `unit`, `is_active`, `category`, `min_stock`, `max_stock`, `target_stock`, `recommended_stock`, `order_mode`
+  - Upsert pro Tenant anhand `sku` (mit Präfix-Regel). Fehler werden zeilenweise zurückgegeben, Export liefert das gleiche Schema.

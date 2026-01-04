@@ -105,5 +105,5 @@ volumes:
 
 networks:
   app_net:
-    external:
-      name: ${COMPOSE_PROJECT_NAME:-dashboard-backend}_default
+    name: lagersoftware_default
+    external: true

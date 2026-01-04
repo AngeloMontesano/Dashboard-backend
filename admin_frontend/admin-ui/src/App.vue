@@ -458,7 +458,7 @@ function openMemberships(tenantId: string) {
 }
 
 .topbar.topbar-flat {
-  padding: 6px 0 10px;
+  padding: 10px 12px 12px;
   min-height: unset;
 }
 </style>

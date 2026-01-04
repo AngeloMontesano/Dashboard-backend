@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import logging
 import sys
+import json
+from datetime import datetime, timezone
 from typing import Any
 
 
@@ -33,10 +35,51 @@ def configure_logging(environment: str) -> None:
     handler = logging.StreamHandler(sys.stdout)
     handler.setLevel(level)
 
-    formatter = logging.Formatter(
-        fmt="%(asctime)s %(levelname)s %(name)s %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S",
-    )
+    class JsonFormatter(logging.Formatter):
+        def format(self, record: logging.LogRecord) -> str:
+            message = record.getMessage()
+            payload = {
+                "ts": datetime.now(timezone.utc).isoformat(),
+                "level": record.levelname,
+                "logger": record.name,
+                "message": _redact_value(message),
+            }
+            # Attach extra fields (e.g. host, slug) for better diagnostics
+            skip_keys = {
+                "name",
+                "msg",
+                "args",
+                "levelname",
+                "levelno",
+                "pathname",
+                "filename",
+                "module",
+                "exc_info",
+                "exc_text",
+                "stack_info",
+                "lineno",
+                "funcName",
+                "created",
+                "msecs",
+                "relativeCreated",
+                "thread",
+                "threadName",
+                "processName",
+                "process",
+                "message",
+            }
+            for key, value in record.__dict__.items():
+                if key in skip_keys:
+                    continue
+                try:
+                    payload[key] = _redact_value(value)
+                except Exception:
+                    payload[key] = "[unserializable]"
+            if record.exc_info:
+                payload["exc_info"] = self.formatException(record.exc_info)
+            return json.dumps(payload, ensure_ascii=False)
+
+    formatter = JsonFormatter()
     handler.setFormatter(formatter)
     handler.addFilter(_RedactAdminKeyFilter())
 

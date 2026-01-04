@@ -22,10 +22,16 @@ body{
   background: var(--bg);
 }
 
-.dark .app{
+.theme-dark{
   background:
     radial-gradient(900px 500px at 15% 10%, rgba(59, 91, 219, 0.18), transparent 60%),
     radial-gradient(700px 420px at 80% 15%, rgba(22, 163, 74, 0.10), transparent 62%),
+    var(--bg);
+}
+.theme-ocean{
+  background:
+    radial-gradient(900px 500px at 15% 10%, rgba(14, 165, 233, 0.18), transparent 60%),
+    radial-gradient(700px 420px at 80% 15%, rgba(56, 189, 248, 0.20), transparent 62%),
     var(--bg);
 }
 

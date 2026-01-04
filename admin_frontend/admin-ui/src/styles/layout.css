@@ -240,6 +240,10 @@
   box-shadow: 0 0 0 4px rgba(59, 91, 219, 0.12);
 }
 
+.input::placeholder{
+  color: var(--placeholder);
+}
+
 .box{
   border: 1px solid var(--border);
   border-radius: var(--radius2);
@@ -314,10 +318,10 @@
   border: 1px solid var(--border);
   font-size: 12px;
 }
-.tag.ok{ color: var(--ok); border-color: rgba(22, 163, 74, 0.35); background: rgba(22, 163, 74, 0.06); }
-.tag.bad{ color: var(--bad); border-color: rgba(220, 38, 38, 0.35); background: rgba(220, 38, 38, 0.06); }
-.tag.warn{ color: #d97706; border-color: rgba(217, 119, 6, 0.35); background: rgba(217, 119, 6, 0.06); }
-.tag.neutral{ color: var(--neutral); }
+.tag.ok{ color: var(--tag-ok-text); border-color: var(--tag-ok-border); background: var(--tag-ok-bg); }
+.tag.bad{ color: var(--tag-bad-text); border-color: var(--tag-bad-border); background: var(--tag-bad-bg); }
+.tag.warn{ color: var(--tag-warn-text); border-color: var(--tag-warn-border); background: var(--tag-warn-bg); }
+.tag.neutral{ color: var(--tag-neutral-text); border-color: var(--tag-neutral-border); background: var(--tag-neutral-bg); }
 
 /* Tables */
 .tableWrap{
@@ -342,12 +346,12 @@
 
 .table thead th{
   font-weight: 800;
-  color: var(--muted);
+  color: var(--table-head-text);
   background: var(--surface2);
 }
 
 .table tbody tr:hover{
-  background: var(--surface2);
+  background: var(--table-row-hover);
 }
 
 .table td.right,
@@ -362,7 +366,7 @@
 }
 
 .rowActive{
-  background: var(--surface2);
+  background: var(--table-row-active);
 }
 
 /* Flex-Table Variante (div.table) */
@@ -410,19 +414,60 @@
 /* Utility */
 .mono{ font-family: var(--mono); }
 
-/* Toast (global, App.vue) */
-.toast{
+/* Toast Host (global, App.vue) */
+.toastHost{
   position: fixed;
-  right: 16px;
-  bottom: 16px;
-  padding: 12px 14px;
-  border-radius: 12px;
+  right: 18px;
+  bottom: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 60;
+}
+
+.toastCard{
   background: var(--panel);
   border: 1px solid var(--border);
+  border-radius: 12px;
   box-shadow: var(--shadow);
-  max-width: 320px;
-  font-weight: 750;
-  z-index: 9999;
+  padding: 12px 14px;
+  width: 340px;
+  max-width: 92vw;
+  color: var(--text);
+}
+
+.toastHeader{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.toastPill{
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+}
+
+.toastPill.success{ color: var(--tag-ok-text); background: var(--tag-ok-bg); border-color: var(--tag-ok-border); }
+.toastPill.warning{ color: var(--tag-warn-text); background: var(--tag-warn-bg); border-color: var(--tag-warn-border); }
+.toastPill.danger{ color: var(--tag-bad-text); background: var(--tag-bad-bg); border-color: var(--tag-bad-border); }
+.toastPill.info{ color: var(--muted); }
+
+.toastTitle{
+  margin: 8px 0 0;
+  font-weight: 800;
+}
+
+.toastDescription{
+  margin: 4px 0 0;
+  color: var(--muted);
 }
 
 /* ===============================================================

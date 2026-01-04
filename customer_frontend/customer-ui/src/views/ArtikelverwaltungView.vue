@@ -531,6 +531,18 @@ function closeCreateCard() {
   nextTick(() => quickScanInput.value?.focus());
 }
 
+function focusPrimeInput(comp: any) {
+  const el: HTMLInputElement | HTMLTextAreaElement | null | undefined =
+    comp?.$el?.querySelector?.('input,textarea');
+  el?.focus();
+}
+
+function closeCreateCard() {
+  showCreate.value = false;
+  resetCreateForm();
+  nextTick(() => quickScanInput.value?.focus());
+}
+
 onMounted(async () => {
   if (!isLoggedIn.value) return;
   await loadCategories();

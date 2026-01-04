@@ -3,6 +3,9 @@
   grid-template-columns: var(--sidebar-width) 1fr;
   min-height: 100vh;
 }
+.app-shell--login{
+  min-height: 100vh;
+}
 
 .sidebar {
   background: var(--color-surface);

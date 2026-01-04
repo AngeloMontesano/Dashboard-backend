@@ -5,6 +5,7 @@ const apiHost = import.meta.env.VITE_API_HOST || "";
 const apiPort = import.meta.env.VITE_API_PORT || "";
 const tenantSlug = import.meta.env.VITE_TENANT_SLUG || "";
 const explicitApiBase = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_BASE;
+const allowRuntimeHost = (import.meta.env.VITE_ALLOW_RUNTIME_HOST || "false").toLowerCase() === "true";
 
 const runtimeHost = typeof window !== "undefined" ? window.location.hostname : "";
 const runtimeProtocol = typeof window !== "undefined" ? window.location.protocol.replace(":", "") : "";
@@ -21,14 +22,10 @@ function replaceHost(url: string, host: string): string | null {
 }
 
 export function getBaseURL(): string {
-  // If an explicit base is set but we are on a tenant host of the same base domain,
-  // prefer the current host to preserve the tenant slug (avoids 404 from missing slug).
-  if (explicitApiBase && baseDomain && runtimeHost && runtimeHost.endsWith(`.${baseDomain}`)) {
-    const adjusted = replaceHost(explicitApiBase, runtimeHost + (runtimePort ? `:${runtimePort}` : ""));
-    if (adjusted) return adjusted;
+  // If an explicit base is set, use it unless runtime-host overriding is explicitly allowed.
+  if (explicitApiBase && (!allowRuntimeHost || !runtimeHost)) {
     return explicitApiBase;
   }
-  if (explicitApiBase) return explicitApiBase;
   if (apiHost) {
     const portPart = apiPort ? `:${apiPort}` : "";
     return `${apiProtocol}://${apiHost}${portPart}`;
@@ -49,6 +46,27 @@ export function getBaseURL(): string {
   return `${apiProtocol}://${apiSubdomain}.${baseDomain}`;
 }
 
+export function getTenantHost(): string | null {
+  // Prefer the runtime host when it already contains the tenant slug.
+  if (baseDomain && runtimeHost && runtimeHost.endsWith(`.${baseDomain}`)) {
+    return runtimeHost + (runtimePort ? `:${runtimePort}` : "");
+  }
+  // Fallback: build host from env slug
+  if (tenantSlug && baseDomain) {
+    const portPart = apiPort ? `:${apiPort}` : "";
+    return `${tenantSlug}.${baseDomain}${portPart}`;
+  }
+  return null;
+}
+
+export function getTenantForwardHeader(): Record<string, string> {
+  const tenantHost = getTenantHost();
+  if (tenantHost) {
+    return { "X-Forwarded-Host": tenantHost };
+  }
+  return {};
+}
+
 // Helpful console output for debugging connectivity
 if (typeof console !== "undefined") {
   console.info(
@@ -65,6 +83,7 @@ if (typeof console !== "undefined") {
       runtimeHost,
       runtimeProtocol,
       runtimePort,
+      allowRuntimeHost,
     }
   );
 }

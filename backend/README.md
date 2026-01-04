@@ -43,6 +43,13 @@ Tenant-Kontext wird zentral in `app/core/tenant.py` / `get_tenant_context` gelö
 - `Membership`: verbindet User <-> Tenant mit Rolle und Aktiv-Flag.
 - `RefreshSession`: Refresh Token Hash, Tenant/User, Ablauf/Revocation, `last_used_at`.
 
+
+## Datenmodell (relevant für Auth)
+- `Tenant`: slug, name, aktiv-Flag.
+- `User`: global eindeutige Email, `password_hash`, aktiv-Flag.
+- `Membership`: verbindet User <-> Tenant mit Rolle und Aktiv-Flag.
+- `RefreshSession`: Refresh Token Hash, Tenant/User, Ablauf/Revocation, `last_used_at`.
+
 ## Logging & Observability
 - **Logger-Namen:** `app.request` (Request/Metrics), `app.auth` (Auth-Flows), `app` (Exception-Handler). Konsumierbar in Docker-Logs.
 - **Validation Logs:** 422-Validation-Errors loggen Path + Fehlerdetails + Request-ID für schnellere Ursachefindung.【F:backend/app/core/errors.py†L75-L93】
@@ -88,3 +95,19 @@ docker compose up -d --build
 - Zusätzliche Module sollten `get_tenant_context` als Dependency nutzen, wenn Daten tenant-spezifisch sind.
 - Für Admin-Only Routen `X-Admin-Key` Header erzwingen (siehe bestehende Admin-Router).
 - Neue Hintergrundjobs sollten Request-ID/Context nicht voraussetzen; Logs mit klaren Labels schreiben.
+- Läuft automatisch, wenn die DB leer ist.
+- Werte können via `SEED_*` Variablen in `.env` überschrieben werden.
+
+## Multi-Tenant Inventar/Artikel (Stand)
+- **Tenant-Isolation**: Alle Inventar-Endpoints filtern strikt per `tenant_id` aus dem Host/Subdomain-Kontext (`X-Forwarded-Host`/`Host`). Ohne gültigen Tenant gibt es 404.
+- **Rollen**: Lesen für alle aktiven Memberships; Schreiben (Artikel/Kategorien anlegen, ändern, importieren) nur für `owner` und `admin`.
+- **SKU-Eindeutigkeit**: Unique pro Tenant (DB-Constraint). Eingaben werden zu `z_<eingabe>` normalisiert, falls nicht bereits mit `z_` beginnen.
+- **Kategorien**: Separate Tabelle, global (systemweit) oder tenant-spezifisch; Artikel referenzieren Kategorien per ID. Systemkategorien sind schreibgeschützt, eigene Kategorien können angelegt/umbenannt/deaktiviert werden.
+- **Artikel-Felder**:
+  - Pflicht: `sku`, `barcode`, `name`
+  - Bestandsfelder: `quantity`, `min_stock`, `max_stock`, `target_stock`, `recommended_stock`
+  - Bestellung/Alarm: `order_mode` (0=kein Alarm, 1=Alarm, 2=Bestellliste mit Empfehlung, 3=automatisch bestellen)
+  - Weitere: `description`, `unit` (Default `pcs`), `is_active`, `category_id` (optional)
+- **CSV-Import/Export**:
+  - Spalten: `sku`, `barcode`, `name`, `description`, `qty`, `unit`, `is_active`, `category`, `min_stock`, `max_stock`, `target_stock`, `recommended_stock`, `order_mode`
+  - Upsert pro Tenant anhand `sku` (mit Präfix-Regel). Fehler werden zeilenweise zurückgegeben, Export liefert das gleiche Schema.

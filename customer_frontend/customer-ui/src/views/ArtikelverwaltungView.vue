@@ -7,6 +7,8 @@ import {
   checkSkuExists,
   exportItems,
   importItems,
+  createCategory,
+  updateCategory,
   type Category,
   type Item
 } from '@/api/inventory';
@@ -19,6 +21,10 @@ const isCreating = ref(false);
 const message = ref<string | null>(null);
 const error = ref<string | null>(null);
 const skuHint = ref<string | null>(null);
+const categoryError = ref<string | null>(null);
+const categoryMessage = ref<string | null>(null);
+const editingCategoryId = ref<string | null>(null);
+const categoryNameInput = ref('');
 
 const categories = ref<Category[]>([]);
 const items = ref<Item[]>([]);
@@ -53,10 +59,10 @@ const isLoggedIn = computed(() => isAuthenticated());
 async function loadCategories() {
   if (!authState.accessToken) return;
   const data = await fetchCategories(authState.accessToken);
-  categories.value = data.filter((c) => c.is_active);
-}
+    categories.value = data.filter((c) => c.is_active);
+  }
 
-async function loadItems() {
+  async function loadItems() {
   if (!authState.accessToken) return;
   isLoading.value = true;
   error.value = null;
@@ -140,7 +146,8 @@ async function handleExport() {
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.setAttribute('download', 'artikel.csv');
+    const now = new Date().toISOString().split('T')[0];
+    link.setAttribute('download', `artikel-${now}.csv`);
     link.click();
     window.URL.revokeObjectURL(url);
     message.value = 'Export erfolgreich';
@@ -193,6 +200,100 @@ watch(
     }
   }
 );
+
+async function handleDeactivate(item: Item, active: boolean) {
+  if (!authState.accessToken) return;
+  error.value = null;
+  message.value = null;
+  try {
+    await updateItem(authState.accessToken, item.id, { is_active: active });
+    message.value = active ? 'Artikel aktiviert' : 'Artikel deaktiviert';
+    await loadItems();
+  } catch (err: any) {
+    error.value = err?.response?.data?.error?.message || err?.message || 'Aktion fehlgeschlagen';
+  }
+}
+
+function selectForEdit(item: Item) {
+  newItem.sku = item.sku;
+  newItem.barcode = item.barcode;
+  newItem.name = item.name;
+  newItem.description = item.description;
+  newItem.quantity = item.quantity;
+  newItem.unit = item.unit;
+  newItem.is_active = item.is_active;
+  newItem.category_id = item.category_id || '';
+  newItem.min_stock = item.min_stock;
+  newItem.max_stock = item.max_stock;
+  newItem.target_stock = item.target_stock;
+  newItem.recommended_stock = item.recommended_stock;
+  newItem.order_mode = item.order_mode;
+}
+
+async function handleUpdate(item: Item) {
+  if (!authState.accessToken) return;
+  error.value = null;
+  message.value = null;
+  try {
+    await updateItem(authState.accessToken, item.id, {
+      ...newItem,
+      category_id: newItem.category_id || null
+    });
+    message.value = 'Artikel aktualisiert';
+    resetForm();
+    await loadItems();
+  } catch (err: any) {
+    error.value = err?.response?.data?.error?.message || err?.message || 'Aktualisierung fehlgeschlagen';
+  }
+}
+
+async function handleCreateCategory() {
+  if (!authState.accessToken) return;
+  categoryError.value = null;
+  categoryMessage.value = null;
+  try {
+    await createCategory(authState.accessToken, { name: categoryNameInput.value });
+    categoryMessage.value = 'Kategorie angelegt';
+    categoryNameInput.value = '';
+    await loadCategories();
+  } catch (err: any) {
+    categoryError.value = err?.response?.data?.error?.message || err?.message || 'Kategorie konnte nicht angelegt werden';
+  }
+}
+
+async function handleUpdateCategory(cat: Category) {
+  if (!authState.accessToken) return;
+  categoryError.value = null;
+  categoryMessage.value = null;
+  try {
+    await updateCategory(authState.accessToken, cat.id, { name: categoryNameInput.value || cat.name });
+    categoryMessage.value = 'Kategorie aktualisiert';
+    categoryNameInput.value = '';
+    editingCategoryId.value = null;
+    await loadCategories();
+  } catch (err: any) {
+    categoryError.value = err?.response?.data?.error?.message || err?.message || 'Kategorie konnte nicht aktualisiert werden';
+  }
+}
+
+async function handleToggleCategory(cat: Category, active: boolean) {
+  if (!authState.accessToken) return;
+  categoryError.value = null;
+  categoryMessage.value = null;
+  try {
+    await updateCategory(authState.accessToken, cat.id, { is_active: active });
+    categoryMessage.value = active ? 'Kategorie aktiviert' : 'Kategorie deaktiviert';
+    await loadCategories();
+  } catch (err: any) {
+    categoryError.value = err?.response?.data?.error?.message || err?.message || 'Status konnte nicht geändert werden';
+  }
+}
+
+function startEditCategory(cat: Category) {
+  if (cat.is_system) return;
+  editingCategoryId.value = cat.id;
+  categoryNameInput.value = cat.name;
+}
 </script>
 
 <template>
@@ -229,6 +330,15 @@ watch(
         <option :value="null">Alle</option>
       </select>
       <button class="button button--ghost" type="button" @click="loadItems" :disabled="isLoading">Aktualisieren</button>
+      <label>
+        <span class="sr-only">Seitengröße</span>
+        <select v-model.number="filters.page_size">
+          <option :value="10">10</option>
+          <option :value="25">25</option>
+          <option :value="50">50</option>
+          <option :value="100">100</option>
+        </select>
+      </label>
     </div>
 
     <div class="cards-grid" style="margin-bottom: 16px">
@@ -251,6 +361,7 @@ watch(
             <th>Bestellung</th>
             <th>Kategorie</th>
             <th>Status</th>
+            <th>Aktionen</th>
           </tr>
         </thead>
         <tbody>
@@ -267,9 +378,34 @@ watch(
                 {{ item.is_active ? 'Aktiv' : 'Inaktiv' }}
               </span>
             </td>
+            <td class="table-actions">
+              <button class="button button--ghost" type="button" @click="selectForEdit(item)">Bearbeiten</button>
+              <button
+                class="button button--ghost"
+                type="button"
+                @click="handleDeactivate(item, !item.is_active)"
+              >
+                {{ item.is_active ? 'Deaktivieren' : 'Aktivieren' }}
+              </button>
+              <button class="button button--ghost" type="button" @click="handleUpdate(item)">Speichern</button>
+            </td>
           </tr>
         </tbody>
       </table>
+      <div class="pagination">
+        <button class="button button--ghost" type="button" :disabled="filters.page <= 1" @click="filters.page = filters.page - 1; loadItems();">
+          Zurück
+        </button>
+        <span>Seite {{ filters.page }}</span>
+        <button
+          class="button button--ghost"
+          type="button"
+          :disabled="filters.page * filters.page_size >= total"
+          @click="filters.page = filters.page + 1; loadItems();"
+        >
+          Weiter
+        </button>
+      </div>
     </div>
     <div v-else class="placeholder">
       <p v-if="isLoading">Lade Artikel...</p>
@@ -345,6 +481,75 @@ watch(
           <button class="button button--ghost" type="button" @click="resetForm">Zurücksetzen</button>
         </div>
       </form>
+    </section>
+
+    <section class="card" style="margin-top: 24px">
+      <h3 class="card__title">Kategorien verwalten</h3>
+      <div v-if="categoryMessage" class="alert alert--success">{{ categoryMessage }}</div>
+      <div v-if="categoryError" class="alert alert--error">{{ categoryError }}</div>
+      <form class="form-inline" @submit.prevent="editingCategoryId ? null : handleCreateCategory">
+        <input
+          v-model="categoryNameInput"
+          placeholder="Kategoriename"
+          :disabled="Boolean(editingCategoryId)"
+          required
+        />
+        <button class="button button--primary" type="submit" :disabled="Boolean(editingCategoryId)">Neue Kategorie</button>
+      </form>
+      <table class="table" style="margin-top: 12px">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>System</th>
+            <th>Status</th>
+            <th>Aktionen</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="cat in categories" :key="cat.id">
+            <td>
+              <span v-if="editingCategoryId !== cat.id">{{ cat.name }}</span>
+              <input
+                v-else
+                v-model="categoryNameInput"
+                :disabled="cat.is_system"
+              />
+            </td>
+            <td>{{ cat.is_system ? 'Ja' : 'Nein' }}</td>
+            <td>
+              <span :class="['badge', cat.is_active ? 'badge--success' : 'badge--muted']">
+                {{ cat.is_active ? 'Aktiv' : 'Inaktiv' }}
+              </span>
+            </td>
+            <td class="table-actions">
+              <button
+                class="button button--ghost"
+                type="button"
+                :disabled="cat.is_system"
+                @click="startEditCategory(cat)"
+              >
+                Bearbeiten
+              </button>
+              <button
+                v-if="editingCategoryId === cat.id"
+                class="button button--primary"
+                type="button"
+                @click="handleUpdateCategory(cat)"
+              >
+                Speichern
+              </button>
+              <button
+                class="button button--ghost"
+                type="button"
+                :disabled="cat.is_system"
+                @click="handleToggleCategory(cat, !cat.is_active)"
+              >
+                {{ cat.is_active ? 'Deaktivieren' : 'Aktivieren' }}
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </section>
   </section>
 </template>

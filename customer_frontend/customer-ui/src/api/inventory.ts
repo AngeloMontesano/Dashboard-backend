@@ -60,6 +60,18 @@ export async function fetchCategories(token: string) {
   return res.data;
 }
 
+export async function createCategory(token: string, payload: { name: string; is_active?: boolean }) {
+  const client = buildClient(token);
+  const res = await client.post<Category>('/inventory/categories', payload);
+  return res.data;
+}
+
+export async function updateCategory(token: string, id: string, payload: { name?: string; is_active?: boolean }) {
+  const client = buildClient(token);
+  const res = await client.patch<Category>(`/inventory/categories/${id}`, payload);
+  return res.data;
+}
+
 export async function fetchItems(params: {
   token: string;
   q?: string;

@@ -38,14 +38,24 @@ function applyPrefix(url: string): string {
   return `${sanitized}${apiPrefix}`;
 }
 
+function normalizeExplicitBase(url: string): string {
+  const trimmed = url.replace(/\/+$/, "");
+  // If no explicit prefix is provided but the base ends with "/api", strip it to match backend routes at "/".
+  if (!apiPrefix && trimmed.toLowerCase().endsWith("/api")) {
+    return trimmed.slice(0, -4);
+  }
+  return trimmed;
+}
+
 export function getBaseURL(): string {
   // If an explicit base is set, use it unless runtime-host overriding is explicitly allowed.
   if (explicitApiBase) {
+    const cleanedExplicitBase = normalizeExplicitBase(explicitApiBase);
     if (allowRuntimeHost && baseDomain && runtimeHost && runtimeHost.endsWith(`.${baseDomain}`)) {
-      const adjusted = replaceHost(explicitApiBase, runtimeHost + (runtimePort ? `:${runtimePort}` : ""));
+      const adjusted = replaceHost(cleanedExplicitBase, runtimeHost + (runtimePort ? `:${runtimePort}` : ""));
       if (adjusted) return applyPrefix(adjusted);
     }
-    return applyPrefix(explicitApiBase);
+    return applyPrefix(cleanedExplicitBase);
   }
   if (apiHost) {
     const portPart = apiPort ? `:${apiPort}` : "";

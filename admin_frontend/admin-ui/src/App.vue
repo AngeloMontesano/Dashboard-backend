@@ -101,7 +101,7 @@
         ========================================================== -->
         <main class="main">
           <!-- Topbar -->
-          <header class="topbar">
+          <header :class="['topbar', ui.section === 'kunden' ? 'topbar-flat' : '']">
             <div class="topLeft">
               <div class="titleRow">
                 <div class="pageTitle">{{ pageTitle }}</div>
@@ -455,6 +455,25 @@ function openMemberships(tenantId: string) {
   display: flex;
   gap: 6px;
   justify-content: flex-end;
+}
+
+.topbar-flat {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  margin: 0 0 4px 0;
+}
+
+.topbar-flat .topRight {
+  align-items: center;
+}
+
+.topbar-flat .tenantContext {
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
 }
 
 .topActions {

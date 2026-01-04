@@ -495,6 +495,42 @@ async function startImport() {
   }
 }
 
+const handleRowClick = (item: Item) => {
+  showCreate.value = false;
+  selectedArticleId.value = item.id;
+  hydrateFormFromItem(item, editForm);
+  banner.message = '';
+  banner.error = '';
+};
+
+const handleNavigateCategories = () => {
+  router.push('/kategorien');
+};
+
+function focusCreateBarcode() {
+  if (showCreateCard.value) {
+    nextTick(() => focusInputElement(createBarcodeInput.value));
+  } else {
+    quickScanInput.value?.focus();
+  }
+}
+
+function focusInputElement(comp: any) {
+  if (comp?.focus) {
+    comp.focus();
+    return;
+  }
+  const el: HTMLInputElement | HTMLTextAreaElement | null | undefined =
+    comp?.$el?.querySelector?.('input,textarea');
+  el?.focus();
+}
+
+function closeCreateCard() {
+  showCreate.value = false;
+  resetCreateForm();
+  nextTick(() => quickScanInput.value?.focus());
+}
+
 const onRowSelect = (item: Item) => {
   showCreate.value = false;
   selectedArticleId.value = item.id;
@@ -639,7 +675,7 @@ watch(
         <p class="section-subtitle">Artikel, Barcodes und Mindestbestände verwalten.</p>
       </div>
       <div class="page-head__actions">
-        <button class="button button--ghost" type="button" @click="navigateToCategories">
+        <button class="button button--ghost" type="button" @click="handleNavigateCategories">
           Kategorien verwalten
         </button>
         <button class="button button--ghost" type="button" @click="openImportModal" :disabled="!canOpenModals">
@@ -733,7 +769,7 @@ watch(
               v-for="item in items"
               :key="item.id"
               :class="{ 'table-row--active': selectedArticleId === item.id }"
-              @click="onRowSelect(item)"
+              @click="handleRowClick(item)"
             >
               <td>{{ item.sku }}</td>
               <td>{{ item.name }}</td>

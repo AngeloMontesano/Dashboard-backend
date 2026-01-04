@@ -14,7 +14,7 @@ import {
 import { useAuth } from '@/composables/useAuth';
 
 const router = useRouter();
-const { state: authState, isAuthenticated } = useAuth();
+const { state: authState, isAuthenticated, logout } = useAuth();
 
 const hasWriteAccess = computed(() => ['owner', 'admin'].includes(authState.role));
 const isLoggedIn = computed(() => isAuthenticated());
@@ -154,10 +154,26 @@ function hydrateFormFromItem(item: Item, target: typeof editForm | typeof create
   target.is_active = item.is_active;
 }
 
+function handleAuthError(err: any) {
+  const status = err?.response?.status;
+  if (status === 401) {
+    banner.error = 'Sitzung abgelaufen. Bitte erneut anmelden.';
+    logout();
+    router.push({ name: 'login', query: { redirect: '/artikelverwaltung' } });
+    return true;
+  }
+  return false;
+}
+
 async function loadCategories() {
   if (!authState.accessToken) return;
-  const data = await fetchCategories(authState.accessToken);
-  categories.value = data.filter((c) => c.is_active);
+  try {
+    const data = await fetchCategories(authState.accessToken);
+    categories.value = data.filter((c) => c.is_active);
+  } catch (err: any) {
+    if (handleAuthError(err)) return;
+    banner.error = err?.message || 'Konnte Kategorien nicht laden.';
+  }
 }
 
 async function loadItems() {
@@ -182,6 +198,7 @@ async function loadItems() {
       hydrateFormFromItem(selectedArticle.value, editForm);
     }
   } catch (err: any) {
+    if (handleAuthError(err)) return;
     banner.error = err?.message || 'Konnte Artikel nicht laden.';
   } finally {
     isLoading.value = false;
@@ -216,7 +233,8 @@ async function handleQuickScan() {
     } else {
       banner.scan = `${result.total} Treffer zum Barcode – Filter gesetzt.`;
     }
-  } catch {
+  } catch (err: any) {
+    if (handleAuthError(err)) return;
     banner.scan = 'Schnellscan fehlgeschlagen.';
   }
 }
@@ -238,6 +256,7 @@ async function handleSaveSelected() {
     banner.message = 'Artikel gespeichert.';
     await loadItems();
   } catch (err: any) {
+    if (handleAuthError(err)) return;
     banner.error = err?.response?.data?.error?.message || err?.message || 'Speichern fehlgeschlagen.';
   } finally {
     isSaving.value = false;
@@ -265,6 +284,7 @@ async function handleCreate() {
     selectedArticleId.value = created.id;
     hydrateFormFromItem(created, editForm);
   } catch (err: any) {
+    if (handleAuthError(err)) return;
     createFeedback.error = err?.response?.data?.error?.message || err?.message || 'Anlage fehlgeschlagen.';
   } finally {
     isSaving.value = false;
@@ -368,10 +388,17 @@ async function handleExportAll() {
     window.URL.revokeObjectURL(url);
     banner.message = 'CSV Export erstellt (alle Artikel).';
   } catch (err: any) {
+    if (handleAuthError(err)) return;
     banner.error = err?.message || 'Export fehlgeschlagen.';
   } finally {
     isExporting.value = false;
   }
+}
+
+function openCreateModal() {
+  resetCreateForm();
+  createFeedback.error = '';
+  createModalOpen.value = true;
 }
 
 function openImportModal() {
@@ -442,6 +469,7 @@ async function startImport() {
     importStep.value = 3;
     await loadItems();
   } catch (err: any) {
+    if (handleAuthError(err)) return;
     importError.value = err?.response?.data?.error?.message || err?.message || 'Import fehlgeschlagen.';
   } finally {
     importLoading.value = false;
@@ -531,7 +559,7 @@ watch(
         <button
           class="button button--primary"
           type="button"
-          @click="() => { resetCreateForm(); createModalOpen = true; }"
+          @click="openCreateModal"
           :disabled="!hasWriteAccess"
         >
           Neuer Artikel

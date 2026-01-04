@@ -15,7 +15,7 @@
       </header>
 
       <div class="controls">
-        <select class="input" v-model="selectedTenantId" @change="loadTenantUsers">
+        <select class="input" v-model="selectedTenantId">
           <option value="">Tenant auswählen</option>
           <option v-for="t in tenants" :key="t.id" :value="t.id">
             {{ t.name }} ({{ t.slug }})
@@ -136,7 +136,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from "vue";
+import { computed, reactive, ref, watch } from "vue";
 import {
   adminCreateTenantUser,
   adminListTenantUsers,
@@ -153,6 +153,11 @@ const props = defineProps<{
   dbOk: boolean;
   actor: string;
   adminKey: string;
+  selectedTenantId?: string;
+}>();
+
+const emit = defineEmits<{
+  (e: "tenantSelected", payload: { id: string; name: string; slug: string } | null): void;
 }>();
 
 const { toast } = useToast();
@@ -190,11 +195,15 @@ async function loadTenants() {
   busy.tenants = true;
   try {
     tenants.value = await adminListTenants(props.adminKey, props.actor, { limit: 200, offset: 0 });
-    if (!selectedTenantId.value && tenants.value.length > 0) {
+    const stored = localStorage.getItem("adminSelectedTenantId");
+    const targetId = props.selectedTenantId || stored;
+    if (!selectedTenantId.value && targetId && tenants.value.some((t) => t.id === targetId)) {
+      selectedTenantId.value = targetId;
+    } else if (!selectedTenantId.value && tenants.value.length > 0) {
       selectedTenantId.value = tenants.value[0].id;
     }
+    emitSelectedTenant();
     toast(`Tenants geladen: ${tenants.value.length}`);
-    await loadTenantUsers();
   } catch (e: any) {
     toast(`Fehler beim Laden: ${stringifyError(e)}`);
   } finally {
@@ -348,8 +357,50 @@ function ensureAdminKey(): boolean {
   return true;
 }
 
-onMounted(async () => {
-  await loadRoles();
-  await loadTenants();
-});
+watch(
+  () => props.adminKey,
+  async (key, prev) => {
+    if (key && key !== prev) {
+      await loadRoles();
+      await loadTenants();
+    }
+  },
+  { immediate: true }
+);
+
+watch(
+  () => selectedTenantId.value,
+  (id) => {
+    if (id) {
+      localStorage.setItem("adminSelectedTenantId", id);
+      emitSelectedTenant();
+      loadTenantUsers();
+    } else {
+      localStorage.removeItem("adminSelectedTenantId");
+      emitSelectedTenant();
+    }
+  }
+);
+
+watch(
+  () => props.selectedTenantId,
+  (id) => {
+    if (!id) {
+      selectedTenantId.value = "";
+      emitSelectedTenant();
+      return;
+    }
+    if (id === selectedTenantId.value) return;
+    selectedTenantId.value = id;
+  }
+);
+
+function emitSelectedTenant() {
+  const t = tenants.value.find((x) => x.id === selectedTenantId.value);
+  if (t) {
+    emit("tenantSelected", { id: t.id, name: t.name, slug: t.slug });
+  } else {
+    emit("tenantSelected", null);
+  }
+}
 </script>

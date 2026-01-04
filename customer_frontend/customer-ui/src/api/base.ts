@@ -44,6 +44,11 @@ export function getTenantSlug(): string {
   return "";
 }
 
+export function getTenantForwardHeader(): Record<string, string> {
+  const slug = getTenantSlug();
+  return slug ? { "X-Tenant-Slug": slug } : {};
+}
+
 // Helpful console output for debugging connectivity
 if (typeof console !== "undefined") {
   console.info(

@@ -12,6 +12,7 @@ type NavItem = {
 const navItems: NavItem[] = [
   { label: 'Dashboard', name: 'dashboard', path: '/', icon: '📊' },
   { label: 'Artikelverwaltung', name: 'artikelverwaltung', path: '/artikelverwaltung', icon: '📦' },
+  { label: 'Kategorien', name: 'kategorien', path: '/kategorien', icon: '🏷️' },
   { label: 'Lagerbewegungen', name: 'lagerbewegungen', path: '/lagerbewegungen', icon: '🔄' },
   { label: 'Inventur', name: 'inventur', path: '/inventur', icon: '📋' },
   { label: 'Berichte & Analysen', name: 'berichte-analysen', path: '/berichte-analysen', icon: '📈' },

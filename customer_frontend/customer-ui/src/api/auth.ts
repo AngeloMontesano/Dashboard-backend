@@ -1,6 +1,5 @@
 import axios from 'axios';
 import { getBaseURL, getTenantHeaders } from './base';
-import { getBaseURL, getTenantHeaders, getTenantSlug } from './base';
 
 type LoginResponse = {
   access_token: string;

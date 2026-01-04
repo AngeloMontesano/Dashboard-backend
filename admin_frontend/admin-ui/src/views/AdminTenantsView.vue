@@ -156,7 +156,6 @@
         </div>
         <button class="btnPrimary small" @click="openMemberships(selectedTenant.id)">Tenant User verwalten</button>
       </div>
-    </div>
 
     <!-- Create Modal -->
     <TenantCreateModal
@@ -191,6 +190,7 @@ const props = defineProps<{
   actor: string;
   apiOk: boolean;
   dbOk: boolean;
+  selectedTenantId?: string;
 }>();
 
 const emit = defineEmits<{

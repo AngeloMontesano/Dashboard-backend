@@ -82,6 +82,10 @@ docker compose up -d --build
   - Bestandsfelder: `quantity`, `min_stock`, `max_stock`, `target_stock`, `recommended_stock`
   - Bestellung/Alarm: `order_mode` (0=kein Alarm, 1=Alarm, 2=Bestellliste mit Empfehlung, 3=automatisch bestellen)
   - Weitere: `description`, `unit` (Default `pcs`), `is_active`, `category_id` (optional)
+- **Lagerbewegungen**:
+  - Endpoint: `POST /inventory/movements` (owner/admin), Payload mit `client_tx_id`, `type` (`IN`/`OUT`), `barcode`, `qty`, optional `note`, `created_at`.
+  - Idempotenz: `client_tx_id` ist pro Tenant eindeutig, wiederholte Requests mit gleicher ID werden nicht doppelt gebucht.
+  - Bestandsschutz: OUT-Buchungen schlagen fehl, wenn der Bestand negativ würde.
 - **CSV-Import/Export**:
   - Spalten: `sku`, `barcode`, `name`, `description`, `qty`, `unit`, `is_active`, `category`, `min_stock`, `max_stock`, `target_stock`, `recommended_stock`, `order_mode`
   - Upsert pro Tenant anhand `sku` (mit Präfix-Regel). Fehler werden zeilenweise zurückgegeben, Export liefert das gleiche Schema.

@@ -44,6 +44,37 @@ def configure_logging(environment: str) -> None:
                 "logger": record.name,
                 "message": _redact_value(message),
             }
+            # Attach extra fields (e.g. host, slug) for better diagnostics
+            skip_keys = {
+                "name",
+                "msg",
+                "args",
+                "levelname",
+                "levelno",
+                "pathname",
+                "filename",
+                "module",
+                "exc_info",
+                "exc_text",
+                "stack_info",
+                "lineno",
+                "funcName",
+                "created",
+                "msecs",
+                "relativeCreated",
+                "thread",
+                "threadName",
+                "processName",
+                "process",
+                "message",
+            }
+            for key, value in record.__dict__.items():
+                if key in skip_keys:
+                    continue
+                try:
+                    payload[key] = _redact_value(value)
+                except Exception:
+                    payload[key] = "[unserializable]"
             if record.exc_info:
                 payload["exc_info"] = self.formatException(record.exc_info)
             return json.dumps(payload, ensure_ascii=False)

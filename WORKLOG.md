@@ -266,3 +266,18 @@
   - Customer Auth/Dashboard-ähnliche Static Views nutzen jetzt die zentralen Layout-Bausteine; Inline-Styles reduziert, Tokens greifen für Status-/Textfarben.
 - **Nächster Schritt**
   - Customer: Artikelverwaltung und Berichte vollständig auf UiPage/UiSection/Utilities heben (inkl. PrimeVue-Parts) und restliche Inline/Scoped-Styles abbauen. Admin: Overlay/Toast-Styling finalisieren.
+
+## Schritt 23 – Legacy-Migration Phase 0–2 (Reverse Engineering & Gap-Liste)
+- **Datum/Uhrzeit**: 2026-01-05T18:05:00+00:00
+- **Ziel**: Legacy-Funktionen aus `/old_lm` analysieren, Scope/DoD festlegen und Soll-Ist-Gaps dokumentieren.
+- **Was wurde geprüft**
+  - Legacy-Module gelesen: `artikel.py`, `bestandsverwaltung.py`, `inventur.py`, `berichte.py`, `bestellungen.py`, `einstellungen.py`, `flash.py`, `dashboard.py`.
+  - Aktuelles Backend/Frontend gecheckt (Inventar-Router, Reporting-Fallback in Frontend, fehlende Bestellungen/Einstellungen-APIs).
+- **Was wurde geändert**
+  - Neue Roadmap-Datei `docs/roadmap/MIGRATION_OLD_LM.md` mit Scope, DoD, Decisions, Funktionsmatrix und Gap-Liste angelegt.
+  - Task-Liste erstellt: `docs/roadmap/TASKS_MIGRATION_OLD_LM.md` mit IDs T1–T8 (Backend/Customer/Docs).
+  - TODO erweitert um Must-Haves für Legacy-Migration (Backend-Endpunkte, Frontend-Datenverdrahtung, OpenAPI-Nachzug).
+- **Ergebnis**
+  - Reverse Engineering abgeschlossen; Gaps klar dokumentiert; Tasks strukturiert.
+- **Nächster Schritt**
+  - T1: Backend GET `/inventory/movements` + OpenAPI/Schemas, dann weitere Tasks laut Roadmap.

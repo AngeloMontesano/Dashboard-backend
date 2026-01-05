@@ -11,6 +11,14 @@ export type MovementPayload = components["schemas"]["MovementPayload"];
 type SkuExistsResponse = components["schemas"]["SKUExistsResponse"];
 type ImportItemsResponse =
   paths["/inventory/items/import"]["post"]["responses"]["200"]["content"]["application/json"];
+type SettingsOut = components["schemas"]["TenantSettingsOut"];
+type SettingsUpdate = components["schemas"]["TenantSettingsUpdate"];
+type MassImportResult = components["schemas"]["MassImportResult"];
+type OrderOut = components["schemas"]["OrderOut"];
+type OrderCreate = components["schemas"]["OrderCreate"];
+type OrderEmailRequest = components["schemas"]["OrderEmailRequest"];
+type ReorderResponse = components["schemas"]["ReorderResponse"];
+export type OrderCreateItem = components["schemas"]["OrderItemInput"];
 
 export type ImportItemsResult = {
   imported: number;
@@ -84,5 +92,81 @@ export async function exportItems(token: string) {
 
 export async function postInventoryMovement(token: string, payload: MovementPayload) {
   const res = await api.post("/inventory/movements", payload, { headers: authHeaders(token) });
+  return res.data;
+}
+
+export async function fetchSettings(token: string) {
+  const res = await api.get<SettingsOut>("/inventory/settings", { headers: authHeaders(token) });
+  return res.data;
+}
+
+export async function updateSettings(token: string, payload: SettingsUpdate) {
+  const res = await api.put<SettingsOut>("/inventory/settings", payload, { headers: authHeaders(token) });
+  return res.data;
+}
+
+export async function exportSettings(token: string) {
+  const res = await api.get<Blob>("/inventory/settings/export", {
+    headers: authHeaders(token),
+    responseType: "blob",
+  });
+  return res.data;
+}
+
+export async function importSettings(token: string, file: File) {
+  const form = new FormData();
+  form.append("file", file);
+  const res = await api.post<MassImportResult>("/inventory/settings/import", form, {
+    headers: {
+      ...authHeaders(token),
+      "Content-Type": "multipart/form-data",
+    },
+  });
+  return res.data;
+}
+
+export async function sendTestEmail(token: string, email: string) {
+  const res = await api.post("/inventory/settings/test-email", { email }, { headers: authHeaders(token) });
+  return res.data as { ok: boolean; error?: string | null };
+}
+
+export async function listOrders(token: string, status?: "OPEN" | "COMPLETED" | "CANCELED") {
+  const res = await api.get<OrderOut[]>("/inventory/orders", {
+    params: status ? { status } : undefined,
+    headers: authHeaders(token),
+  });
+  return res.data;
+}
+
+export async function createOrder(token: string, payload: OrderCreate) {
+  const res = await api.post<OrderOut>("/inventory/orders", payload, { headers: authHeaders(token) });
+  return res.data;
+}
+
+export async function completeOrder(token: string, orderId: string) {
+  const res = await api.post<OrderOut>(`/inventory/orders/${orderId}/complete`, null, { headers: authHeaders(token) });
+  return res.data;
+}
+
+export async function cancelOrder(token: string, orderId: string) {
+  const res = await api.post<OrderOut>(`/inventory/orders/${orderId}/cancel`, null, { headers: authHeaders(token) });
+  return res.data;
+}
+
+export async function sendOrderEmail(token: string, orderId: string, payload: OrderEmailRequest) {
+  const res = await api.post(`/inventory/orders/${orderId}/email`, payload, { headers: authHeaders(token) });
+  return res.data as { ok: boolean; error?: string | null };
+}
+
+export async function downloadOrderPdf(token: string, orderId: string) {
+  const res = await api.get<Blob>(`/inventory/orders/${orderId}/pdf`, {
+    headers: authHeaders(token),
+    responseType: "blob",
+  });
+  return res.data;
+}
+
+export async function fetchReorderRecommendations(token: string) {
+  const res = await api.get<ReorderResponse>("/inventory/orders/recommended", { headers: authHeaders(token) });
   return res.data;
 }

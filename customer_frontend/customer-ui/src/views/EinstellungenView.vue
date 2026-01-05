@@ -1,30 +1,199 @@
 <script setup lang="ts">
+import { reactive, onMounted } from 'vue';
 import UiPage from '@/components/ui/UiPage.vue';
 import UiSection from '@/components/ui/UiSection.vue';
+import UiToolbar from '@/components/ui/UiToolbar.vue';
+import { useAuth } from '@/composables/useAuth';
+import {
+  fetchSettings,
+  updateSettings,
+  exportSettings,
+  importSettings,
+  sendTestEmail
+} from '@/api/inventory';
+
+const { state: authState } = useAuth();
+
+type Settings = Awaited<ReturnType<typeof fetchSettings>>;
+
+const state = reactive<{
+  settings: Settings | null;
+  loading: boolean;
+  error: string | null;
+  success: string | null;
+  testEmail: string;
+  importing: boolean;
+  testing: boolean;
+}({
+  settings: null,
+  loading: false,
+  error: null,
+  success: null,
+  testEmail: '',
+  importing: false,
+  testing: false
+});
+
+async function loadSettings() {
+  if (!authState.accessToken) return;
+  state.loading = true;
+  state.error = null;
+  try {
+    state.settings = await fetchSettings(authState.accessToken);
+  } catch (err: any) {
+    state.error = err?.message || 'Einstellungen konnten nicht geladen werden';
+  } finally {
+    state.loading = false;
+  }
+}
+
+async function saveSettings() {
+  if (!authState.accessToken || !state.settings) return;
+  state.loading = true;
+  state.error = null;
+  state.success = null;
+  try {
+    state.settings = await updateSettings(authState.accessToken, state.settings);
+    state.success = 'Einstellungen gespeichert';
+  } catch (err: any) {
+    state.error = err?.message || 'Speichern fehlgeschlagen';
+  } finally {
+    state.loading = false;
+  }
+}
+
+async function handleExport() {
+  if (!authState.accessToken) return;
+  try {
+    const blob = await exportSettings(authState.accessToken);
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'settings_export.xlsx';
+    a.click();
+    window.URL.revokeObjectURL(url);
+  } catch (err: any) {
+    state.error = err?.message || 'Export fehlgeschlagen';
+  }
+}
+
+async function handleImport(event: Event) {
+  if (!authState.accessToken) return;
+  const target = event.target as HTMLInputElement;
+  const file = target.files?.[0];
+  if (!file) return;
+  state.importing = true;
+  state.error = null;
+  state.success = null;
+  try {
+    await importSettings(authState.accessToken, file);
+    state.success = 'Import abgeschlossen';
+    await loadSettings();
+  } catch (err: any) {
+    state.error = err?.message || 'Import fehlgeschlagen';
+  } finally {
+    state.importing = false;
+    target.value = '';
+  }
+}
+
+async function handleTestEmail() {
+  if (!authState.accessToken) return;
+  state.testing = true;
+  state.error = null;
+  state.success = null;
+  try {
+    const res = await sendTestEmail(authState.accessToken, state.testEmail || state.settings?.contact_email || '');
+    if (!res.ok) {
+      state.error = res.error || 'Test-E-Mail fehlgeschlagen';
+    } else {
+      state.success = 'Test-E-Mail gesendet';
+    }
+  } catch (err: any) {
+    state.error = err?.message || 'Test-E-Mail fehlgeschlagen';
+  } finally {
+    state.testing = false;
+  }
+}
+
+onMounted(loadSettings);
 </script>
 
 <template>
   <UiPage>
-    <UiSection title="Einstellungen" subtitle="Nutzer, Rollen, Benachrichtigungen und API-Schlüssel verwaltest du hier.">
-      <div class="cards-grid mt-md">
-        <article class="card">
-          <h3 class="card__title">Nutzer</h3>
-          <p class="card__value">24</p>
-          <p class="card__hint">davon 3 Admins</p>
-        </article>
-        <article class="card">
-          <h3 class="card__title">Benachrichtigungen</h3>
-          <p class="card__value">7 aktiv</p>
-          <p class="card__hint">E-Mail & Slack</p>
-        </article>
-        <article class="card">
-          <h3 class="card__title">API-Schlüssel</h3>
-          <p class="card__value">2 gültig</p>
-          <p class="card__hint">Zuletzt rotiert vor 12 Tagen</p>
-        </article>
+    <UiSection title="Einstellungen" subtitle="Firmendaten, Auto-Bestellung und Exporte verwalten.">
+      <UiToolbar>
+        <template #start>
+          <p class="eyebrow">Firmendaten & Benachrichtigungen</p>
+        </template>
+        <template #end>
+          <div class="action-row">
+            <button class="button button--ghost" type="button" @click="loadSettings" :disabled="state.loading">Neu laden</button>
+            <button class="button button--ghost" type="button" @click="handleExport">Export</button>
+            <label class="button button--ghost">
+              Import
+              <input type="file" class="sr-only" accept=".xlsx" @change="handleImport" :disabled="state.importing" />
+            </label>
+            <button class="button button--primary" type="button" @click="saveSettings" :disabled="state.loading">
+              Speichern
+            </button>
+          </div>
+        </template>
+      </UiToolbar>
+
+      <div v-if="state.error" class="banner banner--error mt-sm">
+        {{ state.error }}
       </div>
-      <div class="placeholder">
-        <p>Konfigurationsoptionen werden bald hinzugefügt.</p>
+      <div v-if="state.success" class="banner banner--success mt-sm">
+        {{ state.success }}
+      </div>
+
+      <div class="form-grid mt-md" v-if="state.settings">
+        <label class="form-field">
+          <span class="form-label">Firma</span>
+          <input v-model="state.settings.company_name" type="text" class="input" :disabled="state.loading" />
+        </label>
+        <label class="form-field">
+          <span class="form-label">Kontakt E-Mail</span>
+          <input v-model="state.settings.contact_email" type="email" class="input" :disabled="state.loading" />
+        </label>
+        <label class="form-field">
+          <span class="form-label">Bestell-E-Mail</span>
+          <input v-model="state.settings.order_email" type="email" class="input" :disabled="state.loading" />
+        </label>
+        <label class="form-field">
+          <span class="form-label">Telefon</span>
+          <input v-model="state.settings.phone" type="text" class="input" :disabled="state.loading" />
+        </label>
+        <label class="form-field span-2">
+          <span class="form-label">Adresse</span>
+          <textarea v-model="state.settings.address" class="input" rows="2" :disabled="state.loading"></textarea>
+        </label>
+        <label class="form-field">
+          <span class="form-label">Export-Format</span>
+          <input v-model="state.settings.export_format" type="text" class="input" :disabled="state.loading" />
+        </label>
+        <label class="form-field">
+          <span class="form-label">Auto-Bestellung aktiv</span>
+          <input v-model="state.settings.auto_order_enabled" type="checkbox" class="checkbox" :disabled="state.loading" />
+        </label>
+        <label class="form-field">
+          <span class="form-label">Auto-Bestellung Minimum</span>
+          <input v-model.number="state.settings.auto_order_min" type="number" class="input" min="0" :disabled="state.loading" />
+        </label>
+      </div>
+
+      <div class="mt-lg">
+        <h3 class="eyebrow">Test-E-Mail</h3>
+        <div class="form-grid">
+          <label class="form-field">
+            <span class="form-label">Empfänger</span>
+            <input v-model="state.testEmail" type="email" class="input" placeholder="adresse@example.com" :disabled="state.testing" />
+          </label>
+          <button class="button button--ghost align-self-end" type="button" @click="handleTestEmail" :disabled="state.testing">
+            Test-E-Mail senden
+          </button>
+        </div>
       </div>
     </UiSection>
   </UiPage>

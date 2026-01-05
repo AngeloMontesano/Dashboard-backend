@@ -24,6 +24,12 @@
 - Ergebnis: Tenants-Host überläuft nicht, neue Hosts blocken nicht mehr im Vite-Server; Adresse kann strukturiert eingegeben werden; Lagerbewegungen zeigen 401/400 als Fehler ohne endlose Wiederholung; fehlende Backend-Tabellen als Must-Do dokumentiert.
 - Nächste Schritte: Backend-Migration `inventory_orders` und Aggregationsfix einplanen; weitere Queue/Toast-Feinschliffe und Admin-Router-Paging umsetzen.
 
+- Datum/Uhrzeit: 2026-01-08T14:30:00Z
+- Task-ID: FE-AUDIT-05
+- Was analysiert/geändert: Neue Alembic-Revision `0009_create_inventory_orders` angelegt (Orders/Order-Items-Tabellen), Reporting-Aggregation auf explizite GROUP-BY-Spalten umgestellt, TODO auf auszurollende Migration aktualisiert.
+- Ergebnis: Fehlende Tabelle `inventory_orders` wird durch Migration erstellt; Reporting-Query sollte kein GROUP-BY-Fehler mehr werfen. Bereit für Deployment/Ausführung.
+- Nächste Schritte: Migration auf allen Umgebungen ausführen (`alembic upgrade head`), danach Dashboard/Bestellungen/Reporting erneut testen.
+
 ## Schritt 1 – Analyse
 - **Was wurde geprüft**
   - Vorgaben in `docs/` vollständig gelesen (Standards, Roadmap, OpenAPI-Kopie).

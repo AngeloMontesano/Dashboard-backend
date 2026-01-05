@@ -461,9 +461,11 @@ async def _aggregate_consumption(
     start_dt = datetime.combine(start, datetime.min.time()).replace(tzinfo=timezone.utc)
     end_dt = datetime.combine(end + timedelta(days=1), datetime.min.time()).replace(tzinfo=timezone.utc)
 
+    period_col = func.date_trunc("month", InventoryMovement.created_at).label("period")
+
     base = (
         select(
-            func.date_trunc("month", InventoryMovement.created_at).label("period"),
+            period_col,
             Item.id.label("item_id"),
             Item.name.label("item_name"),
             Item.sku.label("item_sku"),
@@ -486,12 +488,12 @@ async def _aggregate_consumption(
     grouped = (
         await db.execute(
             base.group_by(
-                "period",
-                "item_id",
-                "item_name",
-                "item_sku",
-                "category_id",
-            ).order_by("period")
+                period_col,
+                Item.id,
+                Item.name,
+                Item.sku,
+                Item.category_id,
+            ).order_by(period_col)
         )
     ).all()
 

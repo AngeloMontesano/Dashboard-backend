@@ -4,7 +4,7 @@
 - Admin: Logs-Tab in `AdminOperationsView` -> Backend-Endpoint anbinden (Tab aktuell ausgeblendet).
 - Customer: Shell-Mobile-Breakpoints fertigstellen (<1100px umgesetzt); weitere Feinjustierung/Sidebar-Toggle optional prüfen.
 - Customer: Reporting-PDF über API-Export statt DOM-Kopie (umgesetzt); Server-Export weiter verifizieren.
-- Backend-Migration prüfen/ausführen: fehlende Tabellen `inventory_orders` und fehlerhafte Aggregation (GROUP BY) erzeugen 422/500 in Dashboard/Bestellungen/Inventur/Reporting.
+- Backend: Migration `0009_create_inventory_orders` ausrollen; Reporting-Query-Fix (GROUP BY) deployen, damit Dashboard/Bestellungen/Inventur/Reporting keine 422/500 mehr liefern.
 
 ## SOLL (UX/Konsistenz/Performance/Accessibility)
 - Admin: Tenants/Memberships mit Server-Paging und Validierung (Settings-Form, Delete-Confirms über Dialog-Komponente) ausstatten.

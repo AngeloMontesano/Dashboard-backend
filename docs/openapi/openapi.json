@@ -4776,6 +4776,573 @@
             ],
             "title": "Role"
           },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "title": "MembershipUpdate"
+      },
+      "MovementPayload": {
+        "properties": {
+          "client_tx_id": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Client Tx Id"
+          },
+          "type": {
+            "type": "string",
+            "pattern": "^(IN|OUT)$",
+            "title": "Type"
+          },
+          "normalized_sku": {
+            "type": "string",
+            "title": "Normalized Sku"
+          }
+        },
+        "type": "object",
+        "required": [
+          "exists",
+          "normalized_sku"
+        ],
+        "title": "SKUExistsResponse"
+      },
+      "TenantCreate": {
+        "properties": {
+          "slug": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 2,
+            "title": "Slug"
+          },
+          "qty": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Qty"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 128
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "is_active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Active"
+          }
+        },
+        "type": "object",
+        "title": "CategoryUpdate"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "ItemCreate": {
+        "properties": {
+          "sku": {
+            "type": "string",
+            "maxLength": 64,
+            "title": "Sku"
+          },
+          "barcode": {
+            "type": "string",
+            "maxLength": 64,
+            "title": "Barcode"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "Name"
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 1024,
+            "title": "Description",
+            "default": ""
+          },
+          "quantity": {
+            "type": "integer",
+            "title": "Quantity",
+            "default": 0
+          },
+          "unit": {
+            "type": "string",
+            "maxLength": 32,
+            "title": "Unit",
+            "default": "pcs"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "default": true
+          },
+          "category_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category Id"
+          },
+          "min_stock": {
+            "type": "integer",
+            "title": "Min Stock",
+            "default": 0
+          },
+          "max_stock": {
+            "type": "integer",
+            "title": "Max Stock",
+            "default": 0
+          },
+          "target_stock": {
+            "type": "integer",
+            "title": "Target Stock",
+            "default": 0
+          },
+          "recommended_stock": {
+            "type": "integer",
+            "title": "Recommended Stock",
+            "default": 0
+          },
+          "order_mode": {
+            "type": "integer",
+            "title": "Order Mode",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "sku",
+          "barcode",
+          "name"
+        ],
+        "title": "ItemCreate"
+      },
+      "ItemOut": {
+        "properties": {
+          "sku": {
+            "type": "string",
+            "maxLength": 64,
+            "title": "Sku"
+          },
+          "barcode": {
+            "type": "string",
+            "maxLength": 64,
+            "title": "Barcode"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "Name"
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 1024,
+            "title": "Description",
+            "default": ""
+          },
+          "quantity": {
+            "type": "integer",
+            "title": "Quantity",
+            "default": 0
+          },
+          "unit": {
+            "type": "string",
+            "maxLength": 32,
+            "title": "Unit",
+            "default": "pcs"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "default": true
+          },
+          "category_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category Id"
+          },
+          "min_stock": {
+            "type": "integer",
+            "title": "Min Stock",
+            "default": 0
+          },
+          "max_stock": {
+            "type": "integer",
+            "title": "Max Stock",
+            "default": 0
+          },
+          "target_stock": {
+            "type": "integer",
+            "title": "Target Stock",
+            "default": 0
+          },
+          "recommended_stock": {
+            "type": "integer",
+            "title": "Recommended Stock",
+            "default": 0
+          },
+          "order_mode": {
+            "type": "integer",
+            "title": "Order Mode",
+            "default": 0
+          },
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "category_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "sku",
+          "barcode",
+          "name",
+          "id"
+        ],
+        "title": "ItemOut"
+      },
+      "ItemUpdate": {
+        "properties": {
+          "sku": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 64
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sku"
+          },
+          "barcode": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 64
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Barcode"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1024
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quantity"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 32
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit"
+          },
+          "is_active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Active"
+          },
+          "category_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category Id"
+          },
+          "min_stock": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min Stock"
+          },
+          "max_stock": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Stock"
+          },
+          "target_stock": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Stock"
+          },
+          "recommended_stock": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recommended Stock"
+          },
+          "order_mode": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order Mode"
+          }
+        },
+        "type": "object",
+        "title": "ItemUpdate"
+      },
+      "ItemsPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ItemOut"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page"
+          },
+          "page_size": {
+            "type": "integer",
+            "title": "Page Size"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total",
+          "page",
+          "page_size"
+        ],
+        "title": "ItemsPage"
+      },
+      "LoginRequest": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email"
+          },
+          "password": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 4,
+            "title": "Password"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email",
+          "password"
+        ],
+        "title": "LoginRequest"
+      },
+      "LogoutRequest": {
+        "properties": {
+          "refresh_token": {
+            "type": "string",
+            "title": "Refresh Token"
+          }
+        },
+        "type": "object",
+        "required": [
+          "refresh_token"
+        ],
+        "title": "LogoutRequest"
+      },
+      "MembershipCreate": {
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "User Id"
+          },
+          "tenant_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Tenant Id"
+          },
+          "role": {
+            "type": "string",
+            "title": "Role"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id",
+          "tenant_id",
+          "role"
+        ],
+        "title": "MembershipCreate"
+      },
+      "MembershipOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "user_id": {
+            "type": "string",
+            "title": "User Id"
+          },
+          "tenant_id": {
+            "type": "string",
+            "title": "Tenant Id"
+          },
+          "role": {
+            "type": "string",
+            "title": "Role"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "user_id",
+          "tenant_id",
+          "role",
+          "is_active"
+        ],
+        "title": "MembershipOut"
+      },
+      "MembershipUpdate": {
+        "properties": {
+          "role": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Role"
+          },
           "is_active": {
             "anyOf": [
               {
@@ -4818,6 +5385,1220 @@
               {
                 "type": "string",
                 "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "client_tx_id",
+          "type",
+          "barcode",
+          "qty"
+        ],
+        "title": "MovementPayload"
+      },
+      "RefreshRequest": {
+        "properties": {
+          "refresh_token": {
+            "type": "string",
+            "title": "Refresh Token"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "ItemCreate": {
+        "properties": {
+          "sku": {
+            "type": "string",
+            "maxLength": 64,
+            "title": "Sku"
+          },
+          "barcode": {
+            "type": "string",
+            "maxLength": 64,
+            "title": "Barcode"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "Name"
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 1024,
+            "title": "Description",
+            "default": ""
+          },
+          "quantity": {
+            "type": "integer",
+            "title": "Quantity",
+            "default": 0
+          },
+          "unit": {
+            "type": "string",
+            "maxLength": 32,
+            "title": "Unit",
+            "default": "pcs"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "default": true
+          },
+          "category_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category Id"
+          },
+          "min_stock": {
+            "type": "integer",
+            "title": "Min Stock",
+            "default": 0
+          },
+          "max_stock": {
+            "type": "integer",
+            "title": "Max Stock",
+            "default": 0
+          },
+          "target_stock": {
+            "type": "integer",
+            "title": "Target Stock",
+            "default": 0
+          },
+          "recommended_stock": {
+            "type": "integer",
+            "title": "Recommended Stock",
+            "default": 0
+          },
+          "order_mode": {
+            "type": "integer",
+            "title": "Order Mode",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "sku",
+          "barcode",
+          "name"
+        ],
+        "title": "ItemCreate"
+      },
+      "ItemOut": {
+        "properties": {
+          "exists": {
+            "type": "boolean",
+            "title": "Exists"
+          },
+          "normalized_sku": {
+            "type": "string",
+            "title": "Normalized Sku"
+          }
+        },
+        "type": "object",
+        "required": [
+          "exists",
+          "normalized_sku"
+        ],
+        "title": "SKUExistsResponse"
+      },
+      "TenantCreate": {
+        "properties": {
+          "slug": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 2,
+            "title": "Slug"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 2,
+            "title": "Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "slug",
+          "name"
+        ],
+        "title": "TenantCreate"
+      },
+      "TenantOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "slug": {
+            "type": "string",
+            "title": "Slug"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "default": true
+          },
+          "category_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category Id"
+          },
+          "min_stock": {
+            "type": "integer",
+            "title": "Min Stock",
+            "default": 0
+          },
+          "max_stock": {
+            "type": "integer",
+            "title": "Max Stock",
+            "default": 0
+          },
+          "target_stock": {
+            "type": "integer",
+            "title": "Target Stock",
+            "default": 0
+          },
+          "recommended_stock": {
+            "type": "integer",
+            "title": "Recommended Stock",
+            "default": 0
+          },
+          "order_mode": {
+            "type": "integer",
+            "title": "Order Mode",
+            "default": 0
+          },
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "category_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "sku",
+          "barcode",
+          "name",
+          "id"
+        ],
+        "title": "ItemOut"
+      },
+      "ItemUpdate": {
+        "properties": {
+          "sku": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 64
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sku"
+          },
+          "barcode": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 64
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Barcode"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1024
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Active"
+          }
+        },
+        "type": "object",
+        "title": "CategoryUpdate"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "ItemCreate": {
+        "properties": {
+          "sku": {
+            "type": "string",
+            "maxLength": 64,
+            "title": "Sku"
+          },
+          "barcode": {
+            "type": "string",
+            "maxLength": 64,
+            "title": "Barcode"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "Name"
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 1024,
+            "title": "Description",
+            "default": ""
+          },
+          "quantity": {
+            "type": "integer",
+            "title": "Quantity",
+            "default": 0
+          },
+          "unit": {
+            "type": "string",
+            "maxLength": 32,
+            "title": "Unit",
+            "default": "pcs"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "default": true
+          },
+          "category_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category Id"
+          },
+          "min_stock": {
+            "type": "integer",
+            "title": "Min Stock",
+            "default": 0
+          },
+          "max_stock": {
+            "type": "integer",
+            "title": "Max Stock",
+            "default": 0
+          },
+          "target_stock": {
+            "type": "integer",
+            "title": "Target Stock",
+            "default": 0
+          },
+          "recommended_stock": {
+            "type": "integer",
+            "title": "Recommended Stock",
+            "default": 0
+          },
+          "order_mode": {
+            "type": "integer",
+            "title": "Order Mode",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "sku",
+          "barcode",
+          "name"
+        ],
+        "title": "ItemCreate"
+      },
+      "ItemOut": {
+        "properties": {
+          "sku": {
+            "type": "string",
+            "maxLength": 64,
+            "title": "Sku"
+          },
+          "barcode": {
+            "type": "string",
+            "maxLength": 64,
+            "title": "Barcode"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "Name"
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 1024,
+            "title": "Description",
+            "default": ""
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quantity"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 32
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit"
+          },
+          "is_active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Active"
+          },
+          "category_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category Id"
+          },
+          "min_stock": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min Stock"
+          },
+          "max_stock": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Stock"
+          },
+          "target_stock": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Stock"
+          },
+          "recommended_stock": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recommended Stock"
+          },
+          "order_mode": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order Mode"
+          }
+        },
+        "type": "object",
+        "title": "ItemUpdate"
+      },
+      "ItemsPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ItemOut"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Order Mode",
+            "default": 0
+          },
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "category_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "sku",
+          "barcode",
+          "name",
+          "id"
+        ],
+        "title": "ItemOut"
+      },
+      "ItemUpdate": {
+        "properties": {
+          "sku": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 64
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sku"
+          },
+          "barcode": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 64
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Barcode"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1024
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Active"
+          }
+        },
+        "type": "object",
+        "title": "CategoryUpdate"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "ItemCreate": {
+        "properties": {
+          "sku": {
+            "type": "string",
+            "maxLength": 64,
+            "title": "Sku"
+          },
+          "barcode": {
+            "type": "string",
+            "maxLength": 64,
+            "title": "Barcode"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "Name"
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 1024,
+            "title": "Description",
+            "default": ""
+          },
+          "quantity": {
+            "type": "integer",
+            "title": "Quantity",
+            "default": 0
+          },
+          "unit": {
+            "type": "string",
+            "maxLength": 32,
+            "title": "Unit",
+            "default": "pcs"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "default": true
+          },
+          "category_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category Id"
+          },
+          "min_stock": {
+            "type": "integer",
+            "title": "Min Stock",
+            "default": 0
+          },
+          "max_stock": {
+            "type": "integer",
+            "title": "Max Stock",
+            "default": 0
+          },
+          "target_stock": {
+            "type": "integer",
+            "title": "Target Stock",
+            "default": 0
+          },
+          "recommended_stock": {
+            "type": "integer",
+            "title": "Recommended Stock",
+            "default": 0
+          },
+          "order_mode": {
+            "type": "integer",
+            "title": "Order Mode",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "sku",
+          "barcode",
+          "name"
+        ],
+        "title": "ItemCreate"
+      },
+      "ItemOut": {
+        "properties": {
+          "sku": {
+            "type": "string",
+            "maxLength": 64,
+            "title": "Sku"
+          },
+          "barcode": {
+            "type": "string",
+            "maxLength": 64,
+            "title": "Barcode"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "Name"
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 1024,
+            "title": "Description",
+            "default": ""
+          },
+          "quantity": {
+            "type": "integer",
+            "title": "Quantity",
+            "default": 0
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 32
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit"
+          },
+          "is_active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Active"
+          },
+          "category_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category Id"
+          },
+          "min_stock": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min Stock"
+          },
+          "max_stock": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Stock"
+          },
+          "target_stock": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Stock"
+          },
+          "recommended_stock": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recommended Stock"
+          },
+          "order_mode": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order Mode"
+          }
+        },
+        "type": "object",
+        "title": "ItemUpdate"
+      },
+      "ItemsPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ItemOut"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Order Mode",
+            "default": 0
+          },
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "category_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "sku",
+          "barcode",
+          "name",
+          "id"
+        ],
+        "title": "ItemOut"
+      },
+      "ItemUpdate": {
+        "properties": {
+          "sku": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 64
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sku"
+          },
+          "barcode": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 64
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Barcode"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1024
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quantity"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 32
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit"
+          },
+          "is_active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Active"
+          },
+          "category_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category Id"
+          },
+          "min_stock": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min Stock"
+          },
+          "max_stock": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Stock"
+          },
+          "target_stock": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Stock"
+          },
+          "recommended_stock": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recommended Stock"
+          },
+          "order_mode": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order Mode"
+          }
+        },
+        "type": "object",
+        "title": "ItemUpdate"
+      },
+      "ItemsPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ItemOut"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page"
+          },
+          "page_size": {
+            "type": "integer",
+            "title": "Page Size"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total",
+          "page",
+          "page_size"
+        ],
+        "title": "ItemsPage"
+      },
+      "LoginRequest": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email"
+          },
+          "password": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 4,
+            "title": "Password"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email",
+          "password"
+        ],
+        "title": "LoginRequest"
+      },
+      "LogoutRequest": {
+        "properties": {
+          "refresh_token": {
+            "type": "string",
+            "title": "Refresh Token"
+          }
+        },
+        "type": "object",
+        "required": [
+          "refresh_token"
+        ],
+        "title": "LogoutRequest"
+      },
+      "MembershipCreate": {
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "User Id"
+          },
+          "tenant_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Tenant Id"
+          },
+          "role": {
+            "type": "string",
+            "title": "Role"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id",
+          "tenant_id",
+          "role"
+        ],
+        "title": "MembershipCreate"
+      },
+      "MembershipOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "user_id": {
+            "type": "string",
+            "title": "User Id"
+          },
+          "tenant_id": {
+            "type": "string",
+            "title": "Tenant Id"
+          },
+          "role": {
+            "type": "string",
+            "title": "Role"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "user_id",
+          "tenant_id",
+          "role",
+          "is_active"
+        ],
+        "title": "MembershipOut"
+      },
+      "MembershipUpdate": {
+        "properties": {
+          "role": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Role"
+          },
+          "is_active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Active"
+          }
+        },
+        "type": "object",
+        "title": "MembershipUpdate"
+      },
+      "MovementPayload": {
+        "properties": {
+          "client_tx_id": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Client Tx Id"
+          },
+          "type": {
+            "type": "string",
+            "pattern": "^(IN|OUT)$",
+            "title": "Type"
+          },
+          "barcode": {
+            "type": "string",
+            "maxLength": 64,
+            "title": "Barcode"
+          },
+          "qty": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Qty"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
               },
               {
                 "type": "null"
@@ -5931,7 +7712,7 @@
       "TestEmailRequest": {
         "type": "object",
         "properties": {
-          "email": {
+          "company_name": {
             "type": "string",
             "maxLength": 255,
             "title": "Email"

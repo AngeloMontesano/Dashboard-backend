@@ -212,8 +212,9 @@ import AdminOperationsView from "./views/AdminOperationsView.vue";
 const { toast } = useToast();
 const baseDomain = getBaseDomain();
 const apiBase = getBaseURL();
+const ADMIN_AUTH_STORAGE_KEY = "admin_auth";
 
-type OperationsTab = "overview" | "health" | "audit" | "snapshot" | "logs";
+type OperationsTab = "overview" | "health" | "audit" | "snapshot";
 
 /* Sidebar Sections */
 const sections = [
@@ -288,6 +289,10 @@ function applyLogin(payload: { adminKey: string; actor: string }) {
   ui.adminKey = payload.adminKey;
   ui.actor = payload.actor || "admin";
   ui.authenticated = true;
+  sessionStorage.setItem(
+    ADMIN_AUTH_STORAGE_KEY,
+    JSON.stringify({ adminKey: ui.adminKey, actor: ui.actor })
+  );
   quickRefresh();
 }
 
@@ -360,11 +365,23 @@ function resetContext() {
   ui.adminKey = "";
   ui.actor = "";
   ui.authenticated = false;
+  sessionStorage.removeItem(ADMIN_AUTH_STORAGE_KEY);
 }
 
 /* Boot */
 onMounted(async () => {
   syncFromLocation();
+  const storedAuth = sessionStorage.getItem(ADMIN_AUTH_STORAGE_KEY);
+  if (storedAuth) {
+    try {
+      const parsed = JSON.parse(storedAuth) as { adminKey?: string; actor?: string };
+      ui.adminKey = parsed.adminKey || "";
+      ui.actor = parsed.actor || "";
+      ui.authenticated = Boolean(ui.adminKey);
+    } catch {
+      sessionStorage.removeItem(ADMIN_AUTH_STORAGE_KEY);
+    }
+  }
   window.addEventListener("popstate", syncFromLocation);
   await quickRefresh();
 });
@@ -411,7 +428,7 @@ function syncFromLocation() {
 
   if (path === "/operations") {
     ui.section = "operations";
-    if (tabFromQuery && ["overview", "health", "audit", "snapshot", "logs"].includes(tabFromQuery)) {
+    if (tabFromQuery && ["overview", "health", "audit", "snapshot"].includes(tabFromQuery)) {
       operationsTab.value = tabFromQuery;
     } else {
       operationsTab.value = "overview";

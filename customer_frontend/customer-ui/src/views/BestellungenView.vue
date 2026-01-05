@@ -28,6 +28,8 @@ const state = reactive<{
   emailing: Record<string, boolean>;
   recommended: ReorderItem[];
   downloading: Record<string, boolean>;
+  completing: Record<string, boolean>;
+  canceling: Record<string, boolean>;
   items: ItemOption[];
   creating: boolean;
   createForm: { itemId: string; quantity: number; note: string };
@@ -39,6 +41,8 @@ const state = reactive<{
   emailing: {},
   recommended: [],
   downloading: {},
+  completing: {},
+  canceling: {},
   items: [],
   creating: false,
   createForm: { itemId: '', quantity: 1, note: '' },
@@ -103,27 +107,27 @@ async function loadItems() {
 
 async function markComplete(orderId: string) {
   if (!authState.accessToken) return;
-  state.loading = true;
+  state.completing[orderId] = true;
   try {
     const updated = await completeOrder(authState.accessToken, orderId);
     state.orders = state.orders.map((o) => (o.id === updated.id ? updated : o));
   } catch (err: any) {
     state.error = err?.message || 'Erledigen fehlgeschlagen';
   } finally {
-    state.loading = false;
+    state.completing[orderId] = false;
   }
 }
 
 async function markCanceled(orderId: string) {
   if (!authState.accessToken) return;
-  state.loading = true;
+  state.canceling[orderId] = true;
   try {
     const updated = await cancelOrder(authState.accessToken, orderId);
     state.orders = state.orders.map((o) => (o.id === updated.id ? updated : o));
   } catch (err: any) {
     state.error = err?.message || 'Stornieren fehlgeschlagen';
   } finally {
-    state.loading = false;
+    state.canceling[orderId] = false;
   }
 }
 
@@ -299,10 +303,20 @@ onMounted(async () => {
                   <button class="button button--ghost" type="button" @click="sendEmail(order.id)" :disabled="state.emailing[order.id]">
                     E-Mail
                   </button>
-                  <button class="button button--primary" type="button" @click="markComplete(order.id)" :disabled="state.loading">
+                  <button
+                    class="button button--primary"
+                    type="button"
+                    @click="markComplete(order.id)"
+                    :disabled="state.completing[order.id] || state.canceling[order.id]"
+                  >
                     Erledigt
                   </button>
-                  <button class="button button--ghost" type="button" @click="markCanceled(order.id)" :disabled="state.loading">
+                  <button
+                    class="button button--ghost"
+                    type="button"
+                    @click="markCanceled(order.id)"
+                    :disabled="state.canceling[order.id] || state.completing[order.id]"
+                  >
                     Stornieren
                   </button>
                 </td>

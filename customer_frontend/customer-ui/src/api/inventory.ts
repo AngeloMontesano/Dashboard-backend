@@ -1,48 +1,21 @@
-import { createApiClient } from './base';
+import { api, authHeaders } from "./client";
+import type { components, paths } from "./gen/openapi";
 
-function buildClient(token?: string) {
-  return createApiClient({ token });
-}
+export type Category = components["schemas"]["CategoryOut"];
+export type Item = components["schemas"]["ItemOut"];
+export type ItemsPage = components["schemas"]["ItemsPage"];
+type ItemsQuery = NonNullable<paths["/inventory/items"]["get"]["parameters"]["query"]>;
+type ItemCreatePayload = components["schemas"]["ItemCreate"];
+type ItemUpdatePayload = components["schemas"]["ItemUpdate"];
+export type MovementPayload = components["schemas"]["MovementPayload"];
+type SkuExistsResponse = components["schemas"]["SKUExistsResponse"];
+type ImportItemsResponse =
+  paths["/inventory/items/import"]["post"]["responses"]["200"]["content"]["application/json"];
 
-export type Category = {
-  id: string;
-  name: string;
-  is_system: boolean;
-  is_active: boolean;
-};
-
-export type Item = {
-  id: string;
-  sku: string;
-  barcode: string;
-  name: string;
-  description: string;
-  quantity: number;
-  unit: string;
-  is_active: boolean;
-  category_id?: string | null;
-  category_name?: string | null;
-  min_stock: number;
-  max_stock: number;
-  target_stock: number;
-  recommended_stock: number;
-  order_mode: number;
-};
-
-export type ItemsPage = {
-  items: Item[];
-  total: number;
-  page: number;
-  page_size: number;
-};
-
-export type MovementPayload = {
-  client_tx_id: string;
-  type: 'IN' | 'OUT';
-  barcode: string;
-  qty: number;
-  note?: string;
-  created_at?: string;
+export type ImportItemsResult = {
+  imported: number;
+  updated: number;
+  errors: { row: string; error: string }[];
 };
 
 export async function fetchCategories(token: string) {
@@ -96,7 +69,12 @@ export async function importItems(token: string, file: File, mapping?: Record<st
       "Content-Type": "multipart/form-data",
     },
   });
-  return res.data;
+  const data = (res.data || {}) as Partial<ImportItemsResult>;
+  return {
+    imported: data.imported ?? 0,
+    updated: data.updated ?? 0,
+    errors: data.errors ?? [],
+  };
 }
 
 export async function exportItems(token: string) {

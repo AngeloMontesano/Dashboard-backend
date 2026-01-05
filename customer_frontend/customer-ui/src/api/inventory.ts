@@ -19,6 +19,7 @@ type OrderCreate = components["schemas"]["OrderCreate"];
 type OrderEmailRequest = components["schemas"]["OrderEmailRequest"];
 type ReorderResponse = components["schemas"]["ReorderResponse"];
 export type OrderCreateItem = components["schemas"]["OrderItemInput"];
+type InventoryBulkUpdateRequest = components["schemas"]["InventoryBulkUpdateRequest"];
 
 export type ImportItemsResult = {
   imported: number;
@@ -90,9 +91,22 @@ export async function exportItems(token: string) {
   return res.data.csv;
 }
 
+export async function exportInventory(token: string) {
+  const res = await api.get<Blob>("/inventory/inventory/export", {
+    headers: authHeaders(token),
+    responseType: "blob",
+  });
+  return res.data;
+}
+
 export async function postInventoryMovement(token: string, payload: MovementPayload) {
   const res = await api.post("/inventory/movements", payload, { headers: authHeaders(token) });
   return res.data;
+}
+
+export async function bulkUpdateInventory(token: string, payload: InventoryBulkUpdateRequest) {
+  const res = await api.post("/inventory/inventory/bulk", payload, { headers: authHeaders(token) });
+  return res.data as { updated: number; errors: string[] };
 }
 
 export async function fetchSettings(token: string) {

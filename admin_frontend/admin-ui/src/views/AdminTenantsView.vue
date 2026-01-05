@@ -146,7 +146,7 @@
             <div class="detail-box__label">Tenant ID</div>
             <div class="detail-box__value mono">{{ selectedTenant.id }}</div>
           </div>
-          <div class="detail-box detail-box--wide">
+          <div class="detail-box detail-box--wide detail-box--host">
             <div class="detail-box__label">Tenant Host</div>
             <div class="detail-box__value mono detail-box__value--wrap">{{ tenantHost }}</div>
           </div>

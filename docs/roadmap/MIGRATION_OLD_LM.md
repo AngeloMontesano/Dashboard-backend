@@ -27,7 +27,7 @@
 - Exporte folgen Legacy-Spaltenreihenfolge; neue Felder dürfen ergänzt werden, solange Legacy-Felder erhalten bleiben.
 
 ## Known Issues
-- DB-Backfill/Migration für neue Settings-Felder (Ansprechpartner, PLZ/Ort, Filialnummer, Steuernummer) noch ausstehend.
+- Alembic-Revision `0008_tenant_settings_metadata` muss in allen Umgebungen ausgerollt werden; ggf. Backfill der neuen Felder je Tenant.
 - Frontend-Feinschliff (Tokens/Responsive) für Customer-Ansichten Inventur/Bestellungen/Berichte offen.
 - Legacy-Flash-API bleibt ungemappt (Frontend nutzt lokale Toasts).
 

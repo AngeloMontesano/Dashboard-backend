@@ -431,3 +431,14 @@
   - Legacy-Admin-Metadaten sind abbildbar; UI-Filter/Cancelled-Übersicht vorhanden; Vite-Build-Fehler behoben.
 - **Nächster Schritt**
   - DB-Backfill/Migration für neue Settings-Felder prüfen; Responsive/Tokens-Feinschliff fortführen.
+
+## Schritt 36 – Legacy-Migration Phase 3 (Alembic-Revision Settings-Metadaten)
+- **Datum/Uhrzeit**: 2026-01-05T23:40:00+00:00
+- **Ziel**: DB-Migration für neue Settings-Felder bereitstellen.
+- **Was wurde geändert**
+  - Alembic-Revision `0008_tenant_settings_metadata` ergänzt, die die neuen Felder (Ansprechpartner, PLZ, Ort, Filialnummer, Steuernummer) anlegt.
+  - TODO/Roadmap entsprechend aktualisiert (Rollout-Hinweis, Backfill bei Bedarf).
+- **Ergebnis**
+  - Migration steht bereit für Rollout; Backend/Frontend nutzen die Felder bereits.
+- **Nächster Schritt**
+  - Migration in allen Umgebungen ausführen; Backfill je Tenant nach Bedarf; Frontend-Feinschliff (Tokens/Responsive) fortsetzen.

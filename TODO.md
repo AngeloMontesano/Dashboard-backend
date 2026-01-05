@@ -1,7 +1,7 @@
 # TODO
 
 ## Must
-- Legacy-Migration Backend: neue Admin-Metadaten für Einstellungen sind ergänzt; DB-Migration/Backfill für bestehende Tenants prüfen und ausrollen.
+- Legacy-Migration Backend: Alembic-Revision `0008_tenant_settings_metadata` ausrollen (neue Settings-Felder). Bei Bedarf Werte je Tenant befüllen/backfillen.
 - Customer-Frontend: echte Daten für Inventur/Bestellungen/Einstellungen/Reporting sind verdrahtet; Feinschliff (Filter/Responsiveness/Tokens) fortführen.
 - OpenAPI aktualisieren und Typen regenerieren, sobald neue Endpunkte implementiert sind; Wrapper auf neue Typen migrieren.
 - Design-Tokens je App weiter verankern: neue Tokens in Utilities/Theme-Mappings nutzen und Alt-Variablen perspektivisch ablösen (admin: `src/styles/tokens.css`, customer: `src/styles/tokens.css`).

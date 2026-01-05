@@ -253,3 +253,16 @@
   - Kunden-Workspace und Kategorien-Management sind nun tokenbasiert gestylt und nutzen die zentralen Layout-Utilities ohne scoped/inline Styles.
 - **Nächster Schritt**
   - Customer: verbleibende Views (Artikel/Berichte/Inventur/Bestellungen/Einstellungen/Login) migrieren. Admin: zentrale Toast/Overlay-Styles finalisieren.
+
+## Schritt 22 – UI-Harmonisierung (Customer Login/Inventur/Bestellungen/Einstellungen)
+- **Datum/Uhrzeit**: 2026-01-05T17:12:28+00:00
+- **Ziel**: Weitere Customer-Views auf UiPage/UiSection und Utilities heben; Inline-Styles entfernen.
+- **Was wurde geändert**
+  - Utilities (customer) um Auth-Shell/Card, Text-Tones und Action/Form-Spacing ergänzt.
+  - Login-View auf UiPage + Auth-Utilities umgestellt; scoped Styles entfernt, Inputs nutzen gemeinsame Klassen.
+  - Inventur-, Bestellungen- und Einstellungen-Views auf UiPage/UiSection/UiToolbar plus Utility-Spacing migriert; Inline-Styles (margin) entfernt.
+  - Artikelverwaltung: verbliebene Inline-Margins durch Utility-Klassen ersetzt.
+- **Ergebnis**
+  - Customer Auth/Dashboard-ähnliche Static Views nutzen jetzt die zentralen Layout-Bausteine; Inline-Styles reduziert, Tokens greifen für Status-/Textfarben.
+- **Nächster Schritt**
+  - Customer: Artikelverwaltung und Berichte vollständig auf UiPage/UiSection/Utilities heben (inkl. PrimeVue-Parts) und restliche Inline/Scoped-Styles abbauen. Admin: Overlay/Toast-Styling finalisieren.

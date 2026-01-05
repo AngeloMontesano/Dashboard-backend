@@ -1,36 +1,31 @@
 <script setup lang="ts">
+import UiPage from '@/components/ui/UiPage.vue';
+import UiSection from '@/components/ui/UiSection.vue';
 </script>
 
 <template>
-  <section class="page-section">
-    <header class="page-section__header">
-      <div>
-        <p class="eyebrow">Konfiguration</p>
-        <h2 class="section-title">Einstellungen</h2>
-        <p class="section-subtitle">
-          Nutzer, Rollen, Benachrichtigungen und API-Schlüssel verwaltest du hier.
-        </p>
+  <UiPage>
+    <UiSection title="Einstellungen" subtitle="Nutzer, Rollen, Benachrichtigungen und API-Schlüssel verwaltest du hier.">
+      <div class="cards-grid mt-md">
+        <article class="card">
+          <h3 class="card__title">Nutzer</h3>
+          <p class="card__value">24</p>
+          <p class="card__hint">davon 3 Admins</p>
+        </article>
+        <article class="card">
+          <h3 class="card__title">Benachrichtigungen</h3>
+          <p class="card__value">7 aktiv</p>
+          <p class="card__hint">E-Mail & Slack</p>
+        </article>
+        <article class="card">
+          <h3 class="card__title">API-Schlüssel</h3>
+          <p class="card__value">2 gültig</p>
+          <p class="card__hint">Zuletzt rotiert vor 12 Tagen</p>
+        </article>
       </div>
-    </header>
-    <div class="cards-grid" style="margin-bottom: 16px">
-      <article class="card">
-        <h3 class="card__title">Nutzer</h3>
-        <p class="card__value">24</p>
-        <p class="card__hint">davon 3 Admins</p>
-      </article>
-      <article class="card">
-        <h3 class="card__title">Benachrichtigungen</h3>
-        <p class="card__value">7 aktiv</p>
-        <p class="card__hint">E-Mail & Slack</p>
-      </article>
-      <article class="card">
-        <h3 class="card__title">API-Schlüssel</h3>
-        <p class="card__value">2 gültig</p>
-        <p class="card__hint">Zuletzt rotiert vor 12 Tagen</p>
-      </article>
-    </div>
-    <div class="placeholder">
-      <p>Konfigurationsoptionen werden bald hinzugefügt.</p>
-    </div>
-  </section>
+      <div class="placeholder">
+        <p>Konfigurationsoptionen werden bald hinzugefügt.</p>
+      </div>
+    </UiSection>
+  </UiPage>
 </template>

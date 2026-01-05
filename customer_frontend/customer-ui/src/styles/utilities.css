@@ -108,6 +108,18 @@
   gap: var(--spacing-lg);
 }
 
+.auth-shell {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: var(--spacing-2xl);
+  background: var(--color-surface-muted);
+}
+
+.auth-card {
+  width: min(420px, 100%);
+}
+
 .mt-sm {
   margin-top: var(--spacing-sm);
 }

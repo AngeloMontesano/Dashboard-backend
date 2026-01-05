@@ -871,7 +871,7 @@ watch(
         @toggle="showMoreCreateFields = ($event.target as HTMLDetailsElement).open"
       >
         <summary>Weitere Felder</summary>
-        <div class="create-grid" style="margin-top: 12px">
+        <div class="create-grid mt-md">
           <BaseField label="Bestand">
             <BaseInput type="number" :min="0" v-model="createForm.quantity" />
           </BaseField>
@@ -903,7 +903,7 @@ watch(
       </details>
     </section>
 
-    <div v-else-if="!selectedArticle" class="placeholder" style="margin-top: 16px">
+    <div v-else-if="!selectedArticle" class="placeholder mt-md">
       <p>Wähle einen Artikel aus der Tabelle oder klicke auf "Neuer Artikel".</p>
     </div>
   </section>

@@ -1,5 +1,11 @@
 # WORKLOG
 
+- Datum/Uhrzeit: 2026-01-08T10:30:00Z
+- Task-ID: FE-AUDIT-01
+- Was analysiert/geändert: Standards unter `docs/standards` vollständig gelesen; Admin- und Customer-Frontend hinsichtlich Architektur, Routing, API-Layer, UI/UX und Styles gescannt; neue Audit- und Backlog-Dokumente angelegt; TODO neu priorisiert.
+- Ergebnis: `docs/roadmap/FRONTEND_AUDIT.md` mit Standard-Zusammenfassung, Befunden, UX-Top-10 und Quick Wins pro Frontend; `docs/roadmap/FRONTEND_IMPROVEMENTS_BACKLOG.md` mit priorisierten Maßnahmen; `TODO.md` nach MUSS/SOLL/KANN aktualisiert.
+- Nächste Schritte: Maßnahmen mit Teams abstimmen, Prioritäten P0/P1 adressieren (Auth-Persistenz, Logs-Endpoint, Mobile-Breakpoints, PDF-Export), optional Router-Einführung im Admin evaluieren.
+
 ## Schritt 1 – Analyse
 - **Was wurde geprüft**
   - Vorgaben in `docs/` vollständig gelesen (Standards, Roadmap, OpenAPI-Kopie).

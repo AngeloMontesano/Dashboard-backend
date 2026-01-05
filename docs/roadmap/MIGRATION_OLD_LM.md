@@ -73,7 +73,7 @@
 
 ## Gap-Liste Soll-Ist (Phase 2)
 - **Artikel/Inventar:** Neues Backend hat nur `items`/`categories` (SKU/Barcode, `quantity`, `min_stock`, `target_stock`, `order_mode`), keine `pf_artikel_id`, `sollbestand`, `mindestbestand`, `lagerort`, `haltbarkeit`, `preis`. Bulk-Update (`save_all`) und HTML-Übersicht fehlen. Frontend-Artikel-View nutzt Items-API, aber Legacy-Felder/Exporte fehlen.
-- **Lagerbewegungen:** POST `/inventory/movements` existiert (IN/OUT mit `client_tx_id`, qty, note) und verhindert negativen Bestand; GET-Liste/Filter für Reporting fehlt. Legacy verlangt Barcode-IN/OUT (Menge 1) und speichert Typ „Entnahme/Zugang“. Frontend benötigt GET für Reporting-Fallback und ID/Artikel-Details.
+- **Lagerbewegungen:** POST `/inventory/movements` existiert (IN/OUT mit `client_tx_id`, qty, note) und verhindert negativen Bestand; GET-Liste/Filter für Reporting war fehlend – jetzt ergänzt (T1), Reporting-/Export-Endpunkte stehen weiter aus. Legacy verlangt Barcode-IN/OUT (Menge 1) und speichert Typ „Entnahme/Zugang“.
 - **Inventur:** Keine dedizierte Inventur-API (Bulk-Speichern nach Tabelle) oder Excel-Export mit Legacy-Spalten. Frontend-Inventur zeigt nur Platzhalter-KPIs ohne API.
 - **Berichte/Verbrauch:** Backend-Endpunkte `/inventory/report` + Exporte fehlen komplett; Frontend fällt auf Client-Aggregation via GET `/inventory/movements` zurück (ebenfalls nicht vorhanden). Legacy verlangt Monats-Aggregate + CSV/Excel/PDF.
 - **Bestellungen:** Kein Modell/Endpoint im neuen Backend; Customer-View ist Platzhalter ohne API. Legacy-Funktionen (bestellwürdige Liste, offene/erledigte Bestellungen, Erledigt erhöht Bestand, PDF/E-Mail) fehlen vollständig.

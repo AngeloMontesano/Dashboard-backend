@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import List, Optional
+from typing import List, Literal, Optional
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -110,6 +110,27 @@ class ItemsPage(BaseModel):
 class SKUExistsResponse(BaseModel):
     exists: bool
     normalized_sku: str
+
+
+class MovementItemOut(BaseModel):
+    id: str
+    sku: str
+    barcode: str
+    name: str
+    category_id: Optional[str] = None
+
+
+class MovementOut(BaseModel):
+    id: str
+    item_id: str
+    item_name: Optional[str] = None
+    category_id: Optional[str] = None
+    type: Literal["IN", "OUT"]
+    barcode: str
+    qty: int
+    note: Optional[str] = None
+    created_at: datetime
+    item: Optional[MovementItemOut] = None
 
 
 class MovementPayload(BaseModel):

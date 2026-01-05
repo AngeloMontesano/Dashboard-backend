@@ -281,3 +281,16 @@
   - Reverse Engineering abgeschlossen; Gaps klar dokumentiert; Tasks strukturiert.
 - **Nächster Schritt**
   - T1: Backend GET `/inventory/movements` + OpenAPI/Schemas, dann weitere Tasks laut Roadmap.
+
+## Schritt 24 – Legacy-Migration Phase 3 Start (T1: GET Bewegungen)
+- **Datum/Uhrzeit**: 2026-01-05T18:30:00+00:00
+- **Ziel**: Bewegungs-Listing für Reporting/Audit ergänzen (Filter + Limit), Basis für Berichte und Inventur.
+- **Was wurde geändert**
+  - Backend: Neuer GET `/inventory/movements` mit Filtern (Zeitraum, Typ, Kategorie, Items) und Limit; Response liefert Artikel-Infos.
+  - Schemas: `MovementOut`/`MovementItemOut` ergänzt.
+  - OpenAPI: Pfad + Schemas für Bewegungs-Listing hinzugefügt.
+  - Roadmap/TODO aktualisiert: Gap „GET Bewegungen“ geschlossen, Must-Liste angepasst.
+- **Ergebnis**
+  - Bewegungen sind tenant-sicher abrufbar und filterbar; Grundlage für Reporting-Backend/Frontend.
+- **Nächster Schritt**
+  - T2/T3 vorbereiten: Inventur-Bulk/Export und Reporting-Endpunkte implementieren, OpenAPI + Typen nachziehen.

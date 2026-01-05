@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import Any
+from typing import Any, Literal
 
 from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
 from sqlalchemy import func, or_, select
@@ -22,6 +22,8 @@ from app.modules.inventory.schemas import (
     ItemOut,
     ItemUpdate,
     ItemsPage,
+    MovementItemOut,
+    MovementOut,
     MovementPayload,
     SKUExistsResponse,
     TenantPingResponse,
@@ -405,6 +407,69 @@ async def update_item(
 # ----------------------
 # Bewegungen (Bestandsbuchungen)
 # ----------------------
+@router.get("/movements", response_model=list[MovementOut])
+async def list_movements(
+    start: datetime | None = Query(default=None, description="Startzeitpunkt (inklusive, UTC oder lokal ISO8601)"),
+    end: datetime | None = Query(default=None, description="Endzeitpunkt (inklusive, UTC oder lokal ISO8601)"),
+    movement_type: Literal["IN", "OUT"] | None = Query(default=None, alias="type"),
+    category_id: str | None = Query(default=None),
+    item_ids: list[str] | None = Query(default=None, alias="item_ids"),
+    limit: int = Query(default=200, ge=1, le=1000, description="Maximale Anzahl zurückgegebener Bewegungen"),
+    ctx: TenantContext = Depends(get_tenant_context),
+    user_ctx: CurrentUserContext = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> list[MovementOut]:
+    q = (
+        select(InventoryMovement, Item, Category)
+        .join(Item, InventoryMovement.item_id == Item.id)
+        .outerjoin(Category, Category.id == Item.category_id)
+        .where(InventoryMovement.tenant_id == ctx.tenant.id)
+    )
+    if start:
+        q = q.where(InventoryMovement.created_at >= start)
+    if end:
+        q = q.where(InventoryMovement.created_at <= end)
+    if movement_type:
+        q = q.where(InventoryMovement.type == movement_type)
+    if category_id:
+        q = q.where(Item.category_id == category_id)
+    if item_ids:
+        q = q.where(Item.id.in_(item_ids))
+
+    rows = (
+        await db.execute(
+            q.order_by(InventoryMovement.created_at.desc()).limit(limit)
+        )
+    ).all()
+
+    def _movement_to_out(movement: InventoryMovement, item: Item | None) -> MovementOut:
+        return MovementOut(
+            id=str(movement.id),
+            item_id=str(movement.item_id),
+            item_name=item.name if item else None,
+            category_id=str(item.category_id) if item and item.category_id else None,
+            type=movement.type,
+            barcode=movement.barcode,
+            qty=movement.qty,
+            note=movement.note,
+            created_at=movement.created_at,
+            item=MovementItemOut(
+                id=str(item.id),
+                sku=item.sku,
+                barcode=item.barcode,
+                name=item.name,
+                category_id=str(item.category_id) if item.category_id else None,
+            )
+            if item
+            else None,
+        )
+
+    return [
+        _movement_to_out(movement=row[0], item=row[1])
+        for row in rows
+    ]
+
+
 @router.post("/movements", dependencies=[Depends(require_owner_or_admin)])
 async def create_movement(
     payload: MovementPayload,

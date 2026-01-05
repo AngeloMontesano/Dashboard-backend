@@ -8,6 +8,7 @@ import MultiSelect from 'primevue/multiselect';
 import AutoComplete from 'primevue/autocomplete';
 import InputSwitch from 'primevue/inputswitch';
 import InputNumber from 'primevue/inputnumber';
+import Tag from 'primevue/tag';
 import type { CategoryOption, ItemOption, ReportMode } from '@/types/reports';
 
 const props = withDefaults(
@@ -106,7 +107,7 @@ const handleItemSelect = (event: { value: ItemOption }) => {
           placeholder="Zeitraum wählen"
           class="w-full"
         />
-        <small class="hint">Standard: letzte 6 Monate</small>
+        <small class="hint">Standard: letzte 30 Tage</small>
       </div>
 
       <div class="field">
@@ -153,16 +154,15 @@ const handleItemSelect = (event: { value: ItemOption }) => {
           v-model="selectedItemsModel"
           :options="itemSuggestions"
           optionLabel="label"
-          display="chip"
           filter
           placeholder="Artikel wählen"
           class="w-full"
         />
         <div class="chips" v-if="selectedItems.length">
-          <Chip
+          <Tag
             v-for="item in selectedItems"
             :key="item.value"
-            :label="item.label"
+            :value="item.label"
             class="chip"
           />
         </div>

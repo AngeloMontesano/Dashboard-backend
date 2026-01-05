@@ -1,8 +1,8 @@
 export type ReportMode = 'top5' | 'all' | 'selected';
 
 export type ReportParams = {
-  start: string;
-  end: string;
+  from: string;
+  to: string;
   mode: ReportMode;
   item_ids?: string[];
   category_id?: string;

@@ -110,3 +110,12 @@
   - Roadmap um den erledigten Remote-Zugriff bereinigt; Known Issues verweisen auf Proxy-Zugriff als Quelle und auf Backend-Bestätigung.
 - **Was ist offen**
   - Backend-Abgleich der OpenAPI-Definitionen bleibt ausstehend.
+
+## Schritt 10 – Remote-OpenAPI-Verifikation
+- **Was wurde geprüft**
+  - Erneuter Zugriff auf das entfernte Schema: `curl https://api.test.myitnetwork.de/api/openapi.json` und `curl http://api.test.myitnetwork.de/api/openapi.json` (beide 403).
+- **Was wurde geändert**
+  - Roadmap und Standards aktualisiert: Remote-Schema bleibt gesperrt (403), Nutzung der lokalen Kopie bleibt notwendig, Backend-Abgleich weiterhin offen.
+- **Was ist offen**
+  - Backend/Schema-Abgleich der erweiterten OpenAPI-Definitionen.
+  - Freischaltung oder Zugriffspfad für `/api/openapi.json` (aktuell 403) klären, damit `gen:types` ohne lokale Kopie lauffähig ist.

@@ -1,3 +1,4 @@
 - Backend/Schema-Abgleich sicherstellen: Die geänderten OpenAPI-Definitionen (Admin-Login-Response, Items-Import/Export, Movements, Set-Password, Reporting-Endpunkte) müssen serverseitig verifiziert und ggf. angepasst werden.  
   - Frontend: admin & customer  
   - Endpoint/View: `/admin/login`, `/admin/tenants/{tenant_id}/users/{user_id}/set-password`, `/inventory/items/*`, `/inventory/movements`, `/inventory/report*`
+- Remote-Schema-Zugriff reparieren: `/api/openapi.json` liefert aktuell 403 (getestet via curl), `npm run gen:types` braucht einen erreichbaren Endpunkt oder alternative Authentifizierung.

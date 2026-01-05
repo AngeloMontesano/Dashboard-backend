@@ -32,4 +32,4 @@
 
 ## Known Issues
 - Backend muss die aktualisierten OpenAPI-Definitionen (Login, Items-Import/Export, Movements, Set-Password, Reporting) bestätigen, damit die generierten Typen zur Laufzeit passen.
-  - Zugriff auf das laufende Backend ist über den Proxy-Pfad `/api/openapi.json` möglich (z. B. bei laufender Compose-Umgebung); lokale Kopie bleibt die fallback-Quelle.
+  - Remote-Schema ist derzeit nicht abrufbar (`/api/openapi.json` liefert 403 via `api.test.myitnetwork.de`); bis zur Freischaltung muss die lokale Kopie `docs/openapi/openapi.json` für die Generierung genutzt werden.

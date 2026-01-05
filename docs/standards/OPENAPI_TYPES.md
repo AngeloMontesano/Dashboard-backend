@@ -28,8 +28,7 @@
 ## Regeln
 - `src/api/gen/openapi.ts` wird nicht manuell editiert.
 - Wrapper nutzen die generierten Typen für Requests (Payload) und Responses (Resultate).
-- Neue Endpunkte zuerst in `docs/openapi/openapi.json` bzw. Remote-Schema pflegen, dann Typen regenerieren.
+- Neue Endpunkte zuerst in `docs/openapi/openapi.json` pflegen (lokale Quelle), dann Typen regenerieren; Remote-Schema ist optional.
 
 ## Known Issues
 - Backend muss die aktualisierten OpenAPI-Definitionen (Login, Items-Import/Export, Movements, Set-Password, Reporting) bestätigen, damit die generierten Typen zur Laufzeit passen.
-  - Remote-Schema ist derzeit nicht abrufbar (`/api/openapi.json` liefert 403 via `api.test.myitnetwork.de`); bis zur Freischaltung muss die lokale Kopie `docs/openapi/openapi.json` für die Generierung genutzt werden.

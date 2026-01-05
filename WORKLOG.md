@@ -119,3 +119,12 @@
 - **Was ist offen**
   - Backend/Schema-Abgleich der erweiterten OpenAPI-Definitionen.
   - Freischaltung oder Zugriffspfad für `/api/openapi.json` (aktuell 403) klären, damit `gen:types` ohne lokale Kopie lauffähig ist.
+
+## Schritt 11 – Lokale Typ-Generierung als Standard
+- **Was wurde geprüft**
+  - Skripte zur Typ-Generierung in beiden Frontends.
+- **Was wurde geändert**
+  - `gen:types` in Admin- und Customer-Frontend nutzen jetzt standardmäßig `docs/openapi/openapi.json`; optionales `gen:types:remote` verweist auf `/api/openapi.json`.
+  - Roadmap und Standards angepasst: Lokale Spec ist verbindlich, Remote-Zugriff optional.
+- **Was ist offen**
+  - Backend/Schema-Abgleich der erweiterten OpenAPI-Definitionen bleibt offen; Remote-Zugriff ist kein Blocker mehr.

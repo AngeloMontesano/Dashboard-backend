@@ -215,3 +215,17 @@
   - Zwei weitere Kern-Views im Admin folgen den harmonisierten Layout-Utilities ohne Inline-/Scoped-Styles; Modal/Overlay-Optik nutzt zentrale Token-Variablen.
 - **Nächster Schritt**
   - Restliche Admin-Views (Diagnostics/Operations/Audit/Login/Kunden) und Customer-Views schrittweise auf die Utilities/Komponenten ziehen; zentrale Toast/Overlay-Styles finalisieren und responsive Regeln nachziehen.
+
+## Schritt 19 – UI-Harmonisierung (Admin Login/Diagnostics/Operations)
+- **Datum/Uhrzeit**: 2026-01-05T16:50:16+00:00
+- **Ziel**: Weitere Admin-Views auf Utilities/UI-Bausteine heben und Inline-Styles entfernen.
+- **Was wurde geändert**
+  - Utilities ergänzt (auth-shell/-card, code-block, Text-Tones, push-right) für wiederverwendbare Auth-/Log-/Hint-Layouts.
+  - `AdminLoginView` auf `UiPage` und Layout-Utilities umgestellt, Statusfarben über Tokens statt scoped Styles.
+  - `AdminOperationsView` auf `UiPage`/`UiSection` migriert, Tabs/Panels/Audit/Snapshot/Logs ohne Inline-Styles; nutzt neue code-/pill-/action-Utilities.
+  - `AdminDiagnosticsView` analog auf UI-Bausteine und Utilities gehoben; Health/Snapshot/Logs ohne Inline-Styles.
+  - Audit-Filter-Bar und Kunden-Demo-Support/Hints auf Utility-Klassen umgestellt (keine inline `style=` mehr).
+- **Ergebnis**
+  - Drei weitere Admin-Ansichten sowie Audit-Filter nutzen zentrale Utilities und tokenbasierte Farben/Abstände; Inline- und scoped Styles entfernt.
+- **Nächster Schritt**
+  - Admin: Audit-View und Kunden-Demo weiter auf Utilities bringen; Toast/Overlay-Styling zentralisieren. Customer: übrige Views migrieren.

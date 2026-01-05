@@ -132,6 +132,10 @@
   margin: 0;
 }
 
+.full-width{
+  width: 100%;
+}
+
 .table-card{
   border: 1px solid var(--border);
   border-radius: var(--radius2);

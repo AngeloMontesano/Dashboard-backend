@@ -180,3 +180,14 @@
   - Gemeinsame UI-Baustein-Basis pro App verfügbar; zwei Pilot-Views validieren die Nutzung ohne Inline-/Scoped-Styles für Layout/Spacing.
 - **Nächster Schritt**
   - Weitere Kern-Views (Customer: Lagerbewegungen, Berichte & Analysen; Admin: Tenants/Memberships/Operations) auf die UI-Bausteine migrieren; anschließend Theme-Toggle/System-Default und zentrale Toast/Overlay-Styles umsetzen.
+
+## Schritt 16 – UI-Harmonisierung Task 5 (Theme-System + Toggles)
+- **Datum/Uhrzeit**: 2026-01-05T16:15:00+00:00
+- **Ziel**: Dark/Light/System-Theme mit Persistenz pro App einführen und bestehende Toggles vereinheitlichen.
+- **Was wurde geändert**
+  - Admin: Neues `useTheme` (System/Light/Dark, localStorage, `data-theme` auf `<html>`), Init in `main.ts`; App-Root nutzt resolved Theme; Sidebar-Select für Theme; Settings-View nutzt die neuen Theme-IDs.
+  - Customer: `useTheme` auf System-Default umgestellt, Init in `main.ts`; App-Root nutzt resolved Theme; Topbar erhält Theme-Select ohne Inline-Styles; Utilities ergänzt (`inline-field`).
+- **Ergebnis**
+  - Beide Apps setzen Themes zentral über `data-theme` und persistieren im localStorage; Toggles in UI verfügbar.
+- **Nächster Schritt**
+  - Weitere Views auf UI-Bausteine/Utilities migrieren; zentrale Toast/Dialog-Styles harmonisieren; optional System-Listener für Theme-Änderung ergänzen.

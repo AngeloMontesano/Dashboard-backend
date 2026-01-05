@@ -74,3 +74,31 @@
   - `npm run build` in `admin_frontend/admin-ui` und `customer_frontend/customer-ui` erfolgreich (Customer mit bestehendem Chunk-Size-Warning).
 - **Was ist offen**
   - Keine offenen Punkte aus diesem Fix; weitere To-dos siehe Post-Migration-Liste.
+
+## Schritt 6 – Offene Tasks (Planung)
+- **Was wurde geprüft**
+  - Ausstehende Punkte aus `docs/roadmap/POST_MIGRATION_TASKS.md` (OpenAPI-Gaps, Reporting-Endpunkte, Env-Bereinigung).
+- **Was ist geplant**
+  - OpenAPI-Schema nachziehen: Admin-Login-Response, Items-Import/Export, Movements-Response, fehlender Set-Password-Endpunkt, Reporting-Endpunkte ergänzen und dann Typen regenerieren.
+  - VITE-/Docker-Variablen für die Frontends bereinigen, damit nur noch der Proxy-Pfad `/api` genutzt wird.
+  - Builds erneut laufen lassen.
+
+## Schritt 7 – Umsetzung OpenAPI & Env-Bereinigung
+- **Was wurde geprüft**
+  - OpenAPI-Definitionen gegen Wrapper-Annahmen (Admin-Login, Tenant-Set-Password, Items-Import/Export, Movements, Reporting).
+  - Docker-Compose-Variablen für beide Frontends.
+- **Was wurde geändert**
+  - `docs/openapi/openapi.json` ergänzt/angepasst: Admin-Login-Response, Items-Import/Export-Responses, Movement-Response-Schema, Set-Password-Endpunkt, Reporting-Endpunkte mit passenden Schemata.
+  - Post-Migration-Roadmap auf Backend-Abgleich und Remote-OpenAPI fokussiert; Known Issues in `OPENAPI_TYPES.md` aktualisiert.
+  - Frontend-Compose-Dateien (`docker-compose.yml`, `admin_frontend/docker-compose.yml`, `customer_frontend/docker-compose.yml`) von `VITE_API_*`-Hosts befreit (Frontends nutzen nur `/api`).
+  - OpenAPI-Typen neu generiert (`npm run gen:types:local` in Admin- und Customer-Frontend).
+- **Was ist offen**
+  - Backend-Abgleich zu den neuen OpenAPI-Spezifikationen (siehe Roadmap) sowie Klärung des Remote-OpenAPI-Zugriffs.
+
+## Schritt 8 – Verifikation
+- **Was wurde geprüft**
+  - Frontend-Builds nach Schema-/Env-Anpassungen.
+- **Was wurde geändert**
+  - Builds erfolgreich ausgeführt: `npm run build` in `admin_frontend/admin-ui` und `customer_frontend/customer-ui` (Customer mit bekannter Chunk-Size-Warnung).
+- **Was ist offen**
+  - Keine zusätzlichen QA-Punkte; bestehende Chunk-Warnung nur beobachten.

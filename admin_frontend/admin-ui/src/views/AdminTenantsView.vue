@@ -148,7 +148,7 @@
           </div>
           <div class="detail-box detail-box--wide">
             <div class="detail-box__label">Tenant Host</div>
-            <div class="detail-box__value mono">{{ tenantHost }}</div>
+            <div class="detail-box__value mono detail-box__value--wrap">{{ tenantHost }}</div>
           </div>
         </div>
 
@@ -194,9 +194,13 @@
             <span class="field-label">Telefon</span>
             <input class="input" v-model="settingsState.form.phone" :disabled="settingsState.loading" />
           </label>
-          <label class="field span-2">
-            <span class="field-label">Adresse</span>
-            <input class="input" v-model="settingsState.form.address" :disabled="settingsState.loading" />
+          <label class="field">
+            <span class="field-label">Straße</span>
+            <input class="input" v-model="settingsState.addressStreet" :disabled="settingsState.loading" />
+          </label>
+          <label class="field">
+            <span class="field-label">Hausnummer</span>
+            <input class="input" v-model="settingsState.addressNumber" :disabled="settingsState.loading" />
           </label>
           <label class="field">
             <span class="field-label">PLZ</span>
@@ -321,11 +325,15 @@ const settingsState = reactive<{
   saving: boolean;
   error: string;
   form: TenantSettingsUpdate | null;
+  addressStreet: string;
+  addressNumber: string;
 }>({
   loading: false,
   saving: false,
   error: "",
   form: null,
+  addressStreet: "",
+  addressNumber: "",
 });
 
 /* Modal State */
@@ -496,6 +504,9 @@ async function loadTenantSettings(tenantId: string) {
   try {
     const res = await adminGetTenantSettings(props.adminKey, props.actor, tenantId);
     settingsState.form = { ...(res as TenantSettingsOut) };
+    const split = splitAddress(settingsState.form.address || "");
+    settingsState.addressStreet = split.street;
+    settingsState.addressNumber = split.number;
   } catch (e: any) {
     settingsState.error = stringifyError(e);
     toast(`Einstellungen konnten nicht geladen werden: ${settingsState.error}`);
@@ -509,9 +520,13 @@ async function saveTenantSettings() {
   settingsState.saving = true;
   settingsState.error = "";
   try {
+    settingsState.form.address = composeAddress(settingsState.addressStreet, settingsState.addressNumber);
     const payload = { ...settingsState.form } as TenantSettingsUpdate;
     const updated = await adminUpdateTenantSettings(props.adminKey, props.actor, selectedTenant.value.id, payload);
     settingsState.form = { ...(updated as TenantSettingsOut) };
+    const split = splitAddress(settingsState.form.address || "");
+    settingsState.addressStreet = split.street;
+    settingsState.addressNumber = split.number;
     toast("Einstellungen gespeichert");
   } catch (e: any) {
     settingsState.error = stringifyError(e);
@@ -603,6 +618,18 @@ watch(
   },
   { immediate: true }
 );
+
+function splitAddress(address: string) {
+  const match = address?.match(/^(.*?)(\s+\d+\w*)$/);
+  return {
+    street: match ? match[1].trim() : (address || "").trim(),
+    number: match ? match[2].trim() : "",
+  };
+}
+
+function composeAddress(street: string, number: string) {
+  return [street?.trim(), number?.trim()].filter(Boolean).join(" ");
+}
 </script>
 
 <style scoped>

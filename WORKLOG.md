@@ -18,6 +18,12 @@
 - Ergebnis: Admin-Reload behält Kontext (sessionStorage), Operations zeigt nur verfügbare Tabs; Customer-Layout stapelt unter 1100px, Reporting-PDF lädt als Datei statt Popup, Order-Buttons sind gegen Doppelaktionen geschützt.
 - Nächste Schritte: Server-Paging/Validierungen (Tenants/Memberships), Queue-Confirm/A11y-Labels und Theme-Toggle in Topbar angehen.
 
+- Datum/Uhrzeit: 2026-01-08T13:00:00Z
+- Task-ID: FE-AUDIT-04
+- Was analysiert/geändert: Host-Feld im Admin wrappt nun, AllowedHosts für neue Subdomains geöffnet; Admin-Settings Adresse in Straße/Hausnummer aufgeteilt; Customer Settings ebenfalls gesplittet. Reporting-PDF nutzt API-Endpunkt, Customer-API reagiert auf 401 mit Auto-Re-Login; Movement-Queue stoppt endlose Retries bei Client-Fehlern. Backend-Migrationslücke (inventory_orders) im TODO vermerkt.
+- Ergebnis: Tenants-Host überläuft nicht, neue Hosts blocken nicht mehr im Vite-Server; Adresse kann strukturiert eingegeben werden; Lagerbewegungen zeigen 401/400 als Fehler ohne endlose Wiederholung; fehlende Backend-Tabellen als Must-Do dokumentiert.
+- Nächste Schritte: Backend-Migration `inventory_orders` und Aggregationsfix einplanen; weitere Queue/Toast-Feinschliffe und Admin-Router-Paging umsetzen.
+
 ## Schritt 1 – Analyse
 - **Was wurde geprüft**
   - Vorgaben in `docs/` vollständig gelesen (Standards, Roadmap, OpenAPI-Kopie).

@@ -1,16 +1,22 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref, watch } from 'vue';
+import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue';
 import Toast from 'primevue/toast';
 import { useToast } from 'primevue/usetoast';
+import Card from 'primevue/card';
+import DataTable from 'primevue/datatable';
+import Column from 'primevue/column';
+import Tag from 'primevue/tag';
+import ProgressSpinner from 'primevue/progressspinner';
 import type { ChartData } from 'chart.js';
-import { getReportData, exportCsv, exportExcel, exportPdf } from '@/api/reports';
+import { getReportData, exportCsv, exportExcel } from '@/api/reporting';
 import { fetchCategories, fetchItems, type Item } from '@/api/inventory';
 import ReportFilters from '@/components/reports/ReportFilters.vue';
 import ReportKpiCards from '@/components/reports/ReportKpiCards.vue';
 import ReportCharts from '@/components/reports/ReportCharts.vue';
 import ReportExportButtons from '@/components/reports/ReportExportButtons.vue';
 import { useAuth } from '@/composables/useAuth';
-import type { CategoryOption, ItemOption, ReportFilterState, ReportParams, ReportResponse } from '@/types/reports';
+import type { CategoryOption, ItemOption, ReportFilterState, ReportParams, ReportResponse, ReportSeries } from '@/types/reports';
+import { stringifyError } from '@/utils/error';
 
 const { state: authState } = useAuth();
 const toast = useToast();
@@ -35,6 +41,7 @@ const error = ref<string | null>(null);
 const exporting = ref<'csv' | 'excel' | 'pdf' | null>(null);
 const consumptionChart = ref<ChartData<'bar'> | null>(null);
 const trendChart = ref<ChartData<'line'> | null>(null);
+const tableItems = ref<{ name: string; total: number; itemId?: string }[]>([]);
 let debounceTimer: number | undefined;
 
 const allItemOptions = computed<ItemOption[]>(() => {
@@ -50,7 +57,8 @@ const allItemOptions = computed<ItemOption[]>(() => {
 
 function getDefaultRange(): [Date, Date] {
   const end = new Date();
-  const start = new Date(end.getFullYear(), end.getMonth() - 5, 1);
+  const start = new Date();
+  start.setDate(end.getDate() - 29);
   return [start, end];
 }
 
@@ -65,8 +73,8 @@ function buildParams(): ReportParams | null {
   const [start, end] = filters.appliedRange;
   if (!start || !end) return null;
   return {
-    start: formatDateParam(start),
-    end: formatDateParam(end),
+    from: formatDateParam(start),
+    to: formatDateParam(end),
     mode: filters.mode,
     category_id: filters.categoryId || undefined,
     item_ids: filters.mode === 'selected' ? filters.selectedItems.map((i) => i.value) : undefined,
@@ -93,7 +101,7 @@ async function loadCategories() {
     toast.add({
       severity: 'error',
       summary: 'Kategorien fehlgeschlagen',
-      detail: err?.message || 'Kategorien konnten nicht geladen werden',
+      detail: stringifyError(err),
       life: 5000
     });
   }
@@ -115,7 +123,7 @@ async function searchItems(query: string) {
     toast.add({
       severity: 'warn',
       summary: 'Suche fehlgeschlagen',
-      detail: err?.message || 'Artikel konnten nicht gesucht werden',
+      detail: stringifyError(err),
       life: 4000
     });
   }
@@ -150,7 +158,7 @@ async function selectCategoryItems() {
     toast.add({
       severity: 'error',
       summary: 'Kategorie-Übernahme fehlgeschlagen',
-      detail: err?.message || 'Artikel der Kategorie konnten nicht geladen werden',
+      detail: stringifyError(err),
       life: 5000
     });
   }
@@ -208,6 +216,17 @@ function buildCharts(data: ReportResponse) {
     labels,
     datasets: datasets.map((d) => ({ ...d, type: 'line' }))
   } as ChartData<'line'>;
+
+  tableItems.value = buildTableData(data.series);
+}
+
+function buildTableData(series: ReportSeries[]) {
+  const totals: Record<string, { total: number; name: string }> = {};
+  series.forEach((s) => {
+    const total = s.data.reduce((acc, curr) => acc + (curr.value || 0), 0);
+    totals[s.label] = { total, name: s.label };
+  });
+  return Object.values(totals).sort((a, b) => b.total - a.total);
 }
 
 async function loadReports() {
@@ -222,7 +241,7 @@ async function loadReports() {
     reportData.value = { ...res, kpis: { ...res.kpis, months } };
     buildCharts(reportData.value);
   } catch (err: any) {
-    const detail = err?.response?.data?.error?.message || err?.message || 'Konnte Bericht nicht laden';
+    const detail = stringifyError(err);
     error.value = detail;
     toast.add({ severity: 'error', summary: 'Fehler beim Laden', detail, life: 6000 });
   } finally {
@@ -236,22 +255,52 @@ async function handleExport(format: 'csv' | 'excel' | 'pdf') {
   if (!params) return;
   exporting.value = format;
   try {
-    const action = format === 'csv' ? exportCsv : format === 'excel' ? exportExcel : exportPdf;
-    const blob = await action(authState.accessToken, params);
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    const extension = format === 'excel' ? 'xlsx' : format;
-    link.href = url;
-    link.download = `berichte-${params.start}-${params.end}.${extension}`;
-    link.click();
-    window.URL.revokeObjectURL(url);
+    if (format === 'pdf') {
+      await exportVisiblePdf();
+    } else {
+      const action = format === 'csv' ? exportCsv : exportExcel;
+      const blob = await action(authState.accessToken, params);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      const extension = format === 'excel' ? 'xlsx' : format;
+      link.href = url;
+      link.download = `berichte-${params.from}-${params.to}.${extension}`;
+      link.click();
+      window.URL.revokeObjectURL(url);
+    }
     toast.add({ severity: 'success', summary: 'Export gestartet', detail: `${format.toUpperCase()} bereitgestellt.` });
   } catch (err: any) {
-    const detail = err?.response?.data?.error?.message || err?.message || 'Export fehlgeschlagen';
+    const detail = stringifyError(err);
     toast.add({ severity: 'error', summary: 'Export fehlgeschlagen', detail, life: 6000 });
   } finally {
     exporting.value = null;
   }
+}
+
+async function exportVisiblePdf() {
+  await nextTick();
+  const section = document.querySelector('.page-section');
+  if (!section) throw new Error('Bereich nicht gefunden');
+  const printWindow = window.open('', '_blank', 'width=1200,height=800');
+  if (!printWindow) throw new Error('Popup blockiert');
+  printWindow.document.write(`
+    <html>
+      <head>
+        <title>Berichte & Analysen</title>
+        <style>
+          body { font-family: Arial, sans-serif; padding: 16px; color: #111827; }
+          h2, h3 { margin: 0 0 8px; }
+          .section-stack { display: flex; flex-direction: column; gap: 12px; }
+          .card, .p-card { border: 1px solid #e5e7eb; border-radius: 12px; padding: 12px; }
+        </style>
+      </head>
+      <body>${section.innerHTML}</body>
+    </html>
+  `);
+  printWindow.document.close();
+  printWindow.focus();
+  printWindow.print();
+  printWindow.close();
 }
 
 watch(
@@ -346,6 +395,36 @@ onMounted(async () => {
         :loading="loading"
         :error="error"
       />
+
+      <Card>
+        <template #title>Top Artikel</template>
+        <template #subtitle>Sortiert nach Gesamtverbrauch im Zeitraum</template>
+        <template #content>
+          <div v-if="loading" class="table-loading">
+            <ProgressSpinner />
+          </div>
+          <div v-else-if="error" class="table-loading error">{{ error }}</div>
+          <DataTable
+            v-else
+            :value="tableItems"
+            dataKey="name"
+            responsiveLayout="scroll"
+            size="small"
+            :emptyMessage="reportData ? 'Keine Artikel im Zeitraum' : 'Keine Daten'"
+          >
+            <Column field="name" header="Artikel">
+              <template #body="{ data }">
+                <span class="item-name">{{ data.name }}</span>
+              </template>
+            </Column>
+            <Column field="total" header="Gesamtverbrauch" class="text-right">
+              <template #body="{ data }">
+                <Tag severity="info" :value="data.total.toLocaleString('de-DE')" />
+              </template>
+            </Column>
+          </DataTable>
+        </template>
+      </Card>
     </div>
   </section>
 </template>
@@ -356,5 +435,21 @@ onMounted(async () => {
   flex-direction: column;
   gap: 1rem;
   margin-top: 1rem;
+}
+
+.table-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 160px;
+  color: var(--text-secondary-color, #6b7280);
+}
+
+.table-loading.error {
+  color: var(--color-danger, #dc2626);
+}
+
+.item-name {
+  font-weight: 600;
 }
 </style>

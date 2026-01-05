@@ -1,80 +1,115 @@
 /*
   tokens.css
   Zweck
-  - Zentrale Design Tokens
-  - Komponenten nutzen nur var(--token)
+  - Zentrale Design Tokens (Light/Dark)
+  - Views/Components nutzen nur var(--token)
+  - Bestehende Tokens bleiben per Mapping erhalten
 */
 
+/* Light (Admin orientiert sich an Customer-Light) */
 :root{
-  /* Core */
-  --bg: #f4f6fb;
-  --panel: #ffffff;
-  --text: #0f172a;
-  --muted: #64748b;
-  --border: rgba(15, 23, 42, 0.10);
+  /* Surfaces */
+  --surface-0: #f4f6fb;
+  --surface-1: #ffffff;
+  --surface-2: rgba(2, 6, 23, 0.03);
+  --surface-3: rgba(2, 6, 23, 0.05);
+  --overlay: rgba(15, 23, 42, 0.35);
+
+  /* Text */
+  --text-strong: #0f172a;
+  --text-muted: #64748b;
   --placeholder: #94a3b8;
-  --table-head-text: #334155;
-  --table-row-hover: rgba(2, 6, 23, 0.04);
-  --table-row-active: rgba(59, 91, 219, 0.08);
 
-  /* Elevation */
-  --shadow: 0 10px 30px rgba(2, 6, 23, 0.08);
-  --shadow2: 0 8px 18px rgba(2, 6, 23, 0.10);
-
-  /* Brand */
+  /* Accent & Status */
   --primary: #3b5bdb;
-
-  /* Status */
-  --ok: #16a34a;
-  --bad: #dc2626;
+  --primary-strong: #304ac0;
+  --success: #16a34a;
+  --warning: #d97706;
+  --danger: #dc2626;
+  --info: #2563eb;
   --neutral: #475569;
 
-  /* Surfaces */
-  --surface: rgba(2, 6, 23, 0.03);
-  --surface2: rgba(2, 6, 23, 0.05);
-  --surface3: rgba(2, 6, 23, 0.08);
-
-  /* Tags */
-  --tag-ok-bg: rgba(22, 163, 74, 0.10);
-  --tag-ok-border: rgba(22, 163, 74, 0.30);
-  --tag-ok-text: #15803d;
-  --tag-bad-bg: rgba(220, 38, 38, 0.10);
-  --tag-bad-border: rgba(220, 38, 38, 0.30);
-  --tag-bad-text: #b91c1c;
-  --tag-warn-bg: rgba(217, 119, 6, 0.12);
-  --tag-warn-border: rgba(217, 119, 6, 0.32);
-  --tag-warn-text: #92400e;
-  --tag-neutral-bg: rgba(71, 85, 105, 0.12);
-  --tag-neutral-border: rgba(71, 85, 105, 0.32);
-  --tag-neutral-text: #0f172a;
+  /* Border & Shadow */
+  --border: rgba(15, 23, 42, 0.10);
+  --shadow-sm: 0 8px 18px rgba(2, 6, 23, 0.10);
+  --shadow-lg: 0 10px 30px rgba(2, 6, 23, 0.08);
 
   /* Radius */
-  --radius: 16px;
-  --radius2: 12px;
+  --radius-sm: 12px;
+  --radius-md: 16px;
+  --radius-lg: 20px;
+
+  /* Spacing */
+  --space-2: 4px;
+  --space-4: 8px;
+  --space-6: 12px;
+  --space-8: 16px;
+  --space-12: 24px;
+  --space-16: 32px;
+  --space-24: 48px;
+  --space-32: 64px;
+
+  /* Focus */
+  --focus-ring: rgba(59, 91, 219, 0.12);
 
   /* Fonts */
   --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+
+  /* Legacy Mappings (für bestehende Styles) */
+  --bg: var(--surface-0);
+  --panel: var(--surface-1);
+  --text: var(--text-strong);
+  --muted: var(--text-muted);
+  --shadow: var(--shadow-lg);
+  --shadow2: var(--shadow-sm);
+  --surface: var(--surface-2);
+  --surface2: var(--surface-3);
+  --surface3: color-mix(in srgb, var(--surface-3) 60%, black 0%);
+  --tag-ok-bg: color-mix(in srgb, var(--success) 12%, transparent);
+  --tag-ok-border: color-mix(in srgb, var(--success) 32%, transparent);
+  --tag-ok-text: color-mix(in srgb, var(--success) 90%, white 0%);
+  --tag-bad-bg: color-mix(in srgb, var(--danger) 12%, transparent);
+  --tag-bad-border: color-mix(in srgb, var(--danger) 32%, transparent);
+  --tag-bad-text: color-mix(in srgb, var(--danger) 90%, white 0%);
+  --tag-warn-bg: color-mix(in srgb, var(--warning) 14%, transparent);
+  --tag-warn-border: color-mix(in srgb, var(--warning) 34%, transparent);
+  --tag-warn-text: color-mix(in srgb, var(--warning) 80%, white 0%);
+  --tag-neutral-bg: color-mix(in srgb, var(--neutral) 14%, transparent);
+  --tag-neutral-border: color-mix(in srgb, var(--neutral) 34%, transparent);
+  --tag-neutral-text: var(--text-strong);
+  --radius: var(--radius-md);
+  --radius2: var(--radius-sm);
+  --table-head-text: #334155;
+  --table-row-hover: rgba(2, 6, 23, 0.04);
+  --table-row-active: rgba(59, 91, 219, 0.08);
 }
 
-/* Dark Theme Overrides */
-.theme-dark{
-  --bg: #060a12;
-  --panel: #0c1625;
-  --text: #e8edf7;
-  --muted: #cbd5e1;
+/* Dark (Admin-orientiert, aber mit Tokens abgestimmt) */
+.theme-dark,
+[data-theme="dark"]{
+  --surface-0: #060a12;
+  --surface-1: #0c1625;
+  --surface-2: rgba(255, 255, 255, 0.08);
+  --surface-3: rgba(255, 255, 255, 0.12);
+  --overlay: rgba(4, 6, 10, 0.55);
+
+  --text-strong: #e8edf7;
+  --text-muted: #cbd5e1;
   --placeholder: #d3dce8;
+
+  --primary: #5c7cff;
+  --primary-strong: #3b5bdb;
+  --success: #22c55e;
+  --warning: #eab308;
+  --danger: #ef4444;
+  --info: #38bdf8;
+  --neutral: #94a3b8;
+
   --border: rgba(148, 163, 184, 0.30);
-  --table-head-text: #e2e8f0;
-  --table-row-hover: rgba(255, 255, 255, 0.06);
-  --table-row-active: rgba(59, 91, 219, 0.22);
+  --shadow-sm: 0 10px 26px rgba(0, 0, 0, 0.38);
+  --shadow-lg: 0 16px 44px rgba(0, 0, 0, 0.38);
 
-  --shadow: 0 16px 44px rgba(0, 0, 0, 0.38);
-  --shadow2: 0 10px 26px rgba(0, 0, 0, 0.38);
-
-  --surface: rgba(255, 255, 255, 0.08);
-  --surface2: rgba(255, 255, 255, 0.12);
-  --surface3: rgba(255, 255, 255, 0.16);
   --tag-ok-bg: rgba(34, 197, 94, 0.24);
   --tag-ok-border: rgba(74, 222, 128, 0.52);
   --tag-ok-text: #bbf7d0;
@@ -87,26 +122,36 @@
   --tag-neutral-bg: rgba(148, 163, 184, 0.28);
   --tag-neutral-border: rgba(148, 163, 184, 0.52);
   --tag-neutral-text: #e8edf7;
+
+  --table-head-text: #e2e8f0;
+  --table-row-hover: rgba(255, 255, 255, 0.06);
+  --table-row-active: rgba(59, 91, 219, 0.22);
 }
 
-/* Ocean Theme */
+/* Ocean Theme (bleibt optional, nutzt Tokens) */
 .theme-ocean{
-  --bg: #051726;
-  --panel: #0b2438;
-  --text: #e0f2fe;
-  --muted: #94a3af;
+  --surface-0: #051726;
+  --surface-1: #0b2438;
+  --surface-2: rgba(14, 165, 233, 0.06);
+  --surface-3: rgba(14, 165, 233, 0.10);
+  --overlay: rgba(5, 23, 38, 0.55);
+
+  --text-strong: #e0f2fe;
+  --text-muted: #94a3af;
   --placeholder: #cbd5e1;
+
+  --primary: #38bdf8;
+  --primary-strong: #0ea5e9;
+  --success: #2dd4bf;
+  --warning: #fbbf24;
+  --danger: #f87171;
+  --info: #67e8f9;
+  --neutral: #9abbd7;
+
   --border: rgba(148, 163, 184, 0.22);
-  --table-head-text: #e0f2fe;
-  --table-row-hover: rgba(255, 255, 255, 0.07);
-  --table-row-active: rgba(14, 165, 233, 0.24);
+  --shadow-sm: 0 10px 26px rgba(3, 7, 18, 0.40);
+  --shadow-lg: 0 14px 36px rgba(3, 7, 18, 0.55);
 
-  --shadow: 0 14px 36px rgba(3, 7, 18, 0.55);
-  --shadow2: 0 10px 26px rgba(3, 7, 18, 0.40);
-
-  --surface: rgba(14, 165, 233, 0.06);
-  --surface2: rgba(14, 165, 233, 0.10);
-  --surface3: rgba(14, 165, 233, 0.16);
   --tag-ok-bg: rgba(34, 197, 94, 0.22);
   --tag-ok-border: rgba(74, 222, 128, 0.48);
   --tag-ok-text: #bbf7d0;
@@ -119,4 +164,8 @@
   --tag-neutral-bg: rgba(148, 163, 184, 0.28);
   --tag-neutral-border: rgba(148, 163, 184, 0.52);
   --tag-neutral-text: #e0f2fe;
+
+  --table-head-text: #e0f2fe;
+  --table-row-hover: rgba(255, 255, 255, 0.07);
+  --table-row-active: rgba(14, 165, 233, 0.24);
 }

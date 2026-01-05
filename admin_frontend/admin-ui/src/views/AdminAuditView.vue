@@ -1,19 +1,12 @@
 <template>
-  <div class="grid1">
-    <section class="card">
-      <header class="cardHeader">
-        <div>
-          <div class="cardTitle">Audit</div>
-          <div class="cardHint">Filter, Pagination, Details</div>
-        </div>
-
-        <div class="cardHeaderActions">
-          <button class="btnGhost" @click="resetFilters" :disabled="busy.list">Reset</button>
-          <button class="btnPrimary" @click="load" :disabled="busy.list">
-            {{ busy.list ? "lade..." : "Suchen" }}
-          </button>
-        </div>
-      </header>
+  <UiPage>
+    <UiSection title="Audit" subtitle="Filter, Pagination, Details">
+      <template #actions>
+        <button class="btnGhost" @click="resetFilters" :disabled="busy.list">Reset</button>
+        <button class="btnPrimary" @click="load" :disabled="busy.list">
+          {{ busy.list ? "lade..." : "Suchen" }}
+        </button>
+      </template>
 
       <AuditFiltersBar
         v-model:actor="filters.actor"
@@ -27,11 +20,11 @@
         @enter="load"
       />
 
-      <div class="meta">
-        <div class="muted">Einträge: {{ rows.length }}</div>
-        <div class="muted">
+      <div class="stack-sm text-muted text-small">
+        <div>Einträge: {{ rows.length }}</div>
+        <div>
           Offset: <span class="mono">{{ filters.offset }}</span>
-          Limit: <span class="mono">{{ filters.limit }}</span>
+          · Limit: <span class="mono">{{ filters.limit }}</span>
         </div>
       </div>
 
@@ -41,22 +34,22 @@
         @open="openDrawer"
       />
 
-      <div class="rowActions" style="margin-top: 12px;">
+      <div class="action-row mt-6">
         <button class="btnGhost" @click="prevPage" :disabled="busy.list || filters.offset === 0">Prev</button>
         <button class="btnGhost" @click="nextPage" :disabled="busy.list || rows.length < filters.limit">Next</button>
 
-        <div class="muted" style="margin-left: auto;">
+        <div class="text-muted text-small push-right">
           Tipp: Doppelklick auf Payload kopiert JSON im Drawer.
         </div>
       </div>
-    </section>
+    </UiSection>
 
     <AuditDrawer
       :open="drawer.open"
       :row="drawer.row"
       @close="closeDrawer"
     />
-  </div>
+  </UiPage>
 </template>
 
 <script setup lang="ts">
@@ -68,6 +61,8 @@ import { AuditDisplayRow, toDisplayRow } from "../components/audit/format";
 import AuditFiltersBar from "../components/audit/AuditFiltersBar.vue";
 import AuditTable from "../components/audit/AuditTable.vue";
 import AuditDrawer from "../components/audit/AuditDrawer.vue";
+import UiPage from "../components/ui/UiPage.vue";
+import UiSection from "../components/ui/UiSection.vue";
 
 const props = defineProps<{
   adminKey: string;

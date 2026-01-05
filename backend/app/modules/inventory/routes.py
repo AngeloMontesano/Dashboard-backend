@@ -7,16 +7,20 @@ from typing import Any, Literal
 from fastapi import APIRouter, Depends, File, HTTPException, Path, Query, UploadFile
 from fastapi.responses import StreamingResponse
 from sqlalchemy import func, or_, select
+from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 from openpyxl import Workbook
 
 from app.core.db import get_db
+from app.core.config import settings
 from app.core.deps_auth import CurrentUserContext, get_current_user, require_owner_or_admin
 from app.core.deps_tenant import get_tenant_context
 from app.core.tenant import TenantContext
 from app.models.category import Category
 from app.models.item import Item
 from app.models.movement import InventoryMovement
+from app.models.order import InventoryOrder, InventoryOrderItem
+from app.models.tenant_setting import TenantSetting
 from app.modules.inventory.schemas import (
     CategoryCreate,
     CategoryOut,
@@ -35,6 +39,13 @@ from app.modules.inventory.schemas import (
     MovementItemOut,
     MovementOut,
     MovementPayload,
+    MassImportResult,
+    TestEmailRequest,
+    TestEmailResponse,
+    OrderEmailRequest,
+    EmailSendResponse,
+    TenantSettingsOut,
+    TenantSettingsUpdate,
     SKUExistsResponse,
     TenantPingResponse,
     TenantOutPing,

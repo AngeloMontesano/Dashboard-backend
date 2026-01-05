@@ -6,6 +6,7 @@ import ToastService from 'primevue/toastservice';
 import Lara from '@primevue/themes/lara';
 import 'primeicons/primeicons.css';
 import './styles/tokens.css';
+import './styles/utilities.css';
 import './styles/layout.css';
 
 const app = createApp(App);

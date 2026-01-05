@@ -1,5 +1,17 @@
 # WORKLOG
 
+- Datum/Uhrzeit: 2026-01-08T10:30:00Z
+- Task-ID: FE-AUDIT-01
+- Was analysiert/geändert: Standards unter `docs/standards` vollständig gelesen; Admin- und Customer-Frontend hinsichtlich Architektur, Routing, API-Layer, UI/UX und Styles gescannt; neue Audit- und Backlog-Dokumente angelegt; TODO neu priorisiert.
+- Ergebnis: `docs/roadmap/FRONTEND_AUDIT.md` mit Standard-Zusammenfassung, Befunden, UX-Top-10 und Quick Wins pro Frontend; `docs/roadmap/FRONTEND_IMPROVEMENTS_BACKLOG.md` mit priorisierten Maßnahmen; `TODO.md` nach MUSS/SOLL/KANN aktualisiert.
+- Nächste Schritte: Maßnahmen mit Teams abstimmen, Prioritäten P0/P1 adressieren (Auth-Persistenz, Logs-Endpoint, Mobile-Breakpoints, PDF-Export), optional Router-Einführung im Admin evaluieren.
+
+- Datum/Uhrzeit: 2026-01-08T11:00:00Z
+- Task-ID: FE-AUDIT-02
+- Was analysiert/geändert: Feedback zu übermäßigen Admin-Toast-Meldungen und Login-Voreinstellung umgesetzt; Info-Toasts auf Fehlerfälle begrenzt und Admin-Login standardmäßig auf Benutzer/Passwort umgestellt.
+- Ergebnis: Health/Navigation/Theme-Aktionen erzeugen keine Info-Toasts mehr; nur Fehlermeldungen bleiben sichtbar. Login startet im Benutzer/Passwort-Modus, reduziert Doppel-Toast-Flut.
+- Nächste Schritte: Weitere Toast-Reduktion in Unterviews prüfen (z. B. Save-Erfolge gezielt), Admin-Router/Navigations-Verbesserung planen.
+
 ## Schritt 1 – Analyse
 - **Was wurde geprüft**
   - Vorgaben in `docs/` vollständig gelesen (Standards, Roadmap, OpenAPI-Kopie).

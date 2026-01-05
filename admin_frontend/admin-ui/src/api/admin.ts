@@ -16,6 +16,8 @@ import type {
   TenantUserUpdate,
   TenantUserOut,
   TenantUserApiOut,
+  TenantSettingsOut,
+  TenantSettingsUpdate,
 } from "../types";
 
 import { api, adminHeaders } from "./client";
@@ -36,6 +38,8 @@ type AuditResponse = paths["/admin/audit"]["get"]["responses"]["200"]["content"]
 type DiagnosticsResponse = paths["/admin/diagnostics"]["get"]["responses"]["200"]["content"]["application/json"];
 type TenantUserListResponse =
   paths["/admin/tenants/{tenant_id}/users"]["get"]["responses"]["200"]["content"]["application/json"];
+type TenantSettingsResponse =
+  paths["/admin/tenants/{tenant_id}/settings"]["get"]["responses"]["200"]["content"]["application/json"];
 
 type AdminLoginPayload = components["schemas"]["AdminCredentialLogin"];
 type TenantUserCreatePayload = components["schemas"]["TenantUserCreate"];
@@ -95,6 +99,26 @@ export async function adminUpdateTenant(adminKey: string, actor: string | undefi
 export async function adminDeleteTenant(adminKey: string, actor: string | undefined, tenantId: string) {
   await api.delete(`/admin/tenants/${tenantId}`, { ...withAdmin(adminKey, actor), params: { confirm: true } });
   return true;
+}
+
+/* Tenant Settings */
+export async function adminGetTenantSettings(adminKey: string, actor: string | undefined, tenantId: string) {
+  const res = await api.get<TenantSettingsResponse>(`/admin/tenants/${tenantId}/settings`, withAdmin(adminKey, actor));
+  return res.data as TenantSettingsOut;
+}
+
+export async function adminUpdateTenantSettings(
+  adminKey: string,
+  actor: string | undefined,
+  tenantId: string,
+  payload: TenantSettingsUpdate
+) {
+  const res = await api.put<TenantSettingsOut>(
+    `/admin/tenants/${tenantId}/settings`,
+    payload,
+    withAdmin(adminKey, actor)
+  );
+  return res.data;
 }
 
 /* Users */

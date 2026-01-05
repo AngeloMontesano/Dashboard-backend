@@ -169,10 +169,6 @@ onMounted(loadSettings);
           <span class="form-label">Telefon</span>
           <input v-model="state.settings.phone" type="text" class="input" :disabled="state.loading" />
         </label>
-        <label class="form-field span-2">
-          <span class="form-label">Adresse</span>
-          <textarea v-model="state.settings.address" class="input" rows="2" :disabled="state.loading"></textarea>
-        </label>
         <label class="form-field">
           <span class="form-label">PLZ</span>
           <input v-model="state.settings.address_postal_code" type="text" class="input" :disabled="state.loading" />
@@ -180,6 +176,10 @@ onMounted(loadSettings);
         <label class="form-field">
           <span class="form-label">Ort</span>
           <input v-model="state.settings.address_city" type="text" class="input" :disabled="state.loading" />
+        </label>
+        <label class="form-field span-2">
+          <span class="form-label">Adresse</span>
+          <textarea v-model="state.settings.address" class="input" rows="2" :disabled="state.loading"></textarea>
         </label>
         <label class="form-field">
           <span class="form-label">Export-Format</span>

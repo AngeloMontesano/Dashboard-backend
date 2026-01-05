@@ -169,6 +169,78 @@
           </button>
           <button class="btnPrimary small" @click="openMemberships(selectedTenant.id)">Tenant User verwalten</button>
         </div>
+
+        <div class="divider mt-4"></div>
+        <div class="sectionTitle mt-2">Firmendaten & Adresse</div>
+        <div v-if="settingsState.error" class="errorText">Fehler: {{ settingsState.error }}</div>
+        <div class="settings-grid" v-if="settingsState.form">
+          <label class="field">
+            <span class="field-label">Firma</span>
+            <input class="input" v-model="settingsState.form.company_name" :disabled="settingsState.loading" />
+          </label>
+          <label class="field">
+            <span class="field-label">Ansprechpartner</span>
+            <input class="input" v-model="settingsState.form.contact_name" :disabled="settingsState.loading" />
+          </label>
+          <label class="field">
+            <span class="field-label">Kontakt E-Mail</span>
+            <input class="input" v-model="settingsState.form.contact_email" :disabled="settingsState.loading" />
+          </label>
+          <label class="field">
+            <span class="field-label">Bestell-E-Mail</span>
+            <input class="input" v-model="settingsState.form.order_email" :disabled="settingsState.loading" />
+          </label>
+          <label class="field">
+            <span class="field-label">Telefon</span>
+            <input class="input" v-model="settingsState.form.phone" :disabled="settingsState.loading" />
+          </label>
+          <label class="field span-2">
+            <span class="field-label">Adresse</span>
+            <input class="input" v-model="settingsState.form.address" :disabled="settingsState.loading" />
+          </label>
+          <label class="field">
+            <span class="field-label">PLZ</span>
+            <input class="input" v-model="settingsState.form.address_postal_code" :disabled="settingsState.loading" />
+          </label>
+          <label class="field">
+            <span class="field-label">Ort</span>
+            <input class="input" v-model="settingsState.form.address_city" :disabled="settingsState.loading" />
+          </label>
+          <label class="field">
+            <span class="field-label">Filialnummer</span>
+            <input class="input" v-model="settingsState.form.branch_number" :disabled="settingsState.loading" />
+          </label>
+          <label class="field">
+            <span class="field-label">Steuernummer</span>
+            <input class="input" v-model="settingsState.form.tax_number" :disabled="settingsState.loading" />
+          </label>
+          <label class="field">
+            <span class="field-label">Export-Format</span>
+            <input class="input" v-model="settingsState.form.export_format" :disabled="settingsState.loading" />
+          </label>
+          <label class="field">
+            <span class="field-label">Auto-Bestellung Minimum</span>
+            <input
+              class="input"
+              type="number"
+              min="0"
+              v-model.number="settingsState.form.auto_order_min"
+              :disabled="settingsState.loading"
+            />
+          </label>
+          <label class="field checkbox">
+            <input type="checkbox" v-model="settingsState.form.auto_order_enabled" :disabled="settingsState.loading" />
+            <span>Auto-Bestellung aktiv</span>
+          </label>
+        </div>
+        <div class="action-row" v-if="settingsState.form">
+          <button class="btnGhost small" type="button" :disabled="settingsState.loading" @click="loadTenantSettings(selectedTenant.id)">
+            Neu laden
+          </button>
+          <button class="btnPrimary small" type="button" :disabled="settingsState.saving" @click="saveTenantSettings">
+            {{ settingsState.saving ? "speichert..." : "Speichern" }}
+          </button>
+        </div>
       </div>
 
       <TenantCreateModal
@@ -193,8 +265,15 @@
   - CSV-Export aus gefilterter Liste
 */
 import { computed, reactive, ref, watch } from "vue";
-import type { TenantOut } from "../types";
-import { adminListTenants, adminCreateTenant, adminUpdateTenant, adminDeleteTenant } from "../api/admin";
+import type { TenantOut, TenantSettingsOut, TenantSettingsUpdate } from "../types";
+import {
+  adminListTenants,
+  adminCreateTenant,
+  adminUpdateTenant,
+  adminDeleteTenant,
+  adminGetTenantSettings,
+  adminUpdateTenantSettings,
+} from "../api/admin";
 import { useToast } from "../composables/useToast";
 
 import TenantCreateModal from "../components/tenants/TenantCreateModal.vue";
@@ -235,6 +314,18 @@ const busy = reactive({
   toggleId: "" as string,
   deleteId: "" as string,
   error: "",
+});
+
+const settingsState = reactive<{
+  loading: boolean;
+  saving: boolean;
+  error: string;
+  form: TenantSettingsUpdate | null;
+}>({
+  loading: false,
+  saving: false,
+  error: "",
+  form: null,
 });
 
 /* Modal State */
@@ -372,6 +463,11 @@ async function deleteTenant(t: TenantOut) {
 function selectTenant(t: TenantOut) {
   selectedTenant.value = t;
   emitSelectedTenant();
+  if (t?.id) {
+    loadTenantSettings(t.id);
+  } else {
+    settingsState.form = null;
+  }
 }
 
 function openCreateModal() {
@@ -391,6 +487,38 @@ function openMemberships(tenantId: string) {
 function resetFilters() {
   q.value = "";
   statusFilter.value = "all";
+}
+
+async function loadTenantSettings(tenantId: string) {
+  if (!ensureAdminKey()) return;
+  settingsState.loading = true;
+  settingsState.error = "";
+  try {
+    const res = await adminGetTenantSettings(props.adminKey, props.actor, tenantId);
+    settingsState.form = { ...(res as TenantSettingsOut) };
+  } catch (e: any) {
+    settingsState.error = stringifyError(e);
+    toast(`Einstellungen konnten nicht geladen werden: ${settingsState.error}`);
+  } finally {
+    settingsState.loading = false;
+  }
+}
+
+async function saveTenantSettings() {
+  if (!ensureAdminKey() || !selectedTenant.value || !settingsState.form) return;
+  settingsState.saving = true;
+  settingsState.error = "";
+  try {
+    const payload = { ...settingsState.form } as TenantSettingsUpdate;
+    const updated = await adminUpdateTenantSettings(props.adminKey, props.actor, selectedTenant.value.id, payload);
+    settingsState.form = { ...(updated as TenantSettingsOut) };
+    toast("Einstellungen gespeichert");
+  } catch (e: any) {
+    settingsState.error = stringifyError(e);
+    toast(`Speichern fehlgeschlagen: ${settingsState.error}`);
+  } finally {
+    settingsState.saving = false;
+  }
 }
 
 async function copyValue(value: string, label: string) {
@@ -476,3 +604,28 @@ watch(
   { immediate: true }
 );
 </script>
+
+<style scoped>
+.settings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.settings-grid .field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.settings-grid .field.checkbox {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+
+.settings-grid .span-2 {
+  grid-column: span 2;
+}
+</style>

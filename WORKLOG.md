@@ -465,3 +465,16 @@
   - Alembic-Upgrade läuft auch auf Umgebungen ohne vorgenerierte Settings-Tabelle durch.
 - **Nächster Schritt**
   - Migration erneut ausrollen; danach optional Backfill der neuen Felder je Tenant prüfen.
+
+## Schritt 39 – Admin: Kunden-Settings bearbeiten & Customer-Settings UI aufräumen
+- **Datum/Uhrzeit**: 2026-01-06T01:00:00+00:00
+- **Ziel**: Kunden-Adressdaten im Admin-Portal einseh- und bearbeitbar machen sowie Customer-Einstellungen-Formular ordnen.
+- **Was wurde geändert**
+  - Backend: Admin-Endpunkte `/admin/tenants/{tenant_id}/settings` (GET/PUT) hinzugefügt, nutzen TenantSettings-Modelle.
+  - OpenAPI regeneriert und Frontend-Typen neu generiert.
+  - Admin-Frontend (Kunden): Detailbereich lädt Tenant-Settings, zeigt Firmendaten/Adresse und erlaubt Speichern.
+  - Customer-Frontend (Einstellungen): Formularfelder neu gruppiert (Kontakt/Adresse/Auto-Bestellung) für bessere Übersicht.
+- **Ergebnis**
+  - Admin kann Kunden-Firmendaten/Adresse einsehen und ändern; Customer-Settings-View wirkt geordneter.
+- **Nächster Schritt**
+  - Migration ausrollen; Backend-APIs in Zielumgebung prüfen (500/404 laut Screenshot) und Datenbasis/mappings validieren.

@@ -1726,8 +1726,7 @@
             "schema": {
               "anyOf": [
                 {
-                  "type": "string",
-                  "format": "date-time"
+                  "type": "string"
                 },
                 {
                   "type": "null"
@@ -1908,7 +1907,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/MovementPayload"
+                "$ref": "#/components/schemas/TestEmailRequest"
               }
             }
           }
@@ -2010,6 +2009,10 @@
             "schema": {
               "anyOf": [
                 {
+                  "enum": [
+                    "IN",
+                    "OUT"
+                  ],
                   "type": "string"
                 },
                 {
@@ -2069,16 +2072,6 @@
             }
           }
         ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/InventoryBulkUpdateRequest"
-              }
-            }
-          }
-        },
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -2105,10 +2098,8 @@
             }
           }
         }
-      }
-    },
-    "/inventory/inventory/export": {
-      "get": {
+      },
+      "post": {
         "tags": [
           "inventory"
         ],
@@ -2135,7 +2126,7 @@
         "requestBody": {
           "required": true,
           "content": {
-            "multipart/form-data": {
+            "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/MovementPayload"
               }
@@ -2192,7 +2183,7 @@
         "requestBody": {
           "required": true,
           "content": {
-            "application/json": {
+            "multipart/form-data": {
               "schema": {
                 "$ref": "#/components/schemas/InventoryBulkUpdateRequest"
               }
@@ -2200,7 +2191,7 @@
           }
         },
         "responses": {
-          "200": {
+          "201": {
             "description": "Successful Response",
             "content": {
               "application/json": {
@@ -2285,7 +2276,8 @@
             "schema": {
               "anyOf": [
                 {
-                  "type": "string"
+                  "type": "string",
+                  "maxLength": 200
                 },
                 {
                   "type": "null"
@@ -2306,7 +2298,7 @@
           }
         },
         "responses": {
-          "201": {
+          "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
@@ -2366,74 +2358,6 @@
                 }
               }
             }
-          }
-        }
-      },
-      "delete": {
-        "tags": [
-          "admin",
-          "admin-tenants"
-        ],
-        "summary": "Admin Delete Tenant",
-        "description": "L\u00f6scht einen Tenant nur mit expliziter Best\u00e4tigung.\nAufruf: DELETE /admin/tenants/{tenant_id}?confirm=true",
-        "operationId": "admin_delete_tenant_admin_tenants__tenant_id__delete",
-        "parameters": [
-          {
-            "name": "tenant_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Tenant Id"
-            }
-          },
-          {
-            "name": "confirm",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "boolean",
-              "default": false,
-              "title": "Confirm"
-            }
-          },
-          {
-            "name": "x-admin-key",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "X-Admin-Key"
-            }
-          },
-          {
-            "name": "x-admin-actor",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "X-Admin-Actor"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "Successful Response"
           },
           "422": {
             "description": "Validation Error",
@@ -2543,17 +2467,24 @@
                   },
                   "title": "Response Admin List Tenants Admin Tenants Get"
                 }
-              }
+              ],
+              "title": "X-Admin-Key"
             }
           },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
+          {
+            "name": "x-admin-actor",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
                 }
-              }
+              ],
+              "title": "X-Admin-Actor"
             }
           }
         }
@@ -2852,7 +2783,7 @@
           }
         },
         "responses": {
-          "201": {
+          "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
@@ -3074,6 +3005,28 @@
               "title": "X-Admin-Key"
             }
           },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/memberships": {
+      "post": {
+        "tags": [
+          "admin",
+          "admin-memberships"
+        ],
+        "summary": "Admin Create Membership",
+        "operationId": "admin_create_membership_admin_memberships_post",
+        "parameters": [
           {
             "name": "x-admin-actor",
             "in": "header",
@@ -3096,13 +3049,13 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/MembershipUpdate"
+                "$ref": "#/components/schemas/MembershipCreate"
               }
             }
           }
         },
         "responses": {
-          "200": {
+          "201": {
             "description": "Successful Response",
             "content": {
               "application/json": {
@@ -4064,6 +4017,166 @@
         "responses": {
           "204": {
             "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/tenants/{tenant_id}/settings": {
+      "get": {
+        "tags": [
+          "admin",
+          "admin-tenants"
+        ],
+        "summary": "Admin Get Tenant Settings",
+        "operationId": "admin_get_tenant_settings_admin_tenants__tenant_id__settings_get",
+        "parameters": [
+          {
+            "name": "tenant_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Tenant Id"
+            }
+          },
+          {
+            "name": "x-admin-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Key"
+            }
+          },
+          {
+            "name": "x-admin-actor",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Actor"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TenantSettingsOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "admin",
+          "admin-tenants"
+        ],
+        "summary": "Admin Update Tenant Settings",
+        "operationId": "admin_update_tenant_settings_admin_tenants__tenant_id__settings_put",
+        "parameters": [
+          {
+            "name": "tenant_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Tenant Id"
+            }
+          },
+          {
+            "name": "x-admin-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Key"
+            }
+          },
+          {
+            "name": "x-admin-actor",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Actor"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TenantSettingsUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TenantSettingsOut"
+                }
+              }
+            }
           },
           "422": {
             "description": "Validation Error",
@@ -5117,11 +5230,10 @@
             ],
             "title": "Role"
           },
-          "created_at": {
+          "category_id": {
             "anyOf": [
               {
-                "type": "string",
-                "format": "date-time"
+                "type": "string"
               },
               {
                 "type": "null"
@@ -5154,8 +5266,7 @@
           "category_id": {
             "anyOf": [
               {
-                "type": "string",
-                "maxLength": 255
+                "type": "string"
               },
               {
                 "type": "null"
@@ -5169,7 +5280,8 @@
           "id",
           "sku",
           "barcode",
-          "name"
+          "qty",
+          "created_at"
         ],
         "title": "MovementItemOut"
       },
@@ -5224,7 +5336,8 @@
           "note": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "string",
+                "maxLength": 255
               },
               {
                 "type": "null"
@@ -5348,7 +5461,8 @@
           "email": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "string",
+                "maxLength": 255
               },
               {
                 "type": "null"
@@ -5359,8 +5473,7 @@
           "note": {
             "anyOf": [
               {
-                "type": "string",
-                "maxLength": 255
+                "type": "string"
               },
               {
                 "type": "null"
@@ -5548,6 +5661,7 @@
             "title": "Items"
           }
         },
+        "type": "object",
         "required": [
           "id",
           "number",
@@ -5559,7 +5673,15 @@
       },
       "RefreshRequest": {
         "properties": {
-          "note": {
+          "period": {
+            "type": "string",
+            "title": "Period"
+          },
+          "value": {
+            "type": "number",
+            "title": "Value"
+          },
+          "item_id": {
             "anyOf": [
               {
                 "type": "string"
@@ -5568,25 +5690,24 @@
                 "type": "null"
               }
             ],
-            "title": "Note"
+            "title": "Item Id"
           },
-          "items": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/OrderItemInput"
-            },
-            "title": "Items"
+          "item_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Item Name"
           }
         },
+        "type": "object",
         "required": [
-          "id",
-          "name",
-          "sku",
-          "barcode",
-          "quantity",
-          "target_stock",
-          "min_stock",
-          "recommended_qty"
+          "period",
+          "value"
         ],
         "title": "RefreshRequest"
       },
@@ -5797,6 +5918,7 @@
             "title": "Data"
           }
         },
+        "type": "object",
         "required": [
           "label",
           "data"
@@ -5826,71 +5948,146 @@
         ],
         "title": "ReportTopItem"
       },
-      "TestEmailResponse": {
+      "TenantPingResponse": {
         "properties": {
           "ok": {
             "type": "boolean",
             "title": "Ok"
           },
-          "error": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Error"
+          "tenant": {
+            "$ref": "#/components/schemas/TenantOutPing"
           }
         },
         "type": "object",
         "required": [
-          "ok"
+          "ok",
+          "tenant"
         ],
-        "title": "TestEmailResponse"
+        "title": "TenantPingResponse",
+        "description": "Response Modell f\u00fcr /inventory/ping."
       },
-      "TokenResponse": {
+      "TenantSettingsOut": {
         "properties": {
-          "email": {
+          "company_name": {
             "type": "string",
             "maxLength": 255,
-            "title": "Email"
-          }
-        },
-        "type": "object",
-        "required": [
-          "email"
-        ],
-        "title": "TestEmailRequest"
-      },
-      "TestEmailResponse": {
-        "properties": {
-          "ok": {
-            "type": "boolean",
-            "title": "Ok"
+            "title": "Company Name",
+            "default": ""
           },
-          "error": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Error"
+          "contact_email": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "Contact Email",
+            "default": ""
+          },
+          "order_email": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "Order Email",
+            "default": ""
+          },
+          "auto_order_enabled": {
+            "type": "boolean",
+            "title": "Auto Order Enabled",
+            "default": false
+          },
+          "auto_order_min": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Auto Order Min",
+            "default": 0
+          },
+          "export_format": {
+            "type": "string",
+            "maxLength": 32,
+            "title": "Export Format",
+            "default": "xlsx"
+          },
+          "address": {
+            "type": "string",
+            "maxLength": 512,
+            "title": "Address",
+            "default": ""
+          },
+          "address_postal_code": {
+            "type": "string",
+            "maxLength": 32,
+            "title": "Address Postal Code",
+            "default": ""
+          },
+          "address_city": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Address City",
+            "default": ""
+          },
+          "phone": {
+            "type": "string",
+            "maxLength": 64,
+            "title": "Phone",
+            "default": ""
+          },
+          "contact_name": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "Contact Name",
+            "default": ""
+          },
+          "branch_number": {
+            "type": "string",
+            "maxLength": 64,
+            "title": "Branch Number",
+            "default": ""
+          },
+          "tax_number": {
+            "type": "string",
+            "maxLength": 64,
+            "title": "Tax Number",
+            "default": ""
+          },
+          "id": {
+            "type": "string",
+            "title": "Id"
           }
         },
         "type": "object",
         "required": [
-          "ok"
+          "id"
         ],
-        "title": "TestEmailResponse"
+        "title": "TenantSettingsOut"
       },
-      "TokenResponse": {
+      "TenantSettingsUpdate": {
         "properties": {
-          "id": {
+          "company_name": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "Company Name",
+            "default": ""
+          },
+          "contact_email": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "Contact Email",
+            "default": ""
+          },
+          "order_email": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "Order Email",
+            "default": ""
+          },
+          "auto_order_enabled": {
+            "type": "boolean",
+            "title": "Auto Order Enabled",
+            "default": false
+          },
+          "auto_order_min": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Auto Order Min",
+            "default": 0
+          },
+          "export_format": {
             "type": "string",
             "title": "Id"
           },
@@ -6085,6 +6282,43 @@
             "maxLength": 64,
             "title": "Phone",
             "default": ""
+          },
+          "contact_name": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "Contact Name",
+            "default": ""
+          },
+          "branch_number": {
+            "type": "string",
+            "maxLength": 64,
+            "title": "Branch Number",
+            "default": ""
+          },
+          "tax_number": {
+            "type": "string",
+            "maxLength": 64,
+            "title": "Tax Number",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "title": "TenantSettingsUpdate"
+      },
+      "TenantUpdate": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255,
+                "minLength": 2
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
           },
           "contact_name": {
             "type": "string",
@@ -6353,6 +6587,44 @@
         ],
         "title": "TestEmailResponse"
       },
+      "TestEmailRequest": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "Email"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email"
+        ],
+        "title": "TestEmailRequest"
+      },
+      "TestEmailResponse": {
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "title": "Ok"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          }
+        },
+        "type": "object",
+        "required": [
+          "ok"
+        ],
+        "title": "TestEmailResponse"
+      },
       "TokenResponse": {
         "properties": {
           "access_token": {
@@ -6452,91 +6724,9 @@
           }
         },
         "required": [
-          "id",
-          "sku",
-          "barcode",
-          "name"
-        ],
-        "title": "MovementItemOut"
-      },
-      "MovementOut": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Id"
-          },
-          "item_id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Item Id"
-          },
-          "item_name": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Item Name"
-          },
-          "category_id": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "uuid"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Category Id"
-          },
-          "type": {
-            "type": "string",
-            "enum": [
-              "IN",
-              "OUT"
-            ],
-            "title": "Type"
-          },
-          "barcode": {
-            "type": "string",
-            "title": "Barcode"
-          },
-          "qty": {
-            "type": "integer",
-            "title": "Qty"
-          },
-          "note": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Membership Is Active"
-          }
-        },
-        "type": "object",
-        "title": "TenantUserUpdate"
-      },
-      "TestEmailRequest": {
-        "properties": {
-          "email": {
-            "type": "string",
-            "maxLength": 255,
-            "title": "Email"
-          }
-        },
-        "type": "object",
-        "required": [
-          "email"
+          "loc",
+          "msg",
+          "type"
         ],
         "title": "ValidationError"
       }

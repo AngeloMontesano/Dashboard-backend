@@ -79,107 +79,6 @@
         }
       }
     },
-    "/inventory/inventory/bulk": {
-      "post": {
-        "tags": [
-          "inventory"
-        ],
-        "summary": "Bulk Update Inventory",
-        "operationId": "bulk_update_inventory_inventory_inventory_bulk_post",
-        "parameters": [
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/InventoryBulkUpdateRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/InventoryBulkUpdateResult"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/inventory/inventory/export": {
-      "get": {
-        "tags": [
-          "inventory"
-        ],
-        "summary": "Export Inventory",
-        "operationId": "export_inventory_inventory_inventory_export_get",
-        "parameters": [
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response"
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/inventory/ping": {
       "get": {
         "tags": [
@@ -741,127 +640,8 @@
         }
       }
     },
-    "/inventory/movements": {
+    "/inventory/report": {
       "get": {
-        "tags": [
-          "inventory"
-        ],
-        "summary": "List Movements",
-        "operationId": "list_movements_inventory_movements_get",
-        "parameters": [
-          {
-            "name": "start",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "format": "date-time",
-              "title": "Start"
-            }
-          },
-          {
-            "name": "end",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "format": "date-time",
-              "title": "End"
-            }
-          },
-          {
-            "name": "type",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "enum": [
-                "IN",
-                "OUT"
-              ],
-              "title": "Type"
-            }
-          },
-          {
-            "name": "category_id",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "title": "Category Id"
-            }
-          },
-          {
-            "name": "item_ids",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              },
-              "title": "Item Ids"
-            },
-            "style": "form",
-            "explode": true
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "default": 200,
-              "minimum": 1,
-              "maximum": 1000,
-              "title": "Limit"
-            }
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/MovementOut"
-                  },
-                  "title": "MovementOutList"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
         "tags": [
           "inventory"
         ],
@@ -932,7 +712,10 @@
             "schema": {
               "anyOf": [
                 {
-                  "type": "string"
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
                 },
                 {
                   "type": "null"
@@ -956,6 +739,23 @@
               ],
               "default": true,
               "title": "Aggregate"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": 5,
+              "title": "Limit"
             }
           },
           {
@@ -1321,16 +1121,6 @@
             "content": {
               "application/json": {
                 "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ReportResponse"
-                }
               }
             }
           },
@@ -1845,6 +1635,16 @@
             }
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TenantSettingsUpdate"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -2224,6 +2024,10 @@
             "schema": {
               "anyOf": [
                 {
+                  "enum": [
+                    "IN",
+                    "OUT"
+                  ],
                   "type": "string"
                 },
                 {
@@ -2250,39 +2054,6 @@
                 }
               ],
               "title": "Item Ids"
-            }
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "maximum": 1000,
-              "minimum": 1,
-              "description": "Maximale Anzahl zur\u00fcckgegebener Bewegungen",
-              "default": 200,
-              "title": "Limit"
-            },
-            "description": "Maximale Anzahl zur\u00fcckgegebener Bewegungen"
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "array",
-                  "items": {
-                    "type": "string"
-                  }
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
             }
           },
           {
@@ -3025,16 +2796,6 @@
             }
           }
         ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UserUpdate"
-              }
-            }
-          }
-        },
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -3156,6 +2917,26 @@
               "title": "User Id"
             }
           },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "admin",
+          "admin-users"
+        ],
+        "summary": "Admin Create User",
+        "operationId": "admin_create_user_admin_users_post",
+        "parameters": [
           {
             "name": "x-admin-key",
             "in": "header",
@@ -3275,8 +3056,18 @@
             }
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserUpdate"
+              }
+            }
+          }
+        },
         "responses": {
-          "200": {
+          "201": {
             "description": "Successful Response",
             "content": {
               "application/json": {
@@ -5291,7 +5082,7 @@
             ],
             "title": "Role"
           },
-          "note": {
+          "created_at": {
             "anyOf": [
               {
                 "type": "string",
@@ -5301,7 +5092,7 @@
                 "type": "null"
               }
             ],
-            "title": "Is Active"
+            "title": "Created At"
           }
         },
         "type": "object",
@@ -5533,8 +5324,7 @@
           "note": {
             "anyOf": [
               {
-                "type": "string",
-                "maxLength": 1024
+                "type": "string"
               },
               {
                 "type": "null"
@@ -5734,19 +5524,18 @@
       },
       "RefreshRequest": {
         "properties": {
-          "exists": {
+          "ok": {
             "type": "boolean",
-            "title": "Exists"
+            "title": "Ok"
           },
-          "normalized_sku": {
-            "type": "string",
-            "title": "Normalized Sku"
+          "tenant": {
+            "$ref": "#/components/schemas/TenantOutPing"
           }
         },
         "type": "object",
         "required": [
-          "exists",
-          "normalized_sku"
+          "ok",
+          "tenant"
         ],
         "title": "RefreshRequest"
       },
@@ -5796,7 +5585,34 @@
             "title": "Recommended Qty"
           }
         },
+        "required": [
+          "item_id",
+          "quantity"
+        ],
+        "title": "OrderItemInput"
+      },
+      "OrderCreate": {
         "type": "object",
+        "properties": {
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OrderItemInput"
+            },
+            "title": "Items"
+          }
+        },
         "required": [
           "id",
           "name",
@@ -5957,7 +5773,6 @@
             "title": "Data"
           }
         },
-        "type": "object",
         "required": [
           "label",
           "data"
@@ -5987,146 +5802,71 @@
         ],
         "title": "ReportTopItem"
       },
-      "TenantPingResponse": {
+      "TestEmailResponse": {
         "properties": {
           "ok": {
             "type": "boolean",
             "title": "Ok"
           },
-          "tenant": {
-            "$ref": "#/components/schemas/TenantOutPing"
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
           }
         },
         "type": "object",
         "required": [
-          "ok",
-          "tenant"
+          "ok"
         ],
-        "title": "TenantPingResponse",
-        "description": "Response Modell f\u00fcr /inventory/ping."
+        "title": "TestEmailResponse"
       },
-      "TenantSettingsOut": {
+      "TokenResponse": {
         "properties": {
-          "company_name": {
+          "email": {
             "type": "string",
             "maxLength": 255,
-            "title": "Company Name",
-            "default": ""
-          },
-          "contact_email": {
-            "type": "string",
-            "maxLength": 255,
-            "title": "Contact Email",
-            "default": ""
-          },
-          "order_email": {
-            "type": "string",
-            "maxLength": 255,
-            "title": "Order Email",
-            "default": ""
-          },
-          "auto_order_enabled": {
+            "title": "Email"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email"
+        ],
+        "title": "TestEmailRequest"
+      },
+      "TestEmailResponse": {
+        "properties": {
+          "ok": {
             "type": "boolean",
-            "title": "Auto Order Enabled",
-            "default": false
+            "title": "Ok"
           },
-          "auto_order_min": {
-            "type": "integer",
-            "minimum": 0.0,
-            "title": "Auto Order Min",
-            "default": 0
-          },
-          "export_format": {
-            "type": "string",
-            "maxLength": 32,
-            "title": "Export Format",
-            "default": "xlsx"
-          },
-          "address": {
-            "type": "string",
-            "maxLength": 512,
-            "title": "Address",
-            "default": ""
-          },
-          "address_postal_code": {
-            "type": "string",
-            "maxLength": 32,
-            "title": "Address Postal Code",
-            "default": ""
-          },
-          "address_city": {
-            "type": "string",
-            "maxLength": 128,
-            "title": "Address City",
-            "default": ""
-          },
-          "phone": {
-            "type": "string",
-            "maxLength": 64,
-            "title": "Phone",
-            "default": ""
-          },
-          "contact_name": {
-            "type": "string",
-            "maxLength": 255,
-            "title": "Contact Name",
-            "default": ""
-          },
-          "branch_number": {
-            "type": "string",
-            "maxLength": 64,
-            "title": "Branch Number",
-            "default": ""
-          },
-          "tax_number": {
-            "type": "string",
-            "maxLength": 64,
-            "title": "Tax Number",
-            "default": ""
-          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          }
+        },
+        "type": "object",
+        "required": [
+          "ok"
+        ],
+        "title": "TestEmailResponse"
+      },
+      "TokenResponse": {
+        "properties": {
           "id": {
-            "type": "string",
-            "title": "Id"
-          }
-        },
-        "type": "object",
-        "required": [
-          "id"
-        ],
-        "title": "TenantSettingsOut"
-      },
-      "TenantSettingsUpdate": {
-        "properties": {
-          "company_name": {
-            "type": "string",
-            "maxLength": 255,
-            "title": "Company Name",
-            "default": ""
-          },
-          "contact_email": {
-            "type": "string",
-            "maxLength": 255,
-            "title": "Contact Email",
-            "default": ""
-          },
-          "order_email": {
-            "type": "string",
-            "maxLength": 255,
-            "title": "Order Email",
-            "default": ""
-          },
-          "auto_order_enabled": {
-            "type": "boolean",
-            "title": "Auto Order Enabled",
-            "default": false
-          },
-          "auto_order_min": {
-            "type": "integer",
-            "minimum": 0.0,
-            "title": "Auto Order Min",
-            "default": 0
-          },
-          "export_format": {
             "type": "string",
             "title": "Id"
           },
@@ -6344,237 +6084,9 @@
         "type": "object",
         "title": "TenantSettingsUpdate"
       },
-      "OrderItemInput": {
-        "type": "object",
+      "TenantUpdate": {
         "properties": {
-          "item_id": {
-            "type": "string",
-            "title": "Item Id"
-          },
-          "quantity": {
-            "type": "integer",
-            "exclusiveMinimum": 0.0,
-            "title": "Quantity"
-          },
-          "note": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Note"
-          }
-        },
-        "required": [
-          "item_id",
-          "quantity"
-        ],
-        "title": "OrderItemInput"
-      },
-      "OrderCreate": {
-        "type": "object",
-        "properties": {
-          "note": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Note"
-          },
-          "items": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/OrderItemInput"
-            },
-            "title": "Items"
-          }
-        },
-        "required": [
-          "items"
-        ],
-        "title": "OrderCreate"
-      },
-      "OrderItemOut": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "title": "Id"
-          },
-          "item_id": {
-            "type": "string",
-            "title": "Item Id"
-          },
-          "quantity": {
-            "type": "integer",
-            "title": "Quantity"
-          },
-          "note": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Note"
-          },
-          "item_name": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Item Name"
-          },
-          "sku": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Sku"
-          },
-          "barcode": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Barcode"
-          },
-          "category_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Category Id"
-          }
-        },
-        "required": [
-          "id",
-          "item_id",
-          "quantity"
-        ],
-        "title": "OrderItemOut"
-      },
-      "TestEmailRequest": {
-        "properties": {
-          "email": {
-            "type": "string",
-            "maxLength": 255,
-            "title": "Email"
-          }
-        },
-        "type": "object",
-        "required": [
-          "email"
-        ],
-        "title": "TestEmailRequest"
-      },
-      "TestEmailResponse": {
-        "properties": {
-          "ok": {
-            "type": "boolean",
-            "title": "Ok"
-          },
-          "error": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Error"
-          }
-        },
-        "type": "object",
-        "required": [
-          "ok"
-        ],
-        "title": "TestEmailResponse"
-      },
-      "TokenResponse": {
-        "properties": {
-          "email": {
-            "type": "string",
-            "maxLength": 255,
-            "title": "Email"
-          }
-        },
-        "type": "object",
-        "required": [
-          "email"
-        ],
-        "title": "TestEmailRequest"
-      },
-      "TestEmailResponse": {
-        "properties": {
-          "ok": {
-            "type": "boolean",
-            "title": "Ok"
-          },
-          "error": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Error"
-          }
-        },
-        "type": "object",
-        "required": [
-          "ok"
-        ],
-        "title": "TestEmailResponse"
-      },
-      "TokenResponse": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "title": "Id"
-          },
-          "number": {
-            "type": "string",
-            "title": "Number"
-          },
-          "status": {
-            "type": "string",
-            "enum": [
-              "OPEN",
-              "COMPLETED",
-              "CANCELED"
-            ],
-            "title": "Status"
-          },
-          "note": {
+          "name": {
             "anyOf": [
               {
                 "type": "string"
@@ -6719,7 +6231,76 @@
                 "type": "null"
               }
             ],
-            "title": "Note"
+            "title": "Membership Is Active"
+          }
+        },
+        "type": "object",
+        "title": "TenantUserUpdate"
+      },
+      "TestEmailRequest": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "Email"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email"
+        ],
+        "title": "TestEmailRequest"
+      },
+      "TestEmailResponse": {
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "title": "Ok"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          }
+        },
+        "type": "object",
+        "required": [
+          "ok"
+        ],
+        "title": "TestEmailResponse"
+      },
+      "TokenResponse": {
+        "properties": {
+          "access_token": {
+            "type": "string",
+            "title": "Access Token"
+          },
+          "refresh_token": {
+            "type": "string",
+            "title": "Refresh Token"
+          },
+          "token_type": {
+            "type": "string",
+            "title": "Token Type",
+            "default": "bearer"
+          },
+          "expires_in": {
+            "type": "integer",
+            "title": "Expires In"
+          },
+          "role": {
+            "type": "string",
+            "title": "Role"
+          },
+          "tenant_id": {
+            "type": "string",
+            "title": "Tenant Id"
           },
           "created_at": {
             "type": "string",
@@ -6780,124 +6361,6 @@
         },
         "required": [
           "updates"
-        ],
-        "title": "InventoryBulkUpdateRequest"
-      },
-      "InventoryBulkUpdateResult": {
-        "type": "object",
-        "properties": {
-          "updated": {
-            "type": "integer",
-            "title": "Updated"
-          },
-          "errors": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "title": "Errors"
-          }
-        },
-        "required": [
-          "updated",
-          "errors"
-        ],
-        "title": "InventoryBulkUpdateResult"
-      },
-      "ReportDataPoint": {
-        "type": "object",
-        "properties": {
-          "period": {
-            "type": "string",
-            "title": "Period"
-          },
-          "value": {
-            "type": "number",
-            "title": "Value"
-          },
-          "item_id": {
-            "type": "string",
-            "title": "Item Id"
-          },
-          "item_name": {
-            "type": "string",
-            "title": "Item Name"
-          }
-        },
-        "required": [
-          "period",
-          "value"
-        ],
-        "title": "ReportDataPoint"
-      },
-      "ReportSeries": {
-        "type": "object",
-        "properties": {
-          "label": {
-            "type": "string",
-            "title": "Label"
-          },
-          "itemId": {
-            "type": "string",
-            "title": "Item Id"
-          },
-          "color": {
-            "type": "string",
-            "title": "Color"
-          },
-          "items": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/OrderItemOut"
-            },
-            "title": "Items"
-          }
-        },
-        "required": [
-          "id",
-          "number",
-          "status",
-          "created_at",
-          "items"
-        ],
-        "title": "OrderOut"
-      },
-      "OrderEmailRequest": {
-        "type": "object",
-        "properties": {
-          "email": {
-            "anyOf": [
-              {
-                "type": "string",
-                "maxLength": 255
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Email"
-          },
-          "note": {
-            "anyOf": [
-              {
-                "type": "string",
-                "maxLength": 1024
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Note"
-          }
-        },
-        "title": "OrderEmailRequest"
-      },
-      "EmailSendResponse": {
-        "type": "object",
-        "required": [
-          "loc",
-          "msg",
-          "type"
         ],
         "title": "ValidationError"
       }

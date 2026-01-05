@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import uuid
 from datetime import date, datetime, timedelta, timezone
 from io import BytesIO, StringIO
 from typing import Any, Literal
@@ -9,7 +10,9 @@ from fastapi.responses import StreamingResponse
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
-from openpyxl import Workbook
+from openpyxl import Workbook, load_workbook
+from reportlab.lib.pagesizes import A4
+from reportlab.pdfgen import canvas
 
 from app.core.db import get_db
 from app.core.config import settings
@@ -29,11 +32,16 @@ from app.modules.inventory.schemas import (
     ItemOut,
     ItemUpdate,
     ItemsPage,
+    OrderCreate,
+    OrderItemOut,
+    OrderOut,
     ReportResponse,
     ReportSeries,
     ReportDataPoint,
     ReportKpis,
     ReportTopItem,
+    ReorderResponse,
+    ReorderItem,
     InventoryBulkUpdateRequest,
     InventoryBulkUpdateResult,
     MovementItemOut,
@@ -687,6 +695,687 @@ async def export_report(
         out,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         headers={"Content-Disposition": 'attachment; filename="verbrauch.xlsx"'},
+    )
+
+
+# ----------------------
+# Bestellungen (Offen/Erledigt)
+# ----------------------
+def _generate_order_number() -> str:
+    return f"ORDER-{uuid.uuid4().hex[:8].upper()}"
+
+
+def _order_item_to_out(order_item: InventoryOrderItem, item_map: dict[Any, Item]) -> OrderItemOut:
+    item = item_map.get(str(order_item.item_id))
+    return OrderItemOut(
+        id=str(order_item.id),
+        item_id=str(order_item.item_id),
+        quantity=order_item.quantity,
+        note=order_item.note,
+        item_name=item.name if item else None,
+        sku=item.sku if item else None,
+        barcode=item.barcode if item else None,
+        category_id=str(item.category_id) if item and item.category_id else None,
+    )
+
+
+def _order_to_out(order: InventoryOrder, item_map: dict[Any, Item]) -> OrderOut:
+    return OrderOut(
+        id=str(order.id),
+        number=order.number,
+        status=order.status,  # type: ignore[arg-type]
+        note=order.note,
+        created_at=order.created_at,
+        completed_at=order.completed_at,
+        canceled_at=order.canceled_at,
+        items=[_order_item_to_out(oi, item_map) for oi in order.items],
+    )
+
+
+async def _get_order_or_404(
+    *, order_id: str, ctx: TenantContext, db: AsyncSession, load_items: bool = False
+) -> InventoryOrder:
+    try:
+        order_uuid = uuid.UUID(str(order_id))
+    except (TypeError, ValueError):
+        raise HTTPException(
+            status_code=404,
+            detail={"error": {"code": "order_not_found", "message": "Bestellung nicht gefunden"}},
+        )
+    stmt = select(InventoryOrder).where(
+        InventoryOrder.tenant_id == ctx.tenant.id,
+        InventoryOrder.id == order_uuid,
+    )
+    if load_items:
+        stmt = stmt.options(selectinload(InventoryOrder.items))
+    order = await db.scalar(stmt)
+    if order is None:
+        raise HTTPException(
+            status_code=404,
+            detail={"error": {"code": "order_not_found", "message": "Bestellung nicht gefunden"}},
+        )
+    return order
+
+
+async def _items_by_ids(
+    *, db: AsyncSession, ctx: TenantContext, item_ids: set[Any]
+) -> dict[str, Item]:
+    if not item_ids:
+        return {}
+    normalized_ids: set[uuid.UUID] = set()
+    try:
+        for raw in item_ids:
+            normalized_ids.add(uuid.UUID(str(raw)))
+    except (TypeError, ValueError):
+        raise HTTPException(
+            status_code=400,
+            detail={"error": {"code": "invalid_item_id", "message": "Ungültige Item-ID"}},
+        )
+    rows = (
+        await db.scalars(
+            select(Item).where(
+                Item.tenant_id == ctx.tenant.id,
+                Item.id.in_(normalized_ids),
+            )
+        )
+    ).all()
+    return {str(row.id): row for row in rows}
+
+
+@router.get("/orders", response_model=list[OrderOut])
+async def list_orders(
+    status: Literal["OPEN", "COMPLETED", "CANCELED"] | None = Query(default=None),
+    limit: int = Query(default=100, ge=1, le=500),
+    ctx: TenantContext = Depends(get_tenant_context),
+    user_ctx: CurrentUserContext = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> list[OrderOut]:
+    stmt = (
+        select(InventoryOrder)
+        .where(InventoryOrder.tenant_id == ctx.tenant.id)
+        .options(selectinload(InventoryOrder.items))
+    )
+    if status:
+        stmt = stmt.where(InventoryOrder.status == status)
+    stmt = stmt.order_by(InventoryOrder.created_at.desc()).limit(limit)
+
+    orders = (await db.scalars(stmt)).all()
+    item_ids = {str(oi.item_id) for order in orders for oi in order.items}
+    item_map = await _items_by_ids(db=db, ctx=ctx, item_ids=item_ids)
+    return [_order_to_out(order, item_map) for order in orders]
+
+
+@router.post("/orders", response_model=OrderOut, status_code=201, dependencies=[Depends(require_owner_or_admin)])
+async def create_order(
+    payload: OrderCreate,
+    ctx: TenantContext = Depends(get_tenant_context),
+    db: AsyncSession = Depends(get_db),
+) -> OrderOut:
+    if not payload.items:
+        raise HTTPException(
+            status_code=400,
+            detail={"error": {"code": "items_required", "message": "Mindestens eine Position erforderlich"}},
+        )
+
+    item_ids = {entry.item_id for entry in payload.items}
+    item_map = await _items_by_ids(db=db, ctx=ctx, item_ids=item_ids)
+    missing = [iid for iid in item_ids if iid not in item_map]
+    if missing:
+        raise HTTPException(
+            status_code=404,
+            detail={"error": {"code": "item_not_found", "message": f"Artikel nicht gefunden: {', '.join(missing)}"}},
+        )
+
+    order = InventoryOrder(
+        tenant_id=ctx.tenant.id,
+        number=_generate_order_number(),
+        status="OPEN",
+        note=payload.note,
+    )
+    for entry in payload.items:
+        order.items.append(
+            InventoryOrderItem(
+                tenant_id=ctx.tenant.id,
+                item_id=item_map[entry.item_id].id,
+                quantity=entry.quantity,
+                note=entry.note,
+            )
+        )
+
+    db.add(order)
+    await db.flush()
+    await db.commit()
+
+    order = await _get_order_or_404(order_id=str(order.id), ctx=ctx, db=db, load_items=True)
+    return _order_to_out(order, item_map)
+
+
+@router.get("/orders/{order_id}", response_model=OrderOut)
+async def get_order(
+    order_id: str,
+    ctx: TenantContext = Depends(get_tenant_context),
+    user_ctx: CurrentUserContext = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> OrderOut:
+    order = await _get_order_or_404(order_id=order_id, ctx=ctx, db=db, load_items=True)
+    item_ids = {str(oi.item_id) for oi in order.items}
+    item_map = await _items_by_ids(db=db, ctx=ctx, item_ids=item_ids)
+    return _order_to_out(order, item_map)
+
+
+@router.post("/orders/{order_id}/complete", response_model=OrderOut, dependencies=[Depends(require_owner_or_admin)])
+async def complete_order(
+    order_id: str,
+    ctx: TenantContext = Depends(get_tenant_context),
+    db: AsyncSession = Depends(get_db),
+) -> OrderOut:
+    order = await _get_order_or_404(order_id=order_id, ctx=ctx, db=db, load_items=True)
+    if order.status != "OPEN":
+        raise HTTPException(
+            status_code=400,
+            detail={"error": {"code": "order_not_open", "message": "Nur offene Bestellungen können erledigt werden"}},
+        )
+
+    item_ids = {str(oi.item_id) for oi in order.items}
+    item_map = await _items_by_ids(db=db, ctx=ctx, item_ids=item_ids)
+
+    now = datetime.now(timezone.utc)
+    order.status = "COMPLETED"
+    order.completed_at = now
+
+    for order_item in order.items:
+        item = item_map.get(str(order_item.item_id))
+        if item is None:
+            raise HTTPException(
+                status_code=400,
+                detail={"error": {"code": "order_item_missing", "message": "Artikel für Bestellung fehlt"}},
+            )
+        item.quantity += order_item.quantity
+        movement = InventoryMovement(
+            tenant_id=ctx.tenant.id,
+            item_id=item.id,
+            client_tx_id=f"order-{order.id}-{order_item.id}",
+            type="IN",
+            barcode=item.barcode,
+            qty=order_item.quantity,
+            note=f"Order {order.number}",
+            created_at=now,
+        )
+        db.add(movement)
+
+    await db.commit()
+    await db.refresh(order)
+    return _order_to_out(order, item_map)
+
+
+@router.post("/orders/{order_id}/cancel", response_model=OrderOut, dependencies=[Depends(require_owner_or_admin)])
+async def cancel_order(
+    order_id: str,
+    ctx: TenantContext = Depends(get_tenant_context),
+    db: AsyncSession = Depends(get_db),
+) -> OrderOut:
+    order = await _get_order_or_404(order_id=order_id, ctx=ctx, db=db, load_items=True)
+    if order.status != "OPEN":
+        raise HTTPException(
+            status_code=400,
+            detail={"error": {"code": "order_not_open", "message": "Nur offene Bestellungen können storniert werden"}},
+        )
+
+    order.status = "CANCELED"
+    order.canceled_at = datetime.now(timezone.utc)
+    await db.commit()
+    await db.refresh(order)
+
+    item_ids = {oi.item_id for oi in order.items}
+    item_map = await _items_by_ids(db=db, ctx=ctx, item_ids=item_ids)
+    return _order_to_out(order, item_map)
+
+
+def _send_email_message(*, to_email: str, subject: str, body: str) -> EmailSendResponse:
+    if not settings.SMTP_HOST or not settings.SMTP_PORT or not settings.SMTP_FROM:
+        return EmailSendResponse(ok=False, error="SMTP Konfiguration fehlt")
+
+    import smtplib
+    from email.message import EmailMessage
+
+    message = EmailMessage()
+    message["Subject"] = subject
+    message["From"] = settings.SMTP_FROM
+    message["To"] = to_email
+    message.set_content(body)
+
+    try:
+        with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT, timeout=10) as smtp:
+            if settings.SMTP_USER and settings.SMTP_PASSWORD:
+                smtp.starttls()
+                smtp.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
+            smtp.send_message(message)
+        return EmailSendResponse(ok=True, error=None)
+    except Exception as e:  # noqa: BLE001
+        return EmailSendResponse(ok=False, error=str(e))
+
+
+def _format_order_email(
+    order: InventoryOrder,
+    item_map: dict[str, Item],
+    recipient: str,
+    note: str | None,
+) -> tuple[str, str]:
+    lines = [
+        f"Empfänger: {recipient}",
+        f"Bestellung: {order.number}",
+        f"Status: {order.status}",
+        f"Angelegt: {order.created_at}",
+    ]
+    if order.note:
+        lines.append(f"Bestell-Notiz: {order.note}")
+    if note:
+        lines.append(f"Zusätzliche Notiz: {note}")
+    lines.append("")
+    lines.append("Positionen:")
+    for oi in order.items:
+        item = item_map.get(str(oi.item_id))
+        item_name = item.name if item else "(unbekannt)"
+        lines.append(
+            f"- {item_name} (Menge: {oi.quantity}, SKU: {item.sku if item else '-'}, Barcode: {item.barcode if item else '-'})"
+        )
+    subject = f"Bestellung {order.number}"
+    body = "\n".join(lines)
+    return subject, body
+
+
+def _build_order_pdf(order: InventoryOrder, item_map: dict[str, Item]) -> bytes:
+    buf = BytesIO()
+    pdf = canvas.Canvas(buf, pagesize=A4)
+    width, height = A4
+    y = height - 40
+
+    pdf.setFont("Helvetica-Bold", 14)
+    pdf.drawString(40, y, f"Bestellung {order.number}")
+    y -= 20
+    pdf.setFont("Helvetica", 10)
+    pdf.drawString(40, y, f"Status: {order.status}")
+    y -= 15
+    if order.note:
+        pdf.drawString(40, y, f"Notiz: {order.note}")
+        y -= 15
+    pdf.drawString(40, y, f"Angelegt: {order.created_at}")
+    y -= 25
+
+    pdf.setFont("Helvetica-Bold", 11)
+    pdf.drawString(40, y, "Positionen:")
+    y -= 18
+    pdf.setFont("Helvetica", 10)
+
+    headers = ["Artikel", "Menge", "SKU", "Barcode"]
+    col_x = [40, 250, 320, 420]
+    for idx, header in enumerate(headers):
+        pdf.drawString(col_x[idx], y, header)
+    y -= 12
+    pdf.line(40, y, width - 40, y)
+    y -= 14
+
+    for oi in order.items:
+        if y < 60:
+            pdf.showPage()
+            y = height - 40
+            pdf.setFont("Helvetica", 10)
+        item = item_map.get(str(oi.item_id))
+        name = item.name if item else "(unbekannt)"
+        sku = item.sku if item else "-"
+        barcode = item.barcode if item else "-"
+        values = [name, str(oi.quantity), sku, barcode]
+        for idx, value in enumerate(values):
+            pdf.drawString(col_x[idx], y, value)
+        y -= 14
+
+    pdf.showPage()
+    pdf.save()
+    buf.seek(0)
+    return buf.getvalue()
+
+
+@router.post("/orders/{order_id}/email", response_model=EmailSendResponse, dependencies=[Depends(require_owner_or_admin)])
+async def send_order_email(
+    order_id: str,
+    payload: OrderEmailRequest,
+    ctx: TenantContext = Depends(get_tenant_context),
+    db: AsyncSession = Depends(get_db),
+) -> EmailSendResponse:
+    order = await _get_order_or_404(order_id=order_id, ctx=ctx, db=db, load_items=True)
+    item_ids = {str(oi.item_id) for oi in order.items}
+    item_map = await _items_by_ids(db=db, ctx=ctx, item_ids=item_ids)
+    settings_obj = await _get_or_create_settings(ctx=ctx, db=db)
+
+    recipient = payload.email or settings_obj.order_email or settings_obj.contact_email
+    if not recipient:
+        return EmailSendResponse(ok=False, error="Kein Empfänger konfiguriert")
+
+    subject, body = _format_order_email(order, item_map, recipient, payload.note)
+    return _send_email_message(to_email=recipient, subject=subject, body=body)
+
+
+@router.get("/orders/{order_id}/pdf")
+async def get_order_pdf(
+    order_id: str,
+    ctx: TenantContext = Depends(get_tenant_context),
+    user_ctx: CurrentUserContext = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    order = await _get_order_or_404(order_id=order_id, ctx=ctx, db=db, load_items=True)
+    item_ids = {str(oi.item_id) for oi in order.items}
+    item_map = await _items_by_ids(db=db, ctx=ctx, item_ids=item_ids)
+
+    pdf_bytes = _build_order_pdf(order, item_map)
+    filename = f"order-{order.number}.pdf"
+    return StreamingResponse(
+        iter([pdf_bytes]),
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+# ----------------------
+# Einstellungen (Tenant)
+# ----------------------
+MASS_EXPORT_COLUMNS = [
+    "Artikel-ID",
+    "Name",
+    "Barcode",
+    "Kategorie",
+    "Soll",
+    "Min",
+    "Bestand",
+    "Haltbarkeit",
+    "Charge",
+    "Kunden-ID",
+    "Lagerort",
+    "Preis",
+    "Beschreibung",
+    "Letzte Änderung",
+    "Letzte Bestellung",
+    "Bestellt",
+]
+
+
+def _settings_to_out(settings: TenantSetting) -> TenantSettingsOut:
+    return TenantSettingsOut(
+        id=str(settings.id),
+        company_name=settings.company_name,
+        contact_email=settings.contact_email,
+        order_email=settings.order_email,
+        auto_order_enabled=settings.auto_order_enabled,
+        auto_order_min=settings.auto_order_min,
+        export_format=settings.export_format,
+        address=settings.address,
+        address_postal_code=settings.address_postal_code,
+        address_city=settings.address_city,
+        phone=settings.phone,
+        contact_name=settings.contact_name,
+        branch_number=settings.branch_number,
+        tax_number=settings.tax_number,
+    )
+
+
+async def _get_or_create_settings(*, ctx: TenantContext, db: AsyncSession) -> TenantSetting:
+    settings = await db.scalar(
+        select(TenantSetting).where(TenantSetting.tenant_id == ctx.tenant.id)
+    )
+    if settings:
+        return settings
+    settings = TenantSetting(
+        tenant_id=ctx.tenant.id,
+        company_name="",
+        contact_email="",
+        order_email="",
+        auto_order_enabled=False,
+        auto_order_min=0,
+        export_format="xlsx",
+        address="",
+        address_postal_code="",
+        address_city="",
+        phone="",
+        contact_name="",
+        branch_number="",
+        tax_number="",
+    )
+    db.add(settings)
+    await db.commit()
+    await db.refresh(settings)
+    return settings
+
+
+@router.get("/settings", response_model=TenantSettingsOut)
+async def get_tenant_settings(
+    ctx: TenantContext = Depends(get_tenant_context),
+    user_ctx: CurrentUserContext = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> TenantSettingsOut:
+    settings = await _get_or_create_settings(ctx=ctx, db=db)
+    return _settings_to_out(settings)
+
+
+@router.put("/settings", response_model=TenantSettingsOut, dependencies=[Depends(require_owner_or_admin)])
+async def update_tenant_settings(
+    payload: TenantSettingsUpdate,
+    ctx: TenantContext = Depends(get_tenant_context),
+    db: AsyncSession = Depends(get_db),
+) -> TenantSettingsOut:
+    settings = await _get_or_create_settings(ctx=ctx, db=db)
+    settings.company_name = payload.company_name.strip()
+    settings.contact_email = payload.contact_email.strip()
+    settings.order_email = payload.order_email.strip()
+    settings.auto_order_enabled = payload.auto_order_enabled
+    settings.auto_order_min = payload.auto_order_min
+    settings.export_format = payload.export_format.strip() or "xlsx"
+    settings.address = payload.address.strip()
+    settings.address_postal_code = payload.address_postal_code.strip()
+    settings.address_city = payload.address_city.strip()
+    settings.phone = payload.phone.strip()
+    settings.contact_name = payload.contact_name.strip()
+    settings.branch_number = payload.branch_number.strip()
+    settings.tax_number = payload.tax_number.strip()
+
+    await db.commit()
+    await db.refresh(settings)
+    return _settings_to_out(settings)
+
+
+@router.get("/settings/export", dependencies=[Depends(require_owner_or_admin)])
+async def export_settings_inventory(
+    ctx: TenantContext = Depends(get_tenant_context),
+    db: AsyncSession = Depends(get_db),
+):
+    rows = (
+        await db.execute(
+            select(Item, Category)
+            .outerjoin(Category, Category.id == Item.category_id)
+            .where(Item.tenant_id == ctx.tenant.id)
+            .order_by(Item.name.asc())
+        )
+    ).all()
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Export"
+    ws.append(MASS_EXPORT_COLUMNS)
+
+    for item, category in rows:
+        ws.append(
+            [
+                item.sku,
+                item.name,
+                item.barcode,
+                category.name if category else "",
+                item.target_stock,
+                item.min_stock,
+                item.quantity,
+                "",
+                "",
+                str(ctx.tenant.id),
+                "",
+                "",
+                item.description or "",
+                "",
+                "",
+                "",
+            ]
+        )
+
+    buf = BytesIO()
+    wb.save(buf)
+    buf.seek(0)
+    return StreamingResponse(
+        buf,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": 'attachment; filename="settings_export.xlsx"'},
+    )
+
+
+@router.post("/settings/import", response_model=MassImportResult, dependencies=[Depends(require_owner_or_admin)])
+async def import_settings_inventory(
+    file: UploadFile = File(...),
+    ctx: TenantContext = Depends(get_tenant_context),
+    db: AsyncSession = Depends(get_db),
+) -> MassImportResult:
+    content = await file.read()
+    try:
+        wb = load_workbook(BytesIO(content))
+    except Exception:  # noqa: BLE001
+        raise HTTPException(
+            status_code=400,
+            detail={"error": {"code": "invalid_excel", "message": "Datei konnte nicht gelesen werden"}},
+        )
+    ws = wb.active
+    headers = [str(cell.value or "").strip() for cell in next(ws.iter_rows(min_row=1, max_row=1))]
+    missing = [col for col in MASS_EXPORT_COLUMNS if col not in headers]
+    if missing:
+        raise HTTPException(
+            status_code=400,
+            detail={"error": {"code": "missing_columns", "message": f"Fehlende Spalten: {', '.join(missing)}"}},
+        )
+    idx = {name: headers.index(name) for name in headers}
+
+    imported = 0
+    updated = 0
+    errors: list[dict[str, str]] = []
+
+    for row_num, row in enumerate(ws.iter_rows(min_row=2), start=2):
+        try:
+            sku_raw = str(row[idx["Artikel-ID"]].value or "").strip()
+            name = str(row[idx["Name"]].value or "").strip()
+            barcode = str(row[idx["Barcode"]].value or "").strip()
+            if not sku_raw or not name or not barcode:
+                raise ValueError("Artikel-ID, Name und Barcode sind Pflicht")
+
+            category_name = str(row[idx["Kategorie"]].value or "").strip()
+            category = await _category_by_name(db=db, ctx=ctx, name=category_name) if category_name else None
+            if category_name and category is None:
+                raise ValueError(f"Kategorie '{category_name}' nicht gefunden")
+
+            target_stock = int(row[idx["Soll"]].value or 0)
+            min_stock = int(row[idx["Min"]].value or 0)
+            quantity = int(row[idx["Bestand"]].value or 0)
+            description = str(row[idx["Beschreibung"]].value or "").strip()
+
+            normalized_sku = _normalize_sku(sku_raw)
+
+            item = await db.scalar(select(Item).where(Item.tenant_id == ctx.tenant.id, Item.sku == normalized_sku))
+            if item:
+                item.name = name
+                item.barcode = barcode
+                item.category_id = category.id if category else None
+                item.target_stock = target_stock
+                item.min_stock = min_stock
+                item.quantity = quantity
+                item.description = description
+                updated += 1
+            else:
+                new_item = Item(
+                    tenant_id=ctx.tenant.id,
+                    sku=normalized_sku,
+                    barcode=barcode,
+                    name=name,
+                    category_id=category.id if category else None,
+                    target_stock=target_stock,
+                    min_stock=min_stock,
+                    quantity=quantity,
+                    description=description,
+                )
+                db.add(new_item)
+                imported += 1
+        except Exception as e:  # noqa: BLE001
+            errors.append({"row": str(row_num), "error": str(e)})
+
+    await db.commit()
+    return MassImportResult(imported=imported, updated=updated, errors=errors)
+
+
+@router.post("/settings/test-email", response_model=TestEmailResponse, dependencies=[Depends(require_owner_or_admin)])
+async def send_test_email(
+    payload: TestEmailRequest,
+    ctx: TenantContext = Depends(get_tenant_context),
+    db: AsyncSession = Depends(get_db),
+) -> TestEmailResponse:
+    """
+    Sendet eine Test-E-Mail an die angegebene Adresse, nutzt SMTP-Konfiguration aus Settings.
+    """
+    if not settings.SMTP_HOST or not settings.SMTP_PORT or not settings.SMTP_FROM:
+        return TestEmailResponse(ok=False, error="SMTP Konfiguration fehlt")
+
+    import smtplib
+    from email.message import EmailMessage
+
+    message = EmailMessage()
+    message["Subject"] = "Test E-Mail Lagerverwaltung"
+    message["From"] = settings.SMTP_FROM
+    message["To"] = payload.email
+    message.set_content(f"Test E-Mail für Tenant {ctx.tenant.name} ({ctx.tenant.slug})")
+
+    try:
+        with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT, timeout=10) as smtp:
+            if settings.SMTP_USER and settings.SMTP_PASSWORD:
+                smtp.starttls()
+                smtp.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
+            smtp.send_message(message)
+        return TestEmailResponse(ok=True, error=None)
+    except Exception as e:  # noqa: BLE001
+        return TestEmailResponse(ok=False, error=str(e))
+
+
+# ----------------------
+# Bestellwürdig (Empfehlungen)
+# ----------------------
+@router.get("/orders/recommended", response_model=ReorderResponse)
+async def get_reorder_recommendations(
+    ctx: TenantContext = Depends(get_tenant_context),
+    user_ctx: CurrentUserContext = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> ReorderResponse:
+    diff_expr = Item.target_stock - Item.quantity
+    q = select(Item).where(
+        Item.tenant_id == ctx.tenant.id,
+        Item.is_active.is_(True),
+        Item.target_stock > 0,
+        Item.quantity < Item.target_stock,
+    ).order_by(diff_expr.desc())
+
+    items = (await db.scalars(q)).all()
+    return ReorderResponse(
+        items=[
+            ReorderItem(
+                id=str(item.id),
+                name=item.name,
+                sku=item.sku,
+                barcode=item.barcode,
+                category_id=str(item.category_id) if item.category_id else None,
+                quantity=item.quantity,
+                target_stock=item.target_stock,
+                min_stock=item.min_stock,
+                recommended_qty=max(item.target_stock - item.quantity, item.min_stock),
+            )
+            for item in items
+        ]
     )
 
 

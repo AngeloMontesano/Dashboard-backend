@@ -193,3 +193,101 @@ class ReportKpis(BaseModel):
 class ReportResponse(BaseModel):
     series: List[ReportSeries]
     kpis: ReportKpis
+
+
+class OrderItemInput(BaseModel):
+    item_id: str
+    quantity: int = Field(..., gt=0)
+    note: Optional[str] = Field(default=None, max_length=255)
+
+
+class OrderCreate(BaseModel):
+    note: Optional[str] = Field(default=None, max_length=1024)
+    items: List[OrderItemInput]
+
+
+class OrderItemOut(BaseModel):
+    id: str
+    item_id: str
+    quantity: int
+    note: Optional[str] = None
+    item_name: Optional[str] = None
+    sku: Optional[str] = None
+    barcode: Optional[str] = None
+    category_id: Optional[str] = None
+
+
+class OrderOut(BaseModel):
+    id: str
+    number: str
+    status: Literal["OPEN", "COMPLETED", "CANCELED"]
+    note: Optional[str] = None
+    created_at: datetime
+    completed_at: Optional[datetime] = None
+    canceled_at: Optional[datetime] = None
+    items: List[OrderItemOut]
+
+
+class TenantSettingsBase(BaseModel):
+    company_name: str = Field("", max_length=255)
+    contact_email: str = Field("", max_length=255)
+    order_email: str = Field("", max_length=255)
+    auto_order_enabled: bool = False
+    auto_order_min: int = Field(0, ge=0)
+    export_format: str = Field("xlsx", max_length=32)
+    address: str = Field("", max_length=512)
+    address_postal_code: str = Field("", max_length=32)
+    address_city: str = Field("", max_length=128)
+    phone: str = Field("", max_length=64)
+    contact_name: str = Field("", max_length=255)
+    branch_number: str = Field("", max_length=64)
+    tax_number: str = Field("", max_length=64)
+
+
+class TenantSettingsUpdate(TenantSettingsBase):
+    pass
+
+
+class TenantSettingsOut(TenantSettingsBase):
+    id: str
+
+
+class MassImportResult(BaseModel):
+    imported: int
+    updated: int
+    errors: List[dict]
+
+
+class TestEmailRequest(BaseModel):
+    email: str = Field(..., max_length=255)
+
+
+class TestEmailResponse(BaseModel):
+    ok: bool
+    error: Optional[str] = None
+
+
+class OrderEmailRequest(BaseModel):
+    email: Optional[str] = Field(default=None, max_length=255)
+    note: Optional[str] = Field(default=None, max_length=1024)
+
+
+class EmailSendResponse(BaseModel):
+    ok: bool
+    error: Optional[str] = None
+
+
+class ReorderItem(BaseModel):
+    id: str
+    name: str
+    sku: str
+    barcode: str
+    category_id: Optional[str] = None
+    quantity: int
+    target_stock: int
+    min_stock: int
+    recommended_qty: int
+
+
+class ReorderResponse(BaseModel):
+    items: List[ReorderItem]

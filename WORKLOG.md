@@ -64,3 +64,13 @@
   - Customer-Import-Flow typisiert (ImportResult), MovementPayload exportiert, Import-Mapping an API übergeben; PrimeVue-Initialisierung bereinigt (entfernt doppeltes Theme-Setup).
 - **Was ist offen**
   - Nachziehen der dokumentierten Post-Migration-Tasks (OpenAPI-Gaps, Env-Bereinigung) und Monitoring des Bundle-Size-Warnings aus dem Customer-Build (keine Blockade).
+
+## Nachtrag – Alias-Fix für zentrale Helfer
+- **Was wurde geprüft**
+  - Build-Fehler durch nicht auflösbares `@shared/api-client` in beiden Frontends.
+- **Was wurde geändert**
+  - `getBaseURL`/Tenant-Header-Helper pro Frontend lokal definiert (`src/api/base.ts`), Alias-Verweise in `tsconfig.json` und `vite.config.ts` entfernt.
+- **Was wurde geprüft (nach Fix)**
+  - `npm run build` in `admin_frontend/admin-ui` und `customer_frontend/customer-ui` erfolgreich (Customer mit bestehendem Chunk-Size-Warning).
+- **Was ist offen**
+  - Keine offenen Punkte aus diesem Fix; weitere To-dos siehe Post-Migration-Liste.

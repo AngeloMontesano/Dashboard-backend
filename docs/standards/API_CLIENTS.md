@@ -25,7 +25,7 @@
 
 ## Timeout-Regeln
 - Zeitlimits sind zentral im Client definiert; spezielle Requests dürfen ein engeres Timeout per Request-Config setzen.
-- Shared Helper in `packages/api-client` stellt nur `getBaseURL()` (immer `/api`) und Tenant-Header bereit; neue Axios-Instanzen außerhalb der Clients sind nicht erlaubt.
+- Basis-Helfer (`getBaseURL`, Header) liegen pro Frontend lokal unter `src/api/base.ts`; neue Axios-Instanzen außerhalb der Clients sind nicht erlaubt.
 
 ## Neues Wrapper-Template
 ```ts

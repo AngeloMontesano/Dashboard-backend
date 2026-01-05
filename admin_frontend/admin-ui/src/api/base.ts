@@ -1,10 +1,9 @@
 // Zentrale URL-Helfer für das Admin-Frontend.
-import { getBaseURL as sharedGetBaseURL } from "@shared/api-client";
-
 const runtimeHostname = typeof window !== "undefined" ? window.location.hostname : "";
+const API_BASE_PATH = "/api";
 
 export function getBaseURL() {
-  return sharedGetBaseURL();
+  return API_BASE_PATH;
 }
 
 export function getBaseDomain() {

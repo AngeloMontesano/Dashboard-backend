@@ -169,3 +169,14 @@
   - Gemeinsame Layout-Basis pro App ist verfügbar; erste View pro App validiert die Utilities.
 - **Nächster Schritt**
   - Weitere Views auf Utilities/UI-Komponenten migrieren, Theme-Steuerung (System/LocalStorage) und zentrale Toast/Overlay-Styles umsetzen.
+
+## Schritt 15 – UI-Harmonisierung Task 4 (UI-Bausteine + weitere Piloten)
+- **Datum/Uhrzeit**: 2026-01-05T16:09:10+00:00
+- **Ziel**: Zentrale UI-Bausteine je App anlegen und je eine View auf die Bausteine umstellen.
+- **Was wurde geändert**
+  - Admin: Neue UI-Komponenten (`UiPage`, `UiSection`, `UiCard`, `UiStatCard`, `UiToolbar`, `UiEmptyState`) unter `src/components/ui`; Utilities um Ausrichtungs-/Fehlerklassen ergänzt; `AdminUsersView` nutzt jetzt die UI-Bausteine statt eigener Layout-Elemente.
+  - Customer: Entsprechende UI-Komponenten unter `src/components/ui` angelegt; `DashboardView` auf `UiPage`/`UiSection`/`UiStatCard` umgestellt.
+- **Ergebnis**
+  - Gemeinsame UI-Baustein-Basis pro App verfügbar; zwei Pilot-Views validieren die Nutzung ohne Inline-/Scoped-Styles für Layout/Spacing.
+- **Nächster Schritt**
+  - Weitere Kern-Views (Customer: Lagerbewegungen, Berichte & Analysen; Admin: Tenants/Memberships/Operations) auf die UI-Bausteine migrieren; anschließend Theme-Toggle/System-Default und zentrale Toast/Overlay-Styles umsetzen.

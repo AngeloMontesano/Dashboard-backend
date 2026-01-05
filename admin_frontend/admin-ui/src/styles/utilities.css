@@ -124,6 +124,14 @@
 .text-small{ font-size: 12px; }
 .text-muted{ color: var(--muted); }
 
+.align-start{
+  align-items: flex-start;
+}
+
+.no-margin{
+  margin: 0;
+}
+
 .table-card{
   border: 1px solid var(--border);
   border-radius: var(--radius2);

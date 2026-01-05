@@ -1,150 +1,139 @@
 <template>
-  <section class="page stack">
-    <header class="section-header">
-      <div class="stack">
-        <h1 class="section-title">Benutzer</h1>
-        <p class="section-subtitle">Admin-Portal Benutzer verwalten</p>
-      </div>
-      <div class="section-actions">
+  <UiPage>
+    <UiSection title="Benutzer" subtitle="Admin-Portal Benutzer verwalten">
+      <template #actions>
         <button class="btnGhost small" :disabled="busy.list" @click="loadUsers">
           {{ busy.list ? "lädt..." : "Neu laden" }}
         </button>
         <button class="btnPrimary small" @click="openCreateCard">Neuen Benutzer anlegen</button>
-      </div>
-    </header>
+      </template>
 
-    <div class="toolbar">
-      <div class="chip-list">
-        <div class="chip">
-          <div class="chip__label">Benutzer gesamt</div>
-          <div class="chip__value">{{ totalUsers }}</div>
-        </div>
-        <div class="chip">
-          <div class="chip__label">aktiv</div>
-          <div class="chip__value tone-success">{{ activeUsers }}</div>
-        </div>
-        <div class="chip">
-          <div class="chip__label">deaktiviert</div>
-          <div class="chip__value tone-danger">{{ inactiveUsers }}</div>
-        </div>
-      </div>
-      <div class="toolbar-group">
-        <button class="btnGhost small" :disabled="!filteredUsers.length" @click="exportCsv">
-          Benutzer exportieren CSV
-        </button>
-      </div>
-    </div>
+      <UiToolbar>
+        <template #start>
+          <div class="chip-list">
+            <UiStatCard label="Benutzer gesamt" :value="totalUsers" />
+            <UiStatCard label="aktiv" :value="activeUsers" tone="success" />
+            <UiStatCard label="deaktiviert" :value="inactiveUsers" tone="danger" />
+          </div>
+        </template>
+        <template #end>
+          <button class="btnGhost small" :disabled="!filteredUsers.length" @click="exportCsv">
+            Benutzer exportieren CSV
+          </button>
+        </template>
+      </UiToolbar>
 
-    <div class="filter-card">
-      <div class="stack">
-        <label class="field-label" for="user-search">Suche E-Mail</label>
-        <input
-          id="user-search"
-          class="input"
-          v-model.trim="search"
-          placeholder="user@example.com"
-          aria-label="Benutzer nach E-Mail filtern"
+      <div class="filter-card">
+        <div class="stack">
+          <label class="field-label" for="user-search">Suche E-Mail</label>
+          <input
+            id="user-search"
+            class="input"
+            v-model.trim="search"
+            placeholder="user@example.com"
+            aria-label="Benutzer nach E-Mail filtern"
+          />
+          <div class="hint">Tippen zum Filtern. Groß und Kleinschreibung egal.</div>
+        </div>
+        <div class="stack">
+          <span class="text-muted text-small">Treffer: {{ filteredUsers.length }}</span>
+          <button class="btnGhost small" @click="resetFilters" :disabled="!search">Filter zurücksetzen</button>
+        </div>
+      </div>
+
+      <div class="table-card">
+        <div class="table-card__header">
+          <div class="tableTitle">Benutzerliste</div>
+          <div class="text-muted text-small">Zeile anklicken, um auszuwählen.</div>
+        </div>
+        <div class="tableWrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>E-Mail</th>
+                <th>Status</th>
+                <th>Passwort-Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                v-for="u in filteredUsers"
+                :key="u.id"
+                :class="{ rowActive: selectedUser?.id === u.id }"
+                @click="select(u)"
+              >
+                <td class="mono">{{ u.email }}</td>
+                <td>
+                  <span class="tag" :class="u.is_active ? 'ok' : 'bad'">{{ u.is_active ? 'aktiv' : 'deaktiviert' }}</span>
+                </td>
+                <td>
+                  <span class="tag" :class="u.has_password ? 'ok' : 'warn'">
+                    {{ u.has_password ? "gesetzt" : "nicht gesetzt" }}
+                  </span>
+                </td>
+              </tr>
+              <tr v-if="!busy.list && filteredUsers.length === 0">
+                <td colspan="3" class="mutedPad">Keine Benutzer gefunden.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div v-if="busy.error" class="errorText">Fehler: {{ busy.error }}</div>
+      </div>
+
+      <div v-if="selectedUser" class="detail-card">
+        <div class="detail-grid">
+          <div class="detail-box">
+            <div class="detail-box__label">E-Mail</div>
+            <div class="detail-box__value mono">{{ selectedUser.email }}</div>
+          </div>
+          <div class="detail-box">
+            <div class="detail-box__label">Status</div>
+            <div class="detail-box__value">
+              <span class="tag" :class="selectedUser.is_active ? 'ok' : 'bad'">
+                {{ selectedUser.is_active ? "aktiv" : "deaktiviert" }}
+              </span>
+            </div>
+          </div>
+          <div class="detail-box">
+            <div class="detail-box__label">Passwort</div>
+            <div class="detail-box__value">
+              <span class="tag" :class="selectedUser.has_password ? 'ok' : 'warn'">
+                {{ selectedUser.has_password ? "gesetzt" : "nicht gesetzt" }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="action-row">
+          <button class="btnGhost small" :disabled="busy.toggleId === selectedUser.id" @click="toggleActive(selectedUser)">
+            {{ busy.toggleId === selectedUser.id ? "..." : selectedUser.is_active ? "Deaktivieren" : "Aktivieren" }}
+          </button>
+          <button class="btnGhost small" @click="openPasswordModal(selectedUser)">Passwort setzen</button>
+        </div>
+      </div>
+
+      <div v-if="createForm.open" ref="createCardRef">
+        <UserCreateCard
+          :open="createForm.open"
+          :busy="busy.create"
+          v-model:email="createForm.email"
+          v-model:password="createForm.password"
+          @close="closeCreateCard"
+          @create="createUser"
         />
-        <div class="hint">Tippen zum Filtern. Groß und Kleinschreibung egal.</div>
-      </div>
-      <div class="stack">
-        <span class="text-muted text-small">Treffer: {{ filteredUsers.length }}</span>
-        <button class="btnGhost small" @click="resetFilters" :disabled="!search">Filter zurücksetzen</button>
-      </div>
-    </div>
-
-    <div class="table-card">
-      <div class="table-card__header">
-        <div class="tableTitle">Benutzerliste</div>
-        <div class="text-muted text-small">Zeile anklicken, um auszuwählen.</div>
-      </div>
-      <div class="tableWrap">
-        <table class="table">
-          <thead>
-            <tr>
-              <th>E-Mail</th>
-              <th>Status</th>
-              <th>Passwort-Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              v-for="u in filteredUsers"
-              :key="u.id"
-              :class="{ rowActive: selectedUser?.id === u.id }"
-              @click="select(u)"
-            >
-              <td class="mono">{{ u.email }}</td>
-              <td>
-                <span class="tag" :class="u.is_active ? 'ok' : 'bad'">{{ u.is_active ? 'aktiv' : 'deaktiviert' }}</span>
-              </td>
-              <td>
-                <span class="tag" :class="u.has_password ? 'ok' : 'warn'">
-                  {{ u.has_password ? "gesetzt" : "nicht gesetzt" }}
-                </span>
-              </td>
-            </tr>
-            <tr v-if="!busy.list && filteredUsers.length === 0">
-              <td colspan="3" class="mutedPad">Keine Benutzer gefunden.</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <div v-if="busy.error" class="errorText">Fehler: {{ busy.error }}</div>
-    </div>
-
-    <div v-if="selectedUser" class="detail-card">
-      <div class="detail-grid">
-        <div class="detail-box">
-          <div class="detail-box__label">E-Mail</div>
-          <div class="detail-box__value mono">{{ selectedUser.email }}</div>
-        </div>
-        <div class="detail-box">
-          <div class="detail-box__label">Status</div>
-          <div class="detail-box__value">
-            <span class="tag" :class="selectedUser.is_active ? 'ok' : 'bad'">
-              {{ selectedUser.is_active ? "aktiv" : "deaktiviert" }}
-            </span>
-          </div>
-        </div>
-        <div class="detail-box">
-          <div class="detail-box__label">Passwort</div>
-          <div class="detail-box__value">
-            <span class="tag" :class="selectedUser.has_password ? 'ok' : 'warn'">
-              {{ selectedUser.has_password ? "gesetzt" : "nicht gesetzt" }}
-            </span>
-          </div>
-        </div>
       </div>
 
-      <div class="action-row">
-        <button class="btnGhost small" :disabled="busy.toggleId === selectedUser.id" @click="toggleActive(selectedUser)">
-          {{ busy.toggleId === selectedUser.id ? "..." : selectedUser.is_active ? "Deaktivieren" : "Aktivieren" }}
-        </button>
-        <button class="btnGhost small" @click="openPasswordModal(selectedUser)">Passwort setzen</button>
-      </div>
-    </div>
-
-    <div v-if="createForm.open" ref="createCardRef">
-      <UserCreateCard
-        :open="createForm.open"
-        :busy="busy.create"
-        v-model:email="createForm.email"
-        v-model:password="createForm.password"
-        @close="closeCreateCard"
-        @create="createUser"
+      <PasswordModal
+        :open="modalPassword.open"
+        :busy="busy.password"
+        :email="selectedUser?.email || ''"
+        v-model:password="modalPassword.password"
+        @close="closePasswordModal"
+        @save="savePassword"
       />
-    </div>
-
-    <PasswordModal
-      :open="modalPassword.open"
-      :busy="busy.password"
-      :email="selectedUser?.email || ''"
-      v-model:password="modalPassword.password"
-      @close="closePasswordModal"
-      @save="savePassword"
-    />
-  </section>
+    </UiSection>
+  </UiPage>
 </template>
 
 <script setup lang="ts">
@@ -155,6 +144,10 @@ import { useToast } from "../composables/useToast";
 
 import UserCreateCard from "../components/users/UserCreateCard.vue";
 import PasswordModal from "../components/users/UserPasswordModal.vue";
+import UiPage from "../components/ui/UiPage.vue";
+import UiSection from "../components/ui/UiSection.vue";
+import UiToolbar from "../components/ui/UiToolbar.vue";
+import UiStatCard from "../components/ui/UiStatCard.vue";
 
 const props = defineProps<{
   apiOk: boolean;

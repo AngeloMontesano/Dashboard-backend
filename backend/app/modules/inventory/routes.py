@@ -10,7 +10,7 @@ from fastapi.responses import StreamingResponse
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
-from openpyxl import Workbook
+from openpyxl import Workbook, load_workbook
 
 from app.core.db import get_db
 from app.core.deps_auth import CurrentUserContext, get_current_user, require_owner_or_admin
@@ -44,6 +44,7 @@ from app.modules.inventory.schemas import (
     MovementItemOut,
     MovementOut,
     MovementPayload,
+    MassImportResult,
     TenantSettingsOut,
     TenantSettingsUpdate,
     SKUExistsResponse,
@@ -926,6 +927,26 @@ async def cancel_order(
 # ----------------------
 # Einstellungen (Tenant)
 # ----------------------
+MASS_EXPORT_COLUMNS = [
+    "Artikel-ID",
+    "Name",
+    "Barcode",
+    "Kategorie",
+    "Soll",
+    "Min",
+    "Bestand",
+    "Haltbarkeit",
+    "Charge",
+    "Kunden-ID",
+    "Lagerort",
+    "Preis",
+    "Beschreibung",
+    "Letzte Änderung",
+    "Letzte Bestellung",
+    "Bestellt",
+]
+
+
 def _settings_to_out(settings: TenantSetting) -> TenantSettingsOut:
     return TenantSettingsOut(
         id=str(settings.id),
@@ -992,6 +1013,136 @@ async def update_tenant_settings(
     await db.commit()
     await db.refresh(settings)
     return _settings_to_out(settings)
+
+
+@router.get("/settings/export", dependencies=[Depends(require_owner_or_admin)])
+async def export_settings_inventory(
+    ctx: TenantContext = Depends(get_tenant_context),
+    db: AsyncSession = Depends(get_db),
+):
+    rows = (
+        await db.execute(
+            select(Item, Category)
+            .outerjoin(Category, Category.id == Item.category_id)
+            .where(Item.tenant_id == ctx.tenant.id)
+            .order_by(Item.name.asc())
+        )
+    ).all()
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Export"
+    ws.append(MASS_EXPORT_COLUMNS)
+
+    for item, category in rows:
+        ws.append(
+            [
+                item.sku,
+                item.name,
+                item.barcode,
+                category.name if category else "",
+                item.target_stock,
+                item.min_stock,
+                item.quantity,
+                "",
+                "",
+                str(ctx.tenant.id),
+                "",
+                "",
+                item.description or "",
+                "",
+                "",
+                "",
+            ]
+        )
+
+    buf = BytesIO()
+    wb.save(buf)
+    buf.seek(0)
+    return StreamingResponse(
+        buf,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": 'attachment; filename="settings_export.xlsx"'},
+    )
+
+
+@router.post("/settings/import", response_model=MassImportResult, dependencies=[Depends(require_owner_or_admin)])
+async def import_settings_inventory(
+    file: UploadFile = File(...),
+    ctx: TenantContext = Depends(get_tenant_context),
+    db: AsyncSession = Depends(get_db),
+) -> MassImportResult:
+    content = await file.read()
+    try:
+        wb = load_workbook(BytesIO(content))
+    except Exception:  # noqa: BLE001
+        raise HTTPException(
+            status_code=400,
+            detail={"error": {"code": "invalid_excel", "message": "Datei konnte nicht gelesen werden"}},
+        )
+    ws = wb.active
+    headers = [str(cell.value or "").strip() for cell in next(ws.iter_rows(min_row=1, max_row=1))]
+    missing = [col for col in MASS_EXPORT_COLUMNS if col not in headers]
+    if missing:
+        raise HTTPException(
+            status_code=400,
+            detail={"error": {"code": "missing_columns", "message": f"Fehlende Spalten: {', '.join(missing)}"}},
+        )
+    idx = {name: headers.index(name) for name in headers}
+
+    imported = 0
+    updated = 0
+    errors: list[dict[str, str]] = []
+
+    for row_num, row in enumerate(ws.iter_rows(min_row=2), start=2):
+        try:
+            sku_raw = str(row[idx["Artikel-ID"]].value or "").strip()
+            name = str(row[idx["Name"]].value or "").strip()
+            barcode = str(row[idx["Barcode"]].value or "").strip()
+            if not sku_raw or not name or not barcode:
+                raise ValueError("Artikel-ID, Name und Barcode sind Pflicht")
+
+            category_name = str(row[idx["Kategorie"]].value or "").strip()
+            category = await _category_by_name(db=db, ctx=ctx, name=category_name) if category_name else None
+            if category_name and category is None:
+                raise ValueError(f"Kategorie '{category_name}' nicht gefunden")
+
+            target_stock = int(row[idx["Soll"]].value or 0)
+            min_stock = int(row[idx["Min"]].value or 0)
+            quantity = int(row[idx["Bestand"]].value or 0)
+            description = str(row[idx["Beschreibung"]].value or "").strip()
+
+            normalized_sku = _normalize_sku(sku_raw)
+
+            item = await db.scalar(select(Item).where(Item.tenant_id == ctx.tenant.id, Item.sku == normalized_sku))
+            if item:
+                item.name = name
+                item.barcode = barcode
+                item.category_id = category.id if category else None
+                item.target_stock = target_stock
+                item.min_stock = min_stock
+                item.quantity = quantity
+                item.description = description
+                updated += 1
+            else:
+                new_item = Item(
+                    tenant_id=ctx.tenant.id,
+                    sku=normalized_sku,
+                    barcode=barcode,
+                    name=name,
+                    category_id=category.id if category else None,
+                    target_stock=target_stock,
+                    min_stock=min_stock,
+                    quantity=quantity,
+                    description=description,
+                )
+                db.add(new_item)
+                imported += 1
+        except Exception as e:  # noqa: BLE001
+            errors.append({"row": str(row_num), "error": str(e)})
+
+    await db.commit()
+    return MassImportResult(imported=imported, updated=updated, errors=errors)
 
 
 # ----------------------

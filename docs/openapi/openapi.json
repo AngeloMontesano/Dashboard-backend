@@ -3763,6 +3763,126 @@
         }
       }
     },
+    "/inventory/settings/export": {
+      "get": {
+        "tags": [
+          "inventory"
+        ],
+        "summary": "Export Settings Inventory",
+        "operationId": "export_settings_inventory_inventory_settings_export_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary",
+                  "title": "SettingsExport"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inventory/settings/import": {
+      "post": {
+        "tags": [
+          "inventory"
+        ],
+        "summary": "Import Settings Inventory",
+        "operationId": "import_settings_inventory_inventory_settings_import_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "title": "File"
+                  }
+                },
+                "required": [
+                  "file"
+                ]
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MassImportResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/inventory/orders/recommended": {
       "get": {
         "tags": [
@@ -4469,16 +4589,17 @@
             ],
             "title": "Role"
           },
-          "is_active": {
+          "created_at": {
             "anyOf": [
               {
-                "type": "boolean"
+                "type": "string",
+                "format": "date-time"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Is Active"
+            "title": "Created At"
           }
         },
         "type": "object",
@@ -4496,10 +4617,25 @@
             "pattern": "^(IN|OUT)$",
             "title": "Type"
           },
-          "barcode": {
+          "normalized_sku": {
+            "type": "string",
+            "title": "Normalized Sku"
+          }
+        },
+        "type": "object",
+        "required": [
+          "exists",
+          "normalized_sku"
+        ],
+        "title": "SKUExistsResponse"
+      },
+      "TenantCreate": {
+        "properties": {
+          "slug": {
             "type": "string",
             "maxLength": 64,
-            "title": "Barcode"
+            "minLength": 2,
+            "title": "Slug"
           },
           "qty": {
             "type": "integer",
@@ -4809,9 +4945,7 @@
           "user_is_active": {
             "anyOf": [
               {
-                "type": "string",
-                "maxLength": 255,
-                "minLength": 2
+                "type": "boolean"
               },
               {
                 "type": "null"
@@ -5542,6 +5676,32 @@
           "id"
         ],
         "title": "TenantSettingsOut"
+      },
+      "MassImportResult": {
+        "type": "object",
+        "properties": {
+          "imported": {
+            "type": "integer",
+            "title": "Imported"
+          },
+          "updated": {
+            "type": "integer",
+            "title": "Updated"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            },
+            "title": "Errors"
+          }
+        },
+        "required": [
+          "imported",
+          "updated",
+          "errors"
+        ],
+        "title": "MassImportResult"
       },
       "ReorderItem": {
         "type": "object",

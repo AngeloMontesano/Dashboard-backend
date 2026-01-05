@@ -247,6 +247,12 @@ class TenantSettingsOut(TenantSettingsBase):
     id: str
 
 
+class MassImportResult(BaseModel):
+    imported: int
+    updated: int
+    errors: List[dict]
+
+
 class ReorderItem(BaseModel):
     id: str
     name: str

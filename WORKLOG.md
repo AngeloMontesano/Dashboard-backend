@@ -367,3 +367,15 @@
   - Customer/Admin können Basiseinstellungen pro Tenant verwalten; auto_order-Min und Empfänger sind hinterlegt. Mass Import/Export und Test-E-Mail stehen noch aus.
 - **Nächster Schritt**
   - Einstellungen Mass Import/Export + Test-E-Mail ergänzen; Bestell-PDF/E-Mail prüfen; Frontend-Settings-View mit neuen Endpunkten verdrahten.
+
+## Schritt 31 – Legacy-Migration Phase 3 (T5 Teil 2: Mass Import/Export)
+- **Datum/Uhrzeit**: 2026-01-05T21:30:00+00:00
+- **Ziel**: Legacy-Mass-Import/Export für Artikel in den Einstellungen bereitstellen.
+- **Was wurde geändert**
+  - Endpunkte `/inventory/settings/export` (Excel mit Legacy-Spalten) und `/inventory/settings/import` (Excel-Upload) ergänzt; Tenant-Scoped.
+  - Import aktualisiert/legt Items per SKU/Barcode an, nutzt Kategorie-Namen falls vorhanden; Export befüllt Soll/Min/Bestand/Description.
+  - OpenAPI ergänzt (Paths + Schema `MassImportResult`); Roadmap/TODO aktualisiert (Test-E-Mail weiter offen).
+- **Ergebnis**
+  - Massen-Import/Export aus Legacy-Excel-Dateien möglich; Fehlermeldungen je Zeile werden zurückgegeben.
+- **Nächster Schritt**
+  - Test-E-Mail/Empfängerfluss und optionale Bestell-PDF/E-Mail ergänzen; Customer-Einstellungen-View an neue Endpunkte anbinden.

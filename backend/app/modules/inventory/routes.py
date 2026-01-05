@@ -48,6 +48,8 @@ from app.modules.inventory.schemas import (
     MassImportResult,
     TestEmailRequest,
     TestEmailResponse,
+    OrderEmailRequest,
+    EmailSendResponse,
     TenantSettingsOut,
     TenantSettingsUpdate,
     SKUExistsResponse,
@@ -927,6 +929,79 @@ async def cancel_order(
     return _order_to_out(order, item_map)
 
 
+def _send_email_message(*, to_email: str, subject: str, body: str) -> EmailSendResponse:
+    if not settings.SMTP_HOST or not settings.SMTP_PORT or not settings.SMTP_FROM:
+        return EmailSendResponse(ok=False, error="SMTP Konfiguration fehlt")
+
+    import smtplib
+    from email.message import EmailMessage
+
+    message = EmailMessage()
+    message["Subject"] = subject
+    message["From"] = settings.SMTP_FROM
+    message["To"] = to_email
+    message.set_content(body)
+
+    try:
+        with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT, timeout=10) as smtp:
+            if settings.SMTP_USER and settings.SMTP_PASSWORD:
+                smtp.starttls()
+                smtp.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
+            smtp.send_message(message)
+        return EmailSendResponse(ok=True, error=None)
+    except Exception as e:  # noqa: BLE001
+        return EmailSendResponse(ok=False, error=str(e))
+
+
+def _format_order_email(
+    order: InventoryOrder,
+    item_map: dict[str, Item],
+    recipient: str,
+    note: str | None,
+) -> tuple[str, str]:
+    lines = [
+        f"Empfänger: {recipient}",
+        f"Bestellung: {order.number}",
+        f"Status: {order.status}",
+        f"Angelegt: {order.created_at}",
+    ]
+    if order.note:
+        lines.append(f"Bestell-Notiz: {order.note}")
+    if note:
+        lines.append(f"Zusätzliche Notiz: {note}")
+    lines.append("")
+    lines.append("Positionen:")
+    for oi in order.items:
+        item = item_map.get(str(oi.item_id))
+        item_name = item.name if item else "(unbekannt)"
+        lines.append(
+            f"- {item_name} (Menge: {oi.quantity}, SKU: {item.sku if item else '-'}, Barcode: {item.barcode if item else '-'})"
+        )
+    subject = f"Bestellung {order.number}"
+    body = "\n".join(lines)
+    return subject, body
+
+
+@router.post("/orders/{order_id}/email", response_model=EmailSendResponse, dependencies=[Depends(require_owner_or_admin)])
+async def send_order_email(
+    order_id: str,
+    payload: OrderEmailRequest,
+    ctx: TenantContext = Depends(get_tenant_context),
+    db: AsyncSession = Depends(get_db),
+) -> EmailSendResponse:
+    order = await _get_order_or_404(order_id=order_id, ctx=ctx, db=db, load_items=True)
+    item_ids = {str(oi.item_id) for oi in order.items}
+    item_map = await _items_by_ids(db=db, ctx=ctx, item_ids=item_ids)
+    settings_obj = await _get_or_create_settings(ctx=ctx, db=db)
+
+    recipient = payload.email or settings_obj.order_email or settings_obj.contact_email
+    if not recipient:
+        return EmailSendResponse(ok=False, error="Kein Empfänger konfiguriert")
+
+    subject, body = _format_order_email(order, item_map, recipient, payload.note)
+    return _send_email_message(to_email=recipient, subject=subject, body=body)
+
+
 # ----------------------
 # Einstellungen (Tenant)
 # ----------------------
@@ -1171,9 +1246,9 @@ async def send_test_email(
 
     try:
         with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT, timeout=10) as smtp:
-            if settings.SMTP_USERNAME and settings.SMTP_PASSWORD:
+            if settings.SMTP_USER and settings.SMTP_PASSWORD:
                 smtp.starttls()
-                smtp.login(settings.SMTP_USERNAME, settings.SMTP_PASSWORD)
+                smtp.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
             smtp.send_message(message)
         return TestEmailResponse(ok=True, error=None)
     except Exception as e:  # noqa: BLE001

@@ -391,3 +391,15 @@
   - Tenants können SMTP-Konfiguration prüfen; Fehler werden zurückgegeben.
 - **Nächster Schritt**
   - Bestell-PDF/E-Mail prüfen/ergänzen; Customer-Frontend-Einstellungen an neue Endpunkte anbinden.
+
+## Schritt 33 – Legacy-Migration Phase 3 (T4 Ergänzung: Bestell-E-Mail)
+- **Datum/Uhrzeit**: 2026-01-05T22:00:00+00:00
+- **Ziel**: E-Mail-Versand für Bestellungen ergänzen.
+- **Was wurde geändert**
+  - SMTP-Konfiguration an Backend-Settings angeglichen (`SMTP_USER` statt `SMTP_USERNAME`).
+  - Endpoint `/inventory/orders/{id}/email` sendet Bestellübersicht an Empfänger (Payload oder Settings `order_email`/`contact_email`), nutzt bestehende SMTP-Konfiguration.
+  - OpenAPI/Schemas für OrderEmailRequest/EmailSendResponse ergänzt; TODO/Roadmap angepasst (PDF bleibt offen).
+- **Ergebnis**
+  - Bestellungen können per E-Mail verschickt werden; fehlende Empfänger oder SMTP-Fehler werden zurückgegeben.
+- **Nächster Schritt**
+  - Bestell-PDF prüfen/ergänzen; Customer-Frontend-Bestellungen/-Einstellungen an neue Endpunkte anbinden.

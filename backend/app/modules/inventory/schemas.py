@@ -262,6 +262,16 @@ class TestEmailResponse(BaseModel):
     error: Optional[str] = None
 
 
+class OrderEmailRequest(BaseModel):
+    email: Optional[str] = Field(default=None, max_length=255)
+    note: Optional[str] = Field(default=None, max_length=1024)
+
+
+class EmailSendResponse(BaseModel):
+    ok: bool
+    error: Optional[str] = None
+
+
 class ReorderItem(BaseModel):
     id: str
     name: str

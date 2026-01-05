@@ -24,7 +24,6 @@ export default defineConfig(({ mode }) => {
     resolve: {
       alias: {
         '@': path.resolve(__dirname, 'src'),
-        '@shared/api-client': path.resolve(__dirname, '../../packages/api-client/src'),
         axios: path.resolve(__dirname, 'node_modules/axios/index.js')
       }
     },

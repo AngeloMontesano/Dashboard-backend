@@ -1,10 +1,9 @@
-// Wrapper auf den gemeinsamen API-Client im Monorepo.
-import { getBaseURL as sharedGetBaseURL } from '@shared/api-client';
-
-const baseDomain = import.meta.env.VITE_BASE_DOMAIN || 'test.myitnetwork.de';
+// Zentrale URL-Helfer für das Admin-Frontend.
+const runtimeHostname = typeof window !== "undefined" ? window.location.hostname : "";
+const API_BASE_PATH = "/api";
 
 export function getBaseURL() {
-  return sharedGetBaseURL();
+  return API_BASE_PATH;
 }
 
 export function getBaseDomain() {

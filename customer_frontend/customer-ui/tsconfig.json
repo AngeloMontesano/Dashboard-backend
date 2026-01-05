@@ -4,7 +4,6 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
-      "@shared/api-client": ["../../packages/api-client/src"],
       "axios": ["./node_modules/axios/index.d.ts"]
     },
     "target": "ESNext",

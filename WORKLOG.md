@@ -229,3 +229,16 @@
   - Drei weitere Admin-Ansichten sowie Audit-Filter nutzen zentrale Utilities und tokenbasierte Farben/Abstände; Inline- und scoped Styles entfernt.
 - **Nächster Schritt**
   - Admin: Audit-View und Kunden-Demo weiter auf Utilities bringen; Toast/Overlay-Styling zentralisieren. Customer: übrige Views migrieren.
+
+## Schritt 20 – UI-Harmonisierung (Audit + Customer Lagerbewegungen)
+- **Datum/Uhrzeit**: 2026-01-05T16:57:20+00:00
+- **Ziel**: Audit-View und erste Customer-Transaktions-View auf Utilities/UI-Bausteine heben, Inline-Styles entfernen.
+- **Was wurde geändert**
+  - Audit-View auf `UiPage`/`UiSection` + Utility-Layout (action-row, stack-sm, text-muted) umgestellt; Pagination-Hinweise tokenisiert, Buttons ohne inline Styles.
+  - Customer-Utilities um Form-Grids, Action-Rows, Text-Farben und Spacing-Helper erweitert.
+  - Customer `LagerbewegungenView` auf `UiPage`/`UiSection`/`UiToolbar` und neue Utilities refaktoriert; Status/Error-Anzeigen nutzen Token-Klassen statt inline Farbwerte.
+  - Audit-Filter-Bar und Kunden-Demo (KundenView) nutzen Utility-Klassen (Form-Grid, Pill-Row, Action-Row) statt inline Styles.
+- **Ergebnis**
+  - Audit und Lagerbewegungen folgen nun den harmonisierten Layout-Utilities; weitere Inline-/Scoped-Styling reduziert, Token-Farben greifen für Status/Error-Anzeigen.
+- **Nächster Schritt**
+  - Admin: Kunden-View auf Utilities bringen und Toast/Overlays zentralisieren. Customer: weitere Views (Artikel/Kategorien/Berichte/Inventur/Bestellungen/Einstellungen/Login) migrieren und responsive Regeln prüfen.

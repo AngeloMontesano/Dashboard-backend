@@ -1,56 +1,127 @@
+/*
+  tokens.css
+  Zweck
+  - Zentrale Design Tokens (Light/Dark) für Customer-Frontend
+  - Bestehende Farb-/Spacing-Variablen bleiben über Mapping nutzbar
+*/
+
 :root {
-  /* Classic */
-  --color-surface: #ffffff;
-  --color-surface-muted: #f4f6fb;
-  --color-border: #e3e7f0;
-  --color-text: #0f1a2b;
-  --color-text-muted: #3e4b66;
-  --color-primary: #2f7bff;
-  --color-primary-strong: #1c5fd4;
-  --color-success: #1f9d4c;
-  --color-warning: #f59e0b;
-  --color-danger: #e02424;
-  --color-info: #2563eb;
+  /* Surfaces */
+  --surface-0: #f4f6fb;
+  --surface-1: #ffffff;
+  --surface-2: rgba(15, 23, 42, 0.03);
+  --surface-3: rgba(15, 23, 42, 0.05);
+  --overlay: rgba(15, 23, 42, 0.30);
+
+  /* Text */
+  --text-strong: #0f1a2b;
+  --text-muted: #3e4b66;
+  --placeholder: #94a3b8;
+
+  /* Accent & Status */
+  --primary: #2f7bff;
+  --primary-strong: #1c5fd4;
+  --success: #1f9d4c;
+  --warning: #f59e0b;
+  --danger: #e02424;
+  --info: #2563eb;
+
+  /* Border & Shadow */
+  --border: #e3e7f0;
+  --shadow-sm: 0 8px 24px rgba(20, 33, 61, 0.08);
+  --shadow-lg: 0 10px 40px rgba(20, 33, 61, 0.08);
+
+  /* Radius */
+  --radius-sm: 10px;
   --radius-md: 12px;
-  --shadow-soft: 0 10px 40px rgba(20, 33, 61, 0.08);
+  --radius-lg: 16px;
+
+  /* Spacing */
+  --space-2: 4px;
+  --space-4: 8px;
+  --space-6: 12px;
+  --space-8: 16px;
+  --space-12: 24px;
+  --space-16: 32px;
+  --space-24: 48px;
+  --space-32: 64px;
+
+  /* Focus */
+  --focus-ring: rgba(47, 123, 255, 0.26);
+
+  /* Layout */
   --sidebar-width: 260px;
-  --spacing-xs: 4px;
-  --spacing-sm: 8px;
-  --spacing-md: 12px;
-  --spacing-lg: 16px;
-  --spacing-xl: 24px;
-  --spacing-2xl: 32px;
+
+  /* Fonts */
   --font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+  /* Legacy Mappings (bestehende Klassen) */
+  --color-surface: var(--surface-1);
+  --color-surface-muted: var(--surface-0);
+  --color-border: var(--border);
+  --color-text: var(--text-strong);
+  --color-text-muted: var(--text-muted);
+  --color-primary: var(--primary);
+  --color-primary-strong: var(--primary-strong);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --color-info: var(--info);
+  --radius-md: var(--radius-md);
+  --shadow-soft: var(--shadow-lg);
+  --spacing-xs: var(--space-2);
+  --spacing-sm: var(--space-4);
+  --spacing-md: var(--space-6);
+  --spacing-lg: var(--space-8);
+  --spacing-xl: var(--space-12);
+  --spacing-2xl: var(--space-16);
 }
 
-.theme-dark {
-  --color-surface: #0f172a;
-  --color-surface-muted: #0b1120;
-  --color-border: #1e293b;
-  --color-text: #e2e8f0;
-  --color-text-muted: #94a3b8;
-  --color-primary: #3b82f6;
-  --color-primary-strong: #2563eb;
-  --color-success: #22c55e;
-  --color-warning: #eab308;
-  --color-danger: #ef4444;
-  --color-info: #38bdf8;
-  --shadow-soft: 0 16px 44px rgba(0, 0, 0, 0.4);
+.theme-dark,
+[data-theme="dark"] {
+  --surface-0: #0b1120;
+  --surface-1: #0f172a;
+  --surface-2: rgba(255, 255, 255, 0.06);
+  --surface-3: rgba(255, 255, 255, 0.10);
+  --overlay: rgba(0, 6, 24, 0.55);
+
+  --text-strong: #e2e8f0;
+  --text-muted: #94a3b8;
+  --placeholder: #cbd5e1;
+
+  --primary: #3b82f6;
+  --primary-strong: #2563eb;
+  --success: #22c55e;
+  --warning: #eab308;
+  --danger: #ef4444;
+  --info: #38bdf8;
+
+  --border: #1e293b;
+  --shadow-sm: 0 12px 28px rgba(0, 0, 0, 0.36);
+  --shadow-lg: 0 16px 44px rgba(0, 0, 0, 0.40);
 }
 
 .theme-ocean {
-  --color-surface: #0b2438;
-  --color-surface-muted: #051726;
-  --color-border: #133757;
-  --color-text: #e0f2fe;
-  --color-text-muted: #9abbd7;
-  --color-primary: #38bdf8;
-  --color-primary-strong: #0ea5e9;
-  --color-success: #2dd4bf;
-  --color-warning: #fbbf24;
-  --color-danger: #f87171;
-  --color-info: #67e8f9;
-  --shadow-soft: 0 14px 36px rgba(3, 7, 18, 0.55);
+  --surface-0: #051726;
+  --surface-1: #0b2438;
+  --surface-2: rgba(14, 165, 233, 0.06);
+  --surface-3: rgba(14, 165, 233, 0.10);
+  --overlay: rgba(5, 23, 38, 0.55);
+
+  --text-strong: #e0f2fe;
+  --text-muted: #9abbd7;
+  --placeholder: #cbd5e1;
+
+  --primary: #38bdf8;
+  --primary-strong: #0ea5e9;
+  --success: #2dd4bf;
+  --warning: #fbbf24;
+  --danger: #f87171;
+  --info: #67e8f9;
+
+  --border: #133757;
+  --shadow-sm: 0 12px 28px rgba(3, 7, 18, 0.38);
+  --shadow-lg: 0 14px 36px rgba(3, 7, 18, 0.55);
 }
 
 *,
@@ -62,8 +133,8 @@
 body {
   margin: 0;
   font-family: var(--font-family);
-  background: var(--color-surface-muted);
-  color: var(--color-text);
+  background: var(--surface-0);
+  color: var(--text-strong);
   line-height: 1.5;
 }
 

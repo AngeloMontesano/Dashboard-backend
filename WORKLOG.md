@@ -128,3 +128,32 @@
   - Roadmap und Standards angepasst: Lokale Spec ist verbindlich, Remote-Zugriff optional.
 - **Was ist offen**
   - Backend/Schema-Abgleich der erweiterten OpenAPI-Definitionen bleibt offen; Remote-Zugriff ist kein Blocker mehr.
+
+## Schritt 12 – UI-Harmonisierung Task 1 (Ist-Aufnahme)
+- **Datum/Uhrzeit**: 2026-01-05T15:43:05+00:00
+- **Ziel**: Bestandsaufnahme für Design-Harmonisierung (Global Styles, PrimeVue, Tokens, Layout-Bausteine) in Admin- und Customer-Frontend.
+- **Was wurde geprüft**
+  - Admin (`admin_frontend/admin-ui`): globale Styles liegen in `src/styles/{tokens,base,layout}.css` und werden in `src/main.ts` geladen; kein PrimeVue-Einsatz; Theme-Klassen (`theme-dark`, `theme-ocean`, `theme-classic`) werden in `App.vue` gesetzt und in `sessionStorage` persistiert; Toast-Markup zentral in `components/common/ToastHost.vue`; Layout/Buttons/Cards/Table-Styles in `layout.css`.
+  - Customer (`customer_frontend/customer-ui`): globale Styles in `src/styles/{tokens,layout}.css`, Import in `src/main.ts`; PrimeVue mit Lara-Preset und ToastService in `main.ts`, Prime-Komponenten v. a. in `views/BerichteAnalysenView.vue` und `components/reports/*`; Theme-State via `useTheme` (SessionStorage) nur als Klassenwechsel am App-Root; Sidebar/Topbar als eigene Layout-Komponenten; Toast-Markup in `components/common/ToastHost.vue`.
+  - Redundanzen: getrennte Button-/Card-/Table-Klassen beider Apps; zwei Token-Sets ohne gemeinsame Struktur; kein System-Default für Theme in beiden Apps; Toast/Overlay-Styles pro App separat definiert; Responsive-Regeln unterschiedlich (Admin über `.shell` Breakpoint, Customer mit Grid/Sidebar ohne mobile Stacking-Strategie).
+- **Was wurde geändert**
+  - TODO-Liste angelegt (`TODO.md`) mit Muss/Soll/Kann für Tokens, Utilities, Theme-Toggle, Toast/Responsive-Aufgaben.
+  - Neue Standards in `docs/standards/`: `DESIGN_SYSTEM.md`, `THEME_TOKENS.md`, `COMPONENT_CONVENTIONS.md`, `DARKMODE.md` zur Dokumentation der Zielarchitektur (Tokens, Utilities, UI-Bausteine, Dark-Mode-Vorgaben).
+- **Ergebnis**
+  - Ist-Zustand pro App dokumentiert; zentrale Leitplanken für die nächsten Tasks festgelegt, keine Code-/Layout-Änderungen vorgenommen.
+- **Nächster Schritt**
+  - Task 2: Design-Tokens je App vereinheitlichen und um Light/Dark erweitern (inkl. System-Default-Konzept aus den neuen Standards).
+
+## Schritt 13 – UI-Harmonisierung Task 2 (Theme Tokens)
+- **Datum/Uhrzeit**: 2026-01-05T15:53:43+00:00
+- **Ziel**: Theme-Tokens für beide Frontends finalisieren und konsistent einführen (Light/Dark), ohne View-Refactors.
+- **Was wurde geprüft**
+  - Vorhandene Token-Namen in Admin (`--bg`, `--panel`, Tags/Status) und Customer (`--color-*`) für Kompatibilität beibehalten.
+  - Dark-/Ocean-Klassen werden derzeit als Klassen statt `data-theme` gesetzt; Mapping musste kompatibel bleiben.
+- **Was wurde geändert**
+  - Admin: `src/styles/tokens.css` auf die gemeinsame Token-Struktur (Surfaces/Text/Status/Spacing/Radius/Focus) umgestellt, neue Standard-Tokens ergänzt und bestehende Variablen über Legacy-Mappings erhalten (Light/Dark/Ocean).
+  - Customer: `src/styles/tokens.css` um dieselbe Token-Struktur erweitert, inklusive Legacy-Mappings für bestehende Klassen und PrimeVue-Layouts; Light/Dark/Ocean nutzen jetzt die abgestimmten Tokens.
+- **Ergebnis**
+  - Beide Frontends besitzen ein deckungsgleiches Token-Set (Light/Dark) mit kompatiblen Alt-Namen; keine View- oder Komponenten-Anpassungen nötig.
+- **Nächster Schritt**
+  - Task 3: Utilities/Theme-Mappings ergänzen und erste Pilot-Views auf Utilities umstellen (separater Schritt).

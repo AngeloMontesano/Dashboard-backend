@@ -31,5 +31,11 @@ class Settings(BaseSettings):
     BASE_DOMAIN: str = Field(..., description="Base domain für Tenant Subdomains, z.B. test.myitnetwork.de")
     BASE_ADMIN_DOMAIN: str = Field(..., description="Base domain für Admin UI Subdomains")
 
+    SMTP_HOST: str | None = Field(default=None, description="SMTP Host für Test-E-Mails")
+    SMTP_PORT: int | None = Field(default=None, description="SMTP Port für Test-E-Mails")
+    SMTP_USER: str | None = Field(default=None, description="SMTP Benutzername")
+    SMTP_PASSWORD: str | None = Field(default=None, description="SMTP Passwort")
+    SMTP_FROM: str | None = Field(default=None, description="Absender für Test-E-Mails")
+
 
 settings = Settings()

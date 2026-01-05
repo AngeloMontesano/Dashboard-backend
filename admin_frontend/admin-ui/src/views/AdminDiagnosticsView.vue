@@ -1,13 +1,6 @@
 <template>
-  <div class="grid1">
-    <section class="card">
-      <header class="cardHeader">
-        <div>
-          <div class="cardTitle">Diagnostics</div>
-          <div class="cardHint">Health Checks, Admin Checks, Snapshot</div>
-        </div>
-      </header>
-
+  <UiPage>
+    <UiSection title="Diagnostics" subtitle="Health Checks, Admin Checks, Snapshot">
       <div class="tabs">
         <button
           v-for="t in tabs"
@@ -21,13 +14,11 @@
       </div>
 
       <div class="panel" v-if="tab === 'health'">
-        <div class="box">
-          <div class="meta">
-            <div class="muted">Base URL: <span class="mono">{{ baseURL }}</span></div>
-            <div class="muted">API: {{ apiStatus }} · DB: {{ dbStatus }}</div>
-          </div>
+        <div class="box stack-sm">
+          <div class="text-muted text-small">Base URL: <span class="mono">{{ baseURL }}</span></div>
+          <div class="text-muted text-small">API: {{ apiStatus }} · DB: {{ dbStatus }}</div>
 
-          <div class="rowActions" style="margin-top: 12px;">
+          <div class="action-row mt-6">
             <button class="btnPrimary" :disabled="busy.health" @click="runHealthChecks">
               {{ busy.health ? "prüfe..." : "Health Checks" }}
             </button>
@@ -36,7 +27,7 @@
             </button>
           </div>
 
-          <div class="pillRow" style="margin-top: 12px;">
+          <div class="pill-row mt-6">
             <span class="tag" :class="props.apiOk ? 'ok' : 'bad'">API {{ props.apiOk ? "ok" : "down" }}</span>
             <span class="tag" :class="props.dbOk ? 'ok' : 'bad'">DB {{ props.dbOk ? "ok" : "down" }}</span>
             <span class="tag" :class="adminPingOk ? 'ok' : 'bad'">Admin Ping {{ adminPingOk ? "ok" : "down" }}</span>
@@ -44,26 +35,26 @@
           </div>
         </div>
 
-        <div class="box" style="margin-top: 12px;">
+        <div class="box stack-sm mt-6">
           <div class="sectionTitle">Diagnostics Daten</div>
-          <pre class="code" style="margin-top: 8px;">{{ diagData ? JSON.stringify(diagData, null, 2) : "noch nicht geladen" }}</pre>
+          <pre class="code-block mono">{{ diagData ? JSON.stringify(diagData, null, 2) : "noch nicht geladen" }}</pre>
         </div>
       </div>
 
       <div class="panel" v-else-if="tab === 'snapshot'">
-        <div class="box">
+        <div class="box stack-sm">
           <div class="sectionTitle">Snapshot</div>
-          <div class="rowActions" style="margin-top: 10px;">
+          <div class="action-row">
             <button class="btnPrimary" :disabled="busy.snapshot" @click="copySnapshot">
               {{ busy.snapshot ? "kopiere..." : "Snapshot kopieren" }}
             </button>
           </div>
-          <pre class="code" style="margin-top: 10px;">{{ prettySnapshot }}</pre>
+          <pre class="code-block mono">{{ prettySnapshot }}</pre>
         </div>
       </div>
 
       <div class="panel" v-else>
-        <div class="box">
+        <div class="box stack-sm">
           <div class="sectionTitle">Logs (Demo)</div>
           <div class="tableWrap">
             <table class="table">
@@ -85,8 +76,8 @@
           </div>
         </div>
       </div>
-    </section>
-  </div>
+    </UiSection>
+  </UiPage>
 </template>
 
 <script setup lang="ts">
@@ -95,6 +86,8 @@ import { platformHealth, platformHealthDb } from "../api/platform";
 import { getBaseURL } from "../api/base";
 import { adminPing, adminDiagnostics } from "../api/admin";
 import { useToast } from "../composables/useToast";
+import UiPage from "../components/ui/UiPage.vue";
+import UiSection from "../components/ui/UiSection.vue";
 
 const props = defineProps<{
   apiOk: boolean;

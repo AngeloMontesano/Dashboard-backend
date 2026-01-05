@@ -13,6 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from openpyxl import Workbook, load_workbook
 
 from app.core.db import get_db
+from app.core.config import settings
 from app.core.deps_auth import CurrentUserContext, get_current_user, require_owner_or_admin
 from app.core.deps_tenant import get_tenant_context
 from app.core.tenant import TenantContext
@@ -45,6 +46,8 @@ from app.modules.inventory.schemas import (
     MovementOut,
     MovementPayload,
     MassImportResult,
+    TestEmailRequest,
+    TestEmailResponse,
     TenantSettingsOut,
     TenantSettingsUpdate,
     SKUExistsResponse,
@@ -1143,6 +1146,38 @@ async def import_settings_inventory(
 
     await db.commit()
     return MassImportResult(imported=imported, updated=updated, errors=errors)
+
+
+@router.post("/settings/test-email", response_model=TestEmailResponse, dependencies=[Depends(require_owner_or_admin)])
+async def send_test_email(
+    payload: TestEmailRequest,
+    ctx: TenantContext = Depends(get_tenant_context),
+    db: AsyncSession = Depends(get_db),
+) -> TestEmailResponse:
+    """
+    Sendet eine Test-E-Mail an die angegebene Adresse, nutzt SMTP-Konfiguration aus Settings.
+    """
+    if not settings.SMTP_HOST or not settings.SMTP_PORT or not settings.SMTP_FROM:
+        return TestEmailResponse(ok=False, error="SMTP Konfiguration fehlt")
+
+    import smtplib
+    from email.message import EmailMessage
+
+    message = EmailMessage()
+    message["Subject"] = "Test E-Mail Lagerverwaltung"
+    message["From"] = settings.SMTP_FROM
+    message["To"] = payload.email
+    message.set_content(f"Test E-Mail für Tenant {ctx.tenant.name} ({ctx.tenant.slug})")
+
+    try:
+        with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT, timeout=10) as smtp:
+            if settings.SMTP_USERNAME and settings.SMTP_PASSWORD:
+                smtp.starttls()
+                smtp.login(settings.SMTP_USERNAME, settings.SMTP_PASSWORD)
+            smtp.send_message(message)
+        return TestEmailResponse(ok=True, error=None)
+    except Exception as e:  # noqa: BLE001
+        return TestEmailResponse(ok=False, error=str(e))
 
 
 # ----------------------

@@ -379,3 +379,15 @@
   - Massen-Import/Export aus Legacy-Excel-Dateien möglich; Fehlermeldungen je Zeile werden zurückgegeben.
 - **Nächster Schritt**
   - Test-E-Mail/Empfängerfluss und optionale Bestell-PDF/E-Mail ergänzen; Customer-Einstellungen-View an neue Endpunkte anbinden.
+
+## Schritt 32 – Legacy-Migration Phase 3 (T5 Teil 3: Test-E-Mail)
+- **Datum/Uhrzeit**: 2026-01-05T21:45:00+00:00
+- **Ziel**: Test-E-Mail-Funktion gemäß Legacy-Einstellungen bereitstellen.
+- **Was wurde geändert**
+  - SMTP-Konfiguration in Settings ergänzt (`SMTP_HOST/PORT/USERNAME/PASSWORD/FROM`).
+  - Endpoint `/inventory/settings/test-email` sendet Test-Mail an Zieladresse, nutzt TLS/Login falls konfiguriert; liefert Erfolg/Fehler zurück.
+  - OpenAPI-Schemas `TestEmailRequest`/`TestEmailResponse` hinzugefügt; Roadmap/TODO aktualisiert.
+- **Ergebnis**
+  - Tenants können SMTP-Konfiguration prüfen; Fehler werden zurückgegeben.
+- **Nächster Schritt**
+  - Bestell-PDF/E-Mail prüfen/ergänzen; Customer-Frontend-Einstellungen an neue Endpunkte anbinden.

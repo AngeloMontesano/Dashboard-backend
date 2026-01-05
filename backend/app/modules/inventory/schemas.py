@@ -253,6 +253,15 @@ class MassImportResult(BaseModel):
     errors: List[dict]
 
 
+class TestEmailRequest(BaseModel):
+    email: str = Field(..., max_length=255)
+
+
+class TestEmailResponse(BaseModel):
+    ok: bool
+    error: Optional[str] = None
+
+
 class ReorderItem(BaseModel):
     id: str
     name: str

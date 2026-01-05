@@ -193,3 +193,18 @@ class ReportKpis(BaseModel):
 class ReportResponse(BaseModel):
     series: List[ReportSeries]
     kpis: ReportKpis
+
+
+class ReorderItem(BaseModel):
+    id: str
+    name: str
+    sku: str
+    barcode: str
+    category_id: Optional[str] = None
+    quantity: int
+    target_stock: int
+    min_stock: int
+
+
+class ReorderResponse(BaseModel):
+    items: List[ReorderItem]

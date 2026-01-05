@@ -30,6 +30,8 @@ from app.modules.inventory.schemas import (
     ReportDataPoint,
     ReportKpis,
     ReportTopItem,
+    ReorderResponse,
+    ReorderItem,
     InventoryBulkUpdateRequest,
     InventoryBulkUpdateResult,
     MovementItemOut,
@@ -676,6 +678,40 @@ async def export_report(
         out,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         headers={"Content-Disposition": 'attachment; filename="verbrauch.xlsx"'},
+    )
+
+
+# ----------------------
+# Bestellwürdig (Empfehlungen)
+# ----------------------
+@router.get("/orders/recommended", response_model=ReorderResponse)
+async def get_reorder_recommendations(
+    ctx: TenantContext = Depends(get_tenant_context),
+    user_ctx: CurrentUserContext = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> ReorderResponse:
+    q = select(Item).where(
+        Item.tenant_id == ctx.tenant.id,
+        Item.is_active.is_(True),
+        Item.target_stock > 0,
+        Item.quantity < Item.target_stock,
+    ).order_by(Item.target_stock - Item.quantity.desc())
+
+    items = (await db.scalars(q)).all()
+    return ReorderResponse(
+        items=[
+            ReorderItem(
+                id=str(item.id),
+                name=item.name,
+                sku=item.sku,
+                barcode=item.barcode,
+                category_id=str(item.category_id) if item.category_id else None,
+                quantity=item.quantity,
+                target_stock=item.target_stock,
+                min_stock=item.min_stock,
+            )
+            for item in items
+        ]
     )
 
 

@@ -3338,9 +3338,58 @@
                   "format": "binary",
                   "title": "ReportExport"
                 }
+        }
+      }
+    },
+    "/inventory/orders/recommended": {
+      "get": {
+        "tags": [
+          "inventory"
+        ],
+        "summary": "Reorder Recommendations",
+        "operationId": "get_reorder_recommendations_inventory_orders_recommended_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReorderResponse"
+                }
               }
             }
           },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
           "422": {
             "description": "Validation Error",
             "content": {
@@ -4736,6 +4785,76 @@
           "errors"
         ],
         "title": "InventoryBulkUpdateResult"
+      },
+      "ReorderItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "sku": {
+            "type": "string",
+            "title": "Sku"
+          },
+          "barcode": {
+            "type": "string",
+            "title": "Barcode"
+          },
+          "category_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category Id"
+          },
+          "quantity": {
+            "type": "integer",
+            "title": "Quantity"
+          },
+          "target_stock": {
+            "type": "integer",
+            "title": "Target Stock"
+          },
+          "min_stock": {
+            "type": "integer",
+            "title": "Min Stock"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "sku",
+          "barcode",
+          "quantity",
+          "target_stock",
+          "min_stock"
+        ],
+        "title": "ReorderItem"
+      },
+      "ReorderResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReorderItem"
+            },
+            "title": "Items"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "ReorderResponse"
       },
       "ReportDataPoint": {
         "type": "object",

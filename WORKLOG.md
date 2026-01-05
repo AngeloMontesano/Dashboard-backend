@@ -320,3 +320,14 @@
   - Verbrauchsberichte laufen serverseitig; Exporte stehen bereit; Grundlage für Frontend-Anbindung ohne Client-Fallback.
 - **Nächster Schritt**
   - Nächste Pflichtbereiche: Bestellungen (Models/Endpoints) und Einstellungen/Firmendaten inkl. Mass Import/Export umsetzen; Frontend an neue Reporting-/Inventur-APIs anbinden.
+
+## Schritt 27 – Legacy-Migration Phase 3 (T4 Teilschritt: bestellwürdig-Liste)
+- **Datum/Uhrzeit**: 2026-01-05T19:45:00+00:00
+- **Ziel**: Bestellwürdige Artikel serverseitig bereitstellen.
+- **Was wurde geändert**
+  - Backend: GET `/inventory/orders/recommended` liefert aktive Items unter Zielbestand (tenant-scope).
+  - Schemas/OpenAPI: ReorderItem/ReorderResponse ergänzt; Roadmap/TODO angepasst (Bestellungen teilweise geschlossen).
+- **Ergebnis**
+  - Bestellwürdige Liste verfügbar; weitere Bestell-Features (offen/erledigt, Bestandserhöhung, PDF/E-Mail) noch offen.
+- **Nächster Schritt**
+  - Vollständige Bestell-Endpunkte und Einstellungen/Firmendaten implementieren; Customer-Frontend anbinden.

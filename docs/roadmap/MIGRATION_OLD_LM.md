@@ -76,6 +76,6 @@
 - **Lagerbewegungen:** POST `/inventory/movements` existiert (IN/OUT mit `client_tx_id`, qty, note) und verhindert negativen Bestand; GET-Liste/Filter für Reporting war fehlend – jetzt ergänzt (T1), Reporting-/Export-Endpunkte stehen weiter aus. Legacy verlangt Barcode-IN/OUT (Menge 1) und speichert Typ „Entnahme/Zugang“.
 - **Inventur:** Bulk-Update + Excel-Export mit Legacy-Spalten ergänzt (T2 erfüllt); Frontend-Inventur zeigt weiterhin Platzhalter-KPIs ohne API-Anbindung.
 - **Berichte/Verbrauch:** Backend-Endpunkte `/inventory/report` + Exporte ergänzt (CSV/Excel) auf Basis der Bewegungsaggregation; Frontend nutzt noch den Fallback und muss angebunden werden.
-- **Bestellungen:** Kein Modell/Endpoint im neuen Backend; Customer-View ist Platzhalter ohne API. Legacy-Funktionen (bestellwürdige Liste, offene/erledigte Bestellungen, Erledigt erhöht Bestand, PDF/E-Mail) fehlen vollständig.
+- **Bestellungen:** Erste Lücke teilweise geschlossen: bestellwürdige Liste als `/inventory/orders/recommended` verfügbar. Modelle/Endpunkte für offene/erledigte Bestellungen und Bestandserhöhung fehlen weiterhin (PDF/E-Mail offen).
 - **Einstellungen/Firmendaten:** Kein Endpoint für `Kunde`/Firmendaten, Auto-Bestellung/Schwellen, Empfänger/Exportformat, Mass Import/Export oder Test-E-Mail. Customer-Einstellungen-View liefert nur Dummy-KPIs.
 - **Flash/Status:** Keine Entsprechung für Flash-API; Frontend setzt Toasts lokal.

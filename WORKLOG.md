@@ -202,3 +202,16 @@
   - Bei Systemwechsel wird das aktive Theme aktualisiert, solange der Modus auf „system“ steht; Persistenz bleibt in `localStorage`.
 - **Nächster Schritt**
   - Weitere Views migrieren und Toast/Dialog-Styles zentralisieren; Theme-Toggle-UI ggf. verfeinern (Dropdown/Icons) ohne Inline-Styles.
+
+## Schritt 18 – UI-Harmonisierung (Tenants/Memberships + Modals)
+- **Datum/Uhrzeit**: 2026-01-05T16:41:01+00:00
+- **Ziel**: Weitere Admin-Views auf zentrale Utilities/UI-Bausteine heben und Modal-/Overlay-Styles tokenbasiert angleichen.
+- **Was wurde geändert**
+  - Admin-Utilities erweitert (Form-/Detail-/KV-Grids, Tabs, Modal-Backdrops/-Panels, Spacing/BADGE/Spinner) und Table/Detail-Hilfsklassen ergänzt.
+  - `AdminTenantsView` auf `UiPage`/`UiSection`/`UiToolbar`/`UiStatCard` + Utilities umgestellt; scoped Styles entfernt, Filter-/Detail-/Table-Layouts nutzen jetzt tokenisierte Klassen.
+  - `AdminMembershipsView` gleichermaßen auf die UI-Bausteine migriert; Listen-, Filter- und Detailbereiche ohne scoped Styles, Buttons/Badges nutzen zentrale Tokens.
+  - Tenant-Create-Modal auf zentrale Modal-/Backdrop-Utilities umgestellt, inline Styles entfernt.
+- **Ergebnis**
+  - Zwei weitere Kern-Views im Admin folgen den harmonisierten Layout-Utilities ohne Inline-/Scoped-Styles; Modal/Overlay-Optik nutzt zentrale Token-Variablen.
+- **Nächster Schritt**
+  - Restliche Admin-Views (Diagnostics/Operations/Audit/Login/Kunden) und Customer-Views schrittweise auf die Utilities/Komponenten ziehen; zentrale Toast/Overlay-Styles finalisieren und responsive Regeln nachziehen.

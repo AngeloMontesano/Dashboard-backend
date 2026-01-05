@@ -355,3 +355,15 @@
   - Tenants können Bestellungen anlegen, einsehen, erledigen oder stornieren; Abschluss erhöht Bestände und protokolliert Bewegungen.
 - **Nächster Schritt**
   - Einstellungen/Firmendaten inkl. Auto-Bestellung/Empfänger umsetzen; Bestell-PDF/E-Mail prüfen und bei Bedarf nachziehen; Customer-Frontend an neue Order-APIs anbinden.
+
+## Schritt 30 – Legacy-Migration Phase 3 (T5 Teil 1: Basis-Einstellungen)
+- **Datum/Uhrzeit**: 2026-01-05T21:00:00+00:00
+- **Ziel**: Tenant-Einstellungen für Firmendaten und Auto-Bestellung bereitstellen.
+- **Was wurde geändert**
+  - Neues Modell `TenantSetting` (tenant-scoped, unique pro Tenant) mit Firmendaten, Kontakt/Bestell-E-Mail, Auto-Bestellung (Enabled + Min), Export-Format, Adresse, Telefon.
+  - Endpunkte `/inventory/settings` GET/PUT liefern/aktualisieren Settings; Defaults werden bei Erstzugriff angelegt.
+  - Schemas/OpenAPI ergänzt (`TenantSettings*`); Roadmap/TODO aktualisiert.
+- **Ergebnis**
+  - Customer/Admin können Basiseinstellungen pro Tenant verwalten; auto_order-Min und Empfänger sind hinterlegt. Mass Import/Export und Test-E-Mail stehen noch aus.
+- **Nächster Schritt**
+  - Einstellungen Mass Import/Export + Test-E-Mail ergänzen; Bestell-PDF/E-Mail prüfen; Frontend-Settings-View mit neuen Endpunkten verdrahten.

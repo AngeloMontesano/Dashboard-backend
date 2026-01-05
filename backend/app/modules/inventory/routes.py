@@ -20,6 +20,7 @@ from app.models.category import Category
 from app.models.item import Item
 from app.models.movement import InventoryMovement
 from app.models.order import InventoryOrder, InventoryOrderItem
+from app.models.tenant_setting import TenantSetting
 from app.modules.inventory.schemas import (
     CategoryCreate,
     CategoryOut,
@@ -43,6 +44,8 @@ from app.modules.inventory.schemas import (
     MovementItemOut,
     MovementOut,
     MovementPayload,
+    TenantSettingsOut,
+    TenantSettingsUpdate,
     SKUExistsResponse,
     TenantPingResponse,
     TenantOutPing,
@@ -918,6 +921,77 @@ async def cancel_order(
     item_ids = {oi.item_id for oi in order.items}
     item_map = await _items_by_ids(db=db, ctx=ctx, item_ids=item_ids)
     return _order_to_out(order, item_map)
+
+
+# ----------------------
+# Einstellungen (Tenant)
+# ----------------------
+def _settings_to_out(settings: TenantSetting) -> TenantSettingsOut:
+    return TenantSettingsOut(
+        id=str(settings.id),
+        company_name=settings.company_name,
+        contact_email=settings.contact_email,
+        order_email=settings.order_email,
+        auto_order_enabled=settings.auto_order_enabled,
+        auto_order_min=settings.auto_order_min,
+        export_format=settings.export_format,
+        address=settings.address,
+        phone=settings.phone,
+    )
+
+
+async def _get_or_create_settings(*, ctx: TenantContext, db: AsyncSession) -> TenantSetting:
+    settings = await db.scalar(
+        select(TenantSetting).where(TenantSetting.tenant_id == ctx.tenant.id)
+    )
+    if settings:
+        return settings
+    settings = TenantSetting(
+        tenant_id=ctx.tenant.id,
+        company_name="",
+        contact_email="",
+        order_email="",
+        auto_order_enabled=False,
+        auto_order_min=0,
+        export_format="xlsx",
+        address="",
+        phone="",
+    )
+    db.add(settings)
+    await db.commit()
+    await db.refresh(settings)
+    return settings
+
+
+@router.get("/settings", response_model=TenantSettingsOut)
+async def get_tenant_settings(
+    ctx: TenantContext = Depends(get_tenant_context),
+    user_ctx: CurrentUserContext = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> TenantSettingsOut:
+    settings = await _get_or_create_settings(ctx=ctx, db=db)
+    return _settings_to_out(settings)
+
+
+@router.put("/settings", response_model=TenantSettingsOut, dependencies=[Depends(require_owner_or_admin)])
+async def update_tenant_settings(
+    payload: TenantSettingsUpdate,
+    ctx: TenantContext = Depends(get_tenant_context),
+    db: AsyncSession = Depends(get_db),
+) -> TenantSettingsOut:
+    settings = await _get_or_create_settings(ctx=ctx, db=db)
+    settings.company_name = payload.company_name.strip()
+    settings.contact_email = payload.contact_email.strip()
+    settings.order_email = payload.order_email.strip()
+    settings.auto_order_enabled = payload.auto_order_enabled
+    settings.auto_order_min = payload.auto_order_min
+    settings.export_format = payload.export_format.strip() or "xlsx"
+    settings.address = payload.address.strip()
+    settings.phone = payload.phone.strip()
+
+    await db.commit()
+    await db.refresh(settings)
+    return _settings_to_out(settings)
 
 
 # ----------------------

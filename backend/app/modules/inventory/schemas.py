@@ -228,6 +228,25 @@ class OrderOut(BaseModel):
     items: List[OrderItemOut]
 
 
+class TenantSettingsBase(BaseModel):
+    company_name: str = Field("", max_length=255)
+    contact_email: str = Field("", max_length=255)
+    order_email: str = Field("", max_length=255)
+    auto_order_enabled: bool = False
+    auto_order_min: int = Field(0, ge=0)
+    export_format: str = Field("xlsx", max_length=32)
+    address: str = Field("", max_length=512)
+    phone: str = Field("", max_length=64)
+
+
+class TenantSettingsUpdate(TenantSettingsBase):
+    pass
+
+
+class TenantSettingsOut(TenantSettingsBase):
+    id: str
+
+
 class ReorderItem(BaseModel):
     id: str
     name: str

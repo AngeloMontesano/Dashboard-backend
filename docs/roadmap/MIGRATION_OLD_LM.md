@@ -77,5 +77,5 @@
 - **Inventur:** Bulk-Update + Excel-Export mit Legacy-Spalten ergänzt (T2 erfüllt); Frontend-Inventur zeigt weiterhin Platzhalter-KPIs ohne API-Anbindung.
 - **Berichte/Verbrauch:** Backend-Endpunkte `/inventory/report` + Exporte ergänzt (CSV/Excel) auf Basis der Bewegungsaggregation; Frontend nutzt noch den Fallback und muss angebunden werden.
 - **Bestellungen:** Bestellwürdig-Liste (`/inventory/orders/recommended`) und Bestellungen mit Statuswechsel sind verfügbar (`/inventory/orders`, `/inventory/orders/{id}`, `/inventory/orders/{id}/complete|cancel`), Abschluss erhöht den Bestand und erzeugt Bewegungen. PDF/E-Mail bleiben offen.
-- **Einstellungen/Firmendaten:** Kein Endpoint für `Kunde`/Firmendaten, Auto-Bestellung/Schwellen, Empfänger/Exportformat, Mass Import/Export oder Test-E-Mail. Customer-Einstellungen-View liefert nur Dummy-KPIs.
+- **Einstellungen/Firmendaten:** Basis-Settings je Tenant sind verfügbar (`/inventory/settings` GET/PUT: Firmendaten, Auto-Bestellung an/aus + Schwelle, Empfänger, Export-Format, Adresse/Telefon). Offene Punkte: Mass Import/Export, Test-E-Mail, weitere Admin-Metadaten.
 - **Flash/Status:** Keine Entsprechung für Flash-API; Frontend setzt Toasts lokal.

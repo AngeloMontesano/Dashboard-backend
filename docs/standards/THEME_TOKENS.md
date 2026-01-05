@@ -45,3 +45,7 @@ Zentrale CSS-Variablen pro App, die sämtliche Farben, Abstände und Radii defin
 ## Admin
 - Bestehende Klassen (`.btnPrimary`, `.card`, `.table`, `.sidebar`, …) werden auf neue Tokens umgestellt.
 - Dark-Mode-Varianten übernehmen dieselben Token-Namen; zusätzliche Themen (z. B. `theme-ocean`) können Token-Sets erweitern, aber Light/Dark bleiben Pflicht.
+
+## Kompatibilität
+- Bestehende Variablennamen bleiben über Legacy-Mappings erhalten (z. B. Admin `--bg`, `--panel`; Customer `--color-*`), bis Views/Utilities vollständig auf die neuen Tokens migriert sind.
+- Theme-Klassen (`.theme-dark`, `.theme-ocean`) bleiben unterstützend, können später auf `data-theme` gemappt werden.

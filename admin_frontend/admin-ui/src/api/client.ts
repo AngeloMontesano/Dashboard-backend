@@ -1,16 +1,16 @@
-import axios from "axios";
-import { getBaseURL } from "./base";
+import { createApiClient } from "@shared/api-client";
 
 export const api = axios.create({
   baseURL: getBaseURL(),
   timeout: 15000,
 });
 
-api.defaults.headers.common["Content-Type"] = "application/json";
-
-export function adminHeaders(adminKey: string, actor?: string) {
-  return {
-    "X-Admin-Key": adminKey,
-    ...(actor ? { "X-Admin-Actor": actor } : {}),
-  };
+export function apiClient(adminKey: string, actor?: string) {
+  return createApiClient({
+    timeout: 15000,
+    extraHeaders: {
+      "X-Admin-Key": adminKey,
+      ...(actor ? { "X-Admin-Actor": actor } : {})
+    }
+  });
 }

@@ -1,5 +1,4 @@
-import { api } from './client';
-import { getBaseURL, getTenantHeaders } from './base';
+import { createApiClient, getBaseURL } from './base';
 
 type LoginResponse = {
   access_token: string;
@@ -12,6 +11,7 @@ type LoginResponse = {
 
 export async function authLogin(email: string, password: string) {
   const baseURL = getBaseURL();
+  const client = createApiClient();
   try {
     const res = await api.post<LoginResponse>(
       '/auth/login',

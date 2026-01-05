@@ -9,7 +9,7 @@ import Tag from 'primevue/tag';
 import ProgressSpinner from 'primevue/progressspinner';
 import type { ChartData } from 'chart.js';
 import { getReportData, exportCsv, exportExcel } from '@/api/reporting';
-import { fetchCategories, fetchItems, type Item } from '@/api/inventory';
+import { fetchCategories, fetchItems, type Item, type Category } from '@/api/inventory';
 import ReportFilters from '@/components/reports/ReportFilters.vue';
 import ReportKpiCards from '@/components/reports/ReportKpiCards.vue';
 import ReportCharts from '@/components/reports/ReportCharts.vue';
@@ -95,8 +95,8 @@ async function loadCategories() {
   try {
     const res = await fetchCategories(authState.accessToken);
     categories.value = res
-      .filter((c) => c.is_active)
-      .map((c) => ({ label: c.name, value: c.id } satisfies CategoryOption));
+      .filter((c: Category) => c.is_active)
+      .map((c: Category) => ({ label: c.name, value: c.id } satisfies CategoryOption));
   } catch (err: any) {
     toast.add({
       severity: 'error',
@@ -149,7 +149,7 @@ async function selectCategoryItems() {
     });
     const options = res.items.map(toItemOption);
     const merged = [...filters.selectedItems];
-    options.forEach((opt) => {
+    options.forEach((opt: ItemOption) => {
       if (!merged.find((m) => m.value === opt.value)) merged.push(opt);
     });
     filters.selectedItems = merged;

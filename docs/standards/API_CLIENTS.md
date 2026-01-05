@@ -1,7 +1,7 @@
 # API Clients
 
 ## Customer (`customer_frontend/customer-ui/src/api/client.ts`)
-- Eine Axios-Instanz mit `baseURL: "/api"` und Timeout 20s.
+- Eine Axios-Instanz mit `baseURL: "/api"` (keine Host-/Env-Ermittlung) und Timeout 20s.
 - Default-Header: `Content-Type: application/json` plus Tenant-Header aus `getTenantHeaders()`.
 - Helper:
   - `authHeaders(token?)` liefert `{ Authorization: Bearer <token> }` oder `undefined`.
@@ -9,7 +9,7 @@
 - Alle Wrapper (`auth.ts`, `inventory.ts`, `reporting.ts`, `reports.ts`) nutzen nur diese Instanz.
 
 ## Admin (`admin_frontend/admin-ui/src/api/client.ts`)
-- Eine Axios-Instanz mit `baseURL: "/api"` und Timeout 15s.
+- Eine Axios-Instanz mit `baseURL: "/api"` (keine Host-/Env-Ermittlung) und Timeout 15s.
 - Default-Header: `Content-Type: application/json`.
 - Helper: `adminHeaders(adminKey, actor?)` setzt `X-Admin-Key` und optional `X-Admin-Actor`.
 - Wrapper (`admin.ts`, `platform.ts`) nutzen ausschließlich diese Instanz.
@@ -25,6 +25,7 @@
 
 ## Timeout-Regeln
 - Zeitlimits sind zentral im Client definiert; spezielle Requests dürfen ein engeres Timeout per Request-Config setzen.
+- Basis-Helfer (`getBaseURL`, Header) liegen pro Frontend lokal unter `src/api/base.ts`; neue Axios-Instanzen außerhalb der Clients sind nicht erlaubt.
 
 ## Neues Wrapper-Template
 ```ts

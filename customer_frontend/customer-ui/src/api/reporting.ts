@@ -1,13 +1,12 @@
-import { type AxiosInstance } from 'axios';
-import { createApiClient } from './base';
-import type { ReportParams, ReportResponse, ReportSeries, ReportDataPoint, ReportKpis } from '@/types/reports';
-import { stringifyError } from '@/utils/error';
+import { api, authHeaders } from "./client";
+import type { ReportParams, ReportResponse, ReportSeries, ReportDataPoint, ReportKpis } from "@/types/reports";
+import { stringifyError } from "@/utils/error";
 
 const DEFAULT_TOP_LIMIT = 5;
 
 type MovementRecord = {
   id: string;
-  type: 'IN' | 'OUT';
+  type: "IN" | "OUT";
   qty: number | string;
   created_at: string;
   item_id?: string | null;
@@ -20,17 +19,13 @@ type MovementRecord = {
   } | null;
 };
 
-function buildClient(token?: string) {
-  return createApiClient({ token, timeout: 20000 });
-}
-
 function adaptReportParams(params: ReportParams) {
   return {
     ...params,
     item_ids: params.item_ids && params.item_ids.length ? params.item_ids : undefined,
     category_id: params.category_id || undefined,
     aggregate: params.aggregate,
-    limit: params.limit ?? DEFAULT_TOP_LIMIT
+    limit: params.limit ?? DEFAULT_TOP_LIMIT,
   };
 }
 
@@ -39,7 +34,7 @@ function normalizeSeries(series: ReportSeries[]): ReportSeries[] {
     label: s.label,
     itemId: s.itemId,
     color: s.color,
-    data: (s.data || []).map((p) => ({ ...p, value: Number(p.value) || 0 }))
+    data: (s.data || []).map((p) => ({ ...p, value: Number(p.value) || 0 })),
   }));
 }
 
@@ -49,7 +44,7 @@ function normalizeKpis(kpis: ReportKpis): ReportKpis {
     totalConsumption: Number(kpis?.totalConsumption ?? 0),
     averagePerMonth: Number(kpis?.averagePerMonth ?? 0),
     months,
-    topItem: kpis?.topItem || null
+    topItem: kpis?.topItem || null,
   };
 }
 
@@ -108,7 +103,7 @@ function aggregateMovements(movements: MovementRecord[], params: ReportParams): 
       period: month,
       value: monthValues[index],
       item_id: itemId,
-      item_name: name
+      item_name: name,
     }));
     return { label: name, itemId, data } satisfies ReportSeries;
   };
@@ -123,11 +118,11 @@ function aggregateMovements(movements: MovementRecord[], params: ReportParams): 
     const requested = params.item_ids || [];
     series = requested.map((itemId) => {
       const entry = itemMonthTotals[itemId];
-      const label = entry?.name || 'Artikel';
-      return buildItemSeries(itemId, label);
-    });
-  } else {
-    if (params.aggregate === false) {
+    const label = entry?.name || 'Artikel';
+    return buildItemSeries(itemId, label);
+  });
+} else {
+  if (params.aggregate === false) {
       series = totalsByItem.map((item) => buildItemSeries(item.itemId, item.name));
     } else {
       series = [aggregateSeries];
@@ -143,20 +138,22 @@ function aggregateMovements(movements: MovementRecord[], params: ReportParams): 
       totalConsumption,
       averagePerMonth,
       months,
-      topItem: topItem ? { id: topItem.itemId, name: topItem.name, quantity: topItem.total } : null
-    }
+      topItem: topItem ? { id: topItem.itemId, name: topItem.name, quantity: topItem.total } : null,
+    },
   };
 }
 
-async function fetchMovementsForAggregation(client: AxiosInstance, params: ReportParams) {
-  const response = await client.get<MovementRecord[] | { items: MovementRecord[] }>('/inventory/movements', {
+async function fetchMovementsForAggregation(token: string, params: ReportParams) {
+  const response = await api.get<MovementRecord[] | { items: MovementRecord[] }>("/inventory/movements", {
     params: {
       start: params.from,
       end: params.to,
       category_id: params.category_id || undefined,
       item_ids: params.item_ids && params.item_ids.length ? params.item_ids : undefined,
-      type: 'OUT'
-    }
+      type: "OUT",
+    },
+    headers: authHeaders(token),
+    timeout: 20000,
   });
   const data = response.data as any;
   if (Array.isArray(data)) return data;
@@ -165,21 +162,22 @@ async function fetchMovementsForAggregation(client: AxiosInstance, params: Repor
 }
 
 export async function getReportData(token: string, params: ReportParams): Promise<ReportResponse> {
-  const client = buildClient(token);
   try {
-    const res = await client.get<ReportResponse>('/inventory/report', {
-      params: adaptReportParams(params)
+    const res = await api.get<ReportResponse>("/inventory/report", {
+      params: adaptReportParams(params),
+      headers: authHeaders(token),
+      timeout: 20000,
     });
     return {
       series: normalizeSeries(res.data?.series || []),
-      kpis: normalizeKpis(res.data?.kpis)
+      kpis: normalizeKpis(res.data?.kpis),
     };
   } catch (error: any) {
     // TODO Backend: stabilen GET /inventory/report mit o.g. Parametern bereitstellen.
     // Fallback: aggregate clientseitig aus Bewegungen, falls dedizierter Endpoint (noch) fehlt.
     if (error?.response?.status === 404) {
       console.info('[reporting] /inventory/report nicht verfügbar, aggregiere aus Bewegungen');
-      const movements = await fetchMovementsForAggregation(client, params);
+      const movements = await fetchMovementsForAggregation(token, params);
       return aggregateMovements(movements, params);
     }
     if (error?.response?.status === 405) {
@@ -190,11 +188,12 @@ export async function getReportData(token: string, params: ReportParams): Promis
 }
 
 async function downloadReport(token: string, params: ReportParams, format: 'csv' | 'excel') {
-  const client = buildClient(token);
   const endpoint = `/inventory/report/export/${format}`;
-  const response = await client.get(endpoint, {
+  const response = await api.get(endpoint, {
     params: adaptReportParams(params),
-    responseType: 'blob'
+    responseType: "blob",
+    headers: authHeaders(token),
+    timeout: 20000,
   });
   return response.data as Blob;
 }

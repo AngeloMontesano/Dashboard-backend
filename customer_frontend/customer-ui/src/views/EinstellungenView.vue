@@ -24,6 +24,8 @@ const state = reactive<{
   testEmail: string;
   importing: boolean;
   testing: boolean;
+  addressStreet: string;
+  addressNumber: string;
 }>({
   settings: null,
   loading: false,
@@ -31,7 +33,9 @@ const state = reactive<{
   success: null,
   testEmail: '',
   importing: false,
-  testing: false
+  testing: false,
+  addressStreet: '',
+  addressNumber: ''
 });
 
 async function loadSettings() {
@@ -40,6 +44,9 @@ async function loadSettings() {
   state.error = null;
   try {
     state.settings = await fetchSettings(authState.accessToken);
+    const split = splitAddress(state.settings?.address || '');
+    state.addressStreet = split.street;
+    state.addressNumber = split.number;
   } catch (err: any) {
     state.error = err?.message || 'Einstellungen konnten nicht geladen werden';
   } finally {
@@ -53,6 +60,7 @@ async function saveSettings() {
   state.error = null;
   state.success = null;
   try {
+    state.settings.address = composeAddress(state.addressStreet, state.addressNumber);
     state.settings = await updateSettings(authState.accessToken, state.settings);
     state.success = 'Einstellungen gespeichert';
   } catch (err: any) {
@@ -116,6 +124,18 @@ async function handleTestEmail() {
   }
 }
 
+function splitAddress(address: string) {
+  const match = address?.match(/^(.*?)(\s+\d+\w*)$/);
+  return {
+    street: match ? match[1].trim() : (address || '').trim(),
+    number: match ? match[2].trim() : ''
+  };
+}
+
+function composeAddress(street: string, number: string) {
+  return [street?.trim(), number?.trim()].filter(Boolean).join(' ');
+}
+
 onMounted(loadSettings);
 </script>
 
@@ -170,16 +190,20 @@ onMounted(loadSettings);
           <input v-model="state.settings.phone" type="text" class="input" :disabled="state.loading" />
         </label>
         <label class="form-field">
+          <span class="form-label">Straße</span>
+          <input v-model="state.addressStreet" type="text" class="input" :disabled="state.loading" />
+        </label>
+        <label class="form-field">
+          <span class="form-label">Hausnummer</span>
+          <input v-model="state.addressNumber" type="text" class="input" :disabled="state.loading" />
+        </label>
+        <label class="form-field">
           <span class="form-label">PLZ</span>
           <input v-model="state.settings.address_postal_code" type="text" class="input" :disabled="state.loading" />
         </label>
         <label class="form-field">
           <span class="form-label">Ort</span>
           <input v-model="state.settings.address_city" type="text" class="input" :disabled="state.loading" />
-        </label>
-        <label class="form-field span-2">
-          <span class="form-label">Adresse</span>
-          <textarea v-model="state.settings.address" class="input" rows="2" :disabled="state.loading"></textarea>
         </label>
         <label class="form-field">
           <span class="form-label">Export-Format</span>

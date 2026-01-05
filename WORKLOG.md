@@ -403,3 +403,18 @@
   - Bestellungen können per E-Mail verschickt werden; fehlende Empfänger oder SMTP-Fehler werden zurückgegeben.
 - **Nächster Schritt**
   - Bestell-PDF prüfen/ergänzen; Customer-Frontend-Bestellungen/-Einstellungen an neue Endpunkte anbinden.
+
+## Schritt 34 – Legacy-Migration Phase 3 (T4/T5 Ergänzung: Bestell-PDF + Customer-Anbindung)
+- **Datum/Uhrzeit**: 2026-01-05T22:30:00+00:00
+- **Ziel**: Bestell-PDF ergänzen und Customer-Frontend an Bestell-/Einstellungs-APIs anbinden.
+- **Was wurde geändert**
+  - Backend: PDF-Export für Bestellungen (`/inventory/orders/{id}/pdf`) mit Positionen; ReportLab als Dependency.
+  - Backend: SMTP-User-Feld harmonisiert (`SMTP_USER`).
+  - Frontend: Bestellungen-View zeigt offene/erledigte Bestellungen, bestellwürdige Artikel, Aktionen für Erledigen/Storno, PDF/E-Mail.
+  - Frontend: Einstellungen-View nutzt echte Settings (GET/PUT), Export/Import, Test-E-Mail.
+  - OpenAPI/Schemas für Order-PDF und OrderEmailRequest/EmailSendResponse ergänzt.
+  - TODO/Roadmap aktualisiert (PDF erledigt).
+- **Ergebnis**
+  - End-to-end Bestellverwaltung inkl. PDF/E-Mail und Customer-Frontend-Bedienung der Settings/Orders; verbleibende offenen Punkte nur Admin-Metadaten.
+- **Nächster Schritt**
+  - Fehlen noch Admin-Metadaten aus Legacy-Einstellungen (falls benötigt) und Feinschliff Frontend (z. B. Order-Erstellung, weitere Filter).

@@ -11,6 +11,8 @@ from sqlalchemy import func, or_, select
 from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 from openpyxl import Workbook, load_workbook
+from reportlab.lib.pagesizes import A4
+from reportlab.pdfgen import canvas
 
 from app.core.db import get_db
 from app.core.config import settings
@@ -982,6 +984,57 @@ def _format_order_email(
     return subject, body
 
 
+def _build_order_pdf(order: InventoryOrder, item_map: dict[str, Item]) -> bytes:
+    buf = BytesIO()
+    pdf = canvas.Canvas(buf, pagesize=A4)
+    width, height = A4
+    y = height - 40
+
+    pdf.setFont("Helvetica-Bold", 14)
+    pdf.drawString(40, y, f"Bestellung {order.number}")
+    y -= 20
+    pdf.setFont("Helvetica", 10)
+    pdf.drawString(40, y, f"Status: {order.status}")
+    y -= 15
+    if order.note:
+        pdf.drawString(40, y, f"Notiz: {order.note}")
+        y -= 15
+    pdf.drawString(40, y, f"Angelegt: {order.created_at}")
+    y -= 25
+
+    pdf.setFont("Helvetica-Bold", 11)
+    pdf.drawString(40, y, "Positionen:")
+    y -= 18
+    pdf.setFont("Helvetica", 10)
+
+    headers = ["Artikel", "Menge", "SKU", "Barcode"]
+    col_x = [40, 250, 320, 420]
+    for idx, header in enumerate(headers):
+        pdf.drawString(col_x[idx], y, header)
+    y -= 12
+    pdf.line(40, y, width - 40, y)
+    y -= 14
+
+    for oi in order.items:
+        if y < 60:
+            pdf.showPage()
+            y = height - 40
+            pdf.setFont("Helvetica", 10)
+        item = item_map.get(str(oi.item_id))
+        name = item.name if item else "(unbekannt)"
+        sku = item.sku if item else "-"
+        barcode = item.barcode if item else "-"
+        values = [name, str(oi.quantity), sku, barcode]
+        for idx, value in enumerate(values):
+            pdf.drawString(col_x[idx], y, value)
+        y -= 14
+
+    pdf.showPage()
+    pdf.save()
+    buf.seek(0)
+    return buf.getvalue()
+
+
 @router.post("/orders/{order_id}/email", response_model=EmailSendResponse, dependencies=[Depends(require_owner_or_admin)])
 async def send_order_email(
     order_id: str,
@@ -1000,6 +1053,26 @@ async def send_order_email(
 
     subject, body = _format_order_email(order, item_map, recipient, payload.note)
     return _send_email_message(to_email=recipient, subject=subject, body=body)
+
+
+@router.get("/orders/{order_id}/pdf")
+async def get_order_pdf(
+    order_id: str,
+    ctx: TenantContext = Depends(get_tenant_context),
+    user_ctx: CurrentUserContext = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    order = await _get_order_or_404(order_id=order_id, ctx=ctx, db=db, load_items=True)
+    item_ids = {str(oi.item_id) for oi in order.items}
+    item_map = await _items_by_ids(db=db, ctx=ctx, item_ids=item_ids)
+
+    pdf_bytes = _build_order_pdf(order, item_map)
+    filename = f"order-{order.number}.pdf"
+    return StreamingResponse(
+        iter([pdf_bytes]),
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
 
 
 # ----------------------

@@ -3,9 +3,9 @@ from __future__ import annotations
 import uuid
 
 from sqlalchemy import Boolean, ForeignKey, Integer, SmallInteger, String, UniqueConstraint
-from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+from app.core.db_types import GUID
 from app.models.base import Base
 
 
@@ -17,14 +17,14 @@ class Item(Base):
 
     # Technischer Primärschlüssel
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        GUID(),
         primary_key=True,
         default=uuid.uuid4,
     )
 
     # Tenant Isolation über tenant_id
     tenant_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        GUID(),
         ForeignKey("tenants.id", ondelete="RESTRICT"),
         nullable=False,
         index=True,
@@ -55,7 +55,7 @@ class Item(Base):
     )
 
     category_id: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True),
+        GUID(),
         ForeignKey("categories.id", ondelete="SET NULL"),
         nullable=True,
         index=True,

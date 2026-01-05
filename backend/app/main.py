@@ -3,6 +3,7 @@ from __future__ import annotations
 import uuid
 import logging
 import time
+import asyncio
 
 from fastapi import Depends, FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
@@ -14,7 +15,7 @@ from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 from app.observability.metrics import metrics_registry, http_requests_total, http_request_duration_seconds
 
 from app.core.config import settings
-from app.core.db import get_db
+from app.core.db import get_db, init_models, is_sqlite_database
 from app.core.errors import register_exception_handlers
 from app.core.logging import configure_logging
 from app.modules.admin.routes import router as admin_router
@@ -54,6 +55,14 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
+    if is_sqlite_database():
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            asyncio.run(init_models())
+        else:
+            loop.create_task(init_models())
+
     @app.on_event("startup")
     async def log_startup_config() -> None:
         request_logger.info(
@@ -62,6 +71,11 @@ def create_app() -> FastAPI:
             settings.BASE_DOMAIN,
             settings.BASE_ADMIN_DOMAIN,
         )
+
+    @app.on_event("startup")
+    async def ensure_schema() -> None:
+        if is_sqlite_database():
+            await init_models()
 
     app.include_router(admin_login_router)
     app.include_router(inventory_router)

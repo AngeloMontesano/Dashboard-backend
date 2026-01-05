@@ -571,6 +571,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/tenants/{tenant_id}/users/{user_id}/set-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Set Tenant User Password */
+        post: operations["set_tenant_user_password"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/inventory/report": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Report (Aggregiert) */
+        get: operations["inventory_report_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/inventory/reports/consumption": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Report Consumption */
+        get: operations["inventory_reports_consumption_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/inventory/reports/export/{format}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Report Export */
+        get: operations["inventory_reports_export_format_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1038,6 +1106,59 @@ export interface components {
             /** Error Type */
             type: string;
         };
+        /** MovementListResponse */
+        MovementListResponse: components["schemas"]["MovementPayload"][] | {
+            /** Items */
+            items: components["schemas"]["MovementPayload"][];
+        };
+        /** ReportDataPoint */
+        ReportDataPoint: {
+            /** Period */
+            period: string;
+            /** Value */
+            value: number;
+            /** Item Id */
+            item_id?: string;
+            /** Item Name */
+            item_name?: string;
+        };
+        /** ReportSeries */
+        ReportSeries: {
+            /** Label */
+            label: string;
+            /** Item Id */
+            itemId?: string;
+            /** Color */
+            color?: string;
+            /** Data */
+            data: components["schemas"]["ReportDataPoint"][];
+        };
+        /** ReportTopItem */
+        ReportTopItem: {
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
+            /** Quantity */
+            quantity: number;
+        };
+        /** ReportKpis */
+        ReportKpis: {
+            /** Total Consumption */
+            totalConsumption: number;
+            /** Average Per Month */
+            averagePerMonth: number;
+            /** Months */
+            months: string[];
+            /** Top Item */
+            topItem?: components["schemas"]["ReportTopItem"] | null;
+        };
+        /** ReportResponse */
+        ReportResponse: {
+            /** Series */
+            series: components["schemas"]["ReportSeries"][];
+            kpis: components["schemas"]["ReportKpis"];
+        };
     };
     responses: never;
     parameters: never;
@@ -1066,7 +1187,12 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": Record<string, never>;
+                    "application/json": {
+                        /** Admin Key */
+                        admin_key: string;
+                        /** Actor */
+                        actor?: string;
+                    };
                 };
             };
             /** @description Validation Error */
@@ -1400,7 +1526,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["MovementListResponse"];
                 };
             };
             /** @description Validation Error */
@@ -1435,7 +1561,19 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": Record<string, never>;
+                    "application/json": {
+                        /** Imported */
+                        imported: number;
+                        /** Updated */
+                        updated: number;
+                        /** Errors */
+                        errors: {
+                            /** Row */
+                            row: string;
+                            /** Error */
+                            error: string;
+                        }[];
+                    };
                 };
             };
             /** @description Validation Error */
@@ -1466,7 +1604,10 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": Record<string, never>;
+                    "application/json": {
+                        /** Csv */
+                        csv: string;
+                    };
                 };
             };
             /** @description Validation Error */
@@ -2332,6 +2473,164 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+        };
+    };
+    set_tenant_user_password: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tenant_id: string;
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Password */
+                    password: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TenantUserOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    inventory_report_get: {
+        parameters: {
+            query: {
+                /** @description Startdatum (YYYY-MM-DD) */
+                from: string;
+                /** @description Enddatum (YYYY-MM-DD) */
+                to: string;
+                mode: "top5" | "all" | "selected";
+                item_ids?: string[];
+                category_id?: string;
+                aggregate?: boolean;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReportResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    inventory_reports_consumption_get: {
+        parameters: {
+            query: {
+                /** @description Startdatum (YYYY-MM-DD) */
+                from: string;
+                /** @description Enddatum (YYYY-MM-DD) */
+                to: string;
+                mode: "top5" | "all" | "selected";
+                item_ids?: string[];
+                category_id?: string;
+                aggregate?: boolean;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReportResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    inventory_reports_export_format_get: {
+        parameters: {
+            query: {
+                /** @description Startdatum (YYYY-MM-DD) */
+                from: string;
+                /** @description Enddatum (YYYY-MM-DD) */
+                to: string;
+                mode: "top5" | "all" | "selected";
+                item_ids?: string[];
+                category_id?: string;
+                aggregate?: boolean;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                format: "csv" | "excel" | "pdf";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/octet-stream": string;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

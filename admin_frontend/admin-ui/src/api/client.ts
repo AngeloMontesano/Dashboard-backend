@@ -1,9 +1,9 @@
 import { createApiClient } from "@shared/api-client";
 
-/*
-  Zentraler API Client.
-  Admin Key niemals loggen.
-*/
+export const api = axios.create({
+  baseURL: getBaseURL(),
+  timeout: 15000,
+});
 
 export function apiClient(adminKey: string, actor?: string) {
   return createApiClient({

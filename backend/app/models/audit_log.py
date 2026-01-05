@@ -4,9 +4,9 @@ import uuid
 from datetime import datetime, timezone
 
 from sqlalchemy import DateTime, String
-from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
+from app.core.db_types import GUID, JSONBType
 from app.models.base import Base
 
 
@@ -15,7 +15,7 @@ class AdminAuditLog(Base):
 
     # Technischer Primärschlüssel
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        GUID(),
         primary_key=True,
         default=uuid.uuid4,
     )
@@ -45,7 +45,7 @@ class AdminAuditLog(Base):
 
     # Strukturierte Zusatzdaten, keine sensiblen Inhalte
     payload: Mapped[dict] = mapped_column(
-        JSONB,
+        JSONBType(),
         nullable=False,
         default=dict,
     )

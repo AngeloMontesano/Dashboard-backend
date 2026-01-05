@@ -8,5 +8,5 @@ export function getBaseURL() {
 }
 
 export function getBaseDomain() {
-  return baseDomain;
+  return runtimeHostname;
 }

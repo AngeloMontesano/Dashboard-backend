@@ -7,7 +7,9 @@
     "dev": "vite",
     "build": "vue-tsc --noEmit && vite build",
     "preview": "vite preview",
-    "lint": "vue-tsc --noEmit && tsc -p tsconfig.node.json --noEmit"
+    "lint": "vue-tsc --noEmit && tsc -p tsconfig.node.json --noEmit",
+    "gen:types": "openapi-typescript https://api.test.myitnetwork.de/openapi.json -o src/api/gen/openapi.ts",
+    "gen:types:local": "openapi-typescript ../../docs/openapi/openapi.json -o src/api/gen/openapi.ts"
   },
   "dependencies": {
     "@primevue/themes": "^4.5.4",
@@ -22,6 +24,7 @@
   "devDependencies": {
     "@types/node": "^20.12.7",
     "@vitejs/plugin-vue": "^5.0.4",
+    "openapi-typescript": "^7.10.1",
     "typescript": "^5.4.5",
     "vite": "^5.2.8",
     "vue-tsc": "^2.0.8"

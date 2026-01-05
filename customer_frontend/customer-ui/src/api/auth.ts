@@ -13,7 +13,14 @@ export async function authLogin(email: string, password: string) {
   const baseURL = getBaseURL();
   const client = createApiClient();
   try {
-    const res = await client.post<LoginResponse>('/auth/login', { email, password });
+    const res = await api.post<LoginResponse>(
+      '/auth/login',
+      { email, password },
+      {
+        timeout: 15000,
+        headers: getTenantHeaders()
+      }
+    );
     return res.data;
   } catch (err: any) {
     if (err?.code === 'ECONNABORTED') {

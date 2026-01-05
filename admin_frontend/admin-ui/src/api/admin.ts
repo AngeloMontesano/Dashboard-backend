@@ -1,4 +1,4 @@
-// src/api/admin.ts
+import type { components, paths } from "./gen/openapi";
 import type {
   TenantOut,
   TenantCreate,
@@ -12,9 +12,10 @@ import type {
   AuditOut,
   AuditFilters,
   DiagnosticsOut,
-  TenantUserOut,
   TenantUserCreate,
   TenantUserUpdate,
+  TenantUserOut,
+  TenantUserApiOut,
 } from "../types";
 
 import { apiClient } from "./client";
@@ -25,10 +26,42 @@ import { createApiClient } from "@shared/api-client";
   - alle Calls setzen X-Admin-Key und optional X-Admin-Actor
 */
 
+type TenantListResponse = paths["/admin/tenants"]["get"]["responses"]["200"]["content"]["application/json"];
+type UserListResponse = paths["/admin/users"]["get"]["responses"]["200"]["content"]["application/json"];
+type MembershipsByTenantResponse =
+  paths["/admin/memberships/tenant/{tenant_id}"]["get"]["responses"]["200"]["content"]["application/json"];
+type MembershipsByUserResponse =
+  paths["/admin/memberships/user/{user_id}"]["get"]["responses"]["200"]["content"]["application/json"];
+type RolesResponse = paths["/admin/roles"]["get"]["responses"]["200"]["content"]["application/json"];
+type AuditResponse = paths["/admin/audit"]["get"]["responses"]["200"]["content"]["application/json"];
+type DiagnosticsResponse = paths["/admin/diagnostics"]["get"]["responses"]["200"]["content"]["application/json"];
+type TenantUserListResponse =
+  paths["/admin/tenants/{tenant_id}/users"]["get"]["responses"]["200"]["content"]["application/json"];
+
+type AdminLoginPayload = components["schemas"]["AdminCredentialLogin"];
+type TenantUserCreatePayload = components["schemas"]["TenantUserCreate"];
+type TenantUserUpdatePayload = components["schemas"]["TenantUserUpdate"];
+
+type AdminLoginResponse = { admin_key: string; actor?: string };
+
+function withAdmin(adminKey: string, actor?: string) {
+  return { headers: adminHeaders(adminKey, actor) };
+}
+
+function mapTenantUser(tenantId: string, user: TenantUserApiOut): TenantUserOut {
+  return {
+    id: user.membership_id || user.user_id,
+    tenant_id: tenantId,
+    user_id: user.user_id,
+    email: user.email,
+    role: user.role,
+    is_active: user.membership_is_active ?? user.user_is_active ?? false,
+  };
+}
+
 export async function adminPing(adminKey: string, actor?: string) {
-  const api = apiClient(adminKey, actor);
-  const res = await api.get("/admin/ping");
-  return res.data as Record<string, unknown>;
+  const res = await api.get<Record<string, unknown>>("/admin/ping", withAdmin(adminKey, actor));
+  return res.data;
 }
 
 export async function adminLoginWithCredentials(email: string, password: string) {
@@ -43,46 +76,39 @@ export async function adminListTenants(
   actor?: string,
   params?: { q?: string; limit?: number; offset?: number }
 ) {
-  const api = apiClient(adminKey, actor);
-  const res = await api.get("/admin/tenants", { params });
+  const res = await api.get<TenantListResponse>("/admin/tenants", { ...withAdmin(adminKey, actor), params });
   return res.data as TenantOut[];
 }
 
 export async function adminCreateTenant(adminKey: string, actor?: string, payload: TenantCreate) {
-  const api = apiClient(adminKey, actor);
-  const res = await api.post("/admin/tenants", payload);
-  return res.data as TenantOut;
+  const res = await api.post<TenantOut>("/admin/tenants", payload, withAdmin(adminKey, actor));
+  return res.data;
 }
 
-export async function adminUpdateTenant(adminKey: string, actor?: string, tenantId: string, payload: TenantUpdate) {
-  const api = apiClient(adminKey, actor);
-  const res = await api.patch(`/admin/tenants/${tenantId}`, payload);
-  return res.data as TenantOut;
+export async function adminUpdateTenant(adminKey: string, actor: string | undefined, tenantId: string, payload: TenantUpdate) {
+  const res = await api.patch<TenantOut>(`/admin/tenants/${tenantId}`, payload, withAdmin(adminKey, actor));
+  return res.data;
 }
 
-export async function adminDeleteTenant(adminKey: string, actor?: string, tenantId: string) {
-  const api = apiClient(adminKey, actor);
-  await api.delete(`/admin/tenants/${tenantId}`, { params: { confirm: true } });
+export async function adminDeleteTenant(adminKey: string, actor: string | undefined, tenantId: string) {
+  await api.delete(`/admin/tenants/${tenantId}`, { ...withAdmin(adminKey, actor), params: { confirm: true } });
   return true;
 }
 
 /* Users */
 export async function adminListUsers(adminKey: string, actor?: string) {
-  const api = apiClient(adminKey, actor);
-  const res = await api.get("/admin/users");
+  const res = await api.get<UserListResponse>("/admin/users", withAdmin(adminKey, actor));
   return res.data as UserOut[];
 }
 
-export async function adminCreateUser(adminKey: string, actor?: string, payload: UserCreate) {
-  const api = apiClient(adminKey, actor);
-  const res = await api.post("/admin/users", payload);
-  return res.data as UserOut;
+export async function adminCreateUser(adminKey: string, actor: string | undefined, payload: UserCreate) {
+  const res = await api.post<UserOut>("/admin/users", payload, withAdmin(adminKey, actor));
+  return res.data;
 }
 
-export async function adminUpdateUser(adminKey: string, actor?: string, userId: string, payload: UserUpdate) {
-  const api = apiClient(adminKey, actor);
-  const res = await api.patch(`/admin/users/${userId}`, payload);
-  return res.data as UserOut;
+export async function adminUpdateUser(adminKey: string, actor: string | undefined, userId: string, payload: UserUpdate) {
+  const res = await api.patch<UserOut>(`/admin/users/${userId}`, payload, withAdmin(adminKey, actor));
+  return res.data;
 }
 
 /* Tenant Users (combined user + membership for a tenant) */
@@ -92,19 +118,12 @@ export async function adminListTenantUsers(
   tenantId: string,
   params?: { q?: string; limit?: number; offset?: number }
 ) {
-  const api = apiClient(adminKey, actor);
-  const res = await api.get(`/admin/tenants/${tenantId}/users`, { params });
-  const data = res.data as any[];
-  return data.map((u) => ({
-    id: u.id ?? u.user_id ?? u.membership_id,
-    tenant_id: u.tenant_id,
-    user_id: u.user_id,
-    email: u.email,
-    role: u.role,
-    is_active: u.is_active ?? u.user_is_active ?? u.membership_is_active ?? false,
-    has_password: u.has_password ?? u.password_set ?? false,
-    updated_at: u.updated_at ?? u.modified_at ?? u.last_changed,
-  })) as TenantUserOut[];
+  const res = await api.get<TenantUserListResponse>(`/admin/tenants/${tenantId}/users`, {
+    ...withAdmin(adminKey, actor),
+    params,
+  });
+  const data = res.data || [];
+  return (data as TenantUserApiOut[]).map((u) => mapTenantUser(tenantId, u));
 }
 
 export async function adminCreateTenantUser(
@@ -113,51 +132,45 @@ export async function adminCreateTenantUser(
   tenantId: string,
   payload: TenantUserCreate
 ) {
-  const api = apiClient(adminKey, actor);
-  const res = await api.post(`/admin/tenants/${tenantId}/users`, payload);
-  const u = res.data as any;
-  return {
-    id: u.id ?? u.user_id ?? u.membership_id,
-    tenant_id: u.tenant_id,
-    user_id: u.user_id,
-    email: u.email,
-    role: u.role,
-    is_active: u.is_active ?? u.user_is_active ?? u.membership_is_active ?? false,
-    has_password: u.has_password ?? u.password_set ?? false,
-    updated_at: u.updated_at ?? u.modified_at ?? u.last_changed,
-  } as TenantUserOut;
+  const body: TenantUserCreatePayload = {
+    email: payload.email,
+    role: payload.role,
+    password: payload.password ?? null,
+    user_is_active: payload.is_active ?? true,
+    membership_is_active: payload.is_active ?? true,
+  };
+  const res = await api.post<TenantUserApiOut>(`/admin/tenants/${tenantId}/users`, body, withAdmin(adminKey, actor));
+  return mapTenantUser(tenantId, res.data);
 }
 
 export async function adminUpdateTenantUser(
   adminKey: string,
   actor: string | undefined,
   tenantId: string,
-  userId: string,
+  membershipId: string,
   payload: TenantUserUpdate
 ) {
-  const api = apiClient(adminKey, actor);
-  const res = await api.patch(`/admin/tenants/${tenantId}/users/${userId}`, payload);
-  const u = res.data as any;
-  return {
-    id: u.id ?? u.user_id ?? u.membership_id,
-    tenant_id: u.tenant_id,
-    user_id: u.user_id,
-    email: u.email,
-    role: u.role,
-    is_active: u.is_active ?? u.user_is_active ?? u.membership_is_active ?? false,
-    has_password: u.has_password ?? u.password_set ?? false,
-    updated_at: u.updated_at ?? u.modified_at ?? u.last_changed,
-  } as TenantUserOut;
+  const body: TenantUserUpdatePayload = {
+    role: payload.role ?? null,
+    password: payload.password ?? null,
+    user_is_active: payload.is_active ?? null,
+    membership_is_active: payload.is_active ?? null,
+  };
+  const res = await api.patch<TenantUserApiOut>(
+    `/admin/tenants/${tenantId}/users/${membershipId}`,
+    body,
+    withAdmin(adminKey, actor)
+  );
+  return mapTenantUser(tenantId, res.data);
 }
 
 export async function adminDeleteTenantUser(
   adminKey: string,
   actor: string | undefined,
   tenantId: string,
-  userId: string
+  membershipId: string
 ) {
-  const api = apiClient(adminKey, actor);
-  await api.delete(`/admin/tenants/${tenantId}/users/${userId}`);
+  await api.delete(`/admin/tenants/${tenantId}/users/${membershipId}`, withAdmin(adminKey, actor));
   return true;
 }
 
@@ -168,65 +181,57 @@ export async function adminSetTenantUserPassword(
   userId: string,
   password: string
 ) {
-  const api = apiClient(adminKey, actor);
-  const res = await api.post(`/admin/tenants/${tenantId}/users/${userId}/set-password`, { password });
-  const u = res.data as any;
-  return {
-    id: u.id ?? u.user_id ?? u.membership_id,
-    tenant_id: u.tenant_id,
-    user_id: u.user_id,
-    email: u.email,
-    role: u.role,
-    is_active: u.is_active ?? u.user_is_active ?? u.membership_is_active ?? false,
-    has_password: u.has_password ?? u.password_set ?? true,
-    updated_at: u.updated_at ?? u.modified_at ?? u.last_changed,
-  } as TenantUserOut;
+  const res = await api.post<TenantUserApiOut>(
+    `/admin/tenants/${tenantId}/users/${userId}/set-password`,
+    { password },
+    withAdmin(adminKey, actor)
+  );
+  return mapTenantUser(tenantId, res.data);
 }
 
 /* Memberships */
-export async function adminMembershipsByTenant(adminKey: string, actor?: string, tenantId: string) {
-  const api = apiClient(adminKey, actor);
-  const res = await api.get(`/admin/memberships/tenant/${tenantId}`);
+export async function adminMembershipsByTenant(adminKey: string, actor: string | undefined, tenantId: string) {
+  const res = await api.get<MembershipsByTenantResponse>(
+    `/admin/memberships/tenant/${tenantId}`,
+    withAdmin(adminKey, actor)
+  );
   return res.data as MembershipOut[];
 }
 
-export async function adminMembershipsByUser(adminKey: string, actor?: string, userId: string) {
-  const api = apiClient(adminKey, actor);
-  const res = await api.get(`/admin/memberships/user/${userId}`);
+export async function adminMembershipsByUser(adminKey: string, actor: string | undefined, userId: string) {
+  const res = await api.get<MembershipsByUserResponse>(`/admin/memberships/user/${userId}`, withAdmin(adminKey, actor));
   return res.data as MembershipOut[];
 }
 
-export async function adminCreateMembership(adminKey: string, actor?: string, payload: MembershipCreate) {
-  const api = apiClient(adminKey, actor);
-  const res = await api.post("/admin/memberships", payload);
-  return res.data as MembershipOut;
+export async function adminCreateMembership(adminKey: string, actor: string | undefined, payload: MembershipCreate) {
+  const res = await api.post<MembershipOut>("/admin/memberships", payload, withAdmin(adminKey, actor));
+  return res.data;
 }
 
-export async function adminUpdateMembership(adminKey: string, actor?: string, membershipId: string, payload: MembershipUpdate) {
-  const api = apiClient(adminKey, actor);
-  const res = await api.patch(`/admin/memberships/${membershipId}`, payload);
-  return res.data as MembershipOut;
+export async function adminUpdateMembership(
+  adminKey: string,
+  actor: string | undefined,
+  membershipId: string,
+  payload: MembershipUpdate
+) {
+  const res = await api.patch<MembershipOut>(`/admin/memberships/${membershipId}`, payload, withAdmin(adminKey, actor));
+  return res.data;
 }
 
 /* Roles */
 export async function adminRoles(adminKey: string, actor?: string) {
-  const api = apiClient(adminKey, actor);
-  const res = await api.get("/admin/roles");
+  const res = await api.get<RolesResponse>("/admin/roles", withAdmin(adminKey, actor));
   return res.data as string[];
 }
 
 /* Diagnostics */
 export async function adminDiagnostics(adminKey: string, actor?: string) {
-  const api = apiClient(adminKey, actor);
-  const res = await api.get("/admin/diagnostics");
-  return res.data as DiagnosticsOut;
+  const res = await api.get<DiagnosticsResponse>("/admin/diagnostics", withAdmin(adminKey, actor));
+  return (res.data as DiagnosticsOut) || {};
 }
 
 /* Audit */
-export async function adminGetAudit(adminKey: string, actor?: string, filters: AuditFilters = {}) {
-  const api = apiClient(adminKey, actor);
-
-  // backend erwartet query params, null vermeiden
+export async function adminGetAudit(adminKey: string, actor: string | undefined, filters: AuditFilters = {}) {
   const params: Record<string, unknown> = {};
   if (filters.actor) params.actor = filters.actor;
   if (filters.action) params.action = filters.action;
@@ -238,6 +243,6 @@ export async function adminGetAudit(adminKey: string, actor?: string, filters: A
   params.limit = typeof filters.limit === "number" ? filters.limit : 100;
   params.offset = typeof filters.offset === "number" ? filters.offset : 0;
 
-  const res = await api.get("/admin/audit", { params });
+  const res = await api.get<AuditResponse>("/admin/audit", { ...withAdmin(adminKey, actor), params });
   return res.data as AuditOut[];
 }

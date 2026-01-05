@@ -260,6 +260,7 @@ const { toast } = useToast();
 const tenants = ref<TenantOut[]>([]);
 const roles = ref<string[]>([]);
 const memberships = ref<TenantUserOut[]>([]);
+const tenantUsers = memberships;
 
 const selectedTenant = ref<TenantOut | null>(null);
 const selectedMembership = ref<TenantUserOut | null>(null);
@@ -283,7 +284,7 @@ const createForm = reactive({
 const edit = reactive({
   role: "",
   user_is_active: false,
-  membership_is_active: false,
+  is_active: false,
 });
 
 const busy = reactive({

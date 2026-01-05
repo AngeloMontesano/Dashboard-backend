@@ -1,51 +1,37 @@
 // src/types.ts
+import type { components, paths } from "./api/gen/openapi";
 
-export type TenantOut = { id: string; slug: string; name: string; is_active: boolean };
-export type TenantCreate = { slug: string; name: string };
-export type TenantUpdate = { name?: string; is_active?: boolean };
+type TenantListResponse =
+  paths["/admin/tenants"]["get"]["responses"]["200"]["content"]["application/json"];
 
-export type UserOut = { id: string; email: string; is_active: boolean; has_password: boolean };
-export type UserCreate = { email: string; password?: string | null };
-export type UserUpdate = { is_active?: boolean | null; password?: string | null };
+export type TenantOut = TenantListResponse[number];
+export type TenantCreate = components["schemas"]["TenantCreate"];
+export type TenantUpdate = components["schemas"]["TenantUpdate"];
 
-export type MembershipOut = {
-  id: string;
-  user_id: string;
-  tenant_id: string;
+export type UserOut = components["schemas"]["UserOut"];
+export type UserCreate = components["schemas"]["UserCreate"];
+export type UserUpdate = components["schemas"]["UserUpdate"];
+
+export type MembershipOut = components["schemas"]["MembershipOut"];
+export type MembershipCreate = components["schemas"]["MembershipCreate"];
+export type MembershipUpdate = components["schemas"]["MembershipUpdate"];
+
+export type DiagnosticsOut = Record<string, unknown>;
+export type AuditOut = components["schemas"]["AuditOut"];
+export type AuditFilters = NonNullable<paths["/admin/audit"]["get"]["parameters"]["query"]>;
+
+export type TenantUserApiOut = components["schemas"]["TenantUserOut"];
+export type TenantUserCreate = {
+  email: string;
   role: string;
-  is_active: boolean;
+  password?: string | null;
+  is_active?: boolean;
 };
-export type MembershipCreate = { user_id: string; tenant_id: string; role: string };
-export type MembershipUpdate = { role?: string | null; is_active?: boolean | null };
-
-export type DiagnosticsOut = {
-  duplicate_memberships: unknown[];
-  memberships_without_user: unknown[];
-  memberships_without_tenant: unknown[];
-  inactive_tenant_with_active_memberships: unknown[];
+export type TenantUserUpdate = {
+  role?: string | null;
+  password?: string | null;
+  is_active?: boolean | null;
 };
-
-export type AuditOut = {
-  id: string;
-  actor: string;
-  action: string;
-  entity_type: string;
-  entity_id: string;
-  payload: Record<string, unknown>;
-  created_at: string; // ISO date-time
-};
-
-export type AuditFilters = {
-  actor?: string;
-  action?: string;
-  entity_type?: string;
-  entity_id?: string;
-  created_from?: string; // ISO date-time
-  created_to?: string;   // ISO date-time
-  limit?: number;
-  offset?: number;
-};
-
 export type TenantUserOut = {
   id: string;
   tenant_id?: string;
@@ -55,16 +41,4 @@ export type TenantUserOut = {
   is_active: boolean;
   has_password?: boolean;
   updated_at?: string;
-};
-
-export type TenantUserCreate = {
-  email: string;
-  role: string;
-  password: string;
-  is_active?: boolean;
-};
-
-export type TenantUserUpdate = {
-  role?: string | null;
-  is_active?: boolean | null;
 };

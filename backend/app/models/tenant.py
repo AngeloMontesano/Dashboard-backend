@@ -3,9 +3,9 @@ from __future__ import annotations
 import uuid
 
 from sqlalchemy import Boolean, String
-from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
+from app.core.db_types import GUID
 from app.models.base import Base
 
 
@@ -14,7 +14,7 @@ class Tenant(Base):
 
     # Technischer Primärschlüssel
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        GUID(),
         primary_key=True,
         default=uuid.uuid4,
     )

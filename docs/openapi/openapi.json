@@ -79,6 +79,107 @@
         }
       }
     },
+    "/inventory/inventory/bulk": {
+      "post": {
+        "tags": [
+          "inventory"
+        ],
+        "summary": "Bulk Update Inventory",
+        "operationId": "bulk_update_inventory_inventory_inventory_bulk_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InventoryBulkUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InventoryBulkUpdateResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inventory/inventory/export": {
+      "get": {
+        "tags": [
+          "inventory"
+        ],
+        "summary": "Export Inventory",
+        "operationId": "export_inventory_inventory_inventory_export_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/inventory/ping": {
       "get": {
         "tags": [
@@ -640,8 +741,127 @@
         }
       }
     },
-    "/inventory/report": {
+    "/inventory/movements": {
       "get": {
+        "tags": [
+          "inventory"
+        ],
+        "summary": "List Movements",
+        "operationId": "list_movements_inventory_movements_get",
+        "parameters": [
+          {
+            "name": "start",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "title": "Start"
+            }
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "title": "End"
+            }
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "IN",
+                "OUT"
+              ],
+              "title": "Type"
+            }
+          },
+          {
+            "name": "category_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "title": "Category Id"
+            }
+          },
+          {
+            "name": "item_ids",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "title": "Item Ids"
+            },
+            "style": "form",
+            "explode": true
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 200,
+              "minimum": 1,
+              "maximum": 1000,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MovementOut"
+                  },
+                  "title": "MovementOutList"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
         "tags": [
           "inventory"
         ],
@@ -6392,7 +6612,238 @@
                 "type": "null"
               }
             ],
-            "title": "Canceled At"
+            "title": "MovementItemsWrapper"
+          }
+        ],
+        "title": "MovementListResponse"
+      },
+      "MovementItemOut": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "sku": {
+            "type": "string",
+            "title": "Sku"
+          },
+          "barcode": {
+            "type": "string",
+            "title": "Barcode"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "category_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category Id"
+          }
+        },
+        "required": [
+          "id",
+          "sku",
+          "barcode",
+          "name"
+        ],
+        "title": "MovementItemOut"
+      },
+      "MovementOut": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "item_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Item Id"
+          },
+          "item_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Item Name"
+          },
+          "category_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category Id"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "IN",
+              "OUT"
+            ],
+            "title": "Type"
+          },
+          "barcode": {
+            "type": "string",
+            "title": "Barcode"
+          },
+          "qty": {
+            "type": "integer",
+            "title": "Qty"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "item": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MovementItemOut"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Item"
+          }
+        },
+        "required": [
+          "id",
+          "item_id",
+          "type",
+          "barcode",
+          "qty",
+          "created_at"
+        ],
+        "title": "MovementOut"
+      },
+      "InventoryUpdate": {
+        "type": "object",
+        "properties": {
+          "item_id": {
+            "type": "string",
+            "title": "Item Id"
+          },
+          "quantity": {
+            "type": "integer",
+            "minimum": 0,
+            "title": "Quantity"
+          }
+        },
+        "required": [
+          "item_id",
+          "quantity"
+        ],
+        "title": "InventoryUpdate"
+      },
+      "InventoryBulkUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "updates": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/InventoryUpdate"
+            },
+            "title": "Updates"
+          }
+        },
+        "required": [
+          "updates"
+        ],
+        "title": "InventoryBulkUpdateRequest"
+      },
+      "InventoryBulkUpdateResult": {
+        "type": "object",
+        "properties": {
+          "updated": {
+            "type": "integer",
+            "title": "Updated"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "title": "Errors"
+          }
+        },
+        "required": [
+          "updated",
+          "errors"
+        ],
+        "title": "InventoryBulkUpdateResult"
+      },
+      "ReportDataPoint": {
+        "type": "object",
+        "properties": {
+          "period": {
+            "type": "string",
+            "title": "Period"
+          },
+          "value": {
+            "type": "number",
+            "title": "Value"
+          },
+          "item_id": {
+            "type": "string",
+            "title": "Item Id"
+          },
+          "item_name": {
+            "type": "string",
+            "title": "Item Name"
+          }
+        },
+        "required": [
+          "period",
+          "value"
+        ],
+        "title": "ReportDataPoint"
+      },
+      "ReportSeries": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "itemId": {
+            "type": "string",
+            "title": "Item Id"
+          },
+          "color": {
+            "type": "string",
+            "title": "Color"
           },
           "items": {
             "type": "array",

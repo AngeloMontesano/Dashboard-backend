@@ -1,8 +1,8 @@
 # TODO
 
 ## Must
-- Legacy-Migration Backend: Alembic-Revision `0008_tenant_settings_metadata` ausrollen (neue Settings-Felder). Bei Bedarf Werte je Tenant befüllen/backfillen.
-- Customer-Frontend: echte Daten für Inventur/Bestellungen/Einstellungen/Reporting sind verdrahtet; Feinschliff (Filter/Responsiveness/Tokens) fortführen.
+- Legacy-Migration Backend: fehlende Endpunkte für Bestellungen (bestellwürdig/offen/erledigt inkl. Bestandserhöhung) sowie Einstellungen/Firmendaten + Mass Import/Export ergänzen (siehe `docs/roadmap/MIGRATION_OLD_LM.md`); Bewegungs-Listing, Inventur-Bulk/Export und Reporting sind ergänzt.
+- Customer-Frontend: Dummy-KPIs in Inventur/Bestellungen/Einstellungen/Reporting durch echte Daten aus neuen Endpunkten ersetzen; Fallback-Client-Aggregation entfernen, sobald Backend verfügbar.
 - OpenAPI aktualisieren und Typen regenerieren, sobald neue Endpunkte implementiert sind; Wrapper auf neue Typen migrieren.
 - Design-Tokens je App weiter verankern: neue Tokens in Utilities/Theme-Mappings nutzen und Alt-Variablen perspektivisch ablösen (admin: `src/styles/tokens.css`, customer: `src/styles/tokens.css`).
 - Layout-Utilities/Ui-Komponenten sind angelegt (`src/styles/utilities.css`, `src/components/ui` je App); restliche Views schrittweise darauf umstellen, damit kein per-View Spacing/Styling verbleibt (Customer offen: Artikel/Berichte).

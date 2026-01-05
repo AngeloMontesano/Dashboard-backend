@@ -327,6 +327,7 @@
 - **Was wurde geändert**
   - Backend: GET `/inventory/orders/recommended` liefert aktive Items unter Zielbestand (tenant-scope).
   - Schemas/OpenAPI: ReorderItem/ReorderResponse ergänzt; Roadmap/TODO angepasst (Bestellungen teilweise geschlossen).
+  - Empfehlung ergänzt: `recommended_qty` (max Zielbestand-Lücke vs. Mindestbestand), Sortierung nach Lücke.
 - **Ergebnis**
   - Bestellwürdige Liste verfügbar; weitere Bestell-Features (offen/erledigt, Bestandserhöhung, PDF/E-Mail) noch offen.
 - **Nächster Schritt**

@@ -690,12 +690,13 @@ async def get_reorder_recommendations(
     user_ctx: CurrentUserContext = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> ReorderResponse:
+    diff_expr = Item.target_stock - Item.quantity
     q = select(Item).where(
         Item.tenant_id == ctx.tenant.id,
         Item.is_active.is_(True),
         Item.target_stock > 0,
         Item.quantity < Item.target_stock,
-    ).order_by(Item.target_stock - Item.quantity.desc())
+    ).order_by(diff_expr.desc())
 
     items = (await db.scalars(q)).all()
     return ReorderResponse(
@@ -709,6 +710,7 @@ async def get_reorder_recommendations(
                 quantity=item.quantity,
                 target_stock=item.target_stock,
                 min_stock=item.min_stock,
+                recommended_qty=max(item.target_stock - item.quantity, item.min_stock),
             )
             for item in items
         ]

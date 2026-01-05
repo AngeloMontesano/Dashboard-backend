@@ -204,6 +204,7 @@ class ReorderItem(BaseModel):
     quantity: int
     target_stock: int
     min_stock: int
+    recommended_qty: int
 
 
 class ReorderResponse(BaseModel):

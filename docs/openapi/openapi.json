@@ -4827,6 +4827,10 @@
           "min_stock": {
             "type": "integer",
             "title": "Min Stock"
+          },
+          "recommended_qty": {
+            "type": "integer",
+            "title": "Recommended Qty"
           }
         },
         "required": [
@@ -4836,7 +4840,8 @@
           "barcode",
           "quantity",
           "target_stock",
-          "min_stock"
+          "min_stock",
+          "recommended_qty"
         ],
         "title": "ReorderItem"
       },

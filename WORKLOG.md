@@ -307,3 +307,16 @@
   - Inventur-Daten sind per API aktualisier- und exportierbar; Excel folgt Legacy-Spalten, Tenant-Isolation gewährleistet.
 - **Nächster Schritt**
   - T3: Reporting-Endpunkte (/inventory/report + Exporte) implementieren; anschließend Frontend an Inventur/Reporting anbinden.
+
+## Schritt 26 – Legacy-Migration Phase 3 (T3: Reporting)
+- **Datum/Uhrzeit**: 2026-01-05T19:30:00+00:00
+- **Ziel**: Serverseitige Verbrauchs-Reports inkl. CSV/XLSX-Export bereitstellen.
+- **Was wurde geändert**
+  - Backend: GET `/inventory/report` und `/inventory/reports/consumption` liefern aggregierte Verbrauchsdaten (OUT-Bewegungen) nach Zeitraum, Modus (top5/all/selected), Kategorie/Items, optional aggregiert.
+  - Backend: GET `/inventory/reports/export/{format}` erzeugt CSV/XLSX mit Artikeln, Monat, Verbrauch; nutzt dieselbe Aggregation.
+  - Schemas: ReportDataPoint/Series/Kpis/Response ergänzt; OpenAPI bereits vorhanden, jetzt implementiert.
+  - TODO/Roadmap aktualisiert: Reporting-Gap geschlossen.
+- **Ergebnis**
+  - Verbrauchsberichte laufen serverseitig; Exporte stehen bereit; Grundlage für Frontend-Anbindung ohne Client-Fallback.
+- **Nächster Schritt**
+  - Nächste Pflichtbereiche: Bestellungen (Models/Endpoints) und Einstellungen/Firmendaten inkl. Mass Import/Export umsetzen; Frontend an neue Reporting-/Inventur-APIs anbinden.

@@ -161,3 +161,35 @@ class InventoryBulkUpdateRequest(BaseModel):
 class InventoryBulkUpdateResult(BaseModel):
     updated: int
     errors: List[str] = []
+
+
+class ReportDataPoint(BaseModel):
+    period: str
+    value: float
+    item_id: Optional[str] = None
+    item_name: Optional[str] = None
+
+
+class ReportSeries(BaseModel):
+    label: str
+    itemId: Optional[str] = None
+    color: Optional[str] = None
+    data: List[ReportDataPoint]
+
+
+class ReportTopItem(BaseModel):
+    id: str
+    name: str
+    quantity: float
+
+
+class ReportKpis(BaseModel):
+    totalConsumption: float
+    averagePerMonth: float
+    months: List[str]
+    topItem: Optional[ReportTopItem] = None
+
+
+class ReportResponse(BaseModel):
+    series: List[ReportSeries]
+    kpis: ReportKpis

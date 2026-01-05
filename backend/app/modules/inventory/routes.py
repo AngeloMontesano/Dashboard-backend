@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from io import BytesIO
+from datetime import date, datetime, timedelta, timezone
+from io import BytesIO, StringIO
 from typing import Any, Literal
 
-from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
+from fastapi import APIRouter, Depends, File, HTTPException, Path, Query, UploadFile
 from fastapi.responses import StreamingResponse
 from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -25,6 +25,11 @@ from app.modules.inventory.schemas import (
     ItemOut,
     ItemUpdate,
     ItemsPage,
+    ReportResponse,
+    ReportSeries,
+    ReportDataPoint,
+    ReportKpis,
+    ReportTopItem,
     InventoryBulkUpdateRequest,
     InventoryBulkUpdateResult,
     MovementItemOut,
@@ -407,6 +412,271 @@ async def update_item(
         category = await db.get(Category, item.category_id)
 
     return _item_out(item, category)
+
+
+# ----------------------
+# Reporting Helpers
+# ----------------------
+def _parse_date(value: str, name: str) -> date:
+    try:
+        return datetime.strptime(value, "%Y-%m-%d").date()
+    except Exception:  # noqa: BLE001
+        raise HTTPException(status_code=400, detail={"error": {"code": "invalid_date", "message": f"{name} muss YYYY-MM-DD sein"}})
+
+
+async def _aggregate_consumption(
+    *,
+    db: AsyncSession,
+    ctx: TenantContext,
+    start: date,
+    end: date,
+    mode: Literal["top5", "all", "selected"],
+    item_ids: list[str] | None,
+    category_id: str | None,
+    aggregate: bool | None,
+    limit: int | None,
+) -> ReportResponse:
+    if start > end:
+        raise HTTPException(status_code=400, detail={"error": {"code": "invalid_range", "message": "from muss vor to liegen"}})
+
+    start_dt = datetime.combine(start, datetime.min.time()).replace(tzinfo=timezone.utc)
+    end_dt = datetime.combine(end + timedelta(days=1), datetime.min.time()).replace(tzinfo=timezone.utc)
+
+    base = (
+        select(
+            func.date_trunc("month", InventoryMovement.created_at).label("period"),
+            Item.id.label("item_id"),
+            Item.name.label("item_name"),
+            Item.sku.label("item_sku"),
+            Item.category_id.label("category_id"),
+            func.sum(InventoryMovement.qty).label("qty_sum"),
+        )
+        .join(Item, InventoryMovement.item_id == Item.id)
+        .where(
+            InventoryMovement.tenant_id == ctx.tenant.id,
+            InventoryMovement.type == "OUT",
+            InventoryMovement.created_at >= start_dt,
+            InventoryMovement.created_at < end_dt,
+        )
+    )
+    if category_id:
+        base = base.where(Item.category_id == category_id)
+    if item_ids:
+        base = base.where(Item.id.in_(item_ids))
+
+    grouped = (
+        await db.execute(
+            base.group_by(
+                "period",
+                "item_id",
+                "item_name",
+                "item_sku",
+                "category_id",
+            ).order_by("period")
+        )
+    ).all()
+
+    series_map: dict[str, dict[str, Any]] = {}
+    months: set[str] = set()
+
+    for row in grouped:
+        period: datetime = row.period
+        month_key = period.strftime("%Y-%m")
+        months.add(month_key)
+        item_id = str(row.item_id)
+        entry = series_map.setdefault(
+            item_id,
+            {"name": row.item_name, "category_id": row.category_id, "months": {}},
+        )
+        entry["months"][month_key] = float(row.qty_sum or 0.0)
+
+    month_list = sorted(months)
+
+    def _series_from_entry(item_id: str, entry: dict[str, Any]) -> ReportSeries:
+        data = [
+            ReportDataPoint(
+                period=month,
+                value=entry["months"].get(month, 0.0),
+                item_id=item_id,
+                item_name=entry["name"],
+            )
+            for month in month_list
+        ]
+        return ReportSeries(label=entry["name"], itemId=item_id, data=data)
+
+    totals_by_item = [
+        (item_id, sum(values["months"].values()), values)
+        for item_id, values in series_map.items()
+    ]
+    totals_by_item.sort(key=lambda x: x[1], reverse=True)
+
+    series: list[ReportSeries] = []
+
+    if mode == "selected":
+        selected_ids = item_ids or []
+        for item_id in selected_ids:
+            entry = series_map.get(item_id)
+            if entry:
+                series.append(_series_from_entry(item_id, entry))
+    elif mode == "top5":
+        take = limit or 5
+        for item_id, _total, entry in totals_by_item[:take]:
+            series.append(_series_from_entry(item_id, entry))
+    else:  # all
+        if aggregate is False:
+            for item_id, _total, entry in totals_by_item:
+                series.append(_series_from_entry(item_id, entry))
+        else:
+            agg_per_month: dict[str, float] = {m: 0.0 for m in month_list}
+            for _item_id, _total, entry in totals_by_item:
+                for month, value in entry["months"].items():
+                    agg_per_month[month] = agg_per_month.get(month, 0.0) + value
+            data = [
+                ReportDataPoint(period=month, value=agg_per_month.get(month, 0.0))
+                for month in month_list
+            ]
+            series.append(ReportSeries(label="Alle Artikel", data=data))
+
+    total_consumption = sum(total for _id, total, _entry in totals_by_item)
+    average_per_month = total_consumption / len(month_list) if month_list else 0.0
+    top_item = totals_by_item[0] if totals_by_item else None
+    kpis = ReportKpis(
+        totalConsumption=total_consumption,
+        averagePerMonth=average_per_month,
+        months=month_list,
+        topItem=ReportTopItem(
+            id=top_item[0],
+            name=top_item[2]["name"],
+            quantity=top_item[1],
+        )
+        if top_item
+        else None,
+    )
+    return ReportResponse(series=series, kpis=kpis)
+
+
+# ----------------------
+# Reporting (Verbrauch)
+# ----------------------
+@router.get("/report", response_model=ReportResponse)
+async def get_report(
+    from_: str = Query(..., alias="from", description="Startdatum (YYYY-MM-DD)"),
+    to: str = Query(..., description="Enddatum (YYYY-MM-DD)"),
+    mode: Literal["top5", "all", "selected"] = Query(..., description="Aggregationsmodus"),
+    item_ids: list[str] | None = Query(default=None),
+    category_id: str | None = Query(default=None),
+    aggregate: bool | None = Query(default=True),
+    limit: int | None = Query(default=5),
+    ctx: TenantContext = Depends(get_tenant_context),
+    user_ctx: CurrentUserContext = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> ReportResponse:
+    start_date = _parse_date(from_, "from")
+    end_date = _parse_date(to, "to")
+    return await _aggregate_consumption(
+        db=db,
+        ctx=ctx,
+        start=start_date,
+        end=end_date,
+        mode=mode,
+        item_ids=item_ids,
+        category_id=category_id,
+        aggregate=aggregate,
+        limit=limit,
+    )
+
+
+@router.get("/reports/consumption", response_model=ReportResponse)
+async def get_report_consumption(
+    from_: str = Query(..., alias="from", description="Startdatum (YYYY-MM-DD)"),
+    to: str = Query(..., description="Enddatum (YYYY-MM-DD)"),
+    mode: Literal["top5", "all", "selected"] = Query(..., description="Aggregationsmodus"),
+    item_ids: list[str] | None = Query(default=None),
+    category_id: str | None = Query(default=None),
+    aggregate: bool | None = Query(default=True),
+    limit: int | None = Query(default=5),
+    ctx: TenantContext = Depends(get_tenant_context),
+    user_ctx: CurrentUserContext = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> ReportResponse:
+    return await get_report(
+        from_=from_,
+        to=to,
+        mode=mode,
+        item_ids=item_ids,
+        category_id=category_id,
+        aggregate=aggregate,
+        limit=limit,
+        ctx=ctx,
+        user_ctx=user_ctx,
+        db=db,
+    )
+
+
+@router.get("/reports/export/{format}")
+async def export_report(
+    format: str = Path(..., description="csv oder excel"),
+    from_: str = Query(..., alias="from", description="Startdatum (YYYY-MM-DD)"),
+    to: str = Query(..., description="Enddatum (YYYY-MM-DD)"),
+    mode: Literal["top5", "all", "selected"] = Query(..., description="Aggregationsmodus"),
+    item_ids: list[str] | None = Query(default=None),
+    category_id: str | None = Query(default=None),
+    aggregate: bool | None = Query(default=True),
+    limit: int | None = Query(default=5),
+    ctx: TenantContext = Depends(get_tenant_context),
+    user_ctx: CurrentUserContext = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    if format not in {"csv", "excel"}:
+        raise HTTPException(status_code=400, detail={"error": {"code": "invalid_format", "message": "Format muss csv oder excel sein"}})
+
+    report = await get_report(
+        from_=from_,
+        to=to,
+        mode=mode,
+        item_ids=item_ids,
+        category_id=category_id,
+        aggregate=aggregate,
+        limit=limit,
+        ctx=ctx,
+        user_ctx=user_ctx,
+        db=db,
+    )
+
+    rows: list[tuple[str, str, float]] = []
+    for serie in report.series:
+        for point in serie.data:
+            rows.append((serie.label, point.period, point.value))
+
+    if format == "csv":
+        import csv
+
+        buf = StringIO()
+        writer = csv.writer(buf)
+        writer.writerow(["Artikel", "Monat", "Verbrauch"])
+        for artikel, month, value in rows:
+            writer.writerow([artikel, month, value])
+        buf.seek(0)
+        return StreamingResponse(
+            iter([buf.getvalue()]),
+            media_type="text/csv",
+            headers={"Content-Disposition": 'attachment; filename="verbrauch.csv"'},
+        )
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Verbrauch"
+    ws.append(["Artikel", "Monat", "Verbrauch"])
+    for artikel, month, value in rows:
+        ws.append([artikel, month, value])
+    out = BytesIO()
+    wb.save(out)
+    out.seek(0)
+    return StreamingResponse(
+        out,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": 'attachment; filename="verbrauch.xlsx"'},
+    )
 
 
 # ----------------------

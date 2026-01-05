@@ -191,3 +191,14 @@
   - Beide Apps setzen Themes zentral über `data-theme` und persistieren im localStorage; Toggles in UI verfügbar.
 - **Nächster Schritt**
   - Weitere Views auf UI-Bausteine/Utilities migrieren; zentrale Toast/Dialog-Styles harmonisieren; optional System-Listener für Theme-Änderung ergänzen.
+
+## Schritt 17 – UI-Harmonisierung Task 5b (System-Listener)
+- **Datum/Uhrzeit**: 2026-01-05T16:22:29+00:00
+- **Ziel**: System-Theme-Änderungen automatisch berücksichtigen, wenn der Mode auf „system“ steht.
+- **Was wurde geändert**
+  - Admin: `useTheme` ergänzt um `matchMedia`-Listener, der bei Systemwechsel das Theme neu anwendet.
+  - Customer: Gleiches Verhalten in `useTheme`, Listener wird einmalig registriert.
+- **Ergebnis**
+  - Bei Systemwechsel wird das aktive Theme aktualisiert, solange der Modus auf „system“ steht; Persistenz bleibt in `localStorage`.
+- **Nächster Schritt**
+  - Weitere Views migrieren und Toast/Dialog-Styles zentralisieren; Theme-Toggle-UI ggf. verfeinern (Dropdown/Icons) ohne Inline-Styles.

@@ -5,6 +5,7 @@ type ThemeMode = 'light' | 'dark' | 'system';
 const STORAGE_KEY = 'customer_theme';
 const theme = ref<ThemeMode>('system');
 const resolvedTheme = ref<'light' | 'dark'>('light');
+let mediaListenerAttached = false;
 
 function apply(mode: ThemeMode) {
   const effective =
@@ -23,6 +24,15 @@ export function initTheme() {
   const stored = localStorage.getItem(STORAGE_KEY) as ThemeMode | null;
   theme.value = stored || 'system';
   apply(theme.value);
+
+  if (typeof window !== 'undefined' && window.matchMedia && !mediaListenerAttached) {
+    const media = window.matchMedia('(prefers-color-scheme: dark)');
+    const handler = () => {
+      if (theme.value === 'system') apply('system');
+    };
+    media.addEventListener('change', handler);
+    mediaListenerAttached = true;
+  }
 }
 
 export function useTheme() {

@@ -128,3 +128,66 @@
   - Roadmap und Standards angepasst: Lokale Spec ist verbindlich, Remote-Zugriff optional.
 - **Was ist offen**
   - Backend/Schema-Abgleich der erweiterten OpenAPI-Definitionen bleibt offen; Remote-Zugriff ist kein Blocker mehr.
+
+## Schritt 12 – UI-Harmonisierung Task 1 (Ist-Aufnahme)
+- **Datum/Uhrzeit**: 2026-01-05T15:43:05+00:00
+- **Ziel**: Bestandsaufnahme für Design-Harmonisierung (Global Styles, PrimeVue, Tokens, Layout-Bausteine) in Admin- und Customer-Frontend.
+- **Was wurde geprüft**
+  - Admin (`admin_frontend/admin-ui`): globale Styles liegen in `src/styles/{tokens,base,layout}.css` und werden in `src/main.ts` geladen; kein PrimeVue-Einsatz; Theme-Klassen (`theme-dark`, `theme-ocean`, `theme-classic`) werden in `App.vue` gesetzt und in `sessionStorage` persistiert; Toast-Markup zentral in `components/common/ToastHost.vue`; Layout/Buttons/Cards/Table-Styles in `layout.css`.
+  - Customer (`customer_frontend/customer-ui`): globale Styles in `src/styles/{tokens,layout}.css`, Import in `src/main.ts`; PrimeVue mit Lara-Preset und ToastService in `main.ts`, Prime-Komponenten v. a. in `views/BerichteAnalysenView.vue` und `components/reports/*`; Theme-State via `useTheme` (SessionStorage) nur als Klassenwechsel am App-Root; Sidebar/Topbar als eigene Layout-Komponenten; Toast-Markup in `components/common/ToastHost.vue`.
+  - Redundanzen: getrennte Button-/Card-/Table-Klassen beider Apps; zwei Token-Sets ohne gemeinsame Struktur; kein System-Default für Theme in beiden Apps; Toast/Overlay-Styles pro App separat definiert; Responsive-Regeln unterschiedlich (Admin über `.shell` Breakpoint, Customer mit Grid/Sidebar ohne mobile Stacking-Strategie).
+- **Was wurde geändert**
+  - TODO-Liste angelegt (`TODO.md`) mit Muss/Soll/Kann für Tokens, Utilities, Theme-Toggle, Toast/Responsive-Aufgaben.
+  - Neue Standards in `docs/standards/`: `DESIGN_SYSTEM.md`, `THEME_TOKENS.md`, `COMPONENT_CONVENTIONS.md`, `DARKMODE.md` zur Dokumentation der Zielarchitektur (Tokens, Utilities, UI-Bausteine, Dark-Mode-Vorgaben).
+- **Ergebnis**
+  - Ist-Zustand pro App dokumentiert; zentrale Leitplanken für die nächsten Tasks festgelegt, keine Code-/Layout-Änderungen vorgenommen.
+- **Nächster Schritt**
+  - Task 2: Design-Tokens je App vereinheitlichen und um Light/Dark erweitern (inkl. System-Default-Konzept aus den neuen Standards).
+
+## Schritt 13 – UI-Harmonisierung Task 2 (Theme Tokens)
+- **Datum/Uhrzeit**: 2026-01-05T15:53:43+00:00
+- **Ziel**: Theme-Tokens für beide Frontends finalisieren und konsistent einführen (Light/Dark), ohne View-Refactors.
+- **Was wurde geprüft**
+  - Vorhandene Token-Namen in Admin (`--bg`, `--panel`, Tags/Status) und Customer (`--color-*`) für Kompatibilität beibehalten.
+  - Dark-/Ocean-Klassen werden derzeit als Klassen statt `data-theme` gesetzt; Mapping musste kompatibel bleiben.
+- **Was wurde geändert**
+  - Admin: `src/styles/tokens.css` auf die gemeinsame Token-Struktur (Surfaces/Text/Status/Spacing/Radius/Focus) umgestellt, neue Standard-Tokens ergänzt und bestehende Variablen über Legacy-Mappings erhalten (Light/Dark/Ocean).
+  - Customer: `src/styles/tokens.css` um dieselbe Token-Struktur erweitert, inklusive Legacy-Mappings für bestehende Klassen und PrimeVue-Layouts; Light/Dark/Ocean nutzen jetzt die abgestimmten Tokens.
+- **Ergebnis**
+  - Beide Frontends besitzen ein deckungsgleiches Token-Set (Light/Dark) mit kompatiblen Alt-Namen; keine View- oder Komponenten-Anpassungen nötig.
+- **Nächster Schritt**
+  - Task 3: Utilities/Theme-Mappings ergänzen und erste Pilot-Views auf Utilities umstellen (separater Schritt).
+
+## Schritt 14 – UI-Harmonisierung Task 3 (Utilities + Pilot-Views)
+- **Datum/Uhrzeit**: 2026-01-05T16:00:46+00:00
+- **Ziel**: Basis-Utilities pro App bereitstellen und je eine Pilot-View auf die neuen Klassen umstellen.
+- **Was wurde geändert**
+  - Admin: `src/styles/utilities.css` angelegt (page/section/stack/toolbar/chips/cards/detail/flex Utilities) und in `main.ts` importiert; `AdminUsersView` nutzt jetzt ausschließlich die neuen Utilities ohne scoped Styles.
+  - Customer: `src/styles/utilities.css` angelegt (page/section/stack/toolbar/card-grid) und in `main.ts` importiert; `DashboardView` auf die Utilities umgestellt.
+  - TODO aktualisiert: Utilities vorhanden, weitere Views sukzessive umstellen.
+- **Ergebnis**
+  - Gemeinsame Layout-Basis pro App ist verfügbar; erste View pro App validiert die Utilities.
+- **Nächster Schritt**
+  - Weitere Views auf Utilities/UI-Komponenten migrieren, Theme-Steuerung (System/LocalStorage) und zentrale Toast/Overlay-Styles umsetzen.
+
+## Schritt 15 – UI-Harmonisierung Task 4 (UI-Bausteine + weitere Piloten)
+- **Datum/Uhrzeit**: 2026-01-05T16:09:10+00:00
+- **Ziel**: Zentrale UI-Bausteine je App anlegen und je eine View auf die Bausteine umstellen.
+- **Was wurde geändert**
+  - Admin: Neue UI-Komponenten (`UiPage`, `UiSection`, `UiCard`, `UiStatCard`, `UiToolbar`, `UiEmptyState`) unter `src/components/ui`; Utilities um Ausrichtungs-/Fehlerklassen ergänzt; `AdminUsersView` nutzt jetzt die UI-Bausteine statt eigener Layout-Elemente.
+  - Customer: Entsprechende UI-Komponenten unter `src/components/ui` angelegt; `DashboardView` auf `UiPage`/`UiSection`/`UiStatCard` umgestellt.
+- **Ergebnis**
+  - Gemeinsame UI-Baustein-Basis pro App verfügbar; zwei Pilot-Views validieren die Nutzung ohne Inline-/Scoped-Styles für Layout/Spacing.
+- **Nächster Schritt**
+  - Weitere Kern-Views (Customer: Lagerbewegungen, Berichte & Analysen; Admin: Tenants/Memberships/Operations) auf die UI-Bausteine migrieren; anschließend Theme-Toggle/System-Default und zentrale Toast/Overlay-Styles umsetzen.
+
+## Schritt 16 – UI-Harmonisierung Task 5 (Theme-System + Toggles)
+- **Datum/Uhrzeit**: 2026-01-05T16:15:00+00:00
+- **Ziel**: Dark/Light/System-Theme mit Persistenz pro App einführen und bestehende Toggles vereinheitlichen.
+- **Was wurde geändert**
+  - Admin: Neues `useTheme` (System/Light/Dark, localStorage, `data-theme` auf `<html>`), Init in `main.ts`; App-Root nutzt resolved Theme; Sidebar-Select für Theme; Settings-View nutzt die neuen Theme-IDs.
+  - Customer: `useTheme` auf System-Default umgestellt, Init in `main.ts`; App-Root nutzt resolved Theme; Topbar erhält Theme-Select ohne Inline-Styles; Utilities ergänzt (`inline-field`).
+- **Ergebnis**
+  - Beide Apps setzen Themes zentral über `data-theme` und persistieren im localStorage; Toggles in UI verfügbar.
+- **Nächster Schritt**
+  - Weitere Views auf UI-Bausteine/Utilities migrieren; zentrale Toast/Dialog-Styles harmonisieren; optional System-Listener für Theme-Änderung ergänzen.

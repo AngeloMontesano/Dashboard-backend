@@ -266,3 +266,31 @@
   - Customer Auth/Dashboard-ähnliche Static Views nutzen jetzt die zentralen Layout-Bausteine; Inline-Styles reduziert, Tokens greifen für Status-/Textfarben.
 - **Nächster Schritt**
   - Customer: Artikelverwaltung und Berichte vollständig auf UiPage/UiSection/Utilities heben (inkl. PrimeVue-Parts) und restliche Inline/Scoped-Styles abbauen. Admin: Overlay/Toast-Styling finalisieren.
+
+## Schritt 23 – Legacy-Migration Phase 0–2 (Reverse Engineering & Gap-Liste)
+- **Datum/Uhrzeit**: 2026-01-05T18:05:00+00:00
+- **Ziel**: Legacy-Funktionen aus `/old_lm` analysieren, Scope/DoD festlegen und Soll-Ist-Gaps dokumentieren.
+- **Was wurde geprüft**
+  - Legacy-Module gelesen: `artikel.py`, `bestandsverwaltung.py`, `inventur.py`, `berichte.py`, `bestellungen.py`, `einstellungen.py`, `flash.py`, `dashboard.py`.
+  - Aktuelles Backend/Frontend gecheckt (Inventar-Router, Reporting-Fallback in Frontend, fehlende Bestellungen/Einstellungen-APIs).
+- **Was wurde geändert**
+  - Neue Roadmap-Datei `docs/roadmap/MIGRATION_OLD_LM.md` mit Scope, DoD, Decisions, Funktionsmatrix und Gap-Liste angelegt.
+  - Task-Liste erstellt: `docs/roadmap/TASKS_MIGRATION_OLD_LM.md` mit IDs T1–T8 (Backend/Customer/Docs).
+  - TODO erweitert um Must-Haves für Legacy-Migration (Backend-Endpunkte, Frontend-Datenverdrahtung, OpenAPI-Nachzug).
+- **Ergebnis**
+  - Reverse Engineering abgeschlossen; Gaps klar dokumentiert; Tasks strukturiert.
+- **Nächster Schritt**
+  - T1: Backend GET `/inventory/movements` + OpenAPI/Schemas, dann weitere Tasks laut Roadmap.
+
+## Schritt 24 – Legacy-Migration Phase 3 Start (T1: GET Bewegungen)
+- **Datum/Uhrzeit**: 2026-01-05T18:30:00+00:00
+- **Ziel**: Bewegungs-Listing für Reporting/Audit ergänzen (Filter + Limit), Basis für Berichte und Inventur.
+- **Was wurde geändert**
+  - Backend: Neuer GET `/inventory/movements` mit Filtern (Zeitraum, Typ, Kategorie, Items) und Limit; Response liefert Artikel-Infos.
+  - Schemas: `MovementOut`/`MovementItemOut` ergänzt.
+  - OpenAPI: Pfad + Schemas für Bewegungs-Listing hinzugefügt.
+  - Roadmap/TODO aktualisiert: Gap „GET Bewegungen“ geschlossen, Must-Liste angepasst.
+- **Ergebnis**
+  - Bewegungen sind tenant-sicher abrufbar und filterbar; Grundlage für Reporting-Backend/Frontend.
+- **Nächster Schritt**
+  - T2/T3 vorbereiten: Inventur-Bulk/Export und Reporting-Endpunkte implementieren, OpenAPI + Typen nachziehen.

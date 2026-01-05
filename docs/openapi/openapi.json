@@ -4809,7 +4809,9 @@
           "user_is_active": {
             "anyOf": [
               {
-                "type": "boolean"
+                "type": "string",
+                "maxLength": 255,
+                "minLength": 2
               },
               {
                 "type": "null"

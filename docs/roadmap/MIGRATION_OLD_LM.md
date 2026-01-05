@@ -27,10 +27,9 @@
 - Exporte folgen Legacy-Spaltenreihenfolge; neue Felder dürfen ergänzt werden, solange Legacy-Felder erhalten bleiben.
 
 ## Known Issues
-- Backend hat aktuell keine Endpunkte für Reporting (`/inventory/report`, Exporte), Bestellungen oder Firmendaten/Einstellungen.
-- Frontend-Views Inventur/Bestellungen/Einstellungen zeigen nur Platzhalter-KPIs ohne API-Anbindung.
-- Bewegungs-Endpunkt existiert nur als POST (`/inventory/movements`); GET-Listing/Filter für Reporting fehlt.
-- Item-Modell unterscheidet sich vom Legacy-Artikel (keine `pf_artikel_id`, `sollbestand`, `mindestbestand`, `lagerort`, `haltbarkeit`), Mapping/Erweiterung offen.
+- DB-Backfill/Migration für neue Settings-Felder (Ansprechpartner, PLZ/Ort, Filialnummer, Steuernummer) noch ausstehend.
+- Frontend-Feinschliff (Tokens/Responsive) für Customer-Ansichten Inventur/Bestellungen/Berichte offen.
+- Legacy-Flash-API bleibt ungemappt (Frontend nutzt lokale Toasts).
 
 ---
 
@@ -76,6 +75,6 @@
 - **Lagerbewegungen:** POST `/inventory/movements` existiert (IN/OUT mit `client_tx_id`, qty, note) und verhindert negativen Bestand; GET-Liste/Filter für Reporting war fehlend – jetzt ergänzt (T1), Reporting-/Export-Endpunkte stehen weiter aus. Legacy verlangt Barcode-IN/OUT (Menge 1) und speichert Typ „Entnahme/Zugang“.
 - **Inventur:** Bulk-Update + Excel-Export mit Legacy-Spalten ergänzt (T2 erfüllt); Frontend-Inventur zeigt weiterhin Platzhalter-KPIs ohne API-Anbindung.
 - **Berichte/Verbrauch:** Backend-Endpunkte `/inventory/report` + Exporte ergänzt (CSV/Excel) auf Basis der Bewegungsaggregation; Frontend nutzt noch den Fallback und muss angebunden werden.
-- **Bestellungen:** Bestellwürdig-Liste (`/inventory/orders/recommended`) und Bestellungen mit Statuswechsel sind verfügbar (`/inventory/orders`, `/inventory/orders/{id}`, `/inventory/orders/{id}/complete|cancel`), Abschluss erhöht den Bestand und erzeugt Bewegungen. E-Mail-Versand vorhanden (`/inventory/orders/{id}/email`), PDF-Export verfügbar (`/inventory/orders/{id}/pdf`). Weitere Admin-Metadaten offen.
-- **Einstellungen/Firmendaten:** Basis-Settings je Tenant sind verfügbar (`/inventory/settings` GET/PUT: Firmendaten, Auto-Bestellung an/aus + Schwelle, Empfänger, Export-Format, Adresse/Telefon). Mass-Export/Import via Excel hinzugefügt (`/inventory/settings/export`, `/inventory/settings/import`). Test-E-Mail verfügbar (`/inventory/settings/test-email`) mit SMTP-Config; weitere Admin-Metadaten offen.
+- **Bestellungen:** Bestellwürdig-Liste (`/inventory/orders/recommended`) und Bestellungen mit Statuswechsel sind verfügbar (`/inventory/orders`, `/inventory/orders/{id}`, `/inventory/orders/{id}/complete|cancel`), Abschluss erhöht den Bestand und erzeugt Bewegungen. E-Mail-Versand vorhanden (`/inventory/orders/{id}/email`), PDF-Export verfügbar (`/inventory/orders/{id}/pdf`). Filter/Suche/Canceled-Übersicht im Customer-Frontend ergänzt.
+- **Einstellungen/Firmendaten:** Basis-Settings je Tenant sind verfügbar (`/inventory/settings` GET/PUT: Firmendaten, Auto-Bestellung an/aus + Schwelle, Empfänger, Export-Format, Adresse/Telefon) plus Legacy-Admin-Metadaten (Ansprechpartner, PLZ/Ort, Filialnummer, Steuernummer). Mass-Export/Import via Excel hinzugefügt (`/inventory/settings/export`, `/inventory/settings/import`). Test-E-Mail verfügbar (`/inventory/settings/test-email`) mit SMTP-Config. Hinweis: DB-Backfill für neue Settings-Felder einplanen.
 - **Flash/Status:** Keine Entsprechung für Flash-API; Frontend setzt Toasts lokal.

@@ -24,7 +24,7 @@ const state = reactive<{
   testEmail: string;
   importing: boolean;
   testing: boolean;
-}({
+}>({
   settings: null,
   loading: false,
   error: null,
@@ -154,6 +154,10 @@ onMounted(loadSettings);
           <input v-model="state.settings.company_name" type="text" class="input" :disabled="state.loading" />
         </label>
         <label class="form-field">
+          <span class="form-label">Ansprechpartner</span>
+          <input v-model="state.settings.contact_name" type="text" class="input" :disabled="state.loading" />
+        </label>
+        <label class="form-field">
           <span class="form-label">Kontakt E-Mail</span>
           <input v-model="state.settings.contact_email" type="email" class="input" :disabled="state.loading" />
         </label>
@@ -170,6 +174,14 @@ onMounted(loadSettings);
           <textarea v-model="state.settings.address" class="input" rows="2" :disabled="state.loading"></textarea>
         </label>
         <label class="form-field">
+          <span class="form-label">PLZ</span>
+          <input v-model="state.settings.address_postal_code" type="text" class="input" :disabled="state.loading" />
+        </label>
+        <label class="form-field">
+          <span class="form-label">Ort</span>
+          <input v-model="state.settings.address_city" type="text" class="input" :disabled="state.loading" />
+        </label>
+        <label class="form-field">
           <span class="form-label">Export-Format</span>
           <input v-model="state.settings.export_format" type="text" class="input" :disabled="state.loading" />
         </label>
@@ -180,6 +192,14 @@ onMounted(loadSettings);
         <label class="form-field">
           <span class="form-label">Auto-Bestellung Minimum</span>
           <input v-model.number="state.settings.auto_order_min" type="number" class="input" min="0" :disabled="state.loading" />
+        </label>
+        <label class="form-field">
+          <span class="form-label">Filialnummer</span>
+          <input v-model="state.settings.branch_number" type="text" class="input" :disabled="state.loading" />
+        </label>
+        <label class="form-field">
+          <span class="form-label">Steuernummer</span>
+          <input v-model="state.settings.tax_number" type="text" class="input" :disabled="state.loading" />
         </label>
       </div>
 

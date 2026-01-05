@@ -1108,7 +1108,12 @@ def _settings_to_out(settings: TenantSetting) -> TenantSettingsOut:
         auto_order_min=settings.auto_order_min,
         export_format=settings.export_format,
         address=settings.address,
+        address_postal_code=settings.address_postal_code,
+        address_city=settings.address_city,
         phone=settings.phone,
+        contact_name=settings.contact_name,
+        branch_number=settings.branch_number,
+        tax_number=settings.tax_number,
     )
 
 
@@ -1127,7 +1132,12 @@ async def _get_or_create_settings(*, ctx: TenantContext, db: AsyncSession) -> Te
         auto_order_min=0,
         export_format="xlsx",
         address="",
+        address_postal_code="",
+        address_city="",
         phone="",
+        contact_name="",
+        branch_number="",
+        tax_number="",
     )
     db.add(settings)
     await db.commit()
@@ -1159,7 +1169,12 @@ async def update_tenant_settings(
     settings.auto_order_min = payload.auto_order_min
     settings.export_format = payload.export_format.strip() or "xlsx"
     settings.address = payload.address.strip()
+    settings.address_postal_code = payload.address_postal_code.strip()
+    settings.address_city = payload.address_city.strip()
     settings.phone = payload.phone.strip()
+    settings.contact_name = payload.contact_name.strip()
+    settings.branch_number = payload.branch_number.strip()
+    settings.tax_number = payload.tax_number.strip()
 
     await db.commit()
     await db.refresh(settings)

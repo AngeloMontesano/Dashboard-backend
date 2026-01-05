@@ -418,3 +418,16 @@
   - End-to-end Bestellverwaltung inkl. PDF/E-Mail und Customer-Frontend-Bedienung der Settings/Orders; verbleibende offenen Punkte nur Admin-Metadaten.
 - **Nächster Schritt**
   - Fehlen noch Admin-Metadaten aus Legacy-Einstellungen (falls benötigt) und Feinschliff Frontend (z. B. Order-Erstellung, weitere Filter).
+
+## Schritt 35 – Legacy-Migration Phase 3 (Settings-Admin-Metadaten + UI-Filter)
+- **Datum/Uhrzeit**: 2026-01-05T23:15:00+00:00
+- **Ziel**: Fehlende Admin-Metadaten aus Legacy-Einstellungen ergänzen und Customer-UI-Feinschliff (Filter) inkl. Fix des Vite-Fehlers umsetzen.
+- **Was wurde geändert**
+  - Backend: `TenantSetting` um Ansprechpartner, PLZ, Ort, Filialnummer, Steuernummer erweitert; GET/PUT-Ausgabe angepasst, Defaults ergänzt.
+  - OpenAPI regeneriert und Customer-API-Typen erneuert.
+  - Frontend Einstellungen: Syntaxfehler behoben (`reactive`-Generic), zusätzliche Felder für Admin-Metadaten ergänzt.
+  - Frontend Bestellungen: Status-/Suchfilter und Storno-Tabelle ergänzt; PDF-Download nutzt Bestellnummer im Dateinamen.
+- **Ergebnis**
+  - Legacy-Admin-Metadaten sind abbildbar; UI-Filter/Cancelled-Übersicht vorhanden; Vite-Build-Fehler behoben.
+- **Nächster Schritt**
+  - DB-Backfill/Migration für neue Settings-Felder prüfen; Responsive/Tokens-Feinschliff fortführen.

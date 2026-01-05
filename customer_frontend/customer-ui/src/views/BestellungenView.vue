@@ -31,6 +31,7 @@ const state = reactive<{
   items: ItemOption[];
   creating: boolean;
   createForm: { itemId: string; quantity: number; note: string };
+  filters: { status: 'ALL' | 'OPEN' | 'COMPLETED' | 'CANCELED'; search: string };
 }>({
   orders: [],
   loading: false,
@@ -40,11 +41,32 @@ const state = reactive<{
   downloading: {},
   items: [],
   creating: false,
-  createForm: { itemId: '', quantity: 1, note: '' }
+  createForm: { itemId: '', quantity: 1, note: '' },
+  filters: { status: 'ALL', search: '' }
 });
 
 const openOrders = computed(() => state.orders.filter((o) => o.status === 'OPEN'));
 const completedOrders = computed(() => state.orders.filter((o) => o.status === 'COMPLETED'));
+const canceledOrders = computed(() => state.orders.filter((o) => o.status === 'CANCELED'));
+
+const matchesSearch = (order: Order) => {
+  const term = state.filters.search.trim().toLowerCase();
+  if (!term) return true;
+  return (
+    order.number.toLowerCase().includes(term) ||
+    (order.note && order.note.toLowerCase().includes(term)) ||
+    order.items.some((item) => item.item_name?.toLowerCase().includes(term))
+  );
+};
+
+const filteredOrders = computed(() =>
+  state.orders.filter(
+    (o) => (state.filters.status === 'ALL' || o.status === state.filters.status) && matchesSearch(o)
+  )
+);
+const filteredOpenOrders = computed(() => filteredOrders.value.filter((o) => o.status === 'OPEN'));
+const filteredCompletedOrders = computed(() => filteredOrders.value.filter((o) => o.status === 'COMPLETED'));
+const filteredCanceledOrders = computed(() => filteredOrders.value.filter((o) => o.status === 'CANCELED'));
 
 async function loadOrders() {
   if (!authState.accessToken) return;
@@ -124,11 +146,12 @@ async function downloadPdf(orderId: string) {
   if (!authState.accessToken) return;
   state.downloading[orderId] = true;
   try {
+    const order = state.orders.find((o) => o.id === orderId);
     const blob = await downloadOrderPdf(authState.accessToken, orderId);
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `order-${orderId}.pdf`;
+    a.download = `order-${order?.number || orderId}.pdf`;
     a.click();
     window.URL.revokeObjectURL(url);
   } catch (err: any) {
@@ -190,6 +213,27 @@ onMounted(async () => {
         {{ state.error }}
       </div>
 
+      <div class="form-grid mt-md">
+        <label class="form-field">
+          <span class="form-label">Status-Filter</span>
+          <select v-model="state.filters.status" class="input">
+            <option value="ALL">Alle</option>
+            <option value="OPEN">Offen</option>
+            <option value="COMPLETED">Erledigt</option>
+            <option value="CANCELED">Storniert</option>
+          </select>
+        </label>
+        <label class="form-field span-2">
+          <span class="form-label">Suche</span>
+          <input
+            v-model="state.filters.search"
+            type="text"
+            class="input"
+            placeholder="Suche nach Nummer, Notiz oder Artikel"
+          />
+        </label>
+      </div>
+
       <div class="cards-grid mt-md">
         <article class="card">
           <h3 class="card__title">Offene Bestellungen</h3>
@@ -233,7 +277,7 @@ onMounted(async () => {
 
       <div class="mt-lg">
         <h3 class="eyebrow">Offene Bestellungen</h3>
-        <div class="table-wrapper" v-if="openOrders.length">
+        <div class="table-wrapper" v-if="filteredOpenOrders.length">
           <table class="table">
             <thead>
               <tr>
@@ -244,7 +288,7 @@ onMounted(async () => {
               </tr>
             </thead>
             <tbody>
-              <tr v-for="order in openOrders" :key="order.id">
+              <tr v-for="order in filteredOpenOrders" :key="order.id">
                 <td>{{ order.number }}</td>
                 <td>{{ order.items.length }}</td>
                 <td>{{ order.status }}</td>
@@ -266,12 +310,12 @@ onMounted(async () => {
             </tbody>
           </table>
         </div>
-        <p v-else class="placeholder mt-sm">Keine offenen Bestellungen vorhanden.</p>
+        <p v-else class="placeholder mt-sm">Keine offenen Bestellungen vorhanden (Filter berücksichtigen).</p>
       </div>
 
       <div class="mt-lg">
         <h3 class="eyebrow">Erledigte Bestellungen</h3>
-        <div class="table-wrapper" v-if="completedOrders.length">
+        <div class="table-wrapper" v-if="filteredCompletedOrders.length">
           <table class="table">
             <thead>
               <tr>
@@ -282,7 +326,7 @@ onMounted(async () => {
               </tr>
             </thead>
             <tbody>
-              <tr v-for="order in completedOrders" :key="order.id">
+              <tr v-for="order in filteredCompletedOrders" :key="order.id">
                 <td>{{ order.number }}</td>
                 <td>{{ order.items.length }}</td>
                 <td>{{ order.status }}</td>
@@ -298,7 +342,39 @@ onMounted(async () => {
             </tbody>
           </table>
         </div>
-        <p v-else class="placeholder mt-sm">Keine erledigten Bestellungen.</p>
+        <p v-else class="placeholder mt-sm">Keine erledigten Bestellungen (Filter berücksichtigen).</p>
+      </div>
+
+      <div class="mt-lg">
+        <h3 class="eyebrow">Stornierte Bestellungen</h3>
+        <div class="table-wrapper" v-if="filteredCanceledOrders.length">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Nummer</th>
+                <th>Positionen</th>
+                <th>Status</th>
+                <th>Aktionen</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="order in filteredCanceledOrders" :key="order.id">
+                <td>{{ order.number }}</td>
+                <td>{{ order.items.length }}</td>
+                <td>{{ order.status }}</td>
+                <td class="table-actions">
+                  <button class="button button--ghost" type="button" @click="downloadPdf(order.id)" :disabled="state.downloading[order.id]">
+                    PDF
+                  </button>
+                  <button class="button button--ghost" type="button" @click="sendEmail(order.id)" :disabled="state.emailing[order.id]">
+                    E-Mail
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p v-else class="placeholder mt-sm">Keine stornierten Bestellungen (Filter berücksichtigen).</p>
       </div>
 
       <div class="mt-lg">

@@ -236,7 +236,12 @@ class TenantSettingsBase(BaseModel):
     auto_order_min: int = Field(0, ge=0)
     export_format: str = Field("xlsx", max_length=32)
     address: str = Field("", max_length=512)
+    address_postal_code: str = Field("", max_length=32)
+    address_city: str = Field("", max_length=128)
     phone: str = Field("", max_length=64)
+    contact_name: str = Field("", max_length=255)
+    branch_number: str = Field("", max_length=64)
+    tax_number: str = Field("", max_length=64)
 
 
 class TenantSettingsUpdate(TenantSettingsBase):

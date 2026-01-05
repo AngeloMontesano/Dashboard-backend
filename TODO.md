@@ -1,8 +1,8 @@
 # TODO
 
 ## Must
-- Legacy-Migration Backend: verbleibende Bestell-Themen (weitere Admin-Metadaten) ergänzen (siehe `docs/roadmap/MIGRATION_OLD_LM.md`); bestellwürdig, Bewegungen, Inventur, Reporting, Bestell-CRUD/Erledigt-Flow, E-Mail/PDF, Basis-Einstellungen, Mass Import/Export und Test-E-Mail sind ergänzt.
-- Customer-Frontend: Dummy-KPIs in Inventur/Bestellungen/Einstellungen/Reporting durch echte Daten aus neuen Endpunkten ersetzen; Fallback-Client-Aggregation entfernen, sobald Backend verfügbar.
+- Legacy-Migration Backend: neue Admin-Metadaten für Einstellungen sind ergänzt; DB-Migration/Backfill für bestehende Tenants prüfen und ausrollen.
+- Customer-Frontend: echte Daten für Inventur/Bestellungen/Einstellungen/Reporting sind verdrahtet; Feinschliff (Filter/Responsiveness/Tokens) fortführen.
 - OpenAPI aktualisieren und Typen regenerieren, sobald neue Endpunkte implementiert sind; Wrapper auf neue Typen migrieren.
 - Design-Tokens je App weiter verankern: neue Tokens in Utilities/Theme-Mappings nutzen und Alt-Variablen perspektivisch ablösen (admin: `src/styles/tokens.css`, customer: `src/styles/tokens.css`).
 - Layout-Utilities/Ui-Komponenten sind angelegt (`src/styles/utilities.css`, `src/components/ui` je App); restliche Views schrittweise darauf umstellen, damit kein per-View Spacing/Styling verbleibt (Customer offen: Artikel/Berichte).

@@ -57,7 +57,12 @@ function normalizeSeries(series: BackendReport["series"]): ReportSeries[] {
     label: s.label,
     itemId: (s as { itemId?: string }).itemId,
     color: (s as { color?: string }).color,
-    data: (s.data || []).map((p) => ({ ...p, value: Number(p.value) || 0 })),
+    data: (s.data || []).map((p) => ({
+      ...p,
+      item_id: p.item_id || undefined,
+      item_name: p.item_name || undefined,
+      value: Number(p.value) || 0,
+    })),
   }));
 }
 

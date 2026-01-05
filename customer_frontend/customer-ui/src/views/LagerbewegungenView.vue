@@ -4,6 +4,7 @@ import StatusPill from '@/components/common/StatusPill.vue';
 import { useMovementQueue, type MovementRecord } from '@/composables/useMovementQueue';
 import { useOnlineStatus } from '@/composables/useOnlineStatus';
 import { useToast } from '@/composables/useToast';
+import { useAuth } from '@/composables/useAuth';
 
 const barcode = ref('');
 const qty = ref<number>(1);
@@ -11,6 +12,8 @@ const note = ref('');
 const barcodeInput = ref<HTMLInputElement | null>(null);
 
 const { isOnline } = useOnlineStatus();
+const { state: authState } = useAuth();
+const hasWriteAccess = computed(() => ['owner', 'admin'].includes(authState.role));
 const {
   movements,
   enqueueMovement,
@@ -61,6 +64,14 @@ const resetForm = async () => {
 };
 
 const submitMovement = async (type: 'IN' | 'OUT') => {
+  if (!hasWriteAccess.value) {
+    pushToast({
+      title: 'Keine Berechtigung',
+      description: 'Nur Owner/Admin dürfen Lagerbewegungen buchen.',
+      variant: 'warning'
+    });
+    return;
+  }
   if (!barcode.value.trim()) {
     pushToast({
       title: 'Barcode fehlt',
@@ -116,6 +127,7 @@ const submitMovement = async (type: 'IN' | 'OUT') => {
           type="text"
           autocomplete="off"
           placeholder="Barcode scannen oder eingeben"
+          :disabled="!hasWriteAccess"
           autofocus
         />
       </div>
@@ -129,6 +141,7 @@ const submitMovement = async (type: 'IN' | 'OUT') => {
           min="1"
           step="1"
           placeholder="Anzahl"
+          :disabled="!hasWriteAccess"
         />
       </div>
       <div class="field">
@@ -139,15 +152,16 @@ const submitMovement = async (type: 'IN' | 'OUT') => {
           class="input"
           type="text"
           placeholder="Chargeninfo oder Kommentar"
+          :disabled="!hasWriteAccess"
         />
       </div>
     </div>
 
     <div class="actions" style="margin-bottom: 8px">
-      <button class="button button--ghost" type="button" @click="submitMovement('OUT')">
+      <button class="button button--ghost" type="button" @click="submitMovement('OUT')" :disabled="!hasWriteAccess">
         Bestand reduzieren
       </button>
-      <button class="button button--primary" type="button" @click="submitMovement('IN')">
+      <button class="button button--primary" type="button" @click="submitMovement('IN')" :disabled="!hasWriteAccess">
         Bestand erhöhen
       </button>
     </div>

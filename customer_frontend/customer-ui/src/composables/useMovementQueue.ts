@@ -56,6 +56,7 @@ export function useMovementQueue() {
   const syncInterval = ref<number | null>(null);
   const { push: pushToast } = useToast();
   const { state: authState } = useAuth();
+  const hasWriteAccess = computed(() => ['owner', 'admin'].includes(authState.role));
 
   const loadRecords = async () => {
     const db = await openDatabase();
@@ -102,13 +103,13 @@ export function useMovementQueue() {
   const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
   const sendEntry = async (entry: MovementRecord) => {
-    if (!authState.accessToken) {
+    if (!authState.accessToken || !hasWriteAccess.value) {
       const retries = Math.min(MAX_RETRIES, entry.retries + 1);
       const failed: MovementRecord = {
         ...entry,
         status: 'failed',
         retries,
-        last_error: 'Keine aktive Anmeldung'
+        last_error: !authState.accessToken ? 'Keine aktive Anmeldung' : 'Keine Berechtigung'
       };
       await updateRecord(failed);
       return false;

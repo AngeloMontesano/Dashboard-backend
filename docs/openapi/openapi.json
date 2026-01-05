@@ -60,6 +60,107 @@
         }
       }
     },
+    "/inventory/inventory/bulk": {
+      "post": {
+        "tags": [
+          "inventory"
+        ],
+        "summary": "Bulk Update Inventory",
+        "operationId": "bulk_update_inventory_inventory_inventory_bulk_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InventoryBulkUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InventoryBulkUpdateResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inventory/inventory/export": {
+      "get": {
+        "tags": [
+          "inventory"
+        ],
+        "summary": "Export Inventory",
+        "operationId": "export_inventory_inventory_inventory_export_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/inventory/ping": {
       "get": {
         "tags": [
@@ -4579,6 +4680,62 @@
           "created_at"
         ],
         "title": "MovementOut"
+      },
+      "InventoryUpdate": {
+        "type": "object",
+        "properties": {
+          "item_id": {
+            "type": "string",
+            "title": "Item Id"
+          },
+          "quantity": {
+            "type": "integer",
+            "minimum": 0,
+            "title": "Quantity"
+          }
+        },
+        "required": [
+          "item_id",
+          "quantity"
+        ],
+        "title": "InventoryUpdate"
+      },
+      "InventoryBulkUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "updates": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/InventoryUpdate"
+            },
+            "title": "Updates"
+          }
+        },
+        "required": [
+          "updates"
+        ],
+        "title": "InventoryBulkUpdateRequest"
+      },
+      "InventoryBulkUpdateResult": {
+        "type": "object",
+        "properties": {
+          "updated": {
+            "type": "integer",
+            "title": "Updated"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "title": "Errors"
+          }
+        },
+        "required": [
+          "updated",
+          "errors"
+        ],
+        "title": "InventoryBulkUpdateResult"
       },
       "ReportDataPoint": {
         "type": "object",

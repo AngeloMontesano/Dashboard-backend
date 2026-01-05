@@ -294,3 +294,16 @@
   - Bewegungen sind tenant-sicher abrufbar und filterbar; Grundlage für Reporting-Backend/Frontend.
 - **Nächster Schritt**
   - T2/T3 vorbereiten: Inventur-Bulk/Export und Reporting-Endpunkte implementieren, OpenAPI + Typen nachziehen.
+
+## Schritt 25 – Legacy-Migration Phase 3 (T2: Inventur Bulk + Export)
+- **Datum/Uhrzeit**: 2026-01-05T19:00:00+00:00
+- **Ziel**: Inventur-APIs bereitstellen (Bulk-Update & Excel-Export) als Grundlage für Customer-Frontend.
+- **Was wurde geändert**
+  - Backend: Neuer POST `/inventory/inventory/bulk` (Tenant-scoped, Owner/Admin) für Mengen-Updates per Item-ID; GET `/inventory/inventory/export` liefert Excel (`inventur.xlsx`) mit Legacy-Spalten (Artikel-ID, Name, Barcode, Kategorie, Soll, Min, Bestand).
+  - Schemas: `InventoryUpdate`, `InventoryBulkUpdateRequest`, `InventoryBulkUpdateResult` ergänzt.
+  - OpenAPI: Pfade und Schemas für Inventur-Bulk/Export hinzugefügt.
+  - Roadmap/TODO: Gap „Inventur-API“ als erledigt markiert; Must-Liste angepasst.
+- **Ergebnis**
+  - Inventur-Daten sind per API aktualisier- und exportierbar; Excel folgt Legacy-Spalten, Tenant-Isolation gewährleistet.
+- **Nächster Schritt**
+  - T3: Reporting-Endpunkte (/inventory/report + Exporte) implementieren; anschließend Frontend an Inventur/Reporting anbinden.

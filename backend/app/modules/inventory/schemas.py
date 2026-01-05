@@ -147,3 +147,17 @@ class MovementPayload(BaseModel):
         if v not in {"IN", "OUT"}:
             raise ValueError("type must be IN or OUT")
         return v
+
+
+class InventoryUpdate(BaseModel):
+    item_id: str
+    quantity: int = Field(..., ge=0)
+
+
+class InventoryBulkUpdateRequest(BaseModel):
+    updates: List[InventoryUpdate]
+
+
+class InventoryBulkUpdateResult(BaseModel):
+    updated: int
+    errors: List[str] = []

@@ -1,11 +1,14 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from io import BytesIO
 from typing import Any, Literal
 
 from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
+from fastapi.responses import StreamingResponse
 from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from openpyxl import Workbook
 
 from app.core.db import get_db
 from app.core.deps_auth import CurrentUserContext, get_current_user, require_owner_or_admin
@@ -22,6 +25,8 @@ from app.modules.inventory.schemas import (
     ItemOut,
     ItemUpdate,
     ItemsPage,
+    InventoryBulkUpdateRequest,
+    InventoryBulkUpdateResult,
     MovementItemOut,
     MovementOut,
     MovementPayload,
@@ -521,6 +526,85 @@ async def create_movement(
 
     category = await db.get(Category, item.category_id) if item.category_id else None
     return {"ok": True, "item": _item_out(item, category), "movement_id": str(movement.id), "duplicate": False}
+
+
+# ----------------------
+# Inventur (Bulk-Update & Export)
+# ----------------------
+@router.post("/inventory/bulk", response_model=InventoryBulkUpdateResult, dependencies=[Depends(require_owner_or_admin)])
+async def bulk_update_inventory(
+    payload: InventoryBulkUpdateRequest,
+    ctx: TenantContext = Depends(get_tenant_context),
+    db: AsyncSession = Depends(get_db),
+) -> InventoryBulkUpdateResult:
+    errors: list[str] = []
+    updated = 0
+
+    item_ids = [u.item_id for u in payload.updates]
+    if not item_ids:
+        return InventoryBulkUpdateResult(updated=0, errors=[])
+
+    items = (
+        await db.scalars(select(Item).where(Item.tenant_id == ctx.tenant.id, Item.id.in_(item_ids)))
+    ).all()
+    item_map = {str(item.id): item for item in items}
+
+    for entry in payload.updates:
+        item = item_map.get(entry.item_id)
+        if not item:
+            errors.append(f"Item {entry.item_id} not found for tenant")
+            continue
+        item.quantity = entry.quantity
+        updated += 1
+
+    await db.commit()
+    return InventoryBulkUpdateResult(updated=updated, errors=errors)
+
+
+@router.get("/inventory/export")
+async def export_inventory(
+    ctx: TenantContext = Depends(get_tenant_context),
+    user_ctx: CurrentUserContext = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    rows = (
+        await db.execute(
+            select(Item, Category)
+            .outerjoin(Category, Category.id == Item.category_id)
+            .where(Item.tenant_id == ctx.tenant.id)
+            .order_by(Item.name.asc())
+        )
+    ).all()
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Inventur"
+
+    headers = ["Artikel-ID", "Name", "Barcode", "Kategorie", "Soll", "Min", "Bestand"]
+    ws.append(headers)
+
+    for item, category in rows:
+        ws.append(
+            [
+                item.sku,
+                item.name,
+                item.barcode,
+                category.name if category else "",
+                item.target_stock,
+                item.min_stock,
+                item.quantity,
+            ]
+        )
+
+    buf = BytesIO()
+    wb.save(buf)
+    buf.seek(0)
+    filename = "inventur.xlsx"
+    return StreamingResponse(
+        buf,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
 
 
 # ----------------------

@@ -18,8 +18,7 @@ import type {
   TenantUserApiOut,
 } from "../types";
 
-import { apiClient } from "./client";
-import { createApiClient } from "@shared/api-client";
+import { api, adminHeaders } from "./client";
 
 /*
   Admin API Wrapper
@@ -65,9 +64,12 @@ export async function adminPing(adminKey: string, actor?: string) {
 }
 
 export async function adminLoginWithCredentials(email: string, password: string) {
-  const api = createApiClient({ timeout: 15000 });
-  const res = await api.post("/admin/login", { email, password });
-  return res.data as { admin_key: string; actor?: string };
+  const res = await api.post<AdminLoginResponse>(
+    "/admin/login",
+    { email, password },
+    { timeout: 15000 }
+  );
+  return res.data;
 }
 
 /* Tenants */

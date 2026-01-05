@@ -13,9 +13,4 @@ const app = createApp(App);
 app.use(PrimeVue, { ripple: true, theme: { preset: Lara } });
 app.use(ToastService);
 app.use(router);
-app.use(PrimeVue, {
-  theme: {
-    preset: Aura
-  }
-});
 app.mount('#app');

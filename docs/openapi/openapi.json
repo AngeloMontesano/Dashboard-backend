@@ -29,7 +29,20 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "title": "Response Admin Login With Credentials Admin Login Post"
+                  "properties": {
+                    "admin_key": {
+                      "type": "string",
+                      "title": "Admin Key"
+                    },
+                    "actor": {
+                      "type": "string",
+                      "title": "Actor"
+                    }
+                  },
+                  "required": [
+                    "admin_key"
+                  ],
+                  "title": "AdminLoginResponse"
                 }
               }
             }
@@ -648,7 +661,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/MovementListResponse"
+                }
               }
             }
           },
@@ -707,7 +722,44 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "title": "Response Import Items Inventory Items Import Post"
+                  "properties": {
+                    "imported": {
+                      "type": "integer",
+                      "title": "Imported"
+                    },
+                    "updated": {
+                      "type": "integer",
+                      "title": "Updated"
+                    },
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "row": {
+                            "type": "string",
+                            "title": "Row"
+                          },
+                          "error": {
+                            "type": "string",
+                            "title": "Error"
+                          }
+                        },
+                        "required": [
+                          "row",
+                          "error"
+                        ],
+                        "title": "ImportError"
+                      },
+                      "title": "Errors"
+                    }
+                  },
+                  "required": [
+                    "imported",
+                    "updated",
+                    "errors"
+                  ],
+                  "title": "ImportItemsResponse"
                 }
               }
             }
@@ -757,7 +809,16 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "title": "Response Export Items Inventory Items Export Get"
+                  "properties": {
+                    "csv": {
+                      "type": "string",
+                      "title": "Csv"
+                    }
+                  },
+                  "required": [
+                    "csv"
+                  ],
+                  "title": "ExportItemsResponse"
                 }
               }
             }
@@ -1053,7 +1114,7 @@
           "admin-tenants"
         ],
         "summary": "Admin Delete Tenant",
-        "description": "L\u00f6scht einen Tenant nur mit expliziter Best\u00e4tigung.\nAufruf: DELETE /admin/tenants/{tenant_id}?confirm=true",
+        "description": "Löscht einen Tenant nur mit expliziter Bestätigung.\nAufruf: DELETE /admin/tenants/{tenant_id}?confirm=true",
         "operationId": "admin_delete_tenant_admin_tenants__tenant_id__delete",
         "parameters": [
           {
@@ -1755,7 +1816,7 @@
           "admin-audit"
         ],
         "summary": "Admin Get Audit",
-        "description": "Liefert Audit Log Eintr\u00e4ge mit optionalen Filtern.",
+        "description": "Liefert Audit Log Einträge mit optionalen Filtern.",
         "operationId": "admin_get_audit_admin_audit_get",
         "parameters": [
           {
@@ -1947,7 +2008,7 @@
           "admin-diagnostics"
         ],
         "summary": "Admin Diagnostics",
-        "description": "Diagnostik f\u00fcr typische Dateninkonsistenzen.\nLiefert nur Read-Informationen, keine \u00c4nderungen.",
+        "description": "Diagnostik für typische Dateninkonsistenzen.\nLiefert nur Read-Informationen, keine Änderungen.",
         "operationId": "admin_diagnostics_admin_diagnostics_get",
         "parameters": [
           {
@@ -2654,6 +2715,419 @@
             "content": {
               "application/json": {
                 "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/tenants/{tenant_id}/users/{user_id}/set-password": {
+      "post": {
+        "tags": [
+          "admin-tenants"
+        ],
+        "summary": "Set Tenant User Password",
+        "operationId": "set_tenant_user_password",
+        "parameters": [
+          {
+            "name": "tenant_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Tenant Id"
+            }
+          },
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "User Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "password": {
+                    "type": "string",
+                    "minLength": 4,
+                    "maxLength": 128,
+                    "title": "Password"
+                  }
+                },
+                "required": [
+                  "password"
+                ],
+                "title": "SetPasswordRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TenantUserOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inventory/report": {
+      "get": {
+        "tags": [
+          "inventory"
+        ],
+        "summary": "Report (Aggregiert)",
+        "operationId": "inventory_report_get",
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "title": "From"
+            },
+            "description": "Startdatum (YYYY-MM-DD)"
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "title": "To"
+            },
+            "description": "Enddatum (YYYY-MM-DD)"
+          },
+          {
+            "name": "mode",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "top5",
+                "all",
+                "selected"
+              ],
+              "title": "Mode"
+            }
+          },
+          {
+            "name": "item_ids",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "title": "Item Ids"
+            }
+          },
+          {
+            "name": "category_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "title": "Category Id"
+            }
+          },
+          {
+            "name": "aggregate",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "title": "Aggregate"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inventory/reports/consumption": {
+      "get": {
+        "tags": [
+          "inventory"
+        ],
+        "summary": "Report Consumption",
+        "operationId": "inventory_reports_consumption_get",
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "title": "From"
+            },
+            "description": "Startdatum (YYYY-MM-DD)"
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "title": "To"
+            },
+            "description": "Enddatum (YYYY-MM-DD)"
+          },
+          {
+            "name": "mode",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "top5",
+                "all",
+                "selected"
+              ],
+              "title": "Mode"
+            }
+          },
+          {
+            "name": "item_ids",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "title": "Item Ids"
+            }
+          },
+          {
+            "name": "category_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "title": "Category Id"
+            }
+          },
+          {
+            "name": "aggregate",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "title": "Aggregate"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inventory/reports/export/{format}": {
+      "get": {
+        "tags": [
+          "inventory"
+        ],
+        "summary": "Report Export",
+        "operationId": "inventory_reports_export_format_get",
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "title": "From"
+            },
+            "description": "Startdatum (YYYY-MM-DD)"
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "title": "To"
+            },
+            "description": "Enddatum (YYYY-MM-DD)"
+          },
+          {
+            "name": "mode",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "top5",
+                "all",
+                "selected"
+              ],
+              "title": "Mode"
+            }
+          },
+          {
+            "name": "item_ids",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "title": "Item Ids"
+            }
+          },
+          {
+            "name": "category_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "title": "Category Id"
+            }
+          },
+          {
+            "name": "aggregate",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "title": "Aggregate"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "format",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "csv",
+                "excel",
+                "pdf"
+              ],
+              "title": "Format"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary",
+                  "title": "ReportExport"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
               }
             }
           }
@@ -3483,7 +3957,7 @@
           "is_active"
         ],
         "title": "TenantOutPing",
-        "description": "Minimaler Tenant Output f\u00fcr /inventory/ping."
+        "description": "Minimaler Tenant Output für /inventory/ping."
       },
       "TenantPingResponse": {
         "properties": {
@@ -3501,7 +3975,7 @@
           "tenant"
         ],
         "title": "TenantPingResponse",
-        "description": "Response Modell f\u00fcr /inventory/ping."
+        "description": "Response Modell für /inventory/ping."
       },
       "TenantUpdate": {
         "properties": {
@@ -3827,13 +4301,176 @@
           "type"
         ],
         "title": "ValidationError"
+      },
+      "MovementListResponse": {
+        "oneOf": [
+          {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MovementPayload"
+            },
+            "title": "MovementList"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "items": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/MovementPayload"
+                },
+                "title": "Items"
+              }
+            },
+            "required": [
+              "items"
+            ],
+            "title": "MovementItemsWrapper"
+          }
+        ],
+        "title": "MovementListResponse"
+      },
+      "ReportDataPoint": {
+        "type": "object",
+        "properties": {
+          "period": {
+            "type": "string",
+            "title": "Period"
+          },
+          "value": {
+            "type": "number",
+            "title": "Value"
+          },
+          "item_id": {
+            "type": "string",
+            "title": "Item Id"
+          },
+          "item_name": {
+            "type": "string",
+            "title": "Item Name"
+          }
+        },
+        "required": [
+          "period",
+          "value"
+        ],
+        "title": "ReportDataPoint"
+      },
+      "ReportSeries": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "itemId": {
+            "type": "string",
+            "title": "Item Id"
+          },
+          "color": {
+            "type": "string",
+            "title": "Color"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReportDataPoint"
+            },
+            "title": "Data"
+          }
+        },
+        "required": [
+          "label",
+          "data"
+        ],
+        "title": "ReportSeries"
+      },
+      "ReportTopItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "quantity": {
+            "type": "number",
+            "title": "Quantity"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "quantity"
+        ],
+        "title": "ReportTopItem"
+      },
+      "ReportKpis": {
+        "type": "object",
+        "properties": {
+          "totalConsumption": {
+            "type": "number",
+            "title": "Total Consumption"
+          },
+          "averagePerMonth": {
+            "type": "number",
+            "title": "Average Per Month"
+          },
+          "months": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "title": "Months"
+          },
+          "topItem": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ReportTopItem"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Top Item"
+          }
+        },
+        "required": [
+          "totalConsumption",
+          "averagePerMonth",
+          "months"
+        ],
+        "title": "ReportKpis"
+      },
+      "ReportResponse": {
+        "type": "object",
+        "properties": {
+          "series": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReportSeries"
+            },
+            "title": "Series"
+          },
+          "kpis": {
+            "$ref": "#/components/schemas/ReportKpis"
+          }
+        },
+        "required": [
+          "series",
+          "kpis"
+        ],
+        "title": "ReportResponse"
       }
     }
   },
   "tags": [
     {
       "name": "platform",
-      "description": "Basis Endpunkte f\u00fcr Health, Meta und DB Readiness."
+      "description": "Basis Endpunkte für Health, Meta und DB Readiness."
     },
     {
       "name": "inventory",
@@ -3845,15 +4482,15 @@
     },
     {
       "name": "admin-tenants",
-      "description": "Tenant Verwaltung f\u00fcr Admin."
+      "description": "Tenant Verwaltung für Admin."
     },
     {
       "name": "admin-users",
-      "description": "User Verwaltung f\u00fcr Admin."
+      "description": "User Verwaltung für Admin."
     },
     {
       "name": "admin-memberships",
-      "description": "Membership Verwaltung f\u00fcr Admin."
+      "description": "Membership Verwaltung für Admin."
     },
     {
       "name": "admin-roles",

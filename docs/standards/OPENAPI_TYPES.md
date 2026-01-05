@@ -31,8 +31,5 @@
 - Neue Endpunkte zuerst in `docs/openapi/openapi.json` bzw. Remote-Schema pflegen, dann Typen regenerieren.
 
 ## Known Issues
-- Remote-Schema `https://api.test.myitnetwork.de/openapi.json` liefert aus der aktuellen Umgebung HTTP 403; Typen werden daher aus der lokal abgelegten Kopie generiert.
-- `/admin/login` Response ist im Schema als `Record<string, never>` definiert; tatsächlich wird `{ admin_key, actor? }` erwartet.
-- `/inventory/items/import` und `/inventory/items/export` sind im Schema als leere Objekte (`Record<string, never>`) beschrieben; aktuelle Wrapper benötigen detailreiche Felder (imported/updated/errors bzw. `{ csv: string }`).
-- `/inventory/movements` Response ist als `unknown` beschrieben; Wrapper gehen von einem verwertbaren Response-Body aus.
-- Der Endpoint `/admin/tenants/{tenant_id}/users/{user_id}/set-password` fehlt im Schema; der Wrapper nutzt weiterhin den bisherigen Pfad und erwartet eine Tenant-User-Rückgabe.
+- Backend muss die aktualisierten OpenAPI-Definitionen (Login, Items-Import/Export, Movements, Set-Password, Reporting) bestätigen, damit die generierten Typen zur Laufzeit passen.
+  - Remote-Schema ist derzeit nicht abrufbar (`/api/openapi.json` liefert 403 via `api.test.myitnetwork.de`); bis zur Freischaltung muss die lokale Kopie `docs/openapi/openapi.json` für die Generierung genutzt werden.

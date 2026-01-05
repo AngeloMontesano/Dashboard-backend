@@ -1,231 +1,225 @@
 <template>
-  <section class="tenantUsersView">
-    <header class="viewHeader">
-      <div class="headTitles">
-        <div class="headTitle">Tenant Benutzer</div>
-        <div class="headSubtitle">User je Kunde verwalten</div>
-      </div>
-      <div class="headActions">
+  <UiPage>
+    <UiSection title="Tenant Benutzer" subtitle="User je Kunde verwalten">
+      <template #actions>
         <button class="btnGhost small" :disabled="busy.tenants" @click="loadTenants">
           {{ busy.tenants ? "lädt..." : "Tenants laden" }}
         </button>
         <button class="btnGhost small" :disabled="busy.list || !selectedTenant" @click="loadTenantUsers">
           {{ busy.list ? "lädt..." : "Neu laden" }}
         </button>
-      </div>
-    </header>
+      </template>
 
-    <div class="toolbar">
-      <div class="chips">
-        <div class="chip">
-          <div class="chipLabel">Benutzer gesamt</div>
-          <div class="chipValue">{{ totalUsers }}</div>
-        </div>
-        <div class="chip">
-          <div class="chipLabel">aktiv</div>
-          <div class="chipValue success">{{ activeUsers }}</div>
-        </div>
-        <div class="chip">
-          <div class="chipLabel">deaktiviert</div>
-          <div class="chipValue danger">{{ inactiveUsers }}</div>
-        </div>
-      </div>
-      <div class="toolbarActions">
-        <button class="btnGhost small" :disabled="!selectedTenant" @click="toggleCreate">
-          {{ createForm.open ? "Schließen" : "Benutzer hinzufügen" }}
-        </button>
-      </div>
-    </div>
-
-    <div class="searchCard">
-      <div class="searchLeft column">
-        <label class="fieldLabel" for="tenant-search">Kunden Suche</label>
-        <input
-          id="tenant-search"
-          class="input"
-          v-model.trim="filters.tenantSearch"
-          placeholder="Tenant Name oder Slug"
-          aria-label="Tenant suchen"
-        />
-        <div class="hint">Tippen zum Filtern, case-insensitive.</div>
-        <div class="tenantList">
-          <button
-            v-for="t in filteredTenants"
-            :key="t.id"
-            class="tenantOption"
-            :class="{ active: selectedTenant?.id === t.id }"
-            @click="selectTenant(t)"
-          >
-            <span class="tenantName">{{ t.name }}</span>
-            <span class="muted mono">{{ t.slug }}</span>
-          </button>
-          <div v-if="!filteredTenants.length" class="muted smallText">Keine Treffer.</div>
-        </div>
-      </div>
-
-      <div class="searchRight column" v-if="selectedTenant">
-        <label class="fieldLabel" for="user-search">User Suche</label>
-        <input
-          id="user-search"
-          class="input"
-          v-model.trim="filters.userSearch"
-          placeholder="E-Mail oder Name"
-          aria-label="Tenant Benutzer suchen"
-        />
-        <div class="hint">Live (q-Param, debounce 300ms). Groß/Kleinschreibung egal.</div>
-
-        <div class="fieldRow">
-          <div class="field">
-            <div class="label">Status</div>
-            <select class="input" v-model="filters.status">
-              <option value="all">Alle</option>
-              <option value="active">aktiv</option>
-              <option value="inactive">deaktiviert</option>
-            </select>
+      <UiToolbar>
+        <template #start>
+          <div class="chip-list">
+            <UiStatCard label="Benutzer gesamt" :value="totalUsers" />
+            <UiStatCard label="aktiv" :value="activeUsers" tone="success" />
+            <UiStatCard label="deaktiviert" :value="inactiveUsers" tone="danger" />
           </div>
-          <div class="field">
-            <div class="label">Rolle</div>
-            <select class="input" v-model="filters.role">
-              <option value="all">Alle</option>
+        </template>
+        <template #end>
+          <button class="btnGhost small" :disabled="!selectedTenant" @click="toggleCreate">
+            {{ createForm.open ? "Schließen" : "Benutzer hinzufügen" }}
+          </button>
+        </template>
+      </UiToolbar>
+
+      <div class="filter-card two-column">
+        <div class="stack">
+          <label class="field-label" for="tenant-search">Kunden Suche</label>
+          <input
+            id="tenant-search"
+            class="input"
+            v-model.trim="filters.tenantSearch"
+            placeholder="Tenant Name oder Slug"
+            aria-label="Tenant suchen"
+          />
+          <div class="hint">Tippen zum Filtern, case-insensitive.</div>
+          <div class="list-panel">
+            <button
+              v-for="t in filteredTenants"
+              :key="t.id"
+              class="list-panel__item"
+              :class="{ 'is-active': selectedTenant?.id === t.id }"
+              @click="selectTenant(t)"
+            >
+              <div class="stack-sm">
+                <span class="label">{{ t.name }}</span>
+                <span class="muted mono">{{ t.slug }}</span>
+              </div>
+              <span class="badge" :class="t.is_active ? 'tone-success' : 'tone-danger'">
+                {{ t.is_active ? "aktiv" : "deaktiviert" }}
+              </span>
+            </button>
+            <div v-if="!filteredTenants.length" class="muted text-small">Keine Treffer.</div>
+          </div>
+        </div>
+
+        <div class="stack">
+          <label class="field-label" for="user-search">User Suche</label>
+          <input
+            id="user-search"
+            class="input"
+            v-model.trim="filters.userSearch"
+            placeholder="E-Mail oder Name"
+            aria-label="Tenant Benutzer suchen"
+          />
+          <div class="hint">Live (q-Param, debounce 300ms). Groß/Kleinschreibung egal.</div>
+
+          <div class="form-grid">
+            <div class="field">
+              <div class="field-label">Status</div>
+              <select class="input" v-model="filters.status">
+                <option value="all">Alle</option>
+                <option value="active">aktiv</option>
+                <option value="inactive">deaktiviert</option>
+              </select>
+            </div>
+            <div class="field">
+              <div class="field-label">Rolle</div>
+              <select class="input" v-model="filters.role">
+                <option value="all">Alle</option>
+                <option v-for="r in roles" :key="r" :value="r">{{ r }}</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="table-card">
+        <div class="table-card__header">
+          <div class="tableTitle">Tenant Benutzer</div>
+          <div class="text-muted text-small">Quelle: /admin/tenants/{id}/users</div>
+        </div>
+
+        <div class="table-card__body">
+          <div v-if="!selectedTenant" class="mutedPad">Bitte Kunde auswählen.</div>
+          <div v-else class="tableWrap">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>E-Mail</th>
+                  <th>Rolle</th>
+                  <th>Status</th>
+                  <th>Zuletzt geändert</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  v-for="u in filteredUsers"
+                  :key="u.id"
+                  :class="{ rowActive: selectedUser?.id === u.id }"
+                  @click="selectUser(u)"
+                >
+                  <td class="mono">{{ u.email }}</td>
+                  <td>{{ u.role }}</td>
+                  <td>
+                    <span class="tag" :class="u.is_active ? 'ok' : 'bad'">
+                      {{ u.is_active ? "aktiv" : "deaktiviert" }}
+                    </span>
+                  </td>
+                  <td class="mono">{{ lastChanged(u) }}</td>
+                </tr>
+                <tr v-if="!busy.list && filteredUsers.length === 0">
+                  <td colspan="4" class="mutedPad">Keine Tenant Benutzer gefunden.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div v-if="busy.error" class="errorText">Fehler: {{ busy.error }}</div>
+        </div>
+      </div>
+
+      <div v-if="selectedUser" class="detail-card">
+        <div class="detail-card__header">
+          <div>
+            <div class="detail-card__title">{{ selectedUser.email }}</div>
+            <div class="muted mono">ID: {{ selectedUser.id }}</div>
+          </div>
+          <button class="btnGhost small" @click="copyEmail">E-Mail kopieren</button>
+        </div>
+
+        <div class="detail-grid">
+          <div class="detail-box">
+            <div class="detail-box__label">Status</div>
+            <label class="toggle">
+              <input type="checkbox" v-model="edit.is_active" :disabled="busy.save" />
+              <span>{{ edit.is_active ? "aktiv" : "deaktiviert" }}</span>
+            </label>
+          </div>
+          <div class="detail-box">
+            <div class="detail-box__label">Rolle</div>
+            <select class="input" v-model="edit.role" :disabled="busy.save">
               <option v-for="r in roles" :key="r" :value="r">{{ r }}</option>
             </select>
           </div>
         </div>
-      </div>
 
-      <div class="searchRight column" v-else>
-        <div class="muted">Bitte zuerst einen Tenant auswählen.</div>
-      </div>
-    </div>
-
-    <div class="tableCard">
-      <div class="tableHeader">
-        <div class="tableTitle">Tenant Benutzer</div>
-        <div class="muted smallText">Quelle: /admin/tenants/{id}/users</div>
-      </div>
-
-      <div v-if="!selectedTenant" class="mutedPad">Bitte Kunde auswählen.</div>
-      <div v-else class="tableWrap">
-        <table class="table">
-          <thead>
-            <tr>
-              <th>E-Mail</th>
-              <th>Rolle</th>
-              <th>Status</th>
-              <th>Zuletzt geändert</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              v-for="u in filteredUsers"
-              :key="u.id"
-              :class="{ rowActive: selectedUser?.id === u.id }"
-              @click="selectUser(u)"
-            >
-              <td class="mono">{{ u.email }}</td>
-              <td>{{ u.role }}</td>
-              <td>
-                <span class="tag" :class="u.is_active ? 'ok' : 'bad'">
-                  {{ u.is_active ? "aktiv" : "deaktiviert" }}
-                </span>
-              </td>
-              <td class="mono">{{ lastChanged(u) }}</td>
-            </tr>
-            <tr v-if="!busy.list && filteredUsers.length === 0">
-              <td colspan="4" class="mutedPad">Keine Tenant Benutzer gefunden.</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <div v-if="busy.error" class="errorText">Fehler: {{ busy.error }}</div>
-    </div>
-
-    <div v-if="selectedUser" class="detailCard">
-      <div class="detailHeader">
-        <div>
-          <div class="detailTitle">{{ selectedUser.email }}</div>
-          <div class="muted mono">ID: {{ selectedUser.id }}</div>
-        </div>
-        <button class="btnGhost small" @click="copyEmail">E-Mail kopieren</button>
-      </div>
-
-      <div class="detailGrid">
-        <div class="detailBox">
-          <div class="boxLabel">Status</div>
-          <label class="toggle">
-            <input type="checkbox" v-model="edit.is_active" :disabled="busy.save" />
-            <span>{{ edit.is_active ? "aktiv" : "deaktiviert" }}</span>
-          </label>
-        </div>
-        <div class="detailBox">
-          <div class="boxLabel">Rolle</div>
-          <select class="input" v-model="edit.role" :disabled="busy.save">
-            <option v-for="r in roles" :key="r" :value="r">{{ r }}</option>
-          </select>
+        <div class="action-row">
+          <button class="btnPrimary small" :disabled="busy.save" @click="saveUser">
+            {{ busy.save ? "speichere..." : "Speichern" }}
+          </button>
+          <button class="btnGhost small" :disabled="busy.password" @click="setPassword">
+            {{ busy.password ? "setzt..." : "Passwort setzen" }}
+          </button>
+          <button class="btnGhost small" :disabled="busy.save" @click="toggleActive">
+            {{ edit.is_active ? "Deaktivieren" : "Aktivieren" }}
+          </button>
+          <button class="btnGhost small danger" :disabled="busy.save" @click="deleteUser">
+            Löschen
+          </button>
         </div>
       </div>
 
-      <div class="detailActions row gap8 wrap">
-        <button class="btnPrimary small" :disabled="busy.save" @click="saveUser">
-          {{ busy.save ? "speichere..." : "Speichern" }}
-        </button>
-        <button class="btnGhost small" :disabled="busy.password" @click="setPassword">
-          {{ busy.password ? "setzt..." : "Passwort setzen" }}
-        </button>
-        <button class="btnGhost small" :disabled="busy.save" @click="toggleActive">
-          {{ edit.is_active ? "Deaktivieren" : "Aktivieren" }}
-        </button>
-        <button class="btnGhost small danger" :disabled="busy.save" @click="deleteUser">
-          Löschen
-        </button>
-      </div>
-    </div>
+      <div v-if="createForm.open" ref="createCardRef" class="detail-card">
+        <div class="detail-card__header">
+          <div>
+            <div class="detail-card__title">Neuen Tenant Benutzer anlegen</div>
+            <div class="muted">Passwort Pflicht, Rolle wählen.</div>
+          </div>
+          <button class="btnGhost small" @click="toggleCreate">Schließen</button>
+        </div>
 
-    <div v-if="createForm.open" ref="createCardRef" class="detailCard">
-      <div class="detailHeader">
-        <div>
-          <div class="detailTitle">Neuen Tenant Benutzer anlegen</div>
-          <div class="muted">Passwort Pflicht, Rolle wählen.</div>
+        <div class="detail-grid">
+          <div class="detail-box">
+            <div class="detail-box__label">Tenant</div>
+            <div class="detail-box__value mono">
+              {{ selectedTenant ? `${selectedTenant.name} (${selectedTenant.slug})` : "Bitte auswählen" }}
+            </div>
+          </div>
+          <div class="detail-box">
+            <div class="detail-box__label">E-Mail</div>
+            <input class="input" v-model.trim="createForm.email" placeholder="user@example.com" />
+          </div>
+          <div class="detail-box">
+            <div class="detail-box__label">Rolle</div>
+            <select class="input" v-model="createForm.role">
+              <option v-for="r in roles" :key="r" :value="r">{{ r }}</option>
+            </select>
+          </div>
+          <div class="detail-box">
+            <div class="detail-box__label">Passwort</div>
+            <input class="input" type="password" v-model="createForm.password" placeholder="mind. 8 Zeichen" />
+          </div>
+          <div class="detail-box">
+            <div class="detail-box__label">Status</div>
+            <label class="toggle">
+              <input type="checkbox" v-model="createForm.is_active" />
+              <span>{{ createForm.is_active ? "aktiv" : "deaktiviert" }}</span>
+            </label>
+          </div>
         </div>
-        <button class="btnGhost small" @click="toggleCreate">Schließen</button>
-      </div>
 
-      <div class="detailGrid">
-        <div class="detailBox">
-          <div class="boxLabel">Tenant</div>
-          <div class="boxValue mono">{{ selectedTenant ? `${selectedTenant.name} (${selectedTenant.slug})` : "Bitte auswählen" }}</div>
-        </div>
-        <div class="detailBox">
-          <div class="boxLabel">E-Mail</div>
-          <input class="input" v-model.trim="createForm.email" placeholder="user@example.com" />
-        </div>
-        <div class="detailBox">
-          <div class="boxLabel">Rolle</div>
-          <select class="input" v-model="createForm.role">
-            <option v-for="r in roles" :key="r" :value="r">{{ r }}</option>
-          </select>
-        </div>
-        <div class="detailBox">
-          <div class="boxLabel">Passwort</div>
-          <input class="input" type="password" v-model="createForm.password" placeholder="mind. 8 Zeichen" />
-        </div>
-        <div class="detailBox">
-          <div class="boxLabel">Status</div>
-          <label class="toggle">
-            <input type="checkbox" v-model="createForm.is_active" />
-            <span>{{ createForm.is_active ? "aktiv" : "deaktiviert" }}</span>
-          </label>
+        <div class="action-row">
+          <button class="btnPrimary small" :disabled="!selectedTenant || busy.create" @click="createUser">
+            {{ busy.create ? "legt an..." : "Benutzer hinzufügen" }}
+          </button>
+          <div class="muted text-small">Legt Tenant Benutzer an und lädt Liste neu.</div>
         </div>
       </div>
-
-      <div class="detailActions row gap8 wrap">
-        <button class="btnPrimary small" :disabled="!selectedTenant || busy.create" @click="createUser">
-          {{ busy.create ? "legt an..." : "Benutzer hinzufügen" }}
-        </button>
-        <div class="muted smallText">Legt Tenant Benutzer an und lädt Liste neu.</div>
-      </div>
-    </div>
-  </section>
+    </UiSection>
+  </UiPage>
 </template>
 
 <script setup lang="ts">
@@ -242,6 +236,10 @@ import {
 import type { TenantOut, TenantUserOut } from "../types";
 import { useToast } from "../composables/useToast";
 import { debounce } from "../utils/debounce";
+import UiPage from "../components/ui/UiPage.vue";
+import UiSection from "../components/ui/UiSection.vue";
+import UiToolbar from "../components/ui/UiToolbar.vue";
+import UiStatCard from "../components/ui/UiStatCard.vue";
 
 const props = defineProps<{
   apiOk: boolean;
@@ -560,216 +558,3 @@ watch(
   }
 );
 </script>
-
-<style scoped>
-.tenantUsersView {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.viewHeader {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.headTitles {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.headTitle {
-  font-size: 22px;
-  font-weight: 700;
-}
-
-.headSubtitle {
-  color: var(--muted);
-}
-
-.headActions {
-  display: flex;
-  gap: 8px;
-}
-
-.toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.chips {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.chip {
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 10px 12px;
-  min-width: 140px;
-}
-
-.chipLabel {
-  color: var(--muted);
-  font-size: 12px;
-}
-
-.chipValue {
-  font-size: 18px;
-  font-weight: 700;
-}
-
-.chipValue.success {
-  color: var(--green);
-}
-
-.chipValue.danger {
-  color: var(--red);
-}
-
-.toolbarActions {
-  display: flex;
-  gap: 8px;
-}
-
-.searchCard {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 14px;
-}
-
-.column {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.tenantList {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  max-height: 240px;
-  overflow: auto;
-  padding-right: 4px;
-}
-
-.tenantOption {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 8px 10px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--surface);
-  cursor: pointer;
-  text-align: left;
-}
-
-.tenantOption.active {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 1px var(--primary);
-}
-
-.tenantName {
-  font-weight: 600;
-}
-
-.fieldRow {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  margin-top: 6px;
-}
-
-.tableCard {
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 12px;
-}
-
-.tableHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 8px;
-}
-
-.tableTitle {
-  font-weight: 700;
-}
-
-.detailCard {
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.detailHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.detailTitle {
-  font-size: 18px;
-  font-weight: 700;
-}
-
-.detailGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 12px;
-}
-
-.detailBox {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 10px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--surface);
-}
-
-.boxLabel {
-  color: var(--muted);
-  font-size: 12px;
-}
-
-.boxValue {
-  font-weight: 600;
-}
-
-.detailActions {
-  align-items: center;
-}
-
-.errorText {
-  color: var(--red);
-  margin-top: 8px;
-}
-
-@media (max-width: 960px) {
-  .searchCard {
-    grid-template-columns: 1fr;
-  }
-}
-</style>

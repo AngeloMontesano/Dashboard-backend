@@ -360,3 +360,30 @@ textarea:focus {
   margin: 4px 0 0;
   color: var(--color-text-muted);
 }
+
+.p-toast {
+  top: var(--spacing-xl);
+  right: var(--spacing-xl);
+}
+
+.p-toast .p-toast-message {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-soft);
+  color: var(--color-text);
+}
+
+.p-toast .p-toast-message .p-toast-summary {
+  color: var(--color-text);
+  font-weight: 700;
+}
+
+.p-toast .p-toast-message .p-toast-detail {
+  color: var(--color-text-muted);
+}
+
+.p-component-overlay {
+  background: color-mix(in srgb, var(--overlay, rgba(0, 0, 0, 0.35)) 80%, transparent);
+  backdrop-filter: blur(4px);
+}

@@ -10,13 +10,16 @@ import {
   cancelOrder,
   sendOrderEmail,
   downloadOrderPdf,
-  fetchReorderRecommendations
+  fetchReorderRecommendations,
+  fetchItems,
+  createOrder
 } from '@/api/inventory';
 
 const { state: authState } = useAuth();
 
 type Order = Awaited<ReturnType<typeof listOrders>>[number];
 type ReorderItem = Awaited<ReturnType<typeof fetchReorderRecommendations>>['items'][number];
+type ItemOption = Awaited<ReturnType<typeof fetchItems>>['items'][number];
 
 const state = reactive<{
   orders: Order[];
@@ -25,13 +28,19 @@ const state = reactive<{
   emailing: Record<string, boolean>;
   recommended: ReorderItem[];
   downloading: Record<string, boolean>;
+  items: ItemOption[];
+  creating: boolean;
+  createForm: { itemId: string; quantity: number; note: string };
 }>({
   orders: [],
   loading: false,
   error: null,
   emailing: {},
   recommended: [],
-  downloading: {}
+  downloading: {},
+  items: [],
+  creating: false,
+  createForm: { itemId: '', quantity: 1, note: '' }
 });
 
 const openOrders = computed(() => state.orders.filter((o) => o.status === 'OPEN'));
@@ -57,6 +66,16 @@ async function loadRecommendations() {
     state.recommended = res.items || [];
   } catch {
     state.recommended = [];
+  }
+}
+
+async function loadItems() {
+  if (!authState.accessToken) return;
+  try {
+    const res = await fetchItems({ token: authState.accessToken, page: 1, page_size: 200, active: true });
+    state.items = res.items;
+  } catch {
+    state.items = [];
   }
 }
 
@@ -119,9 +138,32 @@ async function downloadPdf(orderId: string) {
   }
 }
 
+async function createNewOrder() {
+  if (!authState.accessToken || !state.createForm.itemId || state.createForm.quantity <= 0) {
+    state.error = 'Bitte Artikel und Menge wählen';
+    return;
+  }
+  state.creating = true;
+  state.error = null;
+  try {
+    const payload = {
+      note: state.createForm.note,
+      items: [{ item_id: state.createForm.itemId, quantity: state.createForm.quantity }]
+    };
+    const created = await createOrder(authState.accessToken, payload);
+    state.orders = [created, ...state.orders];
+    state.createForm = { itemId: '', quantity: 1, note: '' };
+  } catch (err: any) {
+    state.error = err?.message || 'Bestellung konnte nicht angelegt werden';
+  } finally {
+    state.creating = false;
+  }
+}
+
 onMounted(async () => {
   await loadOrders();
   await loadRecommendations();
+  await loadItems();
 });
 </script>
 
@@ -136,6 +178,9 @@ onMounted(async () => {
           <div class="action-row">
             <button class="button button--ghost" type="button" @click="loadOrders" :disabled="state.loading">
               Neu laden
+            </button>
+            <button class="button button--primary" type="button" @click="createNewOrder" :disabled="state.creating">
+              Bestellung anlegen
             </button>
           </div>
         </template>
@@ -161,6 +206,29 @@ onMounted(async () => {
           <p class="card__value">{{ state.recommended.length }}</p>
           <p class="card__hint">Artikel unter Sollbestand</p>
         </article>
+      </div>
+
+      <div class="mt-lg">
+        <h3 class="eyebrow">Neue Bestellung</h3>
+        <div class="form-grid">
+          <label class="form-field">
+            <span class="form-label">Artikel</span>
+            <select v-model="state.createForm.itemId" class="input">
+              <option value="">Bitte wählen</option>
+              <option v-for="item in state.items" :key="item.id" :value="item.id">
+                {{ item.name }} (Bestand {{ item.quantity }})
+              </option>
+            </select>
+          </label>
+          <label class="form-field">
+            <span class="form-label">Menge</span>
+            <input v-model.number="state.createForm.quantity" type="number" min="1" class="input" />
+          </label>
+          <label class="form-field span-2">
+            <span class="form-label">Notiz</span>
+            <input v-model="state.createForm.note" type="text" class="input" />
+          </label>
+        </div>
       </div>
 
       <div class="mt-lg">
@@ -199,6 +267,38 @@ onMounted(async () => {
           </table>
         </div>
         <p v-else class="placeholder mt-sm">Keine offenen Bestellungen vorhanden.</p>
+      </div>
+
+      <div class="mt-lg">
+        <h3 class="eyebrow">Erledigte Bestellungen</h3>
+        <div class="table-wrapper" v-if="completedOrders.length">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Nummer</th>
+                <th>Positionen</th>
+                <th>Status</th>
+                <th>Aktionen</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="order in completedOrders" :key="order.id">
+                <td>{{ order.number }}</td>
+                <td>{{ order.items.length }}</td>
+                <td>{{ order.status }}</td>
+                <td class="table-actions">
+                  <button class="button button--ghost" type="button" @click="downloadPdf(order.id)" :disabled="state.downloading[order.id]">
+                    PDF
+                  </button>
+                  <button class="button button--ghost" type="button" @click="sendEmail(order.id)" :disabled="state.emailing[order.id]">
+                    E-Mail
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p v-else class="placeholder mt-sm">Keine erledigten Bestellungen.</p>
       </div>
 
       <div class="mt-lg">

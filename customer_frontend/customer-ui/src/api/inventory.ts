@@ -18,6 +18,7 @@ type OrderOut = components["schemas"]["OrderOut"];
 type OrderCreate = components["schemas"]["OrderCreate"];
 type OrderEmailRequest = components["schemas"]["OrderEmailRequest"];
 type ReorderResponse = components["schemas"]["ReorderResponse"];
+export type OrderCreateItem = components["schemas"]["OrderItemInput"];
 
 export type ImportItemsResult = {
   imported: number;

@@ -282,14 +282,12 @@ function setTenantContext(payload: { id: string; name: string; slug: string } | 
 
 function clearTenantContext() {
   setTenantContext(null);
-  toast("Tenant Auswahl entfernt");
 }
 
 function applyLogin(payload: { adminKey: string; actor: string }) {
   ui.adminKey = payload.adminKey;
   ui.actor = payload.actor || "admin";
   ui.authenticated = true;
-  toast("Admin Login erfolgreich, lade Portal...");
   quickRefresh();
 }
 
@@ -326,10 +324,9 @@ async function checkApi() {
   try {
     await platformHealth();
     api.ok = true;
-    toast("API erreichbar");
   } catch {
     api.ok = false;
-    toast("API nicht erreichbar");
+    toast("API nicht erreichbar", "danger");
   } finally {
     api.busy = false;
   }
@@ -340,10 +337,9 @@ async function checkDb() {
   try {
     await platformHealthDb();
     db.ok = true;
-    toast("DB erreichbar");
   } catch {
     db.ok = false;
-    toast("DB nicht erreichbar");
+    toast("DB nicht erreichbar", "danger");
   } finally {
     db.busy = false;
   }
@@ -364,7 +360,6 @@ function resetContext() {
   ui.adminKey = "";
   ui.actor = "";
   ui.authenticated = false;
-  toast("Admin Context zurückgesetzt");
 }
 
 /* Boot */
@@ -377,13 +372,11 @@ onMounted(async () => {
 function onThemeSelect(event: Event) {
   const mode = (event.target as HTMLSelectElement).value as "light" | "dark" | "system";
   setTheme(mode);
-  toast(`Theme gesetzt: ${mode}`);
 }
 
 function openMemberships(tenantId: string) {
   goSection("memberships");
   if (tenantId) localStorage.setItem("adminSelectedTenantId", tenantId);
-  toast("Wechsle zu Tenant-User Verwaltung");
 }
 
 function logout() {
@@ -391,7 +384,6 @@ function logout() {
   ui.actor = "";
   ui.authenticated = false;
   ui.section = "kunden";
-  toast("Abgemeldet", "info");
   window.history.pushState({}, "", "/login");
 }
 

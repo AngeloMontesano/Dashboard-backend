@@ -1,5 +1,29 @@
 # WORKLOG
 
+- Datum/Uhrzeit: 2026-01-08T10:30:00Z
+- Task-ID: FE-AUDIT-01
+- Was analysiert/geändert: Standards unter `docs/standards` vollständig gelesen; Admin- und Customer-Frontend hinsichtlich Architektur, Routing, API-Layer, UI/UX und Styles gescannt; neue Audit- und Backlog-Dokumente angelegt; TODO neu priorisiert.
+- Ergebnis: `docs/roadmap/FRONTEND_AUDIT.md` mit Standard-Zusammenfassung, Befunden, UX-Top-10 und Quick Wins pro Frontend; `docs/roadmap/FRONTEND_IMPROVEMENTS_BACKLOG.md` mit priorisierten Maßnahmen; `TODO.md` nach MUSS/SOLL/KANN aktualisiert.
+- Nächste Schritte: Maßnahmen mit Teams abstimmen, Prioritäten P0/P1 adressieren (Auth-Persistenz, Logs-Endpoint, Mobile-Breakpoints, PDF-Export), optional Router-Einführung im Admin evaluieren.
+
+- Datum/Uhrzeit: 2026-01-08T11:00:00Z
+- Task-ID: FE-AUDIT-02
+- Was analysiert/geändert: Feedback zu übermäßigen Admin-Toast-Meldungen und Login-Voreinstellung umgesetzt; Info-Toasts auf Fehlerfälle begrenzt und Admin-Login standardmäßig auf Benutzer/Passwort umgestellt.
+- Ergebnis: Health/Navigation/Theme-Aktionen erzeugen keine Info-Toasts mehr; nur Fehlermeldungen bleiben sichtbar. Login startet im Benutzer/Passwort-Modus, reduziert Doppel-Toast-Flut.
+- Nächste Schritte: Weitere Toast-Reduktion in Unterviews prüfen (z. B. Save-Erfolge gezielt), Admin-Router/Navigations-Verbesserung planen.
+
+- Datum/Uhrzeit: 2026-01-08T12:00:00Z
+- Task-ID: FE-AUDIT-03
+- Was analysiert/geändert: MUSS-Empfehlungen umgesetzt: Admin-Auth wird persistiert, Logs-Tab mit Dummy-Content entfernt; Customer-Shell erhält Mobile-Breakpoint; Reporting-PDF nutzt API-Export; Bestellungen-Aktionen erhalten Row-Busy-States.
+- Ergebnis: Admin-Reload behält Kontext (sessionStorage), Operations zeigt nur verfügbare Tabs; Customer-Layout stapelt unter 1100px, Reporting-PDF lädt als Datei statt Popup, Order-Buttons sind gegen Doppelaktionen geschützt.
+- Nächste Schritte: Server-Paging/Validierungen (Tenants/Memberships), Queue-Confirm/A11y-Labels und Theme-Toggle in Topbar angehen.
+
+- Datum/Uhrzeit: 2026-01-08T13:00:00Z
+- Task-ID: FE-AUDIT-04
+- Was analysiert/geändert: Host-Feld im Admin wrappt nun, AllowedHosts für neue Subdomains geöffnet; Admin-Settings Adresse in Straße/Hausnummer aufgeteilt; Customer Settings ebenfalls gesplittet. Reporting-PDF nutzt API-Endpunkt, Customer-API reagiert auf 401 mit Auto-Re-Login; Movement-Queue stoppt endlose Retries bei Client-Fehlern. Backend-Migrationslücke (inventory_orders) im TODO vermerkt.
+- Ergebnis: Tenants-Host überläuft nicht, neue Hosts blocken nicht mehr im Vite-Server; Adresse kann strukturiert eingegeben werden; Lagerbewegungen zeigen 401/400 als Fehler ohne endlose Wiederholung; fehlende Backend-Tabellen als Must-Do dokumentiert.
+- Nächste Schritte: Backend-Migration `inventory_orders` und Aggregationsfix einplanen; weitere Queue/Toast-Feinschliffe und Admin-Router-Paging umsetzen.
+
 ## Schritt 1 – Analyse
 - **Was wurde geprüft**
   - Vorgaben in `docs/` vollständig gelesen (Standards, Roadmap, OpenAPI-Kopie).

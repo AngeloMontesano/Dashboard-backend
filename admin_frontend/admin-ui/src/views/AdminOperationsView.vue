@@ -182,18 +182,6 @@
         </div>
       </div>
 
-      <div class="panel" v-else>
-        <div class="box stack-sm">
-          <div class="sectionTitle">Logs (Demo)</div>
-          <div class="action-row mt-4">
-            <button class="btnPrimary" :disabled="busy.logs" @click="loadLogs">
-              {{ busy.logs ? "lade..." : "Letzte Logs laden" }}
-            </button>
-            <div class="text-muted text-small push-right">TODO: Backend Endpoint anbinden</div>
-          </div>
-          <pre class="code-block mono">{{ logText }}</pre>
-        </div>
-      </div>
     </UiSection>
 
     <AuditDrawer
@@ -218,7 +206,7 @@ import { AuditDisplayRow, formatLocal, summarizePayload, toDisplayRow } from "..
 import UiPage from "../components/ui/UiPage.vue";
 import UiSection from "../components/ui/UiSection.vue";
 
-type OperationsTab = "overview" | "health" | "audit" | "snapshot" | "logs";
+type OperationsTab = "overview" | "health" | "audit" | "snapshot";
 
 const props = defineProps<{
   apiOk: boolean;
@@ -240,7 +228,6 @@ const tabs: { id: OperationsTab; label: string }[] = [
   { id: "health", label: "Health" },
   { id: "audit", label: "Audit Log" },
   { id: "snapshot", label: "Snapshots" },
-  { id: "logs", label: "Logs" },
 ];
 const tab = ref<OperationsTab>("overview");
 
@@ -249,7 +236,6 @@ const busy = reactive({
   admin: false,
   snapshot: false,
   list: false,
-  logs: false,
 });
 
 const adminPingOk = ref(false);
@@ -300,9 +286,6 @@ const latestSnapshotJson = computed(() => {
   if (!snapshots.value.length) return "";
   return JSON.stringify(snapshots.value[0], null, 2);
 });
-
-const logLines = ref<string[]>([]);
-const logText = computed(() => (logLines.value.length ? logLines.value.join("\n") : "Noch keine Logs geladen."));
 
 async function runHealthChecks() {
   busy.health = true;
@@ -483,17 +466,6 @@ function applyInitialTab(next?: OperationsTab | null) {
   if (next === "audit" && !auditLoadedOnce.value) {
     loadAudit();
   }
-}
-
-function loadLogs() {
-  busy.logs = true;
-  // TODO: Backend Endpoint anbinden, derzeit Demo-Daten
-  logLines.value = [
-    `${new Date().toISOString()} [info] health check ok`,
-    `${new Date().toISOString()} [warn] tenant routing fallback ${tenantLabel.value}`,
-    `${new Date().toISOString()} [info] diagnostics ${diagOk.value ? "ok" : "unbekannt"}`,
-  ];
-  busy.logs = false;
 }
 
 function loadSnapshots(): SnapshotEntry[] {

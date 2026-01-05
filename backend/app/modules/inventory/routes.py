@@ -1,11 +1,14 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import Any
+from io import BytesIO
+from typing import Any, Literal
 
 from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
+from fastapi.responses import StreamingResponse
 from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from openpyxl import Workbook
 
 from app.core.db import get_db
 from app.core.deps_auth import CurrentUserContext, get_current_user, require_owner_or_admin
@@ -22,6 +25,10 @@ from app.modules.inventory.schemas import (
     ItemOut,
     ItemUpdate,
     ItemsPage,
+    InventoryBulkUpdateRequest,
+    InventoryBulkUpdateResult,
+    MovementItemOut,
+    MovementOut,
     MovementPayload,
     SKUExistsResponse,
     TenantPingResponse,
@@ -405,6 +412,69 @@ async def update_item(
 # ----------------------
 # Bewegungen (Bestandsbuchungen)
 # ----------------------
+@router.get("/movements", response_model=list[MovementOut])
+async def list_movements(
+    start: datetime | None = Query(default=None, description="Startzeitpunkt (inklusive, UTC oder lokal ISO8601)"),
+    end: datetime | None = Query(default=None, description="Endzeitpunkt (inklusive, UTC oder lokal ISO8601)"),
+    movement_type: Literal["IN", "OUT"] | None = Query(default=None, alias="type"),
+    category_id: str | None = Query(default=None),
+    item_ids: list[str] | None = Query(default=None, alias="item_ids"),
+    limit: int = Query(default=200, ge=1, le=1000, description="Maximale Anzahl zurückgegebener Bewegungen"),
+    ctx: TenantContext = Depends(get_tenant_context),
+    user_ctx: CurrentUserContext = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> list[MovementOut]:
+    q = (
+        select(InventoryMovement, Item, Category)
+        .join(Item, InventoryMovement.item_id == Item.id)
+        .outerjoin(Category, Category.id == Item.category_id)
+        .where(InventoryMovement.tenant_id == ctx.tenant.id)
+    )
+    if start:
+        q = q.where(InventoryMovement.created_at >= start)
+    if end:
+        q = q.where(InventoryMovement.created_at <= end)
+    if movement_type:
+        q = q.where(InventoryMovement.type == movement_type)
+    if category_id:
+        q = q.where(Item.category_id == category_id)
+    if item_ids:
+        q = q.where(Item.id.in_(item_ids))
+
+    rows = (
+        await db.execute(
+            q.order_by(InventoryMovement.created_at.desc()).limit(limit)
+        )
+    ).all()
+
+    def _movement_to_out(movement: InventoryMovement, item: Item | None) -> MovementOut:
+        return MovementOut(
+            id=str(movement.id),
+            item_id=str(movement.item_id),
+            item_name=item.name if item else None,
+            category_id=str(item.category_id) if item and item.category_id else None,
+            type=movement.type,
+            barcode=movement.barcode,
+            qty=movement.qty,
+            note=movement.note,
+            created_at=movement.created_at,
+            item=MovementItemOut(
+                id=str(item.id),
+                sku=item.sku,
+                barcode=item.barcode,
+                name=item.name,
+                category_id=str(item.category_id) if item.category_id else None,
+            )
+            if item
+            else None,
+        )
+
+    return [
+        _movement_to_out(movement=row[0], item=row[1])
+        for row in rows
+    ]
+
+
 @router.post("/movements", dependencies=[Depends(require_owner_or_admin)])
 async def create_movement(
     payload: MovementPayload,
@@ -456,6 +526,85 @@ async def create_movement(
 
     category = await db.get(Category, item.category_id) if item.category_id else None
     return {"ok": True, "item": _item_out(item, category), "movement_id": str(movement.id), "duplicate": False}
+
+
+# ----------------------
+# Inventur (Bulk-Update & Export)
+# ----------------------
+@router.post("/inventory/bulk", response_model=InventoryBulkUpdateResult, dependencies=[Depends(require_owner_or_admin)])
+async def bulk_update_inventory(
+    payload: InventoryBulkUpdateRequest,
+    ctx: TenantContext = Depends(get_tenant_context),
+    db: AsyncSession = Depends(get_db),
+) -> InventoryBulkUpdateResult:
+    errors: list[str] = []
+    updated = 0
+
+    item_ids = [u.item_id for u in payload.updates]
+    if not item_ids:
+        return InventoryBulkUpdateResult(updated=0, errors=[])
+
+    items = (
+        await db.scalars(select(Item).where(Item.tenant_id == ctx.tenant.id, Item.id.in_(item_ids)))
+    ).all()
+    item_map = {str(item.id): item for item in items}
+
+    for entry in payload.updates:
+        item = item_map.get(entry.item_id)
+        if not item:
+            errors.append(f"Item {entry.item_id} not found for tenant")
+            continue
+        item.quantity = entry.quantity
+        updated += 1
+
+    await db.commit()
+    return InventoryBulkUpdateResult(updated=updated, errors=errors)
+
+
+@router.get("/inventory/export")
+async def export_inventory(
+    ctx: TenantContext = Depends(get_tenant_context),
+    user_ctx: CurrentUserContext = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    rows = (
+        await db.execute(
+            select(Item, Category)
+            .outerjoin(Category, Category.id == Item.category_id)
+            .where(Item.tenant_id == ctx.tenant.id)
+            .order_by(Item.name.asc())
+        )
+    ).all()
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Inventur"
+
+    headers = ["Artikel-ID", "Name", "Barcode", "Kategorie", "Soll", "Min", "Bestand"]
+    ws.append(headers)
+
+    for item, category in rows:
+        ws.append(
+            [
+                item.sku,
+                item.name,
+                item.barcode,
+                category.name if category else "",
+                item.target_stock,
+                item.min_stock,
+                item.quantity,
+            ]
+        )
+
+    buf = BytesIO()
+    wb.save(buf)
+    buf.seek(0)
+    filename = "inventur.xlsx"
+    return StreamingResponse(
+        buf,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
 
 
 # ----------------------

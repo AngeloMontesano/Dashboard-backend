@@ -195,6 +195,39 @@ class ReportResponse(BaseModel):
     kpis: ReportKpis
 
 
+class OrderItemInput(BaseModel):
+    item_id: str
+    quantity: int = Field(..., gt=0)
+    note: Optional[str] = Field(default=None, max_length=255)
+
+
+class OrderCreate(BaseModel):
+    note: Optional[str] = Field(default=None, max_length=1024)
+    items: List[OrderItemInput]
+
+
+class OrderItemOut(BaseModel):
+    id: str
+    item_id: str
+    quantity: int
+    note: Optional[str] = None
+    item_name: Optional[str] = None
+    sku: Optional[str] = None
+    barcode: Optional[str] = None
+    category_id: Optional[str] = None
+
+
+class OrderOut(BaseModel):
+    id: str
+    number: str
+    status: Literal["OPEN", "COMPLETED", "CANCELED"]
+    note: Optional[str] = None
+    created_at: datetime
+    completed_at: Optional[datetime] = None
+    canceled_at: Optional[datetime] = None
+    items: List[OrderItemOut]
+
+
 class ReorderItem(BaseModel):
     id: str
     name: str

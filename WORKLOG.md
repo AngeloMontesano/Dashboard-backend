@@ -343,3 +343,15 @@
   - Berichte & Analysen nutzen serverseitige Aggregation und Exporte; kein Bewegungs-Fallback mehr.
 - **Nächster Schritt**
   - Bestell-Endpunkte (offen/erledigt) und Einstellungen/Firmendaten im Backend ergänzen; Customer-Views auf neue APIs heben.
+
+## Schritt 29 – Legacy-Migration Phase 3 (T4: Bestellungen Grundfunktionen)
+- **Datum/Uhrzeit**: 2026-01-05T20:30:00+00:00
+- **Ziel**: Bestell-CRUD inkl. Erledigt-/Storno-Flow ergänzen und Bestandserhöhung abbilden.
+- **Was wurde geändert**
+  - Backend: Neue Modelle `InventoryOrder`/`InventoryOrderItem` (Tenant-scoped) inkl. Nummern-Constraint.
+  - Endpunkte: `/inventory/orders` (GET/POST), `/inventory/orders/{id}` (GET), `/inventory/orders/{id}/complete` (Bestand erhöhen + Bewegung schreiben), `/inventory/orders/{id}/cancel`.
+  - Schemas/OpenAPI: OrderCreate/OrderOut/OrderItemOut ergänzt; Roadmap/TODO aktualisiert (PDF/E-Mail bleiben offen).
+- **Ergebnis**
+  - Tenants können Bestellungen anlegen, einsehen, erledigen oder stornieren; Abschluss erhöht Bestände und protokolliert Bewegungen.
+- **Nächster Schritt**
+  - Einstellungen/Firmendaten inkl. Auto-Bestellung/Empfänger umsetzen; Bestell-PDF/E-Mail prüfen und bei Bedarf nachziehen; Customer-Frontend an neue Order-APIs anbinden.

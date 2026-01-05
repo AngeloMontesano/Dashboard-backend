@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import uuid
 from datetime import date, datetime, timedelta, timezone
 from io import BytesIO, StringIO
 from typing import Any, Literal
@@ -7,6 +8,7 @@ from typing import Any, Literal
 from fastapi import APIRouter, Depends, File, HTTPException, Path, Query, UploadFile
 from fastapi.responses import StreamingResponse
 from sqlalchemy import func, or_, select
+from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 from openpyxl import Workbook
 
@@ -17,6 +19,7 @@ from app.core.tenant import TenantContext
 from app.models.category import Category
 from app.models.item import Item
 from app.models.movement import InventoryMovement
+from app.models.order import InventoryOrder, InventoryOrderItem
 from app.modules.inventory.schemas import (
     CategoryCreate,
     CategoryOut,
@@ -25,6 +28,9 @@ from app.modules.inventory.schemas import (
     ItemOut,
     ItemUpdate,
     ItemsPage,
+    OrderCreate,
+    OrderItemOut,
+    OrderOut,
     ReportResponse,
     ReportSeries,
     ReportDataPoint,
@@ -679,6 +685,239 @@ async def export_report(
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         headers={"Content-Disposition": 'attachment; filename="verbrauch.xlsx"'},
     )
+
+
+# ----------------------
+# Bestellungen (Offen/Erledigt)
+# ----------------------
+def _generate_order_number() -> str:
+    return f"ORDER-{uuid.uuid4().hex[:8].upper()}"
+
+
+def _order_item_to_out(order_item: InventoryOrderItem, item_map: dict[Any, Item]) -> OrderItemOut:
+    item = item_map.get(str(order_item.item_id))
+    return OrderItemOut(
+        id=str(order_item.id),
+        item_id=str(order_item.item_id),
+        quantity=order_item.quantity,
+        note=order_item.note,
+        item_name=item.name if item else None,
+        sku=item.sku if item else None,
+        barcode=item.barcode if item else None,
+        category_id=str(item.category_id) if item and item.category_id else None,
+    )
+
+
+def _order_to_out(order: InventoryOrder, item_map: dict[Any, Item]) -> OrderOut:
+    return OrderOut(
+        id=str(order.id),
+        number=order.number,
+        status=order.status,  # type: ignore[arg-type]
+        note=order.note,
+        created_at=order.created_at,
+        completed_at=order.completed_at,
+        canceled_at=order.canceled_at,
+        items=[_order_item_to_out(oi, item_map) for oi in order.items],
+    )
+
+
+async def _get_order_or_404(
+    *, order_id: str, ctx: TenantContext, db: AsyncSession, load_items: bool = False
+) -> InventoryOrder:
+    try:
+        order_uuid = uuid.UUID(str(order_id))
+    except (TypeError, ValueError):
+        raise HTTPException(
+            status_code=404,
+            detail={"error": {"code": "order_not_found", "message": "Bestellung nicht gefunden"}},
+        )
+    stmt = select(InventoryOrder).where(
+        InventoryOrder.tenant_id == ctx.tenant.id,
+        InventoryOrder.id == order_uuid,
+    )
+    if load_items:
+        stmt = stmt.options(selectinload(InventoryOrder.items))
+    order = await db.scalar(stmt)
+    if order is None:
+        raise HTTPException(
+            status_code=404,
+            detail={"error": {"code": "order_not_found", "message": "Bestellung nicht gefunden"}},
+        )
+    return order
+
+
+async def _items_by_ids(
+    *, db: AsyncSession, ctx: TenantContext, item_ids: set[Any]
+) -> dict[str, Item]:
+    if not item_ids:
+        return {}
+    normalized_ids: set[uuid.UUID] = set()
+    try:
+        for raw in item_ids:
+            normalized_ids.add(uuid.UUID(str(raw)))
+    except (TypeError, ValueError):
+        raise HTTPException(
+            status_code=400,
+            detail={"error": {"code": "invalid_item_id", "message": "Ungültige Item-ID"}},
+        )
+    rows = (
+        await db.scalars(
+            select(Item).where(
+                Item.tenant_id == ctx.tenant.id,
+                Item.id.in_(normalized_ids),
+            )
+        )
+    ).all()
+    return {str(row.id): row for row in rows}
+
+
+@router.get("/orders", response_model=list[OrderOut])
+async def list_orders(
+    status: Literal["OPEN", "COMPLETED", "CANCELED"] | None = Query(default=None),
+    limit: int = Query(default=100, ge=1, le=500),
+    ctx: TenantContext = Depends(get_tenant_context),
+    user_ctx: CurrentUserContext = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> list[OrderOut]:
+    stmt = (
+        select(InventoryOrder)
+        .where(InventoryOrder.tenant_id == ctx.tenant.id)
+        .options(selectinload(InventoryOrder.items))
+    )
+    if status:
+        stmt = stmt.where(InventoryOrder.status == status)
+    stmt = stmt.order_by(InventoryOrder.created_at.desc()).limit(limit)
+
+    orders = (await db.scalars(stmt)).all()
+    item_ids = {str(oi.item_id) for order in orders for oi in order.items}
+    item_map = await _items_by_ids(db=db, ctx=ctx, item_ids=item_ids)
+    return [_order_to_out(order, item_map) for order in orders]
+
+
+@router.post("/orders", response_model=OrderOut, status_code=201, dependencies=[Depends(require_owner_or_admin)])
+async def create_order(
+    payload: OrderCreate,
+    ctx: TenantContext = Depends(get_tenant_context),
+    db: AsyncSession = Depends(get_db),
+) -> OrderOut:
+    if not payload.items:
+        raise HTTPException(
+            status_code=400,
+            detail={"error": {"code": "items_required", "message": "Mindestens eine Position erforderlich"}},
+        )
+
+    item_ids = {entry.item_id for entry in payload.items}
+    item_map = await _items_by_ids(db=db, ctx=ctx, item_ids=item_ids)
+    missing = [iid for iid in item_ids if iid not in item_map]
+    if missing:
+        raise HTTPException(
+            status_code=404,
+            detail={"error": {"code": "item_not_found", "message": f"Artikel nicht gefunden: {', '.join(missing)}"}},
+        )
+
+    order = InventoryOrder(
+        tenant_id=ctx.tenant.id,
+        number=_generate_order_number(),
+        status="OPEN",
+        note=payload.note,
+    )
+    for entry in payload.items:
+        order.items.append(
+            InventoryOrderItem(
+                tenant_id=ctx.tenant.id,
+                item_id=item_map[entry.item_id].id,
+                quantity=entry.quantity,
+                note=entry.note,
+            )
+        )
+
+    db.add(order)
+    await db.flush()
+    await db.commit()
+
+    order = await _get_order_or_404(order_id=str(order.id), ctx=ctx, db=db, load_items=True)
+    return _order_to_out(order, item_map)
+
+
+@router.get("/orders/{order_id}", response_model=OrderOut)
+async def get_order(
+    order_id: str,
+    ctx: TenantContext = Depends(get_tenant_context),
+    user_ctx: CurrentUserContext = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> OrderOut:
+    order = await _get_order_or_404(order_id=order_id, ctx=ctx, db=db, load_items=True)
+    item_ids = {str(oi.item_id) for oi in order.items}
+    item_map = await _items_by_ids(db=db, ctx=ctx, item_ids=item_ids)
+    return _order_to_out(order, item_map)
+
+
+@router.post("/orders/{order_id}/complete", response_model=OrderOut, dependencies=[Depends(require_owner_or_admin)])
+async def complete_order(
+    order_id: str,
+    ctx: TenantContext = Depends(get_tenant_context),
+    db: AsyncSession = Depends(get_db),
+) -> OrderOut:
+    order = await _get_order_or_404(order_id=order_id, ctx=ctx, db=db, load_items=True)
+    if order.status != "OPEN":
+        raise HTTPException(
+            status_code=400,
+            detail={"error": {"code": "order_not_open", "message": "Nur offene Bestellungen können erledigt werden"}},
+        )
+
+    item_ids = {str(oi.item_id) for oi in order.items}
+    item_map = await _items_by_ids(db=db, ctx=ctx, item_ids=item_ids)
+
+    now = datetime.now(timezone.utc)
+    order.status = "COMPLETED"
+    order.completed_at = now
+
+    for order_item in order.items:
+        item = item_map.get(str(order_item.item_id))
+        if item is None:
+            raise HTTPException(
+                status_code=400,
+                detail={"error": {"code": "order_item_missing", "message": "Artikel für Bestellung fehlt"}},
+            )
+        item.quantity += order_item.quantity
+        movement = InventoryMovement(
+            tenant_id=ctx.tenant.id,
+            item_id=item.id,
+            client_tx_id=f"order-{order.id}-{order_item.id}",
+            type="IN",
+            barcode=item.barcode,
+            qty=order_item.quantity,
+            note=f"Order {order.number}",
+            created_at=now,
+        )
+        db.add(movement)
+
+    await db.commit()
+    await db.refresh(order)
+    return _order_to_out(order, item_map)
+
+
+@router.post("/orders/{order_id}/cancel", response_model=OrderOut, dependencies=[Depends(require_owner_or_admin)])
+async def cancel_order(
+    order_id: str,
+    ctx: TenantContext = Depends(get_tenant_context),
+    db: AsyncSession = Depends(get_db),
+) -> OrderOut:
+    order = await _get_order_or_404(order_id=order_id, ctx=ctx, db=db, load_items=True)
+    if order.status != "OPEN":
+        raise HTTPException(
+            status_code=400,
+            detail={"error": {"code": "order_not_open", "message": "Nur offene Bestellungen können storniert werden"}},
+        )
+
+    order.status = "CANCELED"
+    order.canceled_at = datetime.now(timezone.utc)
+    await db.commit()
+    await db.refresh(order)
+
+    item_ids = {oi.item_id for oi in order.items}
+    item_map = await _items_by_ids(db=db, ctx=ctx, item_ids=item_ids)
+    return _order_to_out(order, item_map)
 
 
 # ----------------------

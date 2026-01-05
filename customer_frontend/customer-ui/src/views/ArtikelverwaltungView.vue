@@ -180,13 +180,8 @@ function handleAuthError(err: any) {
 
 async function loadCategories() {
   if (!authState.accessToken) return;
-  try {
-    const data = await fetchCategories(authState.accessToken);
-    categories.value = data.filter((c) => c.is_active);
-  } catch (err: any) {
-    if (handleAuthError(err)) return;
-    banner.error = err?.message || 'Konnte Kategorien nicht laden.';
-  }
+  const data = await fetchCategories(authState.accessToken);
+  categories.value = data.filter((c: Category) => c.is_active);
 }
 
 async function loadItems() {
@@ -481,11 +476,17 @@ async function startImport() {
   importResult.updated = 0;
   importResult.errors = [];
   try {
-    const result = await importItems(authState.accessToken, importFile.value, importMapping);
-    importResult.created = result.imported;
-    importResult.updated = result.updated;
-    importResult.errors = result.errors;
-    importStep.value = 3;
+    const res = await importItems(authState.accessToken, file);
+    const hint = [`Importiert: ${res.imported}`, `Aktualisiert: ${res.updated}`];
+    if (res.errors.length) {
+      hint.push(`Fehler: ${res.errors.length}`);
+      error.value = res.errors
+        .slice(0, 3)
+        .map((e: { row: string; error: string }) => `Zeile ${e.row}: ${e.error}`)
+        .join('; ');
+    } else {
+      message.value = hint.join(' | ');
+    }
     await loadItems();
   } catch (err: any) {
     if (handleAuthError(err)) return;

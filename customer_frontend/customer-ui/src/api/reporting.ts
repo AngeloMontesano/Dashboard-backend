@@ -1,4 +1,5 @@
-import { api, authHeaders } from './client';
+import { type AxiosInstance } from 'axios';
+import { createApiClient } from './base';
 import type { ReportParams, ReportResponse, ReportSeries, ReportDataPoint, ReportKpis } from '@/types/reports';
 import { stringifyError } from '@/utils/error';
 
@@ -18,6 +19,10 @@ type MovementRecord = {
     category_id?: string | null;
   } | null;
 };
+
+function buildClient(token?: string) {
+  return createApiClient({ token, timeout: 20000 });
+}
 
 function adaptReportParams(params: ReportParams) {
   return {
@@ -143,17 +148,15 @@ function aggregateMovements(movements: MovementRecord[], params: ReportParams): 
   };
 }
 
-async function fetchMovementsForAggregation(token: string, params: ReportParams) {
-  const response = await api.get<MovementRecord[] | { items: MovementRecord[] }>('/inventory/movements', {
+async function fetchMovementsForAggregation(client: AxiosInstance, params: ReportParams) {
+  const response = await client.get<MovementRecord[] | { items: MovementRecord[] }>('/inventory/movements', {
     params: {
       start: params.from,
       end: params.to,
       category_id: params.category_id || undefined,
       item_ids: params.item_ids && params.item_ids.length ? params.item_ids : undefined,
       type: 'OUT'
-    },
-    headers: authHeaders(token),
-    timeout: 20000
+    }
   });
   const data = response.data as any;
   if (Array.isArray(data)) return data;
@@ -162,11 +165,10 @@ async function fetchMovementsForAggregation(token: string, params: ReportParams)
 }
 
 export async function getReportData(token: string, params: ReportParams): Promise<ReportResponse> {
+  const client = buildClient(token);
   try {
-    const res = await api.get<ReportResponse>('/inventory/report', {
-      params: adaptReportParams(params),
-      headers: authHeaders(token),
-      timeout: 20000
+    const res = await client.get<ReportResponse>('/inventory/report', {
+      params: adaptReportParams(params)
     });
     return {
       series: normalizeSeries(res.data?.series || []),
@@ -177,7 +179,7 @@ export async function getReportData(token: string, params: ReportParams): Promis
     // Fallback: aggregate clientseitig aus Bewegungen, falls dedizierter Endpoint (noch) fehlt.
     if (error?.response?.status === 404) {
       console.info('[reporting] /inventory/report nicht verfügbar, aggregiere aus Bewegungen');
-      const movements = await fetchMovementsForAggregation(token, params);
+      const movements = await fetchMovementsForAggregation(client, params);
       return aggregateMovements(movements, params);
     }
     if (error?.response?.status === 405) {
@@ -188,12 +190,11 @@ export async function getReportData(token: string, params: ReportParams): Promis
 }
 
 async function downloadReport(token: string, params: ReportParams, format: 'csv' | 'excel') {
+  const client = buildClient(token);
   const endpoint = `/inventory/report/export/${format}`;
-  const response = await api.get(endpoint, {
+  const response = await client.get(endpoint, {
     params: adaptReportParams(params),
-    responseType: 'blob',
-    headers: authHeaders(token),
-    timeout: 20000
+    responseType: 'blob'
   });
   return response.data as Blob;
 }

@@ -1,20 +1,48 @@
-import { api, authHeaders } from "./client";
-import type { components, paths } from "./gen/openapi";
+import { createApiClient } from './base';
 
-type ItemsQuery = NonNullable<paths["/inventory/items"]["get"]["parameters"]["query"]>;
+function buildClient(token?: string) {
+  return createApiClient({ token });
+}
 
-export type Category = components["schemas"]["CategoryOut"];
-export type Item = components["schemas"]["ItemOut"];
-export type ItemsPage = components["schemas"]["ItemsPage"];
-export type ItemCreatePayload = components["schemas"]["ItemCreate"];
-export type ItemUpdatePayload = components["schemas"]["ItemUpdate"];
-export type MovementPayload = components["schemas"]["MovementPayload"];
-export type SkuExistsResponse = components["schemas"]["SKUExistsResponse"];
+export type Category = {
+  id: string;
+  name: string;
+  is_system: boolean;
+  is_active: boolean;
+};
 
-type ImportItemsResponse = {
-  imported: number;
-  updated: number;
-  errors: Array<{ row: string; error: string }>;
+export type Item = {
+  id: string;
+  sku: string;
+  barcode: string;
+  name: string;
+  description: string;
+  quantity: number;
+  unit: string;
+  is_active: boolean;
+  category_id?: string | null;
+  category_name?: string | null;
+  min_stock: number;
+  max_stock: number;
+  target_stock: number;
+  recommended_stock: number;
+  order_mode: number;
+};
+
+export type ItemsPage = {
+  items: Item[];
+  total: number;
+  page: number;
+  page_size: number;
+};
+
+export type MovementPayload = {
+  client_tx_id: string;
+  type: 'IN' | 'OUT';
+  barcode: string;
+  qty: number;
+  note?: string;
+  created_at?: string;
 };
 
 export async function fetchCategories(token: string) {

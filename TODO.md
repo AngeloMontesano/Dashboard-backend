@@ -2,7 +2,7 @@
 
 ## Must
 - Design-Tokens je App weiter verankern: neue Tokens in Utilities/Theme-Mappings nutzen und Alt-Variablen perspektivisch ablösen (admin: `src/styles/tokens.css`, customer: `src/styles/tokens.css`).
-- Zentrale Layout-Utilities und UI-Bausteine aufsetzen, damit Views kein eigenes Spacing/Stying halten (Ordner `src/styles` und `src/components/ui` je App).
+- Layout-Utilities sind angelegt (`src/styles/utilities.css` je App); restliche Views schrittweise auf Utilities/Ui-Komponenten umstellen, damit kein per-View Spacing/Styling verbleibt.
 - Theme-Steuerung mit System-Default und Persistenz in `localStorage` implementieren (`src/composables/useTheme.ts`, App-Header/Sidebar-Toggles in beiden Frontends).
 - Toast/Dialog/Overlay-Styles zentralisieren und per Tokens steuern (admin: `components/common/ToastHost.vue`, customer: PrimeVue-Overlay/Toast).
 

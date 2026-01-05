@@ -157,3 +157,15 @@
   - Beide Frontends besitzen ein deckungsgleiches Token-Set (Light/Dark) mit kompatiblen Alt-Namen; keine View- oder Komponenten-Anpassungen nötig.
 - **Nächster Schritt**
   - Task 3: Utilities/Theme-Mappings ergänzen und erste Pilot-Views auf Utilities umstellen (separater Schritt).
+
+## Schritt 14 – UI-Harmonisierung Task 3 (Utilities + Pilot-Views)
+- **Datum/Uhrzeit**: 2026-01-05T16:00:46+00:00
+- **Ziel**: Basis-Utilities pro App bereitstellen und je eine Pilot-View auf die neuen Klassen umstellen.
+- **Was wurde geändert**
+  - Admin: `src/styles/utilities.css` angelegt (page/section/stack/toolbar/chips/cards/detail/flex Utilities) und in `main.ts` importiert; `AdminUsersView` nutzt jetzt ausschließlich die neuen Utilities ohne scoped Styles.
+  - Customer: `src/styles/utilities.css` angelegt (page/section/stack/toolbar/card-grid) und in `main.ts` importiert; `DashboardView` auf die Utilities umgestellt.
+  - TODO aktualisiert: Utilities vorhanden, weitere Views sukzessive umstellen.
+- **Ergebnis**
+  - Gemeinsame Layout-Basis pro App ist verfügbar; erste View pro App validiert die Utilities.
+- **Nächster Schritt**
+  - Weitere Views auf Utilities/UI-Komponenten migrieren, Theme-Steuerung (System/LocalStorage) und zentrale Toast/Overlay-Styles umsetzen.

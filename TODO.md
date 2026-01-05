@@ -1,18 +1,20 @@
 # TODO
 
-## Must
-- Legacy-Migration Backend: Alembic-Revision `0008_tenant_settings_metadata` ausrollen (neue Settings-Felder). Bei Bedarf Werte je Tenant befüllen/backfillen.
-- Customer-Frontend: echte Daten für Inventur/Bestellungen/Einstellungen/Reporting sind verdrahtet; Feinschliff (Filter/Responsiveness/Tokens) fortführen.
-- OpenAPI aktualisieren und Typen regenerieren, sobald neue Endpunkte implementiert sind; Wrapper auf neue Typen migrieren.
-- Design-Tokens je App weiter verankern: neue Tokens in Utilities/Theme-Mappings nutzen und Alt-Variablen perspektivisch ablösen (admin: `src/styles/tokens.css`, customer: `src/styles/tokens.css`).
-- Layout-Utilities/Ui-Komponenten sind angelegt (`src/styles/utilities.css`, `src/components/ui` je App); restliche Views schrittweise darauf umstellen, damit kein per-View Spacing/Styling verbleibt (Customer offen: Artikel/Berichte).
-- Theme-Steuerung (System/Light/Dark) mit Persistenz + System-Listener ist eingebaut (`src/composables/useTheme.ts`, Admin-Sidebar/Settings, Customer-Topbar); Feinschliff und weitere Views/Overlays auf Tokens prüfen.
-- Toast/Dialog/Overlay-Styles zentralisieren und per Tokens steuern (admin: `components/common/ToastHost.vue`, customer: PrimeVue-Overlay/Toast).
+## MUSS (kritisch)
+- Admin: Logs-Tab in `AdminOperationsView` -> Backend-Endpoint anbinden (Tab aktuell ausgeblendet).
+- Customer: Shell-Mobile-Breakpoints fertigstellen (<1100px umgesetzt); weitere Feinjustierung/Sidebar-Toggle optional prüfen.
+- Customer: Reporting-PDF über API-Export statt DOM-Kopie (umgesetzt); Server-Export weiter verifizieren.
+- Backend-Migration prüfen/ausführen: fehlende Tabellen `inventory_orders` und fehlerhafte Aggregation (GROUP BY) erzeugen 422/500 in Dashboard/Bestellungen/Inventur/Reporting.
 
-## Should
-- Responsive-Regeln für Tabellen/Toolbars harmonisieren, damit mobile Ansichten nicht überlaufen (Customer: Dashboard/Lagerbewegungen/Berichte, Admin: Tenants/Users/Memberships/Operations).
-- Inline-Styles, harte Farben/Pixel-Abstände aus Views entfernen, sobald Tokens/Utilities stehen (beide Frontends, besonders `src/views`).
+## SOLL (UX/Konsistenz/Performance/Accessibility)
+- Admin: Tenants/Memberships mit Server-Paging und Validierung (Settings-Form, Delete-Confirms über Dialog-Komponente) ausstatten.
+- Admin: Theme-Toggle zusätzlich in der Topbar platzieren; Confirm-Dialog für Danger-Aktionen mit Fokus-Management nutzen.
+- Customer: Queue-Operationen (Lagerbewegungen) mit Confirm für „Queue leeren“ und klaren Empty/Loading-States ergänzen.
+- Customer: Einstellungen-Form validieren (Pflichtfelder, Busy/Disable pro Aktion), Test-E-Mail Feedback inline anzeigen.
+- Customer: Bestellungen weiter verfeinern (Row-Busy ergänzt; leere Zustände/Fehler-Feedback weiter verbessern).
+- Beide: Zentrale Fehler-Helfer (stringifyError) und einheitliche Toast/Overlay-Styles auf Token-Basis verwenden.
 
-## Could
-- Gemeinsame Icon-/Eyebrow-Regeln für Sidebar/Topbar in beiden Apps ableiten, wenn Tokens/Utilities eingeführt sind.
-- PrimeVue-Theming-Preselections (z. B. alternative Presets) evaluieren, falls Tokens nicht alle Komponentenflächen abdecken.
+## KANN (Nice-to-have)
+- Dashboard- und Reporting-KPIs serverseitig aggregieren, um Mehrfach-Requests/Caching zu vermeiden.
+- Snapshot-Funktion (Admin) optional serverseitig speichern/teilen und Tenant/Host deutlich kennzeichnen.
+- PrimeVue-Overlays/Charts an Theme-Tokens anpassen und A11y-Labels für Filter/Selects ergänzen.

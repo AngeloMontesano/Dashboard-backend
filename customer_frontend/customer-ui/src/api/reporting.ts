@@ -33,7 +33,7 @@ export async function getReportData(token: string, params: ReportParams): Promis
   }
 }
 
-async function downloadReport(token: string, params: ReportParams, format: "csv" | "excel") {
+async function downloadReport(token: string, params: ReportParams, format: "csv" | "excel" | "pdf") {
   const endpoint = `/inventory/reports/export/${format}`;
   const response = await api.get(endpoint, {
     params: adaptReportParams(params),
@@ -50,6 +50,10 @@ export async function exportCsv(token: string, params: ReportParams) {
 
 export async function exportExcel(token: string, params: ReportParams) {
   return downloadReport(token, params, "excel");
+}
+
+export async function exportPdf(token: string, params: ReportParams) {
+  return downloadReport(token, params, "pdf");
 }
 
 function normalizeSeries(series: BackendReport["series"]): ReportSeries[] {

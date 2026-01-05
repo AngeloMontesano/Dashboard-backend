@@ -13,6 +13,6 @@ export default defineConfig({
     port: 5173,
     strictPort: true,
     host: true,
-    allowedHosts: ["admin.test.myitnetwork.de"],
+    allowedHosts: true,
   },
 });

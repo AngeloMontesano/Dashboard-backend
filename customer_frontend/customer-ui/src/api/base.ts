@@ -1,106 +1,27 @@
-const baseDomain = import.meta.env.VITE_BASE_DOMAIN || "test.myitnetwork.de";
-const apiSubdomain = import.meta.env.VITE_API_SUBDOMAIN || "api";
-const apiProtocol = import.meta.env.VITE_API_PROTOCOL || "https";
-const apiHost = import.meta.env.VITE_API_HOST || "";
-const apiPort = import.meta.env.VITE_API_PORT || "";
-const tenantSlug = import.meta.env.VITE_TENANT_SLUG || "";
-const explicitApiBase = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_BASE;
-// Default to the dedicated API host (api.<baseDomain>). Opt-in to the runtime host via VITE_ALLOW_RUNTIME_HOST=true.
-const allowRuntimeHost = (import.meta.env.VITE_ALLOW_RUNTIME_HOST || "false").toLowerCase() === "true";
-// Backend serves routes at the root (e.g. /auth/login, /inventory/items). Prefix can still be added via env if needed.
-const apiPrefix = normalizePrefix(import.meta.env.VITE_API_PREFIX ?? "");
+const API_BASE_URL = "/api";
+const runtimeHost = typeof window !== "undefined" ? window.location.host : "";
+const runtimeHostname = typeof window !== "undefined" ? window.location.hostname : "";
 
-const runtimeHost = typeof window !== "undefined" ? window.location.hostname : "";
-const runtimeProtocol = typeof window !== "undefined" ? window.location.protocol.replace(":", "") : "";
-const runtimePort = typeof window !== "undefined" ? window.location.port : "";
-
-function normalizePrefix(prefix: string | undefined | null): string {
-  if (!prefix) return "";
-  const trimmed = prefix.trim();
-  if (!trimmed || trimmed === "/") return "";
-  const withLeading = trimmed.startsWith("/") ? trimmed : `/${trimmed}`;
-  return withLeading.replace(/\/+$/, "");
-}
-
-function replaceHost(url: string, host: string): string | null {
-  try {
-    const parsed = new URL(url);
-    parsed.host = host;
-    return parsed.toString().replace(/\/$/, "");
-  } catch {
-    return null;
-  }
-}
-
-function applyPrefix(url: string): string {
-  const sanitized = url.replace(/\/+$/, "");
-  if (!apiPrefix) return sanitized;
-  return `${sanitized}${apiPrefix}`;
-}
-
-function normalizeExplicitBase(url: string): string {
-  const trimmed = url.replace(/\/+$/, "");
-  // If no explicit prefix is provided but the base ends with "/api", strip it to match backend routes at "/".
-  if (!apiPrefix && trimmed.toLowerCase().endsWith("/api")) {
-    return trimmed.slice(0, -4);
-  }
-  return trimmed;
-}
+const envTenantSlug = (import.meta.env.VITE_TENANT_SLUG || "").trim();
+const envTenantHost = (import.meta.env.VITE_TENANT_HOST || "").trim();
+const allowRuntimeTenant = (import.meta.env.VITE_ALLOW_RUNTIME_TENANT || "true").toLowerCase() === "true";
 
 export function getBaseURL(): string {
-  // Prefer the runtime tenant host when we are served from a tenant subdomain.
-  if (baseDomain && runtimeHost && runtimeHost.endsWith(`.${baseDomain}`)) {
-    const portPart = runtimePort ? `:${runtimePort}` : "";
-    const protocol = runtimeProtocol || apiProtocol;
-    return applyPrefix(`${protocol}://${runtimeHost}${portPart}`);
-  }
-
-  // If an explicit base is set, use it unless runtime-host overriding is explicitly allowed.
-  if (explicitApiBase) {
-    const cleanedExplicitBase = normalizeExplicitBase(explicitApiBase);
-    if (allowRuntimeHost && baseDomain && runtimeHost && runtimeHost.endsWith(`.${baseDomain}`)) {
-      const adjusted = replaceHost(cleanedExplicitBase, runtimeHost + (runtimePort ? `:${runtimePort}` : ""));
-      if (adjusted) return applyPrefix(adjusted);
-    }
-    return applyPrefix(cleanedExplicitBase);
-  }
-  if (apiHost) {
-    const portPart = apiPort ? `:${apiPort}` : "";
-    return applyPrefix(`${apiProtocol}://${apiHost}${portPart}`);
-  }
-  // Prefer the current host if it already matches the base domain (keeps tenant slug)
-  if (allowRuntimeHost && baseDomain && runtimeHost && runtimeHost.endsWith(`.${baseDomain}`)) {
-    const portPart = runtimePort ? `:${runtimePort}` : "";
-    const protocol = runtimeProtocol || apiProtocol;
-    return applyPrefix(`${protocol}://${runtimeHost}${portPart}`);
-  }
-
-  // If a tenant slug is provided via env, build `<slug>.<baseDomain>`
-  if (tenantSlug && baseDomain) {
-    return applyPrefix(`${apiProtocol}://${tenantSlug}.${baseDomain}`);
-  }
-
-  // Fallback: shared api subdomain
-  return applyPrefix(`${apiProtocol}://${apiSubdomain}.${baseDomain}`);
+  return API_BASE_URL;
 }
 
 export function getTenantHost(): string | null {
-  // Prefer the runtime host when it already contains the tenant slug.
-  if (baseDomain && runtimeHost && runtimeHost.endsWith(`.${baseDomain}`)) {
-    return runtimeHost + (runtimePort ? `:${runtimePort}` : "");
-  }
-  // Fallback: build host from env slug
-  if (tenantSlug && baseDomain) {
-    const portPart = apiPort ? `:${apiPort}` : "";
-    return `${tenantSlug}.${baseDomain}${portPart}`;
-  }
+  if (allowRuntimeTenant && runtimeHost) return runtimeHost;
+  if (envTenantHost) return envTenantHost;
   return null;
 }
 
 export function getTenantSlug(): string {
-  const tenantHost = getTenantHost();
-  const slugFromHost = tenantHost ? tenantHost.split(":")[0]?.split(".")[0] : "";
-  return slugFromHost || tenantSlug || "";
+  if (allowRuntimeTenant && runtimeHostname) {
+    const slug = runtimeHostname.split(":")[0]?.split(".")[0];
+    if (slug) return slug;
+  }
+  return envTenantSlug;
 }
 
 export function getTenantHeaders(): Record<string, string> {
@@ -111,26 +32,4 @@ export function getTenantHeaders(): Record<string, string> {
   if (tenantHost) headers["X-Forwarded-Host"] = tenantHost;
   if (slug) headers["X-Tenant-Slug"] = slug;
   return headers;
-}
-
-// Helpful console output for debugging connectivity
-if (typeof console !== "undefined") {
-  console.info(
-    "[api] resolved base URL",
-    getBaseURL(),
-    {
-      explicitApiBase,
-      apiHost,
-      apiPort,
-      apiProtocol,
-      apiSubdomain,
-      baseDomain,
-      tenantSlug,
-      runtimeHost,
-      runtimeProtocol,
-      runtimePort,
-      allowRuntimeHost,
-      apiPrefix,
-    }
-  );
 }

@@ -1,14 +1,7 @@
-import axios, { type AxiosInstance } from 'axios';
-import { getBaseURL, getTenantHeaders } from './base';
+import { api, authHeaders } from './client';
 import type { ReportParams, ReportResponse, ReportSeries, ReportDataPoint, ReportKpis } from '@/types/reports';
 
-const baseURL = getBaseURL();
-
 const DEFAULT_TOP_LIMIT = 5;
-
-type AuthHeaders = {
-  Authorization?: string;
-};
 
 type MovementRecord = {
   id: string;
@@ -24,21 +17,6 @@ type MovementRecord = {
     category_id?: string | null;
   } | null;
 };
-
-function buildClient(token?: string) {
-  const authHeaders: AuthHeaders = {};
-  if (token) authHeaders.Authorization = `Bearer ${token}`;
-
-  return axios.create({
-    baseURL,
-    timeout: 20000,
-    headers: {
-      'Content-Type': 'application/json',
-      ...getTenantHeaders(),
-      ...authHeaders
-    }
-  });
-}
 
 function adaptReportParams(params: ReportParams) {
   return {
@@ -159,15 +137,17 @@ function aggregateMovements(movements: MovementRecord[], params: ReportParams): 
   };
 }
 
-async function fetchMovementsForAggregation(client: AxiosInstance, params: ReportParams) {
-  const response = await client.get<MovementRecord[] | { items: MovementRecord[] }>('/inventory/movements', {
+async function fetchMovementsForAggregation(token: string, params: ReportParams) {
+  const response = await api.get<MovementRecord[] | { items: MovementRecord[] }>('/inventory/movements', {
     params: {
-      start: params.start,
-      end: params.end,
+      start: params.from,
+      end: params.to,
       category_id: params.category_id || undefined,
       item_ids: params.item_ids && params.item_ids.length ? params.item_ids : undefined,
       type: 'OUT'
-    }
+    },
+    headers: authHeaders(token),
+    timeout: 20000
   });
   const data = response.data as any;
   if (Array.isArray(data)) return data;
@@ -176,10 +156,11 @@ async function fetchMovementsForAggregation(client: AxiosInstance, params: Repor
 }
 
 export async function getReportData(token: string, params: ReportParams): Promise<ReportResponse> {
-  const client = buildClient(token);
   try {
-    const res = await client.get<ReportResponse>('/inventory/reports/consumption', {
-      params: adaptReportParams(params)
+    const res = await api.get<ReportResponse>('/inventory/reports/consumption', {
+      params: adaptReportParams(params),
+      headers: authHeaders(token),
+      timeout: 20000
     });
     return {
       series: normalizeSeries(res.data?.series || []),
@@ -188,7 +169,7 @@ export async function getReportData(token: string, params: ReportParams): Promis
   } catch (error: any) {
     // Fallback: aggregate clientseitig aus Bewegungen, falls dedizierter Endpoint (noch) fehlt.
     if (error?.response?.status === 404 || error?.response?.status === 400) {
-      const movements = await fetchMovementsForAggregation(client, params);
+      const movements = await fetchMovementsForAggregation(token, params);
       return aggregateMovements(movements, params);
     }
     throw error;
@@ -196,11 +177,12 @@ export async function getReportData(token: string, params: ReportParams): Promis
 }
 
 async function downloadReport(token: string, params: ReportParams, format: 'csv' | 'excel' | 'pdf') {
-  const client = buildClient(token);
   const endpoint = `/inventory/reports/export/${format}`;
-  const response = await client.get(endpoint, {
+  const response = await api.get(endpoint, {
     params: adaptReportParams(params),
-    responseType: 'blob'
+    responseType: 'blob',
+    headers: authHeaders(token),
+    timeout: 20000
   });
   return response.data as Blob;
 }

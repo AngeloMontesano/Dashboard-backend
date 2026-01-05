@@ -1,5 +1,5 @@
-import axios from 'axios';
-import { getBaseURL, getTenantHeaders, getTenantSlug } from './base';
+import { api } from './client';
+import { getBaseURL, getTenantHeaders } from './base';
 
 type LoginResponse = {
   access_token: string;
@@ -12,16 +12,15 @@ type LoginResponse = {
 
 export async function authLogin(email: string, password: string) {
   const baseURL = getBaseURL();
-  const client = axios.create({
-    baseURL,
-    timeout: 15000,
-    headers: {
-      'Content-Type': 'application/json',
-      ...getTenantHeaders()
-    }
-  });
   try {
-    const res = await client.post<LoginResponse>('/auth/login', { email, password });
+    const res = await api.post<LoginResponse>(
+      '/auth/login',
+      { email, password },
+      {
+        timeout: 15000,
+        headers: getTenantHeaders()
+      }
+    );
     return res.data;
   } catch (err: any) {
     if (err?.code === 'ECONNABORTED') {

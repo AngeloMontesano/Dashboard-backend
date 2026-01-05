@@ -13,3 +13,9 @@
 - Remote-Zugriff auf `https://api.test.myitnetwork.de/openapi.json` (aktuell HTTP 403 aus der CI-Umgebung) klären, damit `npm run gen:types` ohne lokale Kopie funktioniert.  
   - Frontend: admin & customer  
   - Endpoint/View: Typ-Generierung (`gen:types` Script)
+- Reporting-Endpunkte (`/inventory/report`, `/inventory/reports/consumption`, `/inventory/reports/export/{format}`) in das OpenAPI-Schema aufnehmen und Response-Formate definieren.  
+  - Frontend: customer  
+  - Endpoint/View: Reporting/Fallback in `customer_frontend/customer-ui/src/api/reporting.ts`
+- VITE-/Docker-Variablen rund um `VITE_API_*` prüfen und bereinigen, da die Frontends ausschließlich über den Proxy-Pfad `/api` gehen.  
+  - Frontend: admin & customer  
+  - Endpoint/View: Build-/Compose-Umgebung

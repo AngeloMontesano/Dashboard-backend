@@ -332,3 +332,14 @@
   - Bestellwürdige Liste verfügbar; weitere Bestell-Features (offen/erledigt, Bestandserhöhung, PDF/E-Mail) noch offen.
 - **Nächster Schritt**
   - Vollständige Bestell-Endpunkte und Einstellungen/Firmendaten implementieren; Customer-Frontend anbinden.
+
+## Schritt 28 – Customer Reporting an Backend angebunden
+- **Datum/Uhrzeit**: 2026-01-05T20:00:00+00:00
+- **Ziel**: Frontend-Reporting nutzt den neuen Backend-Report-Endpoint und Exporte.
+- **Was wurde geändert**
+  - `customer_frontend` Reporting-API ruft jetzt `/inventory/report` und `/inventory/reports/export/{format}`; Client-Aggregations-Fallback entfernt.
+  - OpenAPI-Typen werden für Response-Adaptierung genutzt; Export-Path aktualisiert.
+- **Ergebnis**
+  - Berichte & Analysen nutzen serverseitige Aggregation und Exporte; kein Bewegungs-Fallback mehr.
+- **Nächster Schritt**
+  - Bestell-Endpunkte (offen/erledigt) und Einstellungen/Firmendaten im Backend ergänzen; Customer-Views auf neue APIs heben.

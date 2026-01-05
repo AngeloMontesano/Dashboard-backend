@@ -31,5 +31,5 @@
 - Neue Endpunkte zuerst in `docs/openapi/openapi.json` bzw. Remote-Schema pflegen, dann Typen regenerieren.
 
 ## Known Issues
-- Remote-Schema `https://api.test.myitnetwork.de/openapi.json` liefert aus der aktuellen Umgebung HTTP 403; Typen werden daher aus der lokal abgelegten Kopie generiert.
 - Backend muss die aktualisierten OpenAPI-Definitionen (Login, Items-Import/Export, Movements, Set-Password, Reporting) bestätigen, damit die generierten Typen zur Laufzeit passen.
+  - Zugriff auf das laufende Backend ist über den Proxy-Pfad `/api/openapi.json` möglich (z. B. bei laufender Compose-Umgebung); lokale Kopie bleibt die fallback-Quelle.

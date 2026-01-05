@@ -102,3 +102,11 @@
   - Builds erfolgreich ausgeführt: `npm run build` in `admin_frontend/admin-ui` und `customer_frontend/customer-ui` (Customer mit bekannter Chunk-Size-Warnung).
 - **Was ist offen**
   - Keine zusätzlichen QA-Punkte; bestehende Chunk-Warnung nur beobachten.
+
+## Schritt 9 – Offene Punkte aktualisiert
+- **Was wurde geprüft**
+  - Übrig gebliebene Roadmap-Punkte nach Proxy-Zugriff auf `/api/openapi.json`.
+- **Was wurde geändert**
+  - Roadmap um den erledigten Remote-Zugriff bereinigt; Known Issues verweisen auf Proxy-Zugriff als Quelle und auf Backend-Bestätigung.
+- **Was ist offen**
+  - Backend-Abgleich der OpenAPI-Definitionen bleibt ausstehend.

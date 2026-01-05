@@ -2,33 +2,23 @@
 </script>
 
 <template>
-  <section class="page-section">
-    <header class="page-section__header">
-      <div>
-        <p class="eyebrow">Überblick</p>
-        <h2 class="section-title">Dashboard</h2>
-        <p class="section-subtitle">
-          Wichtigste Kennzahlen für dein Lager auf einen Blick.
-        </p>
+  <UiPage>
+    <UiSection title="Dashboard" subtitle="Wichtigste Kennzahlen für dein Lager auf einen Blick.">
+      <template #actions>
+        <button class="button button--primary" type="button">Aktualisieren</button>
+      </template>
+
+      <div class="card-grid">
+        <UiStatCard label="Offene Bestellungen" value="12" hint="Heute eingegangen" />
+        <UiStatCard label="Bestände stabil" value="98 %" hint="unter Mindestbestand" />
+        <UiStatCard label="Bewegungen heute" value="134" hint="Ein- und Ausgänge" />
       </div>
-      <button class="button button--primary" type="button">Aktualisieren</button>
-    </header>
-    <div class="cards-grid">
-      <article class="card">
-        <h3 class="card__title">Offene Bestellungen</h3>
-        <p class="card__value">12</p>
-        <p class="card__hint">Heute eingegangen</p>
-      </article>
-      <article class="card">
-        <h3 class="card__title">Bestände stabil</h3>
-        <p class="card__value">98 %</p>
-        <p class="card__hint">unter Mindestbestand</p>
-      </article>
-      <article class="card">
-        <h3 class="card__title">Bewegungen heute</h3>
-        <p class="card__value">134</p>
-        <p class="card__hint">Ein- und Ausgänge</p>
-      </article>
-    </div>
-  </section>
+    </UiSection>
+  </UiPage>
 </template>
+
+<script setup lang="ts">
+import UiPage from "@/components/ui/UiPage.vue";
+import UiSection from "@/components/ui/UiSection.vue";
+import UiStatCard from "@/components/ui/UiStatCard.vue";
+</script>

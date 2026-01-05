@@ -27,8 +27,8 @@ import { useAuth } from './composables/useAuth';
 import { useTheme } from './composables/useTheme';
 
 const { isAuthenticated } = useAuth();
-const { theme } = useTheme();
+const { resolvedTheme } = useTheme();
 
-const themeClass = computed(() => theme.value);
+const themeClass = computed(() => (resolvedTheme.value === 'dark' ? 'theme-dark' : 'theme-classic'));
 const authed = computed(() => isAuthenticated());
 </script>

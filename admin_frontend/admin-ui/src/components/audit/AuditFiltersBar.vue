@@ -1,6 +1,6 @@
 <template>
   <div class="box">
-    <div class="formGrid">
+    <div class="form-grid">
       <div class="field">
         <div class="label">Actor (optional)</div>
         <input class="input" :value="actor" @input="$emit('update:actor', ($event.target as HTMLInputElement).value)" @keyup.enter="$emit('enter')" />
@@ -22,7 +22,7 @@
       </div>
     </div>
 
-    <div class="formGrid" style="margin-top: 10px;">
+    <div class="form-grid mt-4">
       <div class="field">
         <div class="label">Von (ISO)</div>
         <input class="input" placeholder="2026-01-02T10:00:00Z" :value="createdFrom" @input="$emit('update:createdFrom', ($event.target as HTMLInputElement).value)" @keyup.enter="$emit('enter')" />
@@ -49,7 +49,7 @@
       </div>
     </div>
 
-    <div class="hintBox" style="margin-top: 10px;">
+    <div class="text-muted text-small mt-4">
       Filter gehen direkt an <span class="mono">GET /admin/audit</span>.
     </div>
   </div>

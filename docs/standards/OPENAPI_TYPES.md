@@ -36,3 +36,4 @@
 - `/inventory/items/import` und `/inventory/items/export` sind im Schema als leere Objekte (`Record<string, never>`) beschrieben; aktuelle Wrapper benötigen detailreiche Felder (imported/updated/errors bzw. `{ csv: string }`).
 - `/inventory/movements` Response ist als `unknown` beschrieben; Wrapper gehen von einem verwertbaren Response-Body aus.
 - Der Endpoint `/admin/tenants/{tenant_id}/users/{user_id}/set-password` fehlt im Schema; der Wrapper nutzt weiterhin den bisherigen Pfad und erwartet eine Tenant-User-Rückgabe.
+- Reporting-Endpunkte (`/inventory/report`, `/inventory/reports/consumption`, `/inventory/reports/export/{format}`) fehlen im Schema; der Frontend-Fallback aggregiert derzeit Bewegungen clientseitig.

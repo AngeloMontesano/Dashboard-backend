@@ -186,7 +186,7 @@
   - Checks laufen über platform endpoints:
       GET /health
       GET /health/db
-    BaseURL kommt aus VITE_API_BASE
+    BaseURL läuft immer über den Proxy-Pfad /api
 */
 
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from "vue";

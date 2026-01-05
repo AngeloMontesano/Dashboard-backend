@@ -21,6 +21,7 @@
 - Alle Requests nutzen `/api` als Basis, keine Runtime-Host-Berechnung.
 - Header für Tenant-Routing kommen aus `getTenantHeaders()` (Customer) bzw. `adminHeaders()` (Admin).
 - Keine absoluten Backend-Hosts im Frontend; Hosts dürfen nur in Doku oder Build-Skripten vorkommen.
+- Shared-Helper liefern nur relative Pfade/Headers; keine neuen Axios-Instanzen außerhalb der Clients.
 
 ## Client-Regeln
 - Genau eine Axios-Instanz pro App: `customer/src/api/client.ts` und `admin_frontend/admin-ui/src/api/client.ts`.

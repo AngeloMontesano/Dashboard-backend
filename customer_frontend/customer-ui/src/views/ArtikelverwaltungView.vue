@@ -476,17 +476,10 @@ async function startImport() {
   importResult.updated = 0;
   importResult.errors = [];
   try {
-    const res = await importItems(authState.accessToken, file);
-    const hint = [`Importiert: ${res.imported}`, `Aktualisiert: ${res.updated}`];
-    if (res.errors.length) {
-      hint.push(`Fehler: ${res.errors.length}`);
-      error.value = res.errors
-        .slice(0, 3)
-        .map((e: { row: string; error: string }) => `Zeile ${e.row}: ${e.error}`)
-        .join('; ');
-    } else {
-      message.value = hint.join(' | ');
-    }
+    const res = await importItems(authState.accessToken, importFile.value, importMapping);
+    importResult.created = res.imported;
+    importResult.updated = res.updated;
+    importResult.errors = res.errors;
     await loadItems();
   } catch (err: any) {
     if (handleAuthError(err)) return;

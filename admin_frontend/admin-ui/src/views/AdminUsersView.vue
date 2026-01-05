@@ -1,11 +1,11 @@
 <template>
-  <section class="usersView">
-    <header class="viewHeader">
-      <div class="headTitles">
-        <div class="headTitle">Benutzer</div>
-        <div class="headSubtitle">Admin-Portal Benutzer verwalten</div>
+  <section class="page stack">
+    <header class="section-header">
+      <div class="stack">
+        <h1 class="section-title">Benutzer</h1>
+        <p class="section-subtitle">Admin-Portal Benutzer verwalten</p>
       </div>
-      <div class="headActions">
+      <div class="section-actions">
         <button class="btnGhost small" :disabled="busy.list" @click="loadUsers">
           {{ busy.list ? "lädt..." : "Neu laden" }}
         </button>
@@ -14,30 +14,30 @@
     </header>
 
     <div class="toolbar">
-      <div class="chips">
+      <div class="chip-list">
         <div class="chip">
-          <div class="chipLabel">Benutzer gesamt</div>
-          <div class="chipValue">{{ totalUsers }}</div>
+          <div class="chip__label">Benutzer gesamt</div>
+          <div class="chip__value">{{ totalUsers }}</div>
         </div>
         <div class="chip">
-          <div class="chipLabel">aktiv</div>
-          <div class="chipValue success">{{ activeUsers }}</div>
+          <div class="chip__label">aktiv</div>
+          <div class="chip__value tone-success">{{ activeUsers }}</div>
         </div>
         <div class="chip">
-          <div class="chipLabel">deaktiviert</div>
-          <div class="chipValue danger">{{ inactiveUsers }}</div>
+          <div class="chip__label">deaktiviert</div>
+          <div class="chip__value tone-danger">{{ inactiveUsers }}</div>
         </div>
       </div>
-      <div class="toolbarActions">
+      <div class="toolbar-group">
         <button class="btnGhost small" :disabled="!filteredUsers.length" @click="exportCsv">
           Benutzer exportieren CSV
         </button>
       </div>
     </div>
 
-    <div class="searchCard">
-      <div class="searchLeft">
-        <label class="fieldLabel" for="user-search">Suche E-Mail</label>
+    <div class="filter-card">
+      <div class="stack">
+        <label class="field-label" for="user-search">Suche E-Mail</label>
         <input
           id="user-search"
           class="input"
@@ -47,16 +47,16 @@
         />
         <div class="hint">Tippen zum Filtern. Groß und Kleinschreibung egal.</div>
       </div>
-      <div class="searchRight">
-        <span class="muted smallText">Treffer: {{ filteredUsers.length }}</span>
+      <div class="stack">
+        <span class="text-muted text-small">Treffer: {{ filteredUsers.length }}</span>
         <button class="btnGhost small" @click="resetFilters" :disabled="!search">Filter zurücksetzen</button>
       </div>
     </div>
 
-    <div class="tableCard">
-      <div class="tableHeader">
+    <div class="table-card">
+      <div class="table-card__header">
         <div class="tableTitle">Benutzerliste</div>
-        <div class="muted smallText">Zeile anklicken, um auszuwählen.</div>
+        <div class="text-muted text-small">Zeile anklicken, um auszuwählen.</div>
       </div>
       <div class="tableWrap">
         <table class="table">
@@ -93,23 +93,23 @@
       <div v-if="busy.error" class="errorText">Fehler: {{ busy.error }}</div>
     </div>
 
-    <div v-if="selectedUser" class="detailCard">
-      <div class="detailGrid">
-        <div class="detailBox">
-          <div class="boxLabel">E-Mail</div>
-          <div class="boxValue mono">{{ selectedUser.email }}</div>
+    <div v-if="selectedUser" class="detail-card">
+      <div class="detail-grid">
+        <div class="detail-box">
+          <div class="detail-box__label">E-Mail</div>
+          <div class="detail-box__value mono">{{ selectedUser.email }}</div>
         </div>
-        <div class="detailBox">
-          <div class="boxLabel">Status</div>
-          <div class="boxValue">
+        <div class="detail-box">
+          <div class="detail-box__label">Status</div>
+          <div class="detail-box__value">
             <span class="tag" :class="selectedUser.is_active ? 'ok' : 'bad'">
               {{ selectedUser.is_active ? "aktiv" : "deaktiviert" }}
             </span>
           </div>
         </div>
-        <div class="detailBox">
-          <div class="boxLabel">Passwort</div>
-          <div class="boxValue">
+        <div class="detail-box">
+          <div class="detail-box__label">Passwort</div>
+          <div class="detail-box__value">
             <span class="tag" :class="selectedUser.has_password ? 'ok' : 'warn'">
               {{ selectedUser.has_password ? "gesetzt" : "nicht gesetzt" }}
             </span>
@@ -117,17 +117,11 @@
         </div>
       </div>
 
-      <div class="detailActions">
-        <div class="row gap8 wrap">
-          <button
-            class="btnGhost small"
-            :disabled="busy.toggleId === selectedUser.id"
-            @click="toggleActive(selectedUser)"
-          >
-            {{ busy.toggleId === selectedUser.id ? "..." : selectedUser.is_active ? "Deaktivieren" : "Aktivieren" }}
-          </button>
-          <button class="btnGhost small" @click="openPasswordModal(selectedUser)">Passwort setzen</button>
-        </div>
+      <div class="action-row">
+        <button class="btnGhost small" :disabled="busy.toggleId === selectedUser.id" @click="toggleActive(selectedUser)">
+          {{ busy.toggleId === selectedUser.id ? "..." : selectedUser.is_active ? "Deaktivieren" : "Aktivieren" }}
+        </button>
+        <button class="btnGhost small" @click="openPasswordModal(selectedUser)">Passwort setzen</button>
       </div>
     </div>
 
@@ -388,208 +382,3 @@ watch(
   { immediate: true }
 );
 </script>
-
-<style scoped>
-.usersView {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.viewHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 8px 0 12px;
-  border-bottom: 1px solid var(--border);
-  min-height: 56px;
-}
-
-.headTitles {
-  display: grid;
-  gap: 4px;
-}
-
-.headTitle {
-  font-size: 18px;
-  font-weight: 800;
-}
-
-.headSubtitle {
-  color: var(--muted);
-  font-size: 13px;
-}
-
-.headActions {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-.toolbar {
-  display: grid;
-  gap: 10px;
-}
-
-.chips {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.chip {
-  padding: 8px 10px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--surface2);
-  min-width: 120px;
-}
-
-.chipLabel {
-  font-size: 12px;
-  color: var(--muted);
-}
-
-.chipValue {
-  font-weight: 700;
-  font-size: 16px;
-}
-
-.chipValue.success {
-  color: var(--success, #22c55e);
-}
-
-.chipValue.danger {
-  color: var(--danger, #c53030);
-}
-
-.toolbarActions {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  justify-content: flex-start;
-}
-
-.searchCard {
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 12px;
-  background: var(--surface);
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 10px;
-}
-
-.fieldLabel {
-  font-weight: 700;
-  font-size: 13px;
-}
-
-.hint {
-  font-size: 12px;
-  color: var(--muted);
-  margin-top: 6px;
-}
-
-.searchLeft {
-  display: grid;
-  gap: 6px;
-}
-
-.searchRight {
-  display: grid;
-  gap: 8px;
-  align-content: start;
-  justify-items: start;
-}
-
-.smallText {
-  font-size: 12px;
-}
-
-.tableCard {
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 12px;
-  background: var(--surface);
-  display: grid;
-  gap: 8px;
-}
-
-.tableHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.tableTitle {
-  font-weight: 800;
-}
-
-.tableWrap {
-  overflow: auto;
-}
-
-.table tbody tr {
-  cursor: pointer;
-}
-
-.table tbody tr.rowActive {
-  background: var(--table-row-active);
-}
-
-.detailCard {
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 12px;
-  background: var(--panel);
-  color: var(--text, #0f172a);
-  display: grid;
-  gap: 10px;
-  margin-top: 4px;
-}
-
-.detailGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 10px;
-}
-
-.detailBox {
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 10px;
-  background: var(--surface2);
-}
-
-.boxLabel {
-  font-size: 12px;
-  color: var(--muted);
-}
-
-.boxValue {
-  font-weight: 700;
-  margin-top: 4px;
-}
-
-.detailActions {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.errorText {
-  color: var(--danger, #c53030);
-  margin-top: 8px;
-  font-size: 13px;
-}
-
-@media (max-width: 860px) {
-  .toolbar {
-    gap: 8px;
-  }
-}
-</style>

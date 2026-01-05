@@ -242,3 +242,14 @@
   - Audit und Lagerbewegungen folgen nun den harmonisierten Layout-Utilities; weitere Inline-/Scoped-Styling reduziert, Token-Farben greifen für Status/Error-Anzeigen.
 - **Nächster Schritt**
   - Admin: Kunden-View auf Utilities bringen und Toast/Overlays zentralisieren. Customer: weitere Views (Artikel/Kategorien/Berichte/Inventur/Bestellungen/Einstellungen/Login) migrieren und responsive Regeln prüfen.
+
+## Schritt 21 – UI-Harmonisierung (KundenView + Kategorien)
+- **Datum/Uhrzeit**: 2026-01-05T17:03:00+00:00
+- **Ziel**: Admin Kunden-Workspace vollständig auf UI-Bausteine heben und Customer Kategorien-View auf Utilities ausrichten.
+- **Was wurde geändert**
+  - Admin `KundenView` auf `UiPage`/`UiCard` + Utility-Form/Grid/Text-Klassen umgestellt; alte Grid/Card-Markup und Inline-Hints entfernt.
+  - Customer `KategorienView` auf `UiPage`/`UiSection`/`UiToolbar` und Utility-Action/Form-Grids refaktoriert; Inline-Styles entfernt, Inputs nutzen gemeinsame Klassen.
+- **Ergebnis**
+  - Kunden-Workspace und Kategorien-Management sind nun tokenbasiert gestylt und nutzen die zentralen Layout-Utilities ohne scoped/inline Styles.
+- **Nächster Schritt**
+  - Customer: verbleibende Views (Artikel/Berichte/Inventur/Bestellungen/Einstellungen/Login) migrieren. Admin: zentrale Toast/Overlay-Styles finalisieren.

@@ -442,3 +442,15 @@
   - Migration steht bereit für Rollout; Backend/Frontend nutzen die Felder bereits.
 - **Nächster Schritt**
   - Migration in allen Umgebungen ausführen; Backfill je Tenant nach Bedarf; Frontend-Feinschliff (Tokens/Responsive) fortsetzen.
+
+## Schritt 37 – Legacy-Migration Phase 3 (Customer Dashboard an echte Daten anschließen)
+- **Datum/Uhrzeit**: 2026-01-06T00:10:00+00:00
+- **Ziel**: Customer-Dashboard von Dummywerten befreien und mit Live-Daten aus Backend-APIs speisen.
+- **Was wurde geändert**
+  - Neue Dashboard-Logik liest offene Bestellungen (`/inventory/orders`), bestellwürdige Artikel (`/inventory/orders/recommended`), Bewegungen des Tages (`/inventory/movements?start=...`) sowie Item-Bestände (alle Seiten) zur Berechnung der Kennzahlen.
+  - API-Wrapper ergänzt (`fetchMovements`) zur Abfrage der Bewegungen mit Filter.
+  - UI zeigt echte Kennzahlen inkl. Stabilitätsquote (Items >= Mindestbestand), Bewegungen heute und bestellwürdige Artikel; Refresh-Button nutzt Live-Ladevorgang.
+- **Ergebnis**
+  - Dashboard verwendet keine Dummy-KPIs mehr, sondern aktuelle Daten je Tenant.
+- **Nächster Schritt**
+  - Responsive/Token-Feinschliff bleibt offen; Migration `0008` ausrollen.

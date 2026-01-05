@@ -20,6 +20,8 @@ type OrderEmailRequest = components["schemas"]["OrderEmailRequest"];
 type ReorderResponse = components["schemas"]["ReorderResponse"];
 export type OrderCreateItem = components["schemas"]["OrderItemInput"];
 type InventoryBulkUpdateRequest = components["schemas"]["InventoryBulkUpdateRequest"];
+type MovementsQuery = NonNullable<paths["/inventory/movements"]["get"]["parameters"]["query"]>;
+export type MovementOut = components["schemas"]["MovementOut"];
 
 export type ImportItemsResult = {
   imported: number;
@@ -107,6 +109,12 @@ export async function postInventoryMovement(token: string, payload: MovementPayl
 export async function bulkUpdateInventory(token: string, payload: InventoryBulkUpdateRequest) {
   const res = await api.post("/inventory/inventory/bulk", payload, { headers: authHeaders(token) });
   return res.data as { updated: number; errors: string[] };
+}
+
+export async function fetchMovements(params: MovementsQuery & { token: string }) {
+  const { token, ...query } = params;
+  const res = await api.get<MovementOut[]>("/inventory/movements", { params: query, headers: authHeaders(token) });
+  return res.data;
 }
 
 export async function fetchSettings(token: string) {

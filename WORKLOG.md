@@ -460,7 +460,7 @@
 - **Ziel**: Migration `0008_tenant_settings_metadata` robust machen, falls `tenant_settings` noch nicht existiert.
 - **Was wurde geändert**
   - Migration erstellt `tenant_settings` vollständig, falls die Tabelle fehlt (inkl. Unique-Constraint/Index), und fügt andernfalls nur die neuen Metadaten-Spalten hinzu.
-  - Server-Defaults werden nach Anlage entfernt, um App-Defaults zu nutzen.
+  - Server-Defaults werden nach Anlage entfernt, um App-Defaults zu nutzen; numerische Defaults über `sa.text` abgebildet, damit Postgres/Asyncpg sie akzeptiert.
 - **Ergebnis**
   - Alembic-Upgrade läuft auch auf Umgebungen ohne vorgenerierte Settings-Tabelle durch.
 - **Nächster Schritt**

@@ -36,7 +36,7 @@ def upgrade() -> None:
             sa.Column("contact_email", sa.String(length=255), nullable=False, server_default=""),
             sa.Column("order_email", sa.String(length=255), nullable=False, server_default=""),
             sa.Column("auto_order_enabled", sa.Boolean(), nullable=False, server_default=sa.false()),
-            sa.Column("auto_order_min", sa.Integer(), nullable=False, server_default=0),
+            sa.Column("auto_order_min", sa.Integer(), nullable=False, server_default=sa.text("0")),
             sa.Column("export_format", sa.String(length=32), nullable=False, server_default="xlsx"),
             sa.Column("address", sa.String(length=512), nullable=False, server_default=""),
             sa.Column("phone", sa.String(length=64), nullable=False, server_default=""),

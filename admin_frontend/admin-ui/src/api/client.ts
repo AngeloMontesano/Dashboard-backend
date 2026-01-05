@@ -1,5 +1,4 @@
-import axios from "axios";
-import { getBaseURL } from "./base";
+import { createApiClient } from "@shared/api-client";
 
 /*
   Zentraler API Client.
@@ -7,15 +6,11 @@ import { getBaseURL } from "./base";
 */
 
 export function apiClient(adminKey: string, actor?: string) {
-  const baseURL = getBaseURL();
-
-  return axios.create({
-    baseURL,
+  return createApiClient({
     timeout: 15000,
-    headers: {
+    extraHeaders: {
       "X-Admin-Key": adminKey,
-      ...(actor ? { "X-Admin-Actor": actor } : {}),
-      "Content-Type": "application/json",
-    },
+      ...(actor ? { "X-Admin-Actor": actor } : {})
+    }
   });
 }

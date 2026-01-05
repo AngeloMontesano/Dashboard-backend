@@ -60,7 +60,7 @@ const isLoggedIn = computed(() => isAuthenticated());
 async function loadCategories() {
   if (!authState.accessToken) return;
   const data = await fetchCategories(authState.accessToken);
-  categories.value = data.filter((c) => c.is_active);
+  categories.value = data.filter((c: Category) => c.is_active);
 }
 
 async function loadItems() {
@@ -170,7 +170,10 @@ async function handleImport(event: Event) {
     const hint = [`Importiert: ${res.imported}`, `Aktualisiert: ${res.updated}`];
     if (res.errors.length) {
       hint.push(`Fehler: ${res.errors.length}`);
-      error.value = res.errors.slice(0, 3).map((e) => `Zeile ${e.row}: ${e.error}`).join('; ');
+      error.value = res.errors
+        .slice(0, 3)
+        .map((e: { row: string; error: string }) => `Zeile ${e.row}: ${e.error}`)
+        .join('; ');
     } else {
       message.value = hint.join(' | ');
     }

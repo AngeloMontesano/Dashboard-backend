@@ -263,8 +263,6 @@ const memberships = ref<TenantUserOut[]>([]);
 
 const selectedTenant = ref<TenantOut | null>(null);
 const selectedMembership = ref<TenantUserOut | null>(null);
-
-const selectedTenant = ref<TenantOut | null>(null);
 const selectedUser = ref<TenantUserOut | null>(null);
 
 const filters = reactive({
@@ -280,11 +278,6 @@ const createForm = reactive({
   role: "",
   password: "",
   is_active: true,
-});
-
-const edit = reactive({
-  role: "",
-  is_active: false,
 });
 
 const edit = reactive({

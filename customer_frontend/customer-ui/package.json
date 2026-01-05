@@ -10,8 +10,12 @@
     "lint": "vue-tsc --noEmit && tsc -p tsconfig.node.json --noEmit"
   },
   "dependencies": {
+    "@primevue/themes": "^4.5.4",
     "axios": "^1.7.2",
+    "chart.js": "^4.5.1",
     "idb": "^8.0.0",
+    "primeicons": "^7.0.0",
+    "primevue": "^4.5.4",
     "vue": "^3.4.21",
     "vue-router": "^4.3.2"
   },

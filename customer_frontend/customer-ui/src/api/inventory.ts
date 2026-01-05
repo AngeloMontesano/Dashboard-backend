@@ -1,25 +1,7 @@
-import axios from 'axios';
-import { getBaseURL, getTenantHeaders } from './base';
-
-const baseURL = getBaseURL();
-
-type AuthHeaders = {
-  Authorization?: string;
-};
+import { createApiClient } from './base';
 
 function buildClient(token?: string) {
-  const authHeaders: AuthHeaders = {};
-  if (token) authHeaders.Authorization = `Bearer ${token}`;
-
-  return axios.create({
-    baseURL,
-    timeout: 15000,
-    headers: {
-      'Content-Type': 'application/json',
-      ...getTenantHeaders(),
-      ...authHeaders
-    }
-  });
+  return createApiClient({ token });
 }
 
 export type Category = {

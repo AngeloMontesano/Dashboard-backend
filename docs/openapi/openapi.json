@@ -29,20 +29,7 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "properties": {
-                    "admin_key": {
-                      "type": "string",
-                      "title": "Admin Key"
-                    },
-                    "actor": {
-                      "type": "string",
-                      "title": "Actor"
-                    }
-                  },
-                  "required": [
-                    "admin_key"
-                  ],
-                  "title": "AdminLoginResponse"
+                  "title": "Response Admin Login With Credentials Admin Login Post"
                 }
               }
             }
@@ -621,7 +608,1404 @@
         }
       }
     },
+    "/inventory/report": {
+      "get": {
+        "tags": [
+          "inventory"
+        ],
+        "summary": "Get Report",
+        "operationId": "get_report_inventory_report_get",
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Startdatum (YYYY-MM-DD)",
+              "title": "From"
+            },
+            "description": "Startdatum (YYYY-MM-DD)"
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Enddatum (YYYY-MM-DD)",
+              "title": "To"
+            },
+            "description": "Enddatum (YYYY-MM-DD)"
+          },
+          {
+            "name": "mode",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "enum": [
+                "top5",
+                "all",
+                "selected"
+              ],
+              "type": "string",
+              "description": "Aggregationsmodus",
+              "title": "Mode"
+            },
+            "description": "Aggregationsmodus"
+          },
+          {
+            "name": "item_ids",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Item Ids"
+            }
+          },
+          {
+            "name": "category_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Category Id"
+            }
+          },
+          {
+            "name": "aggregate",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": true,
+              "title": "Aggregate"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": 5,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inventory/reports/consumption": {
+      "get": {
+        "tags": [
+          "inventory"
+        ],
+        "summary": "Get Report Consumption",
+        "operationId": "get_report_consumption_inventory_reports_consumption_get",
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Startdatum (YYYY-MM-DD)",
+              "title": "From"
+            },
+            "description": "Startdatum (YYYY-MM-DD)"
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Enddatum (YYYY-MM-DD)",
+              "title": "To"
+            },
+            "description": "Enddatum (YYYY-MM-DD)"
+          },
+          {
+            "name": "mode",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "enum": [
+                "top5",
+                "all",
+                "selected"
+              ],
+              "type": "string",
+              "description": "Aggregationsmodus",
+              "title": "Mode"
+            },
+            "description": "Aggregationsmodus"
+          },
+          {
+            "name": "item_ids",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Item Ids"
+            }
+          },
+          {
+            "name": "category_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Category Id"
+            }
+          },
+          {
+            "name": "aggregate",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": true,
+              "title": "Aggregate"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": 5,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inventory/reports/export/{format}": {
+      "get": {
+        "tags": [
+          "inventory"
+        ],
+        "summary": "Export Report",
+        "operationId": "export_report_inventory_reports_export__format__get",
+        "parameters": [
+          {
+            "name": "format",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "csv oder excel",
+              "title": "Format"
+            },
+            "description": "csv oder excel"
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Startdatum (YYYY-MM-DD)",
+              "title": "From"
+            },
+            "description": "Startdatum (YYYY-MM-DD)"
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Enddatum (YYYY-MM-DD)",
+              "title": "To"
+            },
+            "description": "Enddatum (YYYY-MM-DD)"
+          },
+          {
+            "name": "mode",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "enum": [
+                "top5",
+                "all",
+                "selected"
+              ],
+              "type": "string",
+              "description": "Aggregationsmodus",
+              "title": "Mode"
+            },
+            "description": "Aggregationsmodus"
+          },
+          {
+            "name": "item_ids",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Item Ids"
+            }
+          },
+          {
+            "name": "category_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Category Id"
+            }
+          },
+          {
+            "name": "aggregate",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": true,
+              "title": "Aggregate"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": 5,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inventory/orders": {
+      "get": {
+        "tags": [
+          "inventory"
+        ],
+        "summary": "List Orders",
+        "operationId": "list_orders_inventory_orders_get",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "OPEN",
+                    "COMPLETED",
+                    "CANCELED"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 500,
+              "minimum": 1,
+              "default": 100,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/OrderOut"
+                  },
+                  "title": "Response List Orders Inventory Orders Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "inventory"
+        ],
+        "summary": "Create Order",
+        "operationId": "create_order_inventory_orders_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OrderCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inventory/orders/{order_id}": {
+      "get": {
+        "tags": [
+          "inventory"
+        ],
+        "summary": "Get Order",
+        "operationId": "get_order_inventory_orders__order_id__get",
+        "parameters": [
+          {
+            "name": "order_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Order Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inventory/orders/{order_id}/complete": {
+      "post": {
+        "tags": [
+          "inventory"
+        ],
+        "summary": "Complete Order",
+        "operationId": "complete_order_inventory_orders__order_id__complete_post",
+        "parameters": [
+          {
+            "name": "order_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Order Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inventory/orders/{order_id}/cancel": {
+      "post": {
+        "tags": [
+          "inventory"
+        ],
+        "summary": "Cancel Order",
+        "operationId": "cancel_order_inventory_orders__order_id__cancel_post",
+        "parameters": [
+          {
+            "name": "order_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Order Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inventory/orders/{order_id}/email": {
+      "post": {
+        "tags": [
+          "inventory"
+        ],
+        "summary": "Send Order Email",
+        "operationId": "send_order_email_inventory_orders__order_id__email_post",
+        "parameters": [
+          {
+            "name": "order_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Order Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OrderEmailRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmailSendResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inventory/orders/{order_id}/pdf": {
+      "get": {
+        "tags": [
+          "inventory"
+        ],
+        "summary": "Get Order Pdf",
+        "operationId": "get_order_pdf_inventory_orders__order_id__pdf_get",
+        "parameters": [
+          {
+            "name": "order_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Order Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inventory/settings": {
+      "get": {
+        "tags": [
+          "inventory"
+        ],
+        "summary": "Get Tenant Settings",
+        "operationId": "get_tenant_settings_inventory_settings_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TenantSettingsOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "inventory"
+        ],
+        "summary": "Update Tenant Settings",
+        "operationId": "update_tenant_settings_inventory_settings_put",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TenantSettingsUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TenantSettingsOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inventory/settings/export": {
+      "get": {
+        "tags": [
+          "inventory"
+        ],
+        "summary": "Export Settings Inventory",
+        "operationId": "export_settings_inventory_inventory_settings_export_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inventory/settings/import": {
+      "post": {
+        "tags": [
+          "inventory"
+        ],
+        "summary": "Import Settings Inventory",
+        "operationId": "import_settings_inventory_inventory_settings_import_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_import_settings_inventory_inventory_settings_import_post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MassImportResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inventory/settings/test-email": {
+      "post": {
+        "tags": [
+          "inventory"
+        ],
+        "summary": "Send Test Email",
+        "description": "Sendet eine Test-E-Mail an die angegebene Adresse, nutzt SMTP-Konfiguration aus Settings.",
+        "operationId": "send_test_email_inventory_settings_test_email_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TestEmailRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TestEmailResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inventory/orders/recommended": {
+      "get": {
+        "tags": [
+          "inventory"
+        ],
+        "summary": "Get Reorder Recommendations",
+        "operationId": "get_reorder_recommendations_inventory_orders_recommended_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReorderResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/inventory/movements": {
+      "get": {
+        "tags": [
+          "inventory"
+        ],
+        "summary": "List Movements",
+        "operationId": "list_movements_inventory_movements_get",
+        "parameters": [
+          {
+            "name": "start",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Startzeitpunkt (inklusive, UTC oder lokal ISO8601)",
+              "title": "Start"
+            },
+            "description": "Startzeitpunkt (inklusive, UTC oder lokal ISO8601)"
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Endzeitpunkt (inklusive, UTC oder lokal ISO8601)",
+              "title": "End"
+            },
+            "description": "Endzeitpunkt (inklusive, UTC oder lokal ISO8601)"
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "IN",
+                    "OUT"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Type"
+            }
+          },
+          {
+            "name": "category_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Category Id"
+            }
+          },
+          {
+            "name": "item_ids",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Item Ids"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 1000,
+              "minimum": 1,
+              "description": "Maximale Anzahl zur\u00fcckgegebener Bewegungen",
+              "default": 200,
+              "title": "Limit"
+            },
+            "description": "Maximale Anzahl zur\u00fcckgegebener Bewegungen"
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MovementOut"
+                  },
+                  "title": "Response List Movements Inventory Movements Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
       "post": {
         "tags": [
           "inventory"
@@ -661,9 +2045,113 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/MovementListResponse"
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inventory/inventory/bulk": {
+      "post": {
+        "tags": [
+          "inventory"
+        ],
+        "summary": "Bulk Update Inventory",
+        "operationId": "bulk_update_inventory_inventory_inventory_bulk_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InventoryBulkUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InventoryBulkUpdateResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inventory/inventory/export": {
+      "get": {
+        "tags": [
+          "inventory"
+        ],
+        "summary": "Export Inventory",
+        "operationId": "export_inventory_inventory_inventory_export_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
               }
             }
           },
@@ -722,44 +2210,7 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "properties": {
-                    "imported": {
-                      "type": "integer",
-                      "title": "Imported"
-                    },
-                    "updated": {
-                      "type": "integer",
-                      "title": "Updated"
-                    },
-                    "errors": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "row": {
-                            "type": "string",
-                            "title": "Row"
-                          },
-                          "error": {
-                            "type": "string",
-                            "title": "Error"
-                          }
-                        },
-                        "required": [
-                          "row",
-                          "error"
-                        ],
-                        "title": "ImportError"
-                      },
-                      "title": "Errors"
-                    }
-                  },
-                  "required": [
-                    "imported",
-                    "updated",
-                    "errors"
-                  ],
-                  "title": "ImportItemsResponse"
+                  "title": "Response Import Items Inventory Items Import Post"
                 }
               }
             }
@@ -809,16 +2260,7 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "properties": {
-                    "csv": {
-                      "type": "string",
-                      "title": "Csv"
-                    }
-                  },
-                  "required": [
-                    "csv"
-                  ],
-                  "title": "ExportItemsResponse"
+                  "title": "Response Export Items Inventory Items Export Get"
                 }
               }
             }
@@ -1114,7 +2556,7 @@
           "admin-tenants"
         ],
         "summary": "Admin Delete Tenant",
-        "description": "Löscht einen Tenant nur mit expliziter Bestätigung.\nAufruf: DELETE /admin/tenants/{tenant_id}?confirm=true",
+        "description": "L\u00f6scht einen Tenant nur mit expliziter Best\u00e4tigung.\nAufruf: DELETE /admin/tenants/{tenant_id}?confirm=true",
         "operationId": "admin_delete_tenant_admin_tenants__tenant_id__delete",
         "parameters": [
           {
@@ -1816,7 +3258,7 @@
           "admin-audit"
         ],
         "summary": "Admin Get Audit",
-        "description": "Liefert Audit Log Einträge mit optionalen Filtern.",
+        "description": "Liefert Audit Log Eintr\u00e4ge mit optionalen Filtern.",
         "operationId": "admin_get_audit_admin_audit_get",
         "parameters": [
           {
@@ -2008,7 +3450,7 @@
           "admin-diagnostics"
         ],
         "summary": "Admin Diagnostics",
-        "description": "Diagnostik für typische Dateninkonsistenzen.\nLiefert nur Read-Informationen, keine Änderungen.",
+        "description": "Diagnostik f\u00fcr typische Dateninkonsistenzen.\nLiefert nur Read-Informationen, keine \u00c4nderungen.",
         "operationId": "admin_diagnostics_admin_diagnostics_get",
         "parameters": [
           {
@@ -2446,6 +3888,166 @@
         }
       }
     },
+    "/admin/tenants/{tenant_id}/settings": {
+      "get": {
+        "tags": [
+          "admin",
+          "admin-tenants"
+        ],
+        "summary": "Admin Get Tenant Settings",
+        "operationId": "admin_get_tenant_settings_admin_tenants__tenant_id__settings_get",
+        "parameters": [
+          {
+            "name": "tenant_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Tenant Id"
+            }
+          },
+          {
+            "name": "x-admin-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Key"
+            }
+          },
+          {
+            "name": "x-admin-actor",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Actor"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TenantSettingsOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "admin",
+          "admin-tenants"
+        ],
+        "summary": "Admin Update Tenant Settings",
+        "operationId": "admin_update_tenant_settings_admin_tenants__tenant_id__settings_put",
+        "parameters": [
+          {
+            "name": "tenant_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Tenant Id"
+            }
+          },
+          {
+            "name": "x-admin-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Key"
+            }
+          },
+          {
+            "name": "x-admin-actor",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Actor"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TenantSettingsUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TenantSettingsOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/admin/ping": {
       "get": {
         "tags": [
@@ -2720,419 +4322,6 @@
           }
         }
       }
-    },
-    "/admin/tenants/{tenant_id}/users/{user_id}/set-password": {
-      "post": {
-        "tags": [
-          "admin-tenants"
-        ],
-        "summary": "Set Tenant User Password",
-        "operationId": "set_tenant_user_password",
-        "parameters": [
-          {
-            "name": "tenant_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Tenant Id"
-            }
-          },
-          {
-            "name": "user_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "User Id"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "password": {
-                    "type": "string",
-                    "minLength": 4,
-                    "maxLength": 128,
-                    "title": "Password"
-                  }
-                },
-                "required": [
-                  "password"
-                ],
-                "title": "SetPasswordRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TenantUserOut"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/inventory/report": {
-      "get": {
-        "tags": [
-          "inventory"
-        ],
-        "summary": "Report (Aggregiert)",
-        "operationId": "inventory_report_get",
-        "parameters": [
-          {
-            "name": "from",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "date",
-              "title": "From"
-            },
-            "description": "Startdatum (YYYY-MM-DD)"
-          },
-          {
-            "name": "to",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "date",
-              "title": "To"
-            },
-            "description": "Enddatum (YYYY-MM-DD)"
-          },
-          {
-            "name": "mode",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "enum": [
-                "top5",
-                "all",
-                "selected"
-              ],
-              "title": "Mode"
-            }
-          },
-          {
-            "name": "item_ids",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              },
-              "title": "Item Ids"
-            }
-          },
-          {
-            "name": "category_id",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "title": "Category Id"
-            }
-          },
-          {
-            "name": "aggregate",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "boolean",
-              "title": "Aggregate"
-            }
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "title": "Limit"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ReportResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/inventory/reports/consumption": {
-      "get": {
-        "tags": [
-          "inventory"
-        ],
-        "summary": "Report Consumption",
-        "operationId": "inventory_reports_consumption_get",
-        "parameters": [
-          {
-            "name": "from",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "date",
-              "title": "From"
-            },
-            "description": "Startdatum (YYYY-MM-DD)"
-          },
-          {
-            "name": "to",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "date",
-              "title": "To"
-            },
-            "description": "Enddatum (YYYY-MM-DD)"
-          },
-          {
-            "name": "mode",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "enum": [
-                "top5",
-                "all",
-                "selected"
-              ],
-              "title": "Mode"
-            }
-          },
-          {
-            "name": "item_ids",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              },
-              "title": "Item Ids"
-            }
-          },
-          {
-            "name": "category_id",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "title": "Category Id"
-            }
-          },
-          {
-            "name": "aggregate",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "boolean",
-              "title": "Aggregate"
-            }
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "title": "Limit"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ReportResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/inventory/reports/export/{format}": {
-      "get": {
-        "tags": [
-          "inventory"
-        ],
-        "summary": "Report Export",
-        "operationId": "inventory_reports_export_format_get",
-        "parameters": [
-          {
-            "name": "from",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "date",
-              "title": "From"
-            },
-            "description": "Startdatum (YYYY-MM-DD)"
-          },
-          {
-            "name": "to",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "date",
-              "title": "To"
-            },
-            "description": "Enddatum (YYYY-MM-DD)"
-          },
-          {
-            "name": "mode",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "enum": [
-                "top5",
-                "all",
-                "selected"
-              ],
-              "title": "Mode"
-            }
-          },
-          {
-            "name": "item_ids",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              },
-              "title": "Item Ids"
-            }
-          },
-          {
-            "name": "category_id",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "title": "Category Id"
-            }
-          },
-          {
-            "name": "aggregate",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "boolean",
-              "title": "Aggregate"
-            }
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "title": "Limit"
-            }
-          },
-          {
-            "name": "format",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "enum": [
-                "csv",
-                "excel",
-                "pdf"
-              ],
-              "title": "Format"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/octet-stream": {
-                "schema": {
-                  "type": "string",
-                  "format": "binary",
-                  "title": "ReportExport"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
     }
   },
   "components": {
@@ -3214,6 +4403,20 @@
         ],
         "title": "Body_import_items_inventory_items_import_post"
       },
+      "Body_import_settings_inventory_inventory_settings_import_post": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "format": "binary",
+            "title": "File"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_import_settings_inventory_inventory_settings_import_post"
+      },
       "CategoryCreate": {
         "properties": {
           "name": {
@@ -3291,6 +4494,30 @@
         "type": "object",
         "title": "CategoryUpdate"
       },
+      "EmailSendResponse": {
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "title": "Ok"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          }
+        },
+        "type": "object",
+        "required": [
+          "ok"
+        ],
+        "title": "EmailSendResponse"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -3303,6 +4530,62 @@
         },
         "type": "object",
         "title": "HTTPValidationError"
+      },
+      "InventoryBulkUpdateRequest": {
+        "properties": {
+          "updates": {
+            "items": {
+              "$ref": "#/components/schemas/InventoryUpdate"
+            },
+            "type": "array",
+            "title": "Updates"
+          }
+        },
+        "type": "object",
+        "required": [
+          "updates"
+        ],
+        "title": "InventoryBulkUpdateRequest"
+      },
+      "InventoryBulkUpdateResult": {
+        "properties": {
+          "updated": {
+            "type": "integer",
+            "title": "Updated"
+          },
+          "errors": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Errors",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "updated"
+        ],
+        "title": "InventoryBulkUpdateResult"
+      },
+      "InventoryUpdate": {
+        "properties": {
+          "item_id": {
+            "type": "string",
+            "title": "Item Id"
+          },
+          "quantity": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Quantity"
+          }
+        },
+        "type": "object",
+        "required": [
+          "item_id",
+          "quantity"
+        ],
+        "title": "InventoryUpdate"
       },
       "ItemCreate": {
         "properties": {
@@ -3707,6 +4990,32 @@
         ],
         "title": "LogoutRequest"
       },
+      "MassImportResult": {
+        "properties": {
+          "imported": {
+            "type": "integer",
+            "title": "Imported"
+          },
+          "updated": {
+            "type": "integer",
+            "title": "Updated"
+          },
+          "errors": {
+            "items": {
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Errors"
+          }
+        },
+        "type": "object",
+        "required": [
+          "imported",
+          "updated",
+          "errors"
+        ],
+        "title": "MassImportResult"
+      },
       "MembershipCreate": {
         "properties": {
           "user_id": {
@@ -3793,6 +5102,131 @@
         "type": "object",
         "title": "MembershipUpdate"
       },
+      "MovementItemOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "sku": {
+            "type": "string",
+            "title": "Sku"
+          },
+          "barcode": {
+            "type": "string",
+            "title": "Barcode"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "category_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "sku",
+          "barcode",
+          "name"
+        ],
+        "title": "MovementItemOut"
+      },
+      "MovementOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "item_id": {
+            "type": "string",
+            "title": "Item Id"
+          },
+          "item_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Item Name"
+          },
+          "category_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category Id"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "IN",
+              "OUT"
+            ],
+            "title": "Type"
+          },
+          "barcode": {
+            "type": "string",
+            "title": "Barcode"
+          },
+          "qty": {
+            "type": "integer",
+            "title": "Qty"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "item": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MovementItemOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "item_id",
+          "type",
+          "barcode",
+          "qty",
+          "created_at"
+        ],
+        "title": "MovementOut"
+      },
       "MovementPayload": {
         "properties": {
           "client_tx_id": {
@@ -3849,6 +5283,250 @@
         ],
         "title": "MovementPayload"
       },
+      "OrderCreate": {
+        "properties": {
+          "note": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1024
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/OrderItemInput"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "title": "OrderCreate"
+      },
+      "OrderEmailRequest": {
+        "properties": {
+          "email": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1024
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "type": "object",
+        "title": "OrderEmailRequest"
+      },
+      "OrderItemInput": {
+        "properties": {
+          "item_id": {
+            "type": "string",
+            "title": "Item Id"
+          },
+          "quantity": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Quantity"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "type": "object",
+        "required": [
+          "item_id",
+          "quantity"
+        ],
+        "title": "OrderItemInput"
+      },
+      "OrderItemOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "item_id": {
+            "type": "string",
+            "title": "Item Id"
+          },
+          "quantity": {
+            "type": "integer",
+            "title": "Quantity"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "item_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Item Name"
+          },
+          "sku": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sku"
+          },
+          "barcode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Barcode"
+          },
+          "category_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "item_id",
+          "quantity"
+        ],
+        "title": "OrderItemOut"
+      },
+      "OrderOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "number": {
+            "type": "string",
+            "title": "Number"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "OPEN",
+              "COMPLETED",
+              "CANCELED"
+            ],
+            "title": "Status"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          },
+          "canceled_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Canceled At"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/OrderItemOut"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "number",
+          "status",
+          "created_at",
+          "items"
+        ],
+        "title": "OrderOut"
+      },
       "RefreshRequest": {
         "properties": {
           "refresh_token": {
@@ -3861,6 +5539,243 @@
           "refresh_token"
         ],
         "title": "RefreshRequest"
+      },
+      "ReorderItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "sku": {
+            "type": "string",
+            "title": "Sku"
+          },
+          "barcode": {
+            "type": "string",
+            "title": "Barcode"
+          },
+          "category_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category Id"
+          },
+          "quantity": {
+            "type": "integer",
+            "title": "Quantity"
+          },
+          "target_stock": {
+            "type": "integer",
+            "title": "Target Stock"
+          },
+          "min_stock": {
+            "type": "integer",
+            "title": "Min Stock"
+          },
+          "recommended_qty": {
+            "type": "integer",
+            "title": "Recommended Qty"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "sku",
+          "barcode",
+          "quantity",
+          "target_stock",
+          "min_stock",
+          "recommended_qty"
+        ],
+        "title": "ReorderItem"
+      },
+      "ReorderResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ReorderItem"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "title": "ReorderResponse"
+      },
+      "ReportDataPoint": {
+        "properties": {
+          "period": {
+            "type": "string",
+            "title": "Period"
+          },
+          "value": {
+            "type": "number",
+            "title": "Value"
+          },
+          "item_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Item Id"
+          },
+          "item_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Item Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "period",
+          "value"
+        ],
+        "title": "ReportDataPoint"
+      },
+      "ReportKpis": {
+        "properties": {
+          "totalConsumption": {
+            "type": "number",
+            "title": "Totalconsumption"
+          },
+          "averagePerMonth": {
+            "type": "number",
+            "title": "Averagepermonth"
+          },
+          "months": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Months"
+          },
+          "topItem": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ReportTopItem"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "totalConsumption",
+          "averagePerMonth",
+          "months"
+        ],
+        "title": "ReportKpis"
+      },
+      "ReportResponse": {
+        "properties": {
+          "series": {
+            "items": {
+              "$ref": "#/components/schemas/ReportSeries"
+            },
+            "type": "array",
+            "title": "Series"
+          },
+          "kpis": {
+            "$ref": "#/components/schemas/ReportKpis"
+          }
+        },
+        "type": "object",
+        "required": [
+          "series",
+          "kpis"
+        ],
+        "title": "ReportResponse"
+      },
+      "ReportSeries": {
+        "properties": {
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "itemId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Itemid"
+          },
+          "color": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Color"
+          },
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/ReportDataPoint"
+            },
+            "type": "array",
+            "title": "Data"
+          }
+        },
+        "type": "object",
+        "required": [
+          "label",
+          "data"
+        ],
+        "title": "ReportSeries"
+      },
+      "ReportTopItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "quantity": {
+            "type": "number",
+            "title": "Quantity"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "quantity"
+        ],
+        "title": "ReportTopItem"
       },
       "SKUExistsResponse": {
         "properties": {
@@ -3957,7 +5872,7 @@
           "is_active"
         ],
         "title": "TenantOutPing",
-        "description": "Minimaler Tenant Output für /inventory/ping."
+        "description": "Minimaler Tenant Output f\u00fcr /inventory/ping."
       },
       "TenantPingResponse": {
         "properties": {
@@ -3975,7 +5890,180 @@
           "tenant"
         ],
         "title": "TenantPingResponse",
-        "description": "Response Modell für /inventory/ping."
+        "description": "Response Modell f\u00fcr /inventory/ping."
+      },
+      "TenantSettingsOut": {
+        "properties": {
+          "company_name": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "Company Name",
+            "default": ""
+          },
+          "contact_email": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "Contact Email",
+            "default": ""
+          },
+          "order_email": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "Order Email",
+            "default": ""
+          },
+          "auto_order_enabled": {
+            "type": "boolean",
+            "title": "Auto Order Enabled",
+            "default": false
+          },
+          "auto_order_min": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Auto Order Min",
+            "default": 0
+          },
+          "export_format": {
+            "type": "string",
+            "maxLength": 32,
+            "title": "Export Format",
+            "default": "xlsx"
+          },
+          "address": {
+            "type": "string",
+            "maxLength": 512,
+            "title": "Address",
+            "default": ""
+          },
+          "address_postal_code": {
+            "type": "string",
+            "maxLength": 32,
+            "title": "Address Postal Code",
+            "default": ""
+          },
+          "address_city": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Address City",
+            "default": ""
+          },
+          "phone": {
+            "type": "string",
+            "maxLength": 64,
+            "title": "Phone",
+            "default": ""
+          },
+          "contact_name": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "Contact Name",
+            "default": ""
+          },
+          "branch_number": {
+            "type": "string",
+            "maxLength": 64,
+            "title": "Branch Number",
+            "default": ""
+          },
+          "tax_number": {
+            "type": "string",
+            "maxLength": 64,
+            "title": "Tax Number",
+            "default": ""
+          },
+          "id": {
+            "type": "string",
+            "title": "Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id"
+        ],
+        "title": "TenantSettingsOut"
+      },
+      "TenantSettingsUpdate": {
+        "properties": {
+          "company_name": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "Company Name",
+            "default": ""
+          },
+          "contact_email": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "Contact Email",
+            "default": ""
+          },
+          "order_email": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "Order Email",
+            "default": ""
+          },
+          "auto_order_enabled": {
+            "type": "boolean",
+            "title": "Auto Order Enabled",
+            "default": false
+          },
+          "auto_order_min": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Auto Order Min",
+            "default": 0
+          },
+          "export_format": {
+            "type": "string",
+            "maxLength": 32,
+            "title": "Export Format",
+            "default": "xlsx"
+          },
+          "address": {
+            "type": "string",
+            "maxLength": 512,
+            "title": "Address",
+            "default": ""
+          },
+          "address_postal_code": {
+            "type": "string",
+            "maxLength": 32,
+            "title": "Address Postal Code",
+            "default": ""
+          },
+          "address_city": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Address City",
+            "default": ""
+          },
+          "phone": {
+            "type": "string",
+            "maxLength": 64,
+            "title": "Phone",
+            "default": ""
+          },
+          "contact_name": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "Contact Name",
+            "default": ""
+          },
+          "branch_number": {
+            "type": "string",
+            "maxLength": 64,
+            "title": "Branch Number",
+            "default": ""
+          },
+          "tax_number": {
+            "type": "string",
+            "maxLength": 64,
+            "title": "Tax Number",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "title": "TenantSettingsUpdate"
       },
       "TenantUpdate": {
         "properties": {
@@ -4141,6 +6229,44 @@
         "type": "object",
         "title": "TenantUserUpdate"
       },
+      "TestEmailRequest": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "Email"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email"
+        ],
+        "title": "TestEmailRequest"
+      },
+      "TestEmailResponse": {
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "title": "Ok"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          }
+        },
+        "type": "object",
+        "required": [
+          "ok"
+        ],
+        "title": "TestEmailResponse"
+      },
       "TokenResponse": {
         "properties": {
           "access_token": {
@@ -4301,176 +6427,13 @@
           "type"
         ],
         "title": "ValidationError"
-      },
-      "MovementListResponse": {
-        "oneOf": [
-          {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/MovementPayload"
-            },
-            "title": "MovementList"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "items": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/MovementPayload"
-                },
-                "title": "Items"
-              }
-            },
-            "required": [
-              "items"
-            ],
-            "title": "MovementItemsWrapper"
-          }
-        ],
-        "title": "MovementListResponse"
-      },
-      "ReportDataPoint": {
-        "type": "object",
-        "properties": {
-          "period": {
-            "type": "string",
-            "title": "Period"
-          },
-          "value": {
-            "type": "number",
-            "title": "Value"
-          },
-          "item_id": {
-            "type": "string",
-            "title": "Item Id"
-          },
-          "item_name": {
-            "type": "string",
-            "title": "Item Name"
-          }
-        },
-        "required": [
-          "period",
-          "value"
-        ],
-        "title": "ReportDataPoint"
-      },
-      "ReportSeries": {
-        "type": "object",
-        "properties": {
-          "label": {
-            "type": "string",
-            "title": "Label"
-          },
-          "itemId": {
-            "type": "string",
-            "title": "Item Id"
-          },
-          "color": {
-            "type": "string",
-            "title": "Color"
-          },
-          "data": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ReportDataPoint"
-            },
-            "title": "Data"
-          }
-        },
-        "required": [
-          "label",
-          "data"
-        ],
-        "title": "ReportSeries"
-      },
-      "ReportTopItem": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "title": "Id"
-          },
-          "name": {
-            "type": "string",
-            "title": "Name"
-          },
-          "quantity": {
-            "type": "number",
-            "title": "Quantity"
-          }
-        },
-        "required": [
-          "id",
-          "name",
-          "quantity"
-        ],
-        "title": "ReportTopItem"
-      },
-      "ReportKpis": {
-        "type": "object",
-        "properties": {
-          "totalConsumption": {
-            "type": "number",
-            "title": "Total Consumption"
-          },
-          "averagePerMonth": {
-            "type": "number",
-            "title": "Average Per Month"
-          },
-          "months": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "title": "Months"
-          },
-          "topItem": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/ReportTopItem"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Top Item"
-          }
-        },
-        "required": [
-          "totalConsumption",
-          "averagePerMonth",
-          "months"
-        ],
-        "title": "ReportKpis"
-      },
-      "ReportResponse": {
-        "type": "object",
-        "properties": {
-          "series": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ReportSeries"
-            },
-            "title": "Series"
-          },
-          "kpis": {
-            "$ref": "#/components/schemas/ReportKpis"
-          }
-        },
-        "required": [
-          "series",
-          "kpis"
-        ],
-        "title": "ReportResponse"
       }
     }
   },
   "tags": [
     {
       "name": "platform",
-      "description": "Basis Endpunkte für Health, Meta und DB Readiness."
+      "description": "Basis Endpunkte f\u00fcr Health, Meta und DB Readiness."
     },
     {
       "name": "inventory",
@@ -4482,15 +6445,15 @@
     },
     {
       "name": "admin-tenants",
-      "description": "Tenant Verwaltung für Admin."
+      "description": "Tenant Verwaltung f\u00fcr Admin."
     },
     {
       "name": "admin-users",
-      "description": "User Verwaltung für Admin."
+      "description": "User Verwaltung f\u00fcr Admin."
     },
     {
       "name": "admin-memberships",
-      "description": "Membership Verwaltung für Admin."
+      "description": "Membership Verwaltung f\u00fcr Admin."
     },
     {
       "name": "admin-roles",

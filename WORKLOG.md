@@ -266,3 +266,215 @@
   - Customer Auth/Dashboard-ähnliche Static Views nutzen jetzt die zentralen Layout-Bausteine; Inline-Styles reduziert, Tokens greifen für Status-/Textfarben.
 - **Nächster Schritt**
   - Customer: Artikelverwaltung und Berichte vollständig auf UiPage/UiSection/Utilities heben (inkl. PrimeVue-Parts) und restliche Inline/Scoped-Styles abbauen. Admin: Overlay/Toast-Styling finalisieren.
+
+## Schritt 23 – Legacy-Migration Phase 0–2 (Reverse Engineering & Gap-Liste)
+- **Datum/Uhrzeit**: 2026-01-05T18:05:00+00:00
+- **Ziel**: Legacy-Funktionen aus `/old_lm` analysieren, Scope/DoD festlegen und Soll-Ist-Gaps dokumentieren.
+- **Was wurde geprüft**
+  - Legacy-Module gelesen: `artikel.py`, `bestandsverwaltung.py`, `inventur.py`, `berichte.py`, `bestellungen.py`, `einstellungen.py`, `flash.py`, `dashboard.py`.
+  - Aktuelles Backend/Frontend gecheckt (Inventar-Router, Reporting-Fallback in Frontend, fehlende Bestellungen/Einstellungen-APIs).
+- **Was wurde geändert**
+  - Neue Roadmap-Datei `docs/roadmap/MIGRATION_OLD_LM.md` mit Scope, DoD, Decisions, Funktionsmatrix und Gap-Liste angelegt.
+  - Task-Liste erstellt: `docs/roadmap/TASKS_MIGRATION_OLD_LM.md` mit IDs T1–T8 (Backend/Customer/Docs).
+  - TODO erweitert um Must-Haves für Legacy-Migration (Backend-Endpunkte, Frontend-Datenverdrahtung, OpenAPI-Nachzug).
+- **Ergebnis**
+  - Reverse Engineering abgeschlossen; Gaps klar dokumentiert; Tasks strukturiert.
+- **Nächster Schritt**
+  - T1: Backend GET `/inventory/movements` + OpenAPI/Schemas, dann weitere Tasks laut Roadmap.
+
+## Schritt 24 – Legacy-Migration Phase 3 Start (T1: GET Bewegungen)
+- **Datum/Uhrzeit**: 2026-01-05T18:30:00+00:00
+- **Ziel**: Bewegungs-Listing für Reporting/Audit ergänzen (Filter + Limit), Basis für Berichte und Inventur.
+- **Was wurde geändert**
+  - Backend: Neuer GET `/inventory/movements` mit Filtern (Zeitraum, Typ, Kategorie, Items) und Limit; Response liefert Artikel-Infos.
+  - Schemas: `MovementOut`/`MovementItemOut` ergänzt.
+  - OpenAPI: Pfad + Schemas für Bewegungs-Listing hinzugefügt.
+  - Roadmap/TODO aktualisiert: Gap „GET Bewegungen“ geschlossen, Must-Liste angepasst.
+- **Ergebnis**
+  - Bewegungen sind tenant-sicher abrufbar und filterbar; Grundlage für Reporting-Backend/Frontend.
+- **Nächster Schritt**
+  - T2/T3 vorbereiten: Inventur-Bulk/Export und Reporting-Endpunkte implementieren, OpenAPI + Typen nachziehen.
+
+## Schritt 25 – Legacy-Migration Phase 3 (T2: Inventur Bulk + Export)
+- **Datum/Uhrzeit**: 2026-01-05T19:00:00+00:00
+- **Ziel**: Inventur-APIs bereitstellen (Bulk-Update & Excel-Export) als Grundlage für Customer-Frontend.
+- **Was wurde geändert**
+  - Backend: Neuer POST `/inventory/inventory/bulk` (Tenant-scoped, Owner/Admin) für Mengen-Updates per Item-ID; GET `/inventory/inventory/export` liefert Excel (`inventur.xlsx`) mit Legacy-Spalten (Artikel-ID, Name, Barcode, Kategorie, Soll, Min, Bestand).
+  - Schemas: `InventoryUpdate`, `InventoryBulkUpdateRequest`, `InventoryBulkUpdateResult` ergänzt.
+  - OpenAPI: Pfade und Schemas für Inventur-Bulk/Export hinzugefügt.
+  - Roadmap/TODO: Gap „Inventur-API“ als erledigt markiert; Must-Liste angepasst.
+- **Ergebnis**
+  - Inventur-Daten sind per API aktualisier- und exportierbar; Excel folgt Legacy-Spalten, Tenant-Isolation gewährleistet.
+- **Nächster Schritt**
+  - T3: Reporting-Endpunkte (/inventory/report + Exporte) implementieren; anschließend Frontend an Inventur/Reporting anbinden.
+
+## Schritt 26 – Legacy-Migration Phase 3 (T3: Reporting)
+- **Datum/Uhrzeit**: 2026-01-05T19:30:00+00:00
+- **Ziel**: Serverseitige Verbrauchs-Reports inkl. CSV/XLSX-Export bereitstellen.
+- **Was wurde geändert**
+  - Backend: GET `/inventory/report` und `/inventory/reports/consumption` liefern aggregierte Verbrauchsdaten (OUT-Bewegungen) nach Zeitraum, Modus (top5/all/selected), Kategorie/Items, optional aggregiert.
+  - Backend: GET `/inventory/reports/export/{format}` erzeugt CSV/XLSX mit Artikeln, Monat, Verbrauch; nutzt dieselbe Aggregation.
+  - Schemas: ReportDataPoint/Series/Kpis/Response ergänzt; OpenAPI bereits vorhanden, jetzt implementiert.
+  - TODO/Roadmap aktualisiert: Reporting-Gap geschlossen.
+- **Ergebnis**
+  - Verbrauchsberichte laufen serverseitig; Exporte stehen bereit; Grundlage für Frontend-Anbindung ohne Client-Fallback.
+- **Nächster Schritt**
+  - Nächste Pflichtbereiche: Bestellungen (Models/Endpoints) und Einstellungen/Firmendaten inkl. Mass Import/Export umsetzen; Frontend an neue Reporting-/Inventur-APIs anbinden.
+
+## Schritt 27 – Legacy-Migration Phase 3 (T4 Teilschritt: bestellwürdig-Liste)
+- **Datum/Uhrzeit**: 2026-01-05T19:45:00+00:00
+- **Ziel**: Bestellwürdige Artikel serverseitig bereitstellen.
+- **Was wurde geändert**
+  - Backend: GET `/inventory/orders/recommended` liefert aktive Items unter Zielbestand (tenant-scope).
+  - Schemas/OpenAPI: ReorderItem/ReorderResponse ergänzt; Roadmap/TODO angepasst (Bestellungen teilweise geschlossen).
+  - Empfehlung ergänzt: `recommended_qty` (max Zielbestand-Lücke vs. Mindestbestand), Sortierung nach Lücke.
+- **Ergebnis**
+  - Bestellwürdige Liste verfügbar; weitere Bestell-Features (offen/erledigt, Bestandserhöhung, PDF/E-Mail) noch offen.
+- **Nächster Schritt**
+  - Vollständige Bestell-Endpunkte und Einstellungen/Firmendaten implementieren; Customer-Frontend anbinden.
+
+## Schritt 28 – Customer Reporting an Backend angebunden
+- **Datum/Uhrzeit**: 2026-01-05T20:00:00+00:00
+- **Ziel**: Frontend-Reporting nutzt den neuen Backend-Report-Endpoint und Exporte.
+- **Was wurde geändert**
+  - `customer_frontend` Reporting-API ruft jetzt `/inventory/report` und `/inventory/reports/export/{format}`; Client-Aggregations-Fallback entfernt.
+  - OpenAPI-Typen werden für Response-Adaptierung genutzt; Export-Path aktualisiert.
+- **Ergebnis**
+  - Berichte & Analysen nutzen serverseitige Aggregation und Exporte; kein Bewegungs-Fallback mehr.
+- **Nächster Schritt**
+  - Bestell-Endpunkte (offen/erledigt) und Einstellungen/Firmendaten im Backend ergänzen; Customer-Views auf neue APIs heben.
+
+## Schritt 29 – Legacy-Migration Phase 3 (T4: Bestellungen Grundfunktionen)
+- **Datum/Uhrzeit**: 2026-01-05T20:30:00+00:00
+- **Ziel**: Bestell-CRUD inkl. Erledigt-/Storno-Flow ergänzen und Bestandserhöhung abbilden.
+- **Was wurde geändert**
+  - Backend: Neue Modelle `InventoryOrder`/`InventoryOrderItem` (Tenant-scoped) inkl. Nummern-Constraint.
+  - Endpunkte: `/inventory/orders` (GET/POST), `/inventory/orders/{id}` (GET), `/inventory/orders/{id}/complete` (Bestand erhöhen + Bewegung schreiben), `/inventory/orders/{id}/cancel`.
+  - Schemas/OpenAPI: OrderCreate/OrderOut/OrderItemOut ergänzt; Roadmap/TODO aktualisiert (PDF/E-Mail bleiben offen).
+- **Ergebnis**
+  - Tenants können Bestellungen anlegen, einsehen, erledigen oder stornieren; Abschluss erhöht Bestände und protokolliert Bewegungen.
+- **Nächster Schritt**
+  - Einstellungen/Firmendaten inkl. Auto-Bestellung/Empfänger umsetzen; Bestell-PDF/E-Mail prüfen und bei Bedarf nachziehen; Customer-Frontend an neue Order-APIs anbinden.
+
+## Schritt 30 – Legacy-Migration Phase 3 (T5 Teil 1: Basis-Einstellungen)
+- **Datum/Uhrzeit**: 2026-01-05T21:00:00+00:00
+- **Ziel**: Tenant-Einstellungen für Firmendaten und Auto-Bestellung bereitstellen.
+- **Was wurde geändert**
+  - Neues Modell `TenantSetting` (tenant-scoped, unique pro Tenant) mit Firmendaten, Kontakt/Bestell-E-Mail, Auto-Bestellung (Enabled + Min), Export-Format, Adresse, Telefon.
+  - Endpunkte `/inventory/settings` GET/PUT liefern/aktualisieren Settings; Defaults werden bei Erstzugriff angelegt.
+  - Schemas/OpenAPI ergänzt (`TenantSettings*`); Roadmap/TODO aktualisiert.
+- **Ergebnis**
+  - Customer/Admin können Basiseinstellungen pro Tenant verwalten; auto_order-Min und Empfänger sind hinterlegt. Mass Import/Export und Test-E-Mail stehen noch aus.
+- **Nächster Schritt**
+  - Einstellungen Mass Import/Export + Test-E-Mail ergänzen; Bestell-PDF/E-Mail prüfen; Frontend-Settings-View mit neuen Endpunkten verdrahten.
+
+## Schritt 31 – Legacy-Migration Phase 3 (T5 Teil 2: Mass Import/Export)
+- **Datum/Uhrzeit**: 2026-01-05T21:30:00+00:00
+- **Ziel**: Legacy-Mass-Import/Export für Artikel in den Einstellungen bereitstellen.
+- **Was wurde geändert**
+  - Endpunkte `/inventory/settings/export` (Excel mit Legacy-Spalten) und `/inventory/settings/import` (Excel-Upload) ergänzt; Tenant-Scoped.
+  - Import aktualisiert/legt Items per SKU/Barcode an, nutzt Kategorie-Namen falls vorhanden; Export befüllt Soll/Min/Bestand/Description.
+  - OpenAPI ergänzt (Paths + Schema `MassImportResult`); Roadmap/TODO aktualisiert (Test-E-Mail weiter offen).
+- **Ergebnis**
+  - Massen-Import/Export aus Legacy-Excel-Dateien möglich; Fehlermeldungen je Zeile werden zurückgegeben.
+- **Nächster Schritt**
+  - Test-E-Mail/Empfängerfluss und optionale Bestell-PDF/E-Mail ergänzen; Customer-Einstellungen-View an neue Endpunkte anbinden.
+
+## Schritt 32 – Legacy-Migration Phase 3 (T5 Teil 3: Test-E-Mail)
+- **Datum/Uhrzeit**: 2026-01-05T21:45:00+00:00
+- **Ziel**: Test-E-Mail-Funktion gemäß Legacy-Einstellungen bereitstellen.
+- **Was wurde geändert**
+  - SMTP-Konfiguration in Settings ergänzt (`SMTP_HOST/PORT/USERNAME/PASSWORD/FROM`).
+  - Endpoint `/inventory/settings/test-email` sendet Test-Mail an Zieladresse, nutzt TLS/Login falls konfiguriert; liefert Erfolg/Fehler zurück.
+  - OpenAPI-Schemas `TestEmailRequest`/`TestEmailResponse` hinzugefügt; Roadmap/TODO aktualisiert.
+- **Ergebnis**
+  - Tenants können SMTP-Konfiguration prüfen; Fehler werden zurückgegeben.
+- **Nächster Schritt**
+  - Bestell-PDF/E-Mail prüfen/ergänzen; Customer-Frontend-Einstellungen an neue Endpunkte anbinden.
+
+## Schritt 33 – Legacy-Migration Phase 3 (T4 Ergänzung: Bestell-E-Mail)
+- **Datum/Uhrzeit**: 2026-01-05T22:00:00+00:00
+- **Ziel**: E-Mail-Versand für Bestellungen ergänzen.
+- **Was wurde geändert**
+  - SMTP-Konfiguration an Backend-Settings angeglichen (`SMTP_USER` statt `SMTP_USERNAME`).
+  - Endpoint `/inventory/orders/{id}/email` sendet Bestellübersicht an Empfänger (Payload oder Settings `order_email`/`contact_email`), nutzt bestehende SMTP-Konfiguration.
+  - OpenAPI/Schemas für OrderEmailRequest/EmailSendResponse ergänzt; TODO/Roadmap angepasst (PDF bleibt offen).
+- **Ergebnis**
+  - Bestellungen können per E-Mail verschickt werden; fehlende Empfänger oder SMTP-Fehler werden zurückgegeben.
+- **Nächster Schritt**
+  - Bestell-PDF prüfen/ergänzen; Customer-Frontend-Bestellungen/-Einstellungen an neue Endpunkte anbinden.
+
+## Schritt 34 – Legacy-Migration Phase 3 (T4/T5 Ergänzung: Bestell-PDF + Customer-Anbindung)
+- **Datum/Uhrzeit**: 2026-01-05T22:30:00+00:00
+- **Ziel**: Bestell-PDF ergänzen und Customer-Frontend an Bestell-/Einstellungs-APIs anbinden.
+- **Was wurde geändert**
+  - Backend: PDF-Export für Bestellungen (`/inventory/orders/{id}/pdf`) mit Positionen; ReportLab als Dependency.
+  - Backend: SMTP-User-Feld harmonisiert (`SMTP_USER`).
+  - Frontend: Bestellungen-View zeigt offene/erledigte Bestellungen, bestellwürdige Artikel, Aktionen für Erledigen/Storno, PDF/E-Mail.
+  - Frontend: Einstellungen-View nutzt echte Settings (GET/PUT), Export/Import, Test-E-Mail.
+  - OpenAPI/Schemas für Order-PDF und OrderEmailRequest/EmailSendResponse ergänzt.
+  - TODO/Roadmap aktualisiert (PDF erledigt).
+- **Ergebnis**
+  - End-to-end Bestellverwaltung inkl. PDF/E-Mail und Customer-Frontend-Bedienung der Settings/Orders; verbleibende offenen Punkte nur Admin-Metadaten.
+- **Nächster Schritt**
+  - Fehlen noch Admin-Metadaten aus Legacy-Einstellungen (falls benötigt) und Feinschliff Frontend (z. B. Order-Erstellung, weitere Filter).
+
+## Schritt 35 – Legacy-Migration Phase 3 (Settings-Admin-Metadaten + UI-Filter)
+- **Datum/Uhrzeit**: 2026-01-05T23:15:00+00:00
+- **Ziel**: Fehlende Admin-Metadaten aus Legacy-Einstellungen ergänzen und Customer-UI-Feinschliff (Filter) inkl. Fix des Vite-Fehlers umsetzen.
+- **Was wurde geändert**
+  - Backend: `TenantSetting` um Ansprechpartner, PLZ, Ort, Filialnummer, Steuernummer erweitert; GET/PUT-Ausgabe angepasst, Defaults ergänzt.
+  - OpenAPI regeneriert und Customer-API-Typen erneuert.
+  - Frontend Einstellungen: Syntaxfehler behoben (`reactive`-Generic), zusätzliche Felder für Admin-Metadaten ergänzt.
+  - Frontend Bestellungen: Status-/Suchfilter und Storno-Tabelle ergänzt; PDF-Download nutzt Bestellnummer im Dateinamen.
+- **Ergebnis**
+  - Legacy-Admin-Metadaten sind abbildbar; UI-Filter/Cancelled-Übersicht vorhanden; Vite-Build-Fehler behoben.
+- **Nächster Schritt**
+  - DB-Backfill/Migration für neue Settings-Felder prüfen; Responsive/Tokens-Feinschliff fortführen.
+
+## Schritt 36 – Legacy-Migration Phase 3 (Alembic-Revision Settings-Metadaten)
+- **Datum/Uhrzeit**: 2026-01-05T23:40:00+00:00
+- **Ziel**: DB-Migration für neue Settings-Felder bereitstellen.
+- **Was wurde geändert**
+  - Alembic-Revision `0008_tenant_settings_metadata` ergänzt, die die neuen Felder (Ansprechpartner, PLZ, Ort, Filialnummer, Steuernummer) anlegt.
+  - TODO/Roadmap entsprechend aktualisiert (Rollout-Hinweis, Backfill bei Bedarf).
+- **Ergebnis**
+  - Migration steht bereit für Rollout; Backend/Frontend nutzen die Felder bereits.
+- **Nächster Schritt**
+  - Migration in allen Umgebungen ausführen; Backfill je Tenant nach Bedarf; Frontend-Feinschliff (Tokens/Responsive) fortsetzen.
+
+## Schritt 37 – Legacy-Migration Phase 3 (Customer Dashboard an echte Daten anschließen)
+- **Datum/Uhrzeit**: 2026-01-06T00:10:00+00:00
+- **Ziel**: Customer-Dashboard von Dummywerten befreien und mit Live-Daten aus Backend-APIs speisen.
+- **Was wurde geändert**
+  - Neue Dashboard-Logik liest offene Bestellungen (`/inventory/orders`), bestellwürdige Artikel (`/inventory/orders/recommended`), Bewegungen des Tages (`/inventory/movements?start=...`) sowie Item-Bestände (alle Seiten) zur Berechnung der Kennzahlen.
+  - API-Wrapper ergänzt (`fetchMovements`) zur Abfrage der Bewegungen mit Filter.
+  - UI zeigt echte Kennzahlen inkl. Stabilitätsquote (Items >= Mindestbestand), Bewegungen heute und bestellwürdige Artikel; Refresh-Button nutzt Live-Ladevorgang.
+- **Ergebnis**
+  - Dashboard verwendet keine Dummy-KPIs mehr, sondern aktuelle Daten je Tenant.
+- **Nächster Schritt**
+  - Responsive/Token-Feinschliff bleibt offen; Migration `0008` ausrollen.
+
+## Schritt 38 – Legacy-Migration Phase 3 (Fix Migration 0008 Tenant Settings)
+- **Datum/Uhrzeit**: 2026-01-06T00:25:00+00:00
+- **Ziel**: Migration `0008_tenant_settings_metadata` robust machen, falls `tenant_settings` noch nicht existiert.
+- **Was wurde geändert**
+  - Migration erstellt `tenant_settings` vollständig, falls die Tabelle fehlt (inkl. Unique-Constraint/Index), und fügt andernfalls nur die neuen Metadaten-Spalten hinzu.
+  - Server-Defaults werden nach Anlage entfernt, um App-Defaults zu nutzen; numerische Defaults über `sa.text` abgebildet, damit Postgres/Asyncpg sie akzeptiert.
+- **Ergebnis**
+  - Alembic-Upgrade läuft auch auf Umgebungen ohne vorgenerierte Settings-Tabelle durch.
+- **Nächster Schritt**
+  - Migration erneut ausrollen; danach optional Backfill der neuen Felder je Tenant prüfen.
+
+## Schritt 39 – Admin: Kunden-Settings bearbeiten & Customer-Settings UI aufräumen
+- **Datum/Uhrzeit**: 2026-01-06T01:00:00+00:00
+- **Ziel**: Kunden-Adressdaten im Admin-Portal einseh- und bearbeitbar machen sowie Customer-Einstellungen-Formular ordnen.
+- **Was wurde geändert**
+  - Backend: Admin-Endpunkte `/admin/tenants/{tenant_id}/settings` (GET/PUT) hinzugefügt, nutzen TenantSettings-Modelle.
+  - OpenAPI regeneriert und Frontend-Typen neu generiert.
+  - Admin-Frontend (Kunden): Detailbereich lädt Tenant-Settings, zeigt Firmendaten/Adresse und erlaubt Speichern.
+  - Customer-Frontend (Einstellungen): Formularfelder neu gruppiert (Kontakt/Adresse/Auto-Bestellung) für bessere Übersicht.
+- **Ergebnis**
+  - Admin kann Kunden-Firmendaten/Adresse einsehen und ändern; Customer-Settings-View wirkt geordneter.
+- **Nächster Schritt**
+  - Migration ausrollen; Backend-APIs in Zielumgebung prüfen (500/404 laut Screenshot) und Datenbasis/mappings validieren.

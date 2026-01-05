@@ -32,8 +32,10 @@ def _import_models() -> None:
     import app.models.audit_log  # noqa: F401
     import app.models.category  # noqa: F401
     import app.models.item  # noqa: F401
+    import app.models.order  # noqa: F401
     import app.models.membership  # noqa: F401
     import app.models.movement  # noqa: F401
+    import app.models.tenant_setting  # noqa: F401
     import app.models.refresh_session  # noqa: F401
     import app.models.tenant  # noqa: F401
     import app.models.user  # noqa: F401

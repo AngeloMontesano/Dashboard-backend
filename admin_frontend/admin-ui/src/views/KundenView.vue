@@ -175,9 +175,9 @@
             </table>
           </div>
 
-          <div class="hintBox" style="margin-top: 10px;">
-            Später: Users tenant scoped laden, Reset über Admin Endpoint.
-          </div>
+      <div class="text-muted text-small mt-4">
+        Später: Users tenant scoped laden, Reset über Admin Endpoint.
+      </div>
         </div>
       </div>
 
@@ -188,7 +188,7 @@
             Später: Admin Memberships API nutzen.
           </div>
 
-          <div class="pillRow" style="margin-top: 10px;">
+          <div class="pill-row mt-4">
             <span class="tag neutral">owner</span>
             <span class="tag neutral">admin</span>
             <span class="tag neutral">worker</span>
@@ -204,7 +204,7 @@
             Später: Support Sessions pro Tenant.
           </div>
 
-          <div class="rowActions" style="margin-top: 12px;">
+          <div class="action-row mt-6">
             <button class="btnPrimary" @click="toast('Support Session erzeugt (Demo)')">Code erzeugen</button>
             <button class="btnGhost" @click="toast('Session beendet (Demo)')">Beenden</button>
           </div>
@@ -225,7 +225,7 @@
 
       <div class="drawerBody">
         <div class="sectionTitle">Aktionen</div>
-        <div class="rowActions">
+        <div class="action-row">
           <button class="btnPrimary" @click="toggleTenant(drawer.tenant)">
             {{ drawer.tenant?.active ? "Deaktivieren" : "Aktivieren" }}
           </button>
@@ -233,7 +233,7 @@
           <button class="btnGhost" @click="toast('Reset (Demo)')">Passwort Reset</button>
         </div>
 
-        <div class="sectionTitle" style="margin-top: 12px;">Notiz</div>
+        <div class="sectionTitle mt-6">Notiz</div>
         <textarea class="input area" v-model="drawer.note" placeholder="Interne Notiz"></textarea>
       </div>
     </aside>
@@ -247,7 +247,7 @@
       </div>
 
       <div class="modalBody">
-        <div class="formGrid">
+        <div class="form-grid">
           <div class="field">
             <div class="label">Name</div>
             <input class="input" v-model.trim="modal.name" placeholder="Bäckerei Muster" />
@@ -257,7 +257,7 @@
             <input class="input" v-model.trim="modal.slug" placeholder="baeckerei-muster" />
           </div>
         </div>
-        <div class="muted" style="margin-top: 10px;">Demo: wird lokal erzeugt.</div>
+        <div class="text-muted text-small mt-4">Demo: wird lokal erzeugt.</div>
       </div>
 
       <div class="modalFooter">

@@ -4589,16 +4589,17 @@
             ],
             "title": "Role"
           },
-          "is_active": {
+          "created_at": {
             "anyOf": [
               {
-                "type": "boolean"
+                "type": "string",
+                "format": "date-time"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Is Active"
+            "title": "Created At"
           }
         },
         "type": "object",
@@ -4616,10 +4617,25 @@
             "pattern": "^(IN|OUT)$",
             "title": "Type"
           },
-          "barcode": {
+          "normalized_sku": {
+            "type": "string",
+            "title": "Normalized Sku"
+          }
+        },
+        "type": "object",
+        "required": [
+          "exists",
+          "normalized_sku"
+        ],
+        "title": "SKUExistsResponse"
+      },
+      "TenantCreate": {
+        "properties": {
+          "slug": {
             "type": "string",
             "maxLength": 64,
-            "title": "Barcode"
+            "minLength": 2,
+            "title": "Slug"
           },
           "qty": {
             "type": "integer",

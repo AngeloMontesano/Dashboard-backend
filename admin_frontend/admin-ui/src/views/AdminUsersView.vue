@@ -1,156 +1,139 @@
 <template>
-  <section class="usersView">
-    <header class="viewHeader">
-      <div class="headTitles">
-        <div class="headTitle">Benutzer</div>
-        <div class="headSubtitle">Admin-Portal Benutzer verwalten</div>
-      </div>
-      <div class="headActions">
+  <UiPage>
+    <UiSection title="Benutzer" subtitle="Admin-Portal Benutzer verwalten">
+      <template #actions>
         <button class="btnGhost small" :disabled="busy.list" @click="loadUsers">
           {{ busy.list ? "lädt..." : "Neu laden" }}
         </button>
         <button class="btnPrimary small" @click="openCreateCard">Neuen Benutzer anlegen</button>
-      </div>
-    </header>
+      </template>
 
-    <div class="toolbar">
-      <div class="chips">
-        <div class="chip">
-          <div class="chipLabel">Benutzer gesamt</div>
-          <div class="chipValue">{{ totalUsers }}</div>
-        </div>
-        <div class="chip">
-          <div class="chipLabel">aktiv</div>
-          <div class="chipValue success">{{ activeUsers }}</div>
-        </div>
-        <div class="chip">
-          <div class="chipLabel">deaktiviert</div>
-          <div class="chipValue danger">{{ inactiveUsers }}</div>
-        </div>
-      </div>
-      <div class="toolbarActions">
-        <button class="btnGhost small" :disabled="!filteredUsers.length" @click="exportCsv">
-          Benutzer exportieren CSV
-        </button>
-      </div>
-    </div>
+      <UiToolbar>
+        <template #start>
+          <div class="chip-list">
+            <UiStatCard label="Benutzer gesamt" :value="totalUsers" />
+            <UiStatCard label="aktiv" :value="activeUsers" tone="success" />
+            <UiStatCard label="deaktiviert" :value="inactiveUsers" tone="danger" />
+          </div>
+        </template>
+        <template #end>
+          <button class="btnGhost small" :disabled="!filteredUsers.length" @click="exportCsv">
+            Benutzer exportieren CSV
+          </button>
+        </template>
+      </UiToolbar>
 
-    <div class="searchCard">
-      <div class="searchLeft">
-        <label class="fieldLabel" for="user-search">Suche E-Mail</label>
-        <input
-          id="user-search"
-          class="input"
-          v-model.trim="search"
-          placeholder="user@example.com"
-          aria-label="Benutzer nach E-Mail filtern"
-        />
-        <div class="hint">Tippen zum Filtern. Groß und Kleinschreibung egal.</div>
-      </div>
-      <div class="searchRight">
-        <span class="muted smallText">Treffer: {{ filteredUsers.length }}</span>
-        <button class="btnGhost small" @click="resetFilters" :disabled="!search">Filter zurücksetzen</button>
-      </div>
-    </div>
-
-    <div class="tableCard">
-      <div class="tableHeader">
-        <div class="tableTitle">Benutzerliste</div>
-        <div class="muted smallText">Zeile anklicken, um auszuwählen.</div>
-      </div>
-      <div class="tableWrap">
-        <table class="table">
-          <thead>
-            <tr>
-              <th>E-Mail</th>
-              <th>Status</th>
-              <th>Passwort-Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              v-for="u in filteredUsers"
-              :key="u.id"
-              :class="{ rowActive: selectedUser?.id === u.id }"
-              @click="select(u)"
-            >
-              <td class="mono">{{ u.email }}</td>
-              <td>
-                <span class="tag" :class="u.is_active ? 'ok' : 'bad'">{{ u.is_active ? 'aktiv' : 'deaktiviert' }}</span>
-              </td>
-              <td>
-                <span class="tag" :class="u.has_password ? 'ok' : 'warn'">
-                  {{ u.has_password ? "gesetzt" : "nicht gesetzt" }}
-                </span>
-              </td>
-            </tr>
-            <tr v-if="!busy.list && filteredUsers.length === 0">
-              <td colspan="3" class="mutedPad">Keine Benutzer gefunden.</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <div v-if="busy.error" class="errorText">Fehler: {{ busy.error }}</div>
-    </div>
-
-    <div v-if="selectedUser" class="detailCard">
-      <div class="detailGrid">
-        <div class="detailBox">
-          <div class="boxLabel">E-Mail</div>
-          <div class="boxValue mono">{{ selectedUser.email }}</div>
+      <div class="filter-card">
+        <div class="stack">
+          <label class="field-label" for="user-search">Suche E-Mail</label>
+          <input
+            id="user-search"
+            class="input"
+            v-model.trim="search"
+            placeholder="user@example.com"
+            aria-label="Benutzer nach E-Mail filtern"
+          />
+          <div class="hint">Tippen zum Filtern. Groß und Kleinschreibung egal.</div>
         </div>
-        <div class="detailBox">
-          <div class="boxLabel">Status</div>
-          <div class="boxValue">
-            <span class="tag" :class="selectedUser.is_active ? 'ok' : 'bad'">
-              {{ selectedUser.is_active ? "aktiv" : "deaktiviert" }}
-            </span>
+        <div class="stack">
+          <span class="text-muted text-small">Treffer: {{ filteredUsers.length }}</span>
+          <button class="btnGhost small" @click="resetFilters" :disabled="!search">Filter zurücksetzen</button>
+        </div>
+      </div>
+
+      <div class="table-card">
+        <div class="table-card__header">
+          <div class="tableTitle">Benutzerliste</div>
+          <div class="text-muted text-small">Zeile anklicken, um auszuwählen.</div>
+        </div>
+        <div class="tableWrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>E-Mail</th>
+                <th>Status</th>
+                <th>Passwort-Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                v-for="u in filteredUsers"
+                :key="u.id"
+                :class="{ rowActive: selectedUser?.id === u.id }"
+                @click="select(u)"
+              >
+                <td class="mono">{{ u.email }}</td>
+                <td>
+                  <span class="tag" :class="u.is_active ? 'ok' : 'bad'">{{ u.is_active ? 'aktiv' : 'deaktiviert' }}</span>
+                </td>
+                <td>
+                  <span class="tag" :class="u.has_password ? 'ok' : 'warn'">
+                    {{ u.has_password ? "gesetzt" : "nicht gesetzt" }}
+                  </span>
+                </td>
+              </tr>
+              <tr v-if="!busy.list && filteredUsers.length === 0">
+                <td colspan="3" class="mutedPad">Keine Benutzer gefunden.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div v-if="busy.error" class="errorText">Fehler: {{ busy.error }}</div>
+      </div>
+
+      <div v-if="selectedUser" class="detail-card">
+        <div class="detail-grid">
+          <div class="detail-box">
+            <div class="detail-box__label">E-Mail</div>
+            <div class="detail-box__value mono">{{ selectedUser.email }}</div>
+          </div>
+          <div class="detail-box">
+            <div class="detail-box__label">Status</div>
+            <div class="detail-box__value">
+              <span class="tag" :class="selectedUser.is_active ? 'ok' : 'bad'">
+                {{ selectedUser.is_active ? "aktiv" : "deaktiviert" }}
+              </span>
+            </div>
+          </div>
+          <div class="detail-box">
+            <div class="detail-box__label">Passwort</div>
+            <div class="detail-box__value">
+              <span class="tag" :class="selectedUser.has_password ? 'ok' : 'warn'">
+                {{ selectedUser.has_password ? "gesetzt" : "nicht gesetzt" }}
+              </span>
+            </div>
           </div>
         </div>
-        <div class="detailBox">
-          <div class="boxLabel">Passwort</div>
-          <div class="boxValue">
-            <span class="tag" :class="selectedUser.has_password ? 'ok' : 'warn'">
-              {{ selectedUser.has_password ? "gesetzt" : "nicht gesetzt" }}
-            </span>
-          </div>
-        </div>
-      </div>
 
-      <div class="detailActions">
-        <div class="row gap8 wrap">
-          <button
-            class="btnGhost small"
-            :disabled="busy.toggleId === selectedUser.id"
-            @click="toggleActive(selectedUser)"
-          >
+        <div class="action-row">
+          <button class="btnGhost small" :disabled="busy.toggleId === selectedUser.id" @click="toggleActive(selectedUser)">
             {{ busy.toggleId === selectedUser.id ? "..." : selectedUser.is_active ? "Deaktivieren" : "Aktivieren" }}
           </button>
           <button class="btnGhost small" @click="openPasswordModal(selectedUser)">Passwort setzen</button>
         </div>
       </div>
-    </div>
 
-    <div v-if="createForm.open" ref="createCardRef">
-      <UserCreateCard
-        :open="createForm.open"
-        :busy="busy.create"
-        v-model:email="createForm.email"
-        v-model:password="createForm.password"
-        @close="closeCreateCard"
-        @create="createUser"
+      <div v-if="createForm.open" ref="createCardRef">
+        <UserCreateCard
+          :open="createForm.open"
+          :busy="busy.create"
+          v-model:email="createForm.email"
+          v-model:password="createForm.password"
+          @close="closeCreateCard"
+          @create="createUser"
+        />
+      </div>
+
+      <PasswordModal
+        :open="modalPassword.open"
+        :busy="busy.password"
+        :email="selectedUser?.email || ''"
+        v-model:password="modalPassword.password"
+        @close="closePasswordModal"
+        @save="savePassword"
       />
-    </div>
-
-    <PasswordModal
-      :open="modalPassword.open"
-      :busy="busy.password"
-      :email="selectedUser?.email || ''"
-      v-model:password="modalPassword.password"
-      @close="closePasswordModal"
-      @save="savePassword"
-    />
-  </section>
+    </UiSection>
+  </UiPage>
 </template>
 
 <script setup lang="ts">
@@ -161,6 +144,10 @@ import { useToast } from "../composables/useToast";
 
 import UserCreateCard from "../components/users/UserCreateCard.vue";
 import PasswordModal from "../components/users/UserPasswordModal.vue";
+import UiPage from "../components/ui/UiPage.vue";
+import UiSection from "../components/ui/UiSection.vue";
+import UiToolbar from "../components/ui/UiToolbar.vue";
+import UiStatCard from "../components/ui/UiStatCard.vue";
 
 const props = defineProps<{
   apiOk: boolean;
@@ -388,208 +375,3 @@ watch(
   { immediate: true }
 );
 </script>
-
-<style scoped>
-.usersView {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.viewHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 8px 0 12px;
-  border-bottom: 1px solid var(--border);
-  min-height: 56px;
-}
-
-.headTitles {
-  display: grid;
-  gap: 4px;
-}
-
-.headTitle {
-  font-size: 18px;
-  font-weight: 800;
-}
-
-.headSubtitle {
-  color: var(--muted);
-  font-size: 13px;
-}
-
-.headActions {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-.toolbar {
-  display: grid;
-  gap: 10px;
-}
-
-.chips {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.chip {
-  padding: 8px 10px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--surface2);
-  min-width: 120px;
-}
-
-.chipLabel {
-  font-size: 12px;
-  color: var(--muted);
-}
-
-.chipValue {
-  font-weight: 700;
-  font-size: 16px;
-}
-
-.chipValue.success {
-  color: var(--success, #22c55e);
-}
-
-.chipValue.danger {
-  color: var(--danger, #c53030);
-}
-
-.toolbarActions {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  justify-content: flex-start;
-}
-
-.searchCard {
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 12px;
-  background: var(--surface);
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 10px;
-}
-
-.fieldLabel {
-  font-weight: 700;
-  font-size: 13px;
-}
-
-.hint {
-  font-size: 12px;
-  color: var(--muted);
-  margin-top: 6px;
-}
-
-.searchLeft {
-  display: grid;
-  gap: 6px;
-}
-
-.searchRight {
-  display: grid;
-  gap: 8px;
-  align-content: start;
-  justify-items: start;
-}
-
-.smallText {
-  font-size: 12px;
-}
-
-.tableCard {
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 12px;
-  background: var(--surface);
-  display: grid;
-  gap: 8px;
-}
-
-.tableHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.tableTitle {
-  font-weight: 800;
-}
-
-.tableWrap {
-  overflow: auto;
-}
-
-.table tbody tr {
-  cursor: pointer;
-}
-
-.table tbody tr.rowActive {
-  background: var(--table-row-active);
-}
-
-.detailCard {
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 12px;
-  background: var(--panel);
-  color: var(--text, #0f172a);
-  display: grid;
-  gap: 10px;
-  margin-top: 4px;
-}
-
-.detailGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 10px;
-}
-
-.detailBox {
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 10px;
-  background: var(--surface2);
-}
-
-.boxLabel {
-  font-size: 12px;
-  color: var(--muted);
-}
-
-.boxValue {
-  font-weight: 700;
-  margin-top: 4px;
-}
-
-.detailActions {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.errorText {
-  color: var(--danger, #c53030);
-  margin-top: 8px;
-  font-size: 13px;
-}
-
-@media (max-width: 860px) {
-  .toolbar {
-    gap: 8px;
-  }
-}
-</style>

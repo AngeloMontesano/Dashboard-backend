@@ -2,6 +2,9 @@
 import { computed, onMounted, reactive, ref } from 'vue';
 import { createCategory, fetchCategories, updateCategory, type Category } from '@/api/inventory';
 import { useAuth } from '@/composables/useAuth';
+import UiPage from '@/components/ui/UiPage.vue';
+import UiSection from '@/components/ui/UiSection.vue';
+import UiToolbar from '@/components/ui/UiToolbar.vue';
 
 const { state: authState, isAuthenticated } = useAuth();
 const hasWriteAccess = computed(() => ['owner', 'admin'].includes(authState.role));
@@ -78,83 +81,76 @@ onMounted(async () => {
 </script>
 
 <template>
-  <section class="page-section">
-    <header class="page-section__header">
-      <div>
-        <p class="eyebrow">Stammdaten</p>
-        <h2 class="section-title">Kategorien</h2>
-        <p class="section-subtitle">Kategorien verwalten und aktivieren/deaktivieren.</p>
+  <UiPage>
+    <UiSection title="Kategorien" subtitle="Kategorien verwalten und aktivieren/deaktivieren.">
+      <UiToolbar>
+        <template #start>
+          <div class="eyebrow">Stammdaten</div>
+        </template>
+      </UiToolbar>
+
+      <div v-if="feedback.message" class="alert alert--success">{{ feedback.message }}</div>
+      <div v-if="feedback.error" class="alert alert--error">{{ feedback.error }}</div>
+
+      <form class="action-row" @submit.prevent="handleCreate">
+        <input
+          class="input"
+          v-model="form.name"
+          placeholder="Kategoriename"
+          required
+          :disabled="!hasWriteAccess"
+        />
+        <label class="inline-field">
+          <input type="checkbox" v-model="form.is_active" :disabled="!hasWriteAccess" />
+          <span>Aktiv</span>
+        </label>
+        <button class="button button--primary" type="submit" :disabled="!hasWriteAccess">Neue Kategorie</button>
+      </form>
+
+      <div v-if="categories.length" class="tableWrap mt-md">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Status</th>
+              <th>System</th>
+              <th>Aktionen</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="cat in categories" :key="cat.id">
+              <td>
+                <input
+                  class="input"
+                  :value="cat.name"
+                  :disabled="cat.is_system || !hasWriteAccess"
+                  @change="renameCategory(cat, ($event.target as HTMLInputElement).value)"
+                />
+              </td>
+              <td>
+                <span :class="['badge', cat.is_active ? 'badge--success' : 'badge--muted']">
+                  {{ cat.is_active ? 'Aktiv' : 'Inaktiv' }}
+                </span>
+              </td>
+              <td>{{ cat.is_system ? 'Ja' : 'Nein' }}</td>
+              <td class="table-actions">
+                <button
+                  class="button button--ghost"
+                  type="button"
+                  :disabled="cat.is_system || !hasWriteAccess"
+                  @click="toggleCategory(cat, !cat.is_active)"
+                >
+                  {{ cat.is_active ? 'Deaktivieren' : 'Aktivieren' }}
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
-    </header>
-
-    <div v-if="feedback.message" class="alert alert--success">{{ feedback.message }}</div>
-    <div v-if="feedback.error" class="alert alert--error">{{ feedback.error }}</div>
-
-    <form class="form-inline" @submit.prevent="handleCreate">
-      <input v-model="form.name" placeholder="Kategoriename" required :disabled="!hasWriteAccess" />
-      <label class="checkbox">
-        <input type="checkbox" v-model="form.is_active" :disabled="!hasWriteAccess" />
-        <span>Aktiv</span>
-      </label>
-      <button class="button button--primary" type="submit" :disabled="!hasWriteAccess">Neue Kategorie</button>
-    </form>
-
-    <div class="table-wrapper" style="margin-top: 12px" v-if="categories.length">
-      <table class="table">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Status</th>
-            <th>System</th>
-            <th>Aktionen</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="cat in categories" :key="cat.id">
-            <td>
-              <input
-                :value="cat.name"
-                :disabled="cat.is_system || !hasWriteAccess"
-                @change="renameCategory(cat, ($event.target as HTMLInputElement).value)"
-              />
-            </td>
-            <td>
-              <span :class="['badge', cat.is_active ? 'badge--success' : 'badge--muted']">
-                {{ cat.is_active ? 'Aktiv' : 'Inaktiv' }}
-              </span>
-            </td>
-            <td>{{ cat.is_system ? 'Ja' : 'Nein' }}</td>
-            <td class="table-actions">
-              <button
-                class="button button--ghost"
-                type="button"
-                :disabled="cat.is_system || !hasWriteAccess"
-                @click="toggleCategory(cat, !cat.is_active)"
-              >
-                {{ cat.is_active ? 'Deaktivieren' : 'Aktivieren' }}
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-    <div v-else class="placeholder">
-      <p v-if="isLoading">Lade Kategorien...</p>
-      <p v-else>Keine Kategorien vorhanden.</p>
-    </div>
-  </section>
+      <div v-else class="placeholder">
+        <p v-if="isLoading">Lade Kategorien...</p>
+        <p v-else>Keine Kategorien vorhanden.</p>
+      </div>
+    </UiSection>
+  </UiPage>
 </template>
-
-<style scoped>
-.form-inline {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.checkbox {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-</style>

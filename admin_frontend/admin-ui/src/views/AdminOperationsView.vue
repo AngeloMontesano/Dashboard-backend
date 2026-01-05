@@ -1,18 +1,11 @@
 <template>
-  <div class="grid1">
-    <section class="card">
-      <header class="cardHeader">
-        <div>
-          <div class="cardTitle">Operations</div>
-          <div class="cardHint">Health, Audit, Snapshots, Logs</div>
-        </div>
-
-        <div class="cardHeaderActions">
-          <button class="btnGhost" @click="refreshActiveTab" :disabled="busy.health || busy.admin || busy.list">
-            {{ busy.health || busy.admin || busy.list ? "..." : "Aktualisieren" }}
-          </button>
-        </div>
-      </header>
+  <UiPage>
+    <UiSection title="Operations" subtitle="Health, Audit, Snapshots, Logs">
+      <template #actions>
+        <button class="btnGhost" @click="refreshActiveTab" :disabled="busy.health || busy.admin || busy.list">
+          {{ busy.health || busy.admin || busy.list ? "..." : "Aktualisieren" }}
+        </button>
+      </template>
 
       <div class="tabs">
         <button
@@ -27,60 +20,56 @@
       </div>
 
       <div class="panel" v-if="tab === 'overview'">
-        <div class="box">
+        <div class="box stack-sm">
           <div class="sectionTitle">Übersicht</div>
-          <div class="meta">
-            <div class="muted">Base URL: <span class="mono">{{ baseURL }}</span></div>
-            <div class="muted">API: {{ apiStatus }} · DB: {{ dbStatus }}</div>
-          </div>
+          <div class="text-muted text-small">Base URL: <span class="mono">{{ baseURL }}</span></div>
+          <div class="text-muted text-small">API: {{ apiStatus }} · DB: {{ dbStatus }}</div>
 
-          <div class="pillRow" style="margin-top: 12px;">
+          <div class="pill-row mt-6">
             <span class="tag" :class="props.apiOk ? 'ok' : 'bad'">API {{ props.apiOk ? "ok" : "down" }}</span>
             <span class="tag" :class="props.dbOk ? 'ok' : 'bad'">DB {{ props.dbOk ? "ok" : "down" }}</span>
             <span class="tag" :class="adminPingOk ? 'ok' : 'bad'">Admin Ping {{ adminPingOk ? "ok" : "down" }}</span>
             <span class="tag" :class="diagOk ? 'ok' : 'bad'">Diagnostics {{ diagOk ? "ok" : "down" }}</span>
           </div>
 
-          <div class="muted" style="margin-top: 12px;">
+          <div class="text-muted text-small mt-6">
             Wähle oben einen Tab für Details oder Checks. Health und Admin Checks lassen sich über „Aktualisieren“ erneut ausführen.
           </div>
         </div>
 
-        <div class="box" style="margin-top: 12px;">
+        <div class="box stack-sm mt-6">
           <div class="sectionTitle">Tenant Routing Debug</div>
-          <div class="kvGrid">
+          <div class="kv-grid">
             <div class="kv">
-              <div class="k">Host</div>
-              <div class="v mono">{{ currentHost }}</div>
+              <div class="kv__label">Host</div>
+              <div class="kv__value mono">{{ currentHost }}</div>
             </div>
             <div class="kv">
-              <div class="k">X-Forwarded-Host</div>
-              <div class="v mono">{{ forwardedHost || "unbekannt" }}</div>
+              <div class="kv__label">X-Forwarded-Host</div>
+              <div class="kv__value mono">{{ forwardedHost || "unbekannt" }}</div>
             </div>
             <div class="kv">
-              <div class="k">Tenant (UI)</div>
-              <div class="v">{{ tenantLabel }}</div>
+              <div class="kv__label">Tenant (UI)</div>
+              <div class="kv__value">{{ tenantLabel }}</div>
             </div>
             <div class="kv">
-              <div class="k">API Base</div>
-              <div class="v mono">{{ baseURL }}</div>
+              <div class="kv__label">API Base</div>
+              <div class="kv__value mono">{{ baseURL }}</div>
             </div>
             <div class="kv">
-              <div class="k">Browser Origin</div>
-              <div class="v mono">{{ windowOrigin }}</div>
+              <div class="kv__label">Browser Origin</div>
+              <div class="kv__value mono">{{ windowOrigin }}</div>
             </div>
           </div>
         </div>
       </div>
 
       <div class="panel" v-else-if="tab === 'health'">
-        <div class="box">
-          <div class="meta">
-            <div class="muted">Base URL: <span class="mono">{{ baseURL }}</span></div>
-            <div class="muted">API: {{ apiStatus }} · DB: {{ dbStatus }}</div>
-          </div>
+        <div class="box stack-sm">
+          <div class="text-muted text-small">Base URL: <span class="mono">{{ baseURL }}</span></div>
+          <div class="text-muted text-small">API: {{ apiStatus }} · DB: {{ dbStatus }}</div>
 
-          <div class="rowActions" style="margin-top: 12px;">
+          <div class="action-row mt-6">
             <button class="btnPrimary" :disabled="busy.health" @click="runHealthChecks">
               {{ busy.health ? "prüfe..." : "Health Checks" }}
             </button>
@@ -89,7 +78,7 @@
             </button>
           </div>
 
-          <div class="pillRow" style="margin-top: 12px;">
+          <div class="pill-row mt-6">
             <span class="tag" :class="props.apiOk ? 'ok' : 'bad'">API {{ props.apiOk ? "ok" : "down" }}</span>
             <span class="tag" :class="props.dbOk ? 'ok' : 'bad'">DB {{ props.dbOk ? "ok" : "down" }}</span>
             <span class="tag" :class="adminPingOk ? 'ok' : 'bad'">Admin Ping {{ adminPingOk ? "ok" : "down" }}</span>
@@ -97,14 +86,14 @@
           </div>
         </div>
 
-        <div class="box" style="margin-top: 12px;">
+        <div class="box stack-sm mt-6">
           <div class="sectionTitle">Diagnostics Daten</div>
-          <pre class="code" style="margin-top: 8px;">{{ diagData ? JSON.stringify(diagData, null, 2) : "noch nicht geladen" }}</pre>
+          <pre class="code-block mono">{{ diagData ? JSON.stringify(diagData, null, 2) : "noch nicht geladen" }}</pre>
         </div>
       </div>
 
       <div class="panel" v-else-if="tab === 'audit'">
-        <div class="rowActions" style="margin-bottom: 12px;">
+        <div class="action-row">
           <button class="btnGhost" @click="resetFilters" :disabled="busy.list">Reset</button>
           <button class="btnPrimary" @click="loadAudit" :disabled="busy.list">
             {{ busy.list ? "lade..." : "Suchen" }}
@@ -123,11 +112,11 @@
           @enter="loadAudit"
         />
 
-        <div class="meta">
-          <div class="muted">Einträge: {{ rows.length }}</div>
-          <div class="muted">
+        <div class="stack-sm text-muted text-small mt-4">
+          <div>Einträge: {{ rows.length }}</div>
+          <div>
             Offset: <span class="mono">{{ filters.offset }}</span>
-            Limit: <span class="mono">{{ filters.limit }}</span>
+            · Limit: <span class="mono">{{ filters.limit }}</span>
           </div>
         </div>
 
@@ -137,27 +126,27 @@
           @open="openDrawer"
         />
 
-        <div class="rowActions" style="margin-top: 12px;">
+        <div class="action-row mt-6">
           <button class="btnGhost" @click="prevPage" :disabled="busy.list || filters.offset === 0">Prev</button>
           <button class="btnGhost" @click="nextPage" :disabled="busy.list || rows.length < filters.limit">Next</button>
 
-          <div class="muted" style="margin-left: auto;">
+          <div class="text-muted text-small push-right">
             Tipp: Doppelklick auf Payload kopiert JSON im Drawer.
           </div>
         </div>
       </div>
 
       <div class="panel" v-else-if="tab === 'snapshot'">
-        <div class="box">
+        <div class="box stack-sm">
           <div class="sectionTitle">Snapshot</div>
-          <div class="rowActions" style="margin-top: 10px;">
+          <div class="action-row">
             <button class="btnPrimary" :disabled="busy.snapshot" @click="createSnapshot">
               {{ busy.snapshot ? "speichere..." : "Snapshot erstellen" }}
             </button>
-            <div class="muted" style="margin-left: auto;">max. 20 Snapshots, lokal gespeichert</div>
+            <div class="text-muted text-small push-right">max. 20 Snapshots, lokal gespeichert</div>
           </div>
 
-          <div class="tableWrap" style="margin-top: 10px;" v-if="snapshots.length">
+          <div class="tableWrap mt-4" v-if="snapshots.length">
             <table class="table">
               <thead>
                 <tr>
@@ -184,35 +173,35 @@
             </table>
           </div>
 
-          <div class="muted" v-else style="margin-top: 12px;">Noch keine Snapshots gespeichert.</div>
+          <div class="text-muted text-small" v-else>Noch keine Snapshots gespeichert.</div>
         </div>
 
-        <div class="box" v-if="latestSnapshotJson" style="margin-top: 12px;">
+        <div class="box stack-sm mt-6" v-if="latestSnapshotJson">
           <div class="sectionTitle">Letzter Snapshot</div>
-          <pre class="code" style="margin-top: 8px;">{{ latestSnapshotJson }}</pre>
+          <pre class="code-block mono">{{ latestSnapshotJson }}</pre>
         </div>
       </div>
 
       <div class="panel" v-else>
-        <div class="box">
+        <div class="box stack-sm">
           <div class="sectionTitle">Logs (Demo)</div>
-          <div class="rowActions" style="margin-bottom: 8px;">
+          <div class="action-row mt-4">
             <button class="btnPrimary" :disabled="busy.logs" @click="loadLogs">
               {{ busy.logs ? "lade..." : "Letzte Logs laden" }}
             </button>
-            <div class="muted" style="margin-left: auto;">TODO: Backend Endpoint anbinden</div>
+            <div class="text-muted text-small push-right">TODO: Backend Endpoint anbinden</div>
           </div>
-          <pre class="code">{{ logText }}</pre>
+          <pre class="code-block mono">{{ logText }}</pre>
         </div>
       </div>
-    </section>
+    </UiSection>
 
     <AuditDrawer
       :open="drawer.open"
       :row="drawer.row"
       @close="closeDrawer"
     />
-  </div>
+  </UiPage>
 </template>
 
 <script setup lang="ts">
@@ -226,6 +215,8 @@ import AuditDrawer from "../components/audit/AuditDrawer.vue";
 import type { AuditOut } from "../types";
 import { useToast } from "../composables/useToast";
 import { AuditDisplayRow, formatLocal, summarizePayload, toDisplayRow } from "../components/audit/format";
+import UiPage from "../components/ui/UiPage.vue";
+import UiSection from "../components/ui/UiSection.vue";
 
 type OperationsTab = "overview" | "health" | "audit" | "snapshot" | "logs";
 

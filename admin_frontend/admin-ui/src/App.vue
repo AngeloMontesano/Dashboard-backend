@@ -9,7 +9,7 @@
     - Zentrales Toast Rendering (alle Views nutzen nur toast())
     - Sections links sind gekoppelt an Content rechts (keine "toten" Menüs)
   -->
-  <div :class="['app', ui.theme, ui.theme === 'theme-dark' ? 'dark' : '']">
+  <div :class="['app', appThemeClass]">
     <template v-if="!ui.authenticated">
       <AdminLoginView @loggedIn="applyLogin" />
     </template>
@@ -58,11 +58,11 @@
                 </button>
               </div>
 
-              <div class="sysRow">
-                <div class="statusPill" :class="db.ok ? 'ok' : 'bad'">
-                  <span class="dot"></span>
-                  <span>DB {{ db.ok ? "erreichbar" : "nicht erreichbar" }}</span>
-                </div>
+            <div class="sysRow">
+              <div class="statusPill" :class="db.ok ? 'ok' : 'bad'">
+                <span class="dot"></span>
+                <span>DB {{ db.ok ? "erreichbar" : "nicht erreichbar" }}</span>
+              </div>
                 <button class="btnGhost small" :disabled="db.busy" @click="checkDb">
                   {{ db.busy ? "prüfe..." : "Prüfen" }}
                 </button>
@@ -72,10 +72,14 @@
             <div class="divider"></div>
 
             <!-- Theme Quick Toggle -->
-            <label class="toggle">
-              <input type="checkbox" :checked="ui.theme === 'theme-dark'" @change="toggleSidebarTheme" />
-              <span>Darkmode</span>
-            </label>
+            <div class="toggle">
+              <span>Theme</span>
+              <select class="input full-width" :value="theme.value" @change="onThemeSelect">
+                <option value="system">System</option>
+                <option value="light">Light</option>
+                <option value="dark">Dark</option>
+              </select>
+            </div>
           </div>
         </aside>
 
@@ -156,7 +160,7 @@
               :actor="ui.actor"
               :apiOk="api.ok"
               :dbOk="db.ok"
-              :theme="ui.theme"
+              :theme="theme.value"
               :apiBase="apiBase"
               :baseDomain="baseDomain"
               @setTheme="setTheme"
@@ -193,6 +197,7 @@ import { computed, onBeforeUnmount, onMounted, reactive, ref } from "vue";
 import { useToast } from "./composables/useToast";
 import { platformHealth, platformHealthDb } from "./api/platform";
 import { getBaseDomain, getBaseURL } from "./api/base";
+import { useTheme } from "./composables/useTheme";
 
 /* Views */
 import AdminTenantsView from "./views/AdminTenantsView.vue";
@@ -224,7 +229,6 @@ type SectionId = (typeof sections)[number]["id"];
 /* UI State */
 // TODO: Entfernen, sobald Admin-APIs ohne expliziten adminKey/actor auskommen.
 const ui = reactive({
-  theme: "theme-classic",
   actor: "",
   adminKey: "",
   authenticated: false,
@@ -232,6 +236,8 @@ const ui = reactive({
 });
 
 const operationsTab = ref<OperationsTab>("overview");
+const { theme, resolvedTheme, setTheme } = useTheme();
+const appThemeClass = computed(() => (resolvedTheme.value === "dark" ? "theme-dark" : "theme-classic"));
 
 const tenantContext = reactive({
   id: localStorage.getItem("adminSelectedTenantId") || "",
@@ -363,25 +369,15 @@ function resetContext() {
 
 /* Boot */
 onMounted(async () => {
-  const savedTheme = sessionStorage.getItem("adminTheme");
-  if (savedTheme) {
-    ui.theme = savedTheme;
-  }
-
   syncFromLocation();
   window.addEventListener("popstate", syncFromLocation);
   await quickRefresh();
 });
 
-function toggleSidebarTheme() {
-  const next = ui.theme === "theme-dark" ? "theme-classic" : "theme-dark";
-  setTheme(next);
-}
-
-function setTheme(themeId: string) {
-  ui.theme = themeId;
-  sessionStorage.setItem("adminTheme", themeId);
-  toast(`Theme gesetzt: ${themeId.replace("theme-", "")}`);
+function onThemeSelect(event: Event) {
+  const mode = (event.target as HTMLSelectElement).value as "light" | "dark" | "system";
+  setTheme(mode);
+  toast(`Theme gesetzt: ${mode}`);
 }
 
 function openMemberships(tenantId: string) {

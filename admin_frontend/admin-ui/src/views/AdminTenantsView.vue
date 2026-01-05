@@ -1,166 +1,158 @@
 <template>
-  <section class="tenantsView">
-    <header class="viewHeader">
-      <div class="headTitles">
-        <div class="headTitle">Kunden</div>
-        <div class="headSubtitle">Kunden suchen und auswählen</div>
-      </div>
-      <div class="headActions">
+  <UiPage>
+    <UiSection title="Kunden" subtitle="Kunden suchen und auswählen">
+      <template #actions>
         <button class="btnGhost small" @click="openCreateModal">Neuen Kunden anlegen</button>
         <button class="btnGhost small" :disabled="busy.list" @click="loadTenants">
-          <span v-if="busy.list" class="dotSpinner" aria-hidden="true"></span>
+          <span v-if="busy.list" class="spinner" aria-hidden="true"></span>
           {{ busy.list ? "lädt..." : "Neu laden" }}
         </button>
-      </div>
-    </header>
+      </template>
 
-    <div class="toolbar">
-      <div class="chips">
-        <div class="chip">
-          <div class="chipLabel">Kunden gesamt</div>
-          <div class="chipValue">{{ totalTenants }}</div>
-        </div>
-        <div class="chip">
-          <div class="chipLabel">aktiv</div>
-          <div class="chipValue success">{{ activeTenants }}</div>
-        </div>
-        <div class="chip">
-          <div class="chipLabel">deaktiviert</div>
-          <div class="chipValue danger">{{ inactiveTenants }}</div>
-        </div>
-      </div>
-      <div class="toolbarActions">
-        <button class="btnGhost small" :disabled="!filteredTenants.length" @click="exportCsv">
-          Kunden exportieren CSV
-        </button>
-        <button class="btnGhost small" :disabled="busy.list" @click="loadTenants">Neu laden</button>
-      </div>
-    </div>
+      <UiToolbar>
+        <template #start>
+          <div class="chip-list">
+            <UiStatCard label="Kunden gesamt" :value="totalTenants" />
+            <UiStatCard label="aktiv" :value="activeTenants" tone="success" />
+            <UiStatCard label="deaktiviert" :value="inactiveTenants" tone="danger" />
+          </div>
+        </template>
+        <template #end>
+          <div class="toolbar-group">
+            <button class="btnGhost small" :disabled="!filteredTenants.length" @click="exportCsv">
+              Kunden exportieren CSV
+            </button>
+            <button class="btnGhost small" :disabled="busy.list" @click="loadTenants">Neu laden</button>
+          </div>
+        </template>
+      </UiToolbar>
 
-    <div class="searchCard">
-      <div class="searchLeft">
-        <label class="fieldLabel" for="kunden-search">Suche</label>
-        <input
-          id="kunden-search"
-          class="input"
-          v-model.trim="q"
-          placeholder="Name oder URL-Kürzel eingeben"
-          aria-label="Kunden suchen"
-        />
-        <div class="hint">Tippen zum Filtern. Groß und Kleinschreibung egal. Prefix zuerst, sonst enthält.</div>
-      </div>
-      <div class="searchRight">
-        <label class="fieldLabel" for="kunden-status">Status</label>
-        <select id="kunden-status" class="input" v-model="statusFilter" aria-label="Status filtern">
-          <option value="all">Alle</option>
-          <option value="active">Aktiv</option>
-          <option value="disabled">Deaktiviert</option>
-        </select>
-        <span class="muted smallText">Treffer: {{ filteredTenants.length }}</span>
-      </div>
-    </div>
+      <div class="filter-card two-column">
+        <div class="stack">
+          <label class="field-label" for="kunden-search">Suche</label>
+          <input
+            id="kunden-search"
+            class="input"
+            v-model.trim="q"
+            placeholder="Name oder URL-Kürzel eingeben"
+            aria-label="Kunden suchen"
+          />
+          <div class="hint">Tippen zum Filtern. Groß und Kleinschreibung egal. Prefix zuerst, sonst enthält.</div>
 
-    <div class="tableCard">
-      <div class="tableHeader">
-        <div class="tableTitle">Kundenliste</div>
-        <div class="muted smallText">Zeile anklicken, um auszuwählen.</div>
-      </div>
-      <div class="tableWrap">
-        <table class="table">
-          <thead>
-            <tr>
-              <th class="narrowCol"></th>
-              <th>Slug</th>
-              <th>Name</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
+          <div class="list-panel">
+            <button
               v-for="t in filteredTenants"
               :key="t.id"
-              :class="{ rowActive: selectedTenant?.id === t.id }"
+              class="list-panel__item"
+              :class="{ 'is-active': selectedTenant?.id === t.id }"
+              type="button"
               @click="selectTenant(t)"
             >
-              <td class="selectDot">
-                <span class="dot" :class="selectedTenant?.id === t.id ? 'dotActive' : ''"></span>
-              </td>
-              <td class="mono">{{ t.slug }}</td>
-              <td>{{ t.name }}</td>
-              <td>
-                <span class="tag" :class="t.is_active ? 'ok' : 'bad'">
-                  {{ t.is_active ? "aktiv" : "deaktiviert" }}
-                </span>
-              </td>
-            </tr>
-            <tr v-if="!busy.list && filteredTenants.length === 0">
-              <td colspan="4" class="mutedPad">Keine Kunden gefunden.</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <div v-if="busy.error" class="errorText">Fehler: {{ busy.error }}</div>
-      <div v-if="!busy.list && filteredTenants.length === 0" class="row gap8 wrap">
-        <button class="btnPrimary small" @click="openCreateModal">Ersten Kunden anlegen</button>
-        <button class="btnGhost small" @click="resetFilters">Filter zurücksetzen</button>
-      </div>
-    </div>
+              <div class="stack-sm">
+                <div class="label">{{ t.name }}</div>
+                <span class="muted mono">{{ t.slug }}</span>
+              </div>
+              <span class="badge" :class="t.is_active ? 'tone-success' : 'tone-danger'">
+                {{ t.is_active ? "aktiv" : "deaktiviert" }}
+              </span>
+            </button>
+            <div v-if="!filteredTenants.length" class="muted text-small">Keine Kunden gefunden.</div>
+          </div>
+        </div>
 
-    <div v-if="selectedTenant" class="detailCard">
-      <div class="detailGrid">
-        <div class="detailBox tight">
-          <div class="boxLabel">Name</div>
-          <div class="boxValue">{{ selectedTenant.name }}</div>
-        </div>
-        <div class="detailBox tight">
-          <div class="boxLabel copyLabel">
-            <span>URL-Kürzel</span>
+        <div class="stack">
+          <label class="field-label" for="kunden-status">Status</label>
+          <select id="kunden-status" class="input" v-model="statusFilter" aria-label="Status filtern">
+            <option value="all">Alle</option>
+            <option value="active">Aktiv</option>
+            <option value="disabled">Deaktiviert</option>
+          </select>
+          <span class="muted text-small">Treffer: {{ filteredTenants.length }}</span>
+          <div class="divider"></div>
+          <div class="stack">
+            <div class="field-label">Ausgewählter Host</div>
+            <div class="mono text-small">{{ tenantHost || "—" }}</div>
             <button
-              class="iconBtn"
+              class="btnGhost small"
               type="button"
-              aria-label="In Zwischenablage kopieren"
-              title="In Zwischenablage kopieren"
-              @click.stop="copyValue(selectedTenant.slug, 'URL-Kürzel')"
+              :disabled="!selectedTenant"
+              @click="resetFilters"
             >
-              📋
+              Filter zurücksetzen
             </button>
           </div>
-          <div class="boxValue mono">{{ selectedTenant.slug }}</div>
-        </div>
-        <div class="detailBox medium">
-          <div class="boxLabel copyLabel">
-            <span>Tenant ID</span>
-            <button
-              class="iconBtn"
-              type="button"
-              aria-label="In Zwischenablage kopieren"
-              title="In Zwischenablage kopieren"
-              @click.stop="copyValue(selectedTenant.id, 'Tenant ID')"
-            >
-              📋
-            </button>
-          </div>
-          <div class="boxValue mono">{{ selectedTenant.id }}</div>
-        </div>
-        <div class="detailBox hostBox">
-          <div class="boxLabel copyLabel">
-            <span>Tenant Host</span>
-            <button
-              class="iconBtn"
-              type="button"
-              aria-label="In Zwischenablage kopieren"
-              title="In Zwischenablage kopieren"
-              @click.stop="copyValue(tenantHost, 'Tenant Host')"
-            >
-              📋
-            </button>
-          </div>
-          <div class="boxValue mono hostValue">{{ tenantHost }}</div>
         </div>
       </div>
 
-      <div class="detailActions">
-        <div class="row gap8 wrap">
+      <div class="table-card">
+        <div class="table-card__header">
+          <div class="tableTitle">Kundenliste</div>
+          <div class="text-muted text-small">Zeile anklicken, um auszuwählen.</div>
+        </div>
+        <div class="table-card__body">
+          <div class="tableWrap">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th class="narrowCol"></th>
+                  <th>Slug</th>
+                  <th>Name</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  v-for="t in filteredTenants"
+                  :key="t.id"
+                  :class="{ rowActive: selectedTenant?.id === t.id }"
+                  @click="selectTenant(t)"
+                >
+                  <td class="selectDot">
+                    <span class="dot" :class="selectedTenant?.id === t.id ? 'dotActive' : ''"></span>
+                  </td>
+                  <td class="mono">{{ t.slug }}</td>
+                  <td>{{ t.name }}</td>
+                  <td>
+                    <span class="tag" :class="t.is_active ? 'ok' : 'bad'">
+                      {{ t.is_active ? "aktiv" : "deaktiviert" }}
+                    </span>
+                  </td>
+                </tr>
+                <tr v-if="!busy.list && filteredTenants.length === 0">
+                  <td colspan="4" class="mutedPad">Keine Kunden gefunden.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div v-if="busy.error" class="errorText">Fehler: {{ busy.error }}</div>
+          <div v-if="!busy.list && filteredTenants.length === 0" class="action-row">
+            <button class="btnPrimary small" @click="openCreateModal">Ersten Kunden anlegen</button>
+            <button class="btnGhost small" @click="resetFilters">Filter zurücksetzen</button>
+          </div>
+        </div>
+      </div>
+
+      <div v-if="selectedTenant" class="detail-card">
+        <div class="detail-grid">
+          <div class="detail-box">
+            <div class="detail-box__label">Name</div>
+            <div class="detail-box__value">{{ selectedTenant.name }}</div>
+          </div>
+          <div class="detail-box">
+            <div class="detail-box__label">URL-Kürzel</div>
+            <div class="detail-box__value mono">{{ selectedTenant.slug }}</div>
+          </div>
+          <div class="detail-box detail-box--medium">
+            <div class="detail-box__label">Tenant ID</div>
+            <div class="detail-box__value mono">{{ selectedTenant.id }}</div>
+          </div>
+          <div class="detail-box detail-box--wide">
+            <div class="detail-box__label">Tenant Host</div>
+            <div class="detail-box__value mono">{{ tenantHost }}</div>
+          </div>
+        </div>
+
+        <div class="action-row">
           <button
             class="btnGhost small"
             :disabled="busy.toggleId === selectedTenant.id"
@@ -175,21 +167,21 @@
           >
             {{ busy.deleteId === selectedTenant.id ? "löscht..." : "Kunde löschen" }}
           </button>
+          <button class="btnPrimary small" @click="openMemberships(selectedTenant.id)">Tenant User verwalten</button>
         </div>
-        <button class="btnPrimary small" @click="openMemberships(selectedTenant.id)">Tenant User verwalten</button>
       </div>
-    </div>
 
-    <TenantCreateModal
-      :open="modal.open"
-      :busy="busy.create"
-      :baseDomain="baseDomain"
-      v-model:name="modal.name"
-      v-model:slug="modal.slug"
-      @close="closeCreateModal"
-      @create="createTenant"
-    />
-  </section>
+      <TenantCreateModal
+        :open="modal.open"
+        :busy="busy.create"
+        :baseDomain="baseDomain"
+        v-model:name="modal.name"
+        v-model:slug="modal.slug"
+        @close="closeCreateModal"
+        @create="createTenant"
+      />
+    </UiSection>
+  </UiPage>
 </template>
 
 <script setup lang="ts">
@@ -206,6 +198,10 @@ import { adminListTenants, adminCreateTenant, adminUpdateTenant, adminDeleteTena
 import { useToast } from "../composables/useToast";
 
 import TenantCreateModal from "../components/tenants/TenantCreateModal.vue";
+import UiPage from "../components/ui/UiPage.vue";
+import UiSection from "../components/ui/UiSection.vue";
+import UiToolbar from "../components/ui/UiToolbar.vue";
+import UiStatCard from "../components/ui/UiStatCard.vue";
 
 const props = defineProps<{
   adminKey: string;
@@ -480,306 +476,3 @@ watch(
   { immediate: true }
 );
 </script>
-
-<style scoped>
-.tenantsView {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.viewHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 8px 0 12px;
-  border-bottom: 1px solid var(--border);
-  min-height: 56px;
-}
-
-.headTitles {
-  display: grid;
-  gap: 4px;
-}
-
-.headTitle {
-  font-size: 18px;
-  font-weight: 800;
-}
-
-.headSubtitle {
-  color: var(--muted);
-  font-size: 13px;
-}
-
-.headActions {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-.toolbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.chips {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.chip {
-  padding: 8px 10px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--surface2);
-  min-width: 120px;
-}
-
-.chipLabel {
-  font-size: 12px;
-  color: var(--muted);
-}
-
-.chipValue {
-  font-weight: 700;
-  font-size: 16px;
-}
-
-.chipValue.success {
-  color: var(--success, #22c55e);
-}
-
-.chipValue.danger {
-  color: var(--danger, #c53030);
-}
-
-.toolbarActions {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.searchCard {
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 12px;
-  background: var(--surface);
-  display: grid;
-  grid-template-columns: 1fr 220px;
-  gap: 12px;
-}
-
-.fieldLabel {
-  font-weight: 700;
-  font-size: 13px;
-}
-
-.hint {
-  font-size: 12px;
-  color: var(--muted);
-  margin-top: 6px;
-}
-
-.searchLeft {
-  display: grid;
-  gap: 6px;
-}
-
-.searchRight {
-  display: grid;
-  gap: 8px;
-  align-content: start;
-}
-
-.smallText {
-  font-size: 12px;
-}
-
-.tableCard {
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 12px;
-  background: var(--surface);
-  display: grid;
-  gap: 8px;
-}
-
-.tableHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.tableTitle {
-  font-weight: 800;
-}
-
-.tableWrap {
-  overflow: auto;
-}
-
-.selectDot {
-  width: 32px;
-}
-
-.narrowCol {
-  width: 32px;
-}
-
-.dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  border: 2px solid var(--border);
-  display: inline-block;
-}
-
-.dotActive {
-  border-color: var(--primary);
-  background: var(--primary);
-}
-
-.table tbody tr {
-  cursor: pointer;
-}
-
-.table tbody tr.rowActive {
-  background: var(--table-row-active);
-}
-
-.detailCard {
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 12px;
-  background: var(--surface);
-  color: var(--text, #0f172a);
-  display: grid;
-  gap: 10px;
-  margin-top: 4px;
-}
-
-.detailGrid {
-  display: grid;
-  grid-template-columns: 1fr 1fr 2fr 3fr;
-  gap: 10px;
-  align-items: stretch;
-}
-
-.detailBox {
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 10px;
-  background: var(--surface2);
-}
-
-.boxLabel {
-  font-size: 12px;
-  color: var(--muted);
-}
-
-.copyLabel {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 6px;
-}
-
-.iconBtn {
-  border: 1px solid var(--border);
-  background: var(--surface);
-  border-radius: 6px;
-  padding: 2px 6px;
-  font-size: 13px;
-  line-height: 1;
-  cursor: pointer;
-  color: var(--muted);
-}
-
-.iconBtn:hover,
-.iconBtn:focus-visible {
-  color: var(--text);
-  border-color: var(--primary);
-  outline: none;
-}
-
-.boxValue {
-  font-weight: 700;
-  margin-top: 4px;
-}
-
-.detailBox.tight {
-  min-width: 120px;
-}
-
-.detailBox.medium {
-  min-width: 200px;
-}
-
-.detailBox.hostBox {
-  min-width: 320px;
-}
-
-.hostValue {
-  white-space: nowrap;
-  overflow-x: auto;
-}
-
-.detailActions {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.tiny {
-  font-size: 11px;
-  padding: 0;
-}
-
-.errorText {
-  color: var(--danger, #c53030);
-  margin-top: 8px;
-  font-size: 13px;
-}
-
-.dotSpinner {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  border: 2px solid var(--muted);
-  border-top-color: transparent;
-  display: inline-block;
-  margin-right: 6px;
-  animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@media (max-width: 1024px) {
-  .detailGrid {
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  }
-}
-
-@media (max-width: 860px) {
-  .searchCard {
-    grid-template-columns: 1fr;
-  }
-
-  .hostValue {
-    white-space: nowrap;
-    overflow-x: auto;
-  }
-}
-</style>

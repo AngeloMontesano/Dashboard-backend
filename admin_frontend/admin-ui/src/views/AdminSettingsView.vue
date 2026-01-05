@@ -152,7 +152,7 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-  (e: "setTheme", theme: string): void;
+  (e: "setTheme", theme: "light" | "dark" | "system"): void;
   (e: "resetContext"): void;
 }>();
 
@@ -160,11 +160,11 @@ const { toast } = useToast();
 const users = ref<UserOut[]>([]);
 const selectedUserId = ref("");
 const themes = [
-  { id: "theme-classic", label: "Classic" },
-  { id: "theme-dark", label: "Dark" },
-  { id: "theme-ocean", label: "Ocean" },
+  { id: "system", label: "System" },
+  { id: "light", label: "Light" },
+  { id: "dark", label: "Dark" },
 ];
-const localTheme = ref(props.theme || "theme-classic");
+const localTheme = ref((props.theme as "light" | "dark" | "system") || "system");
 const grafanaUrl = import.meta.env.VITE_GRAFANA_URL || "http://localhost:3000";
 
 const userForm = reactive({
@@ -283,7 +283,7 @@ onMounted(() => {
   loadUsers();
 });
 
-function onThemeChange(themeId: string) {
+function onThemeChange(themeId: "light" | "dark" | "system") {
   localTheme.value = themeId;
   emit("setTheme", themeId);
 }

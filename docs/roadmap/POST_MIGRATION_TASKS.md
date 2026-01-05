@@ -1,0 +1,15 @@
+- OpenAPI-Schema für `/admin/login` um tatsächliche Response-Felder (`admin_key`, optional `actor`) ergänzen.  
+  - Frontend: admin  
+  - Endpoint/View: `/admin/login`
+- Responses für `/inventory/items/import` und `/inventory/items/export` im OpenAPI-Schema mit realen Feldern (Import-Zähler, Fehlerliste bzw. `csv`-String) hinterlegen.  
+  - Frontend: customer  
+  - Endpoint/View: `/inventory/items/import`, `/inventory/items/export`
+- Endpoint `/admin/tenants/{tenant_id}/users/{user_id}/set-password` ins OpenAPI-Schema aufnehmen und Response modellieren.  
+  - Frontend: admin  
+  - Endpoint/View: `/admin/tenants/{tenant_id}/users/{user_id}/set-password`
+- Response-Body für `/inventory/movements` im OpenAPI-Schema präzisieren, damit Bewegungen typisiert verarbeitet werden können.  
+  - Frontend: customer  
+  - Endpoint/View: `/inventory/movements`
+- Remote-Zugriff auf `https://api.test.myitnetwork.de/openapi.json` (aktuell HTTP 403 aus der CI-Umgebung) klären, damit `npm run gen:types` ohne lokale Kopie funktioniert.  
+  - Frontend: admin & customer  
+  - Endpoint/View: Typ-Generierung (`gen:types` Script)

@@ -1,19 +1,27 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from typing import Any
+import uuid
+from datetime import date, datetime, timedelta, timezone
+from io import BytesIO, StringIO
+from typing import Any, Literal
 
-from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
+from fastapi import APIRouter, Depends, File, HTTPException, Path, Query, UploadFile
+from fastapi.responses import StreamingResponse
 from sqlalchemy import func, or_, select
+from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
+from openpyxl import Workbook, load_workbook
 
 from app.core.db import get_db
+from app.core.config import settings
 from app.core.deps_auth import CurrentUserContext, get_current_user, require_owner_or_admin
 from app.core.deps_tenant import get_tenant_context
 from app.core.tenant import TenantContext
 from app.models.category import Category
 from app.models.item import Item
 from app.models.movement import InventoryMovement
+from app.models.order import InventoryOrder, InventoryOrderItem
+from app.models.tenant_setting import TenantSetting
 from app.modules.inventory.schemas import (
     CategoryCreate,
     CategoryOut,
@@ -22,7 +30,26 @@ from app.modules.inventory.schemas import (
     ItemOut,
     ItemUpdate,
     ItemsPage,
+    OrderCreate,
+    OrderItemOut,
+    OrderOut,
+    ReportResponse,
+    ReportSeries,
+    ReportDataPoint,
+    ReportKpis,
+    ReportTopItem,
+    ReorderResponse,
+    ReorderItem,
+    InventoryBulkUpdateRequest,
+    InventoryBulkUpdateResult,
+    MovementItemOut,
+    MovementOut,
     MovementPayload,
+    MassImportResult,
+    TestEmailRequest,
+    TestEmailResponse,
+    TenantSettingsOut,
+    TenantSettingsUpdate,
     SKUExistsResponse,
     TenantPingResponse,
     TenantOutPing,
@@ -403,8 +430,858 @@ async def update_item(
 
 
 # ----------------------
+# Reporting Helpers
+# ----------------------
+def _parse_date(value: str, name: str) -> date:
+    try:
+        return datetime.strptime(value, "%Y-%m-%d").date()
+    except Exception:  # noqa: BLE001
+        raise HTTPException(status_code=400, detail={"error": {"code": "invalid_date", "message": f"{name} muss YYYY-MM-DD sein"}})
+
+
+async def _aggregate_consumption(
+    *,
+    db: AsyncSession,
+    ctx: TenantContext,
+    start: date,
+    end: date,
+    mode: Literal["top5", "all", "selected"],
+    item_ids: list[str] | None,
+    category_id: str | None,
+    aggregate: bool | None,
+    limit: int | None,
+) -> ReportResponse:
+    if start > end:
+        raise HTTPException(status_code=400, detail={"error": {"code": "invalid_range", "message": "from muss vor to liegen"}})
+
+    start_dt = datetime.combine(start, datetime.min.time()).replace(tzinfo=timezone.utc)
+    end_dt = datetime.combine(end + timedelta(days=1), datetime.min.time()).replace(tzinfo=timezone.utc)
+
+    base = (
+        select(
+            func.date_trunc("month", InventoryMovement.created_at).label("period"),
+            Item.id.label("item_id"),
+            Item.name.label("item_name"),
+            Item.sku.label("item_sku"),
+            Item.category_id.label("category_id"),
+            func.sum(InventoryMovement.qty).label("qty_sum"),
+        )
+        .join(Item, InventoryMovement.item_id == Item.id)
+        .where(
+            InventoryMovement.tenant_id == ctx.tenant.id,
+            InventoryMovement.type == "OUT",
+            InventoryMovement.created_at >= start_dt,
+            InventoryMovement.created_at < end_dt,
+        )
+    )
+    if category_id:
+        base = base.where(Item.category_id == category_id)
+    if item_ids:
+        base = base.where(Item.id.in_(item_ids))
+
+    grouped = (
+        await db.execute(
+            base.group_by(
+                "period",
+                "item_id",
+                "item_name",
+                "item_sku",
+                "category_id",
+            ).order_by("period")
+        )
+    ).all()
+
+    series_map: dict[str, dict[str, Any]] = {}
+    months: set[str] = set()
+
+    for row in grouped:
+        period: datetime = row.period
+        month_key = period.strftime("%Y-%m")
+        months.add(month_key)
+        item_id = str(row.item_id)
+        entry = series_map.setdefault(
+            item_id,
+            {"name": row.item_name, "category_id": row.category_id, "months": {}},
+        )
+        entry["months"][month_key] = float(row.qty_sum or 0.0)
+
+    month_list = sorted(months)
+
+    def _series_from_entry(item_id: str, entry: dict[str, Any]) -> ReportSeries:
+        data = [
+            ReportDataPoint(
+                period=month,
+                value=entry["months"].get(month, 0.0),
+                item_id=item_id,
+                item_name=entry["name"],
+            )
+            for month in month_list
+        ]
+        return ReportSeries(label=entry["name"], itemId=item_id, data=data)
+
+    totals_by_item = [
+        (item_id, sum(values["months"].values()), values)
+        for item_id, values in series_map.items()
+    ]
+    totals_by_item.sort(key=lambda x: x[1], reverse=True)
+
+    series: list[ReportSeries] = []
+
+    if mode == "selected":
+        selected_ids = item_ids or []
+        for item_id in selected_ids:
+            entry = series_map.get(item_id)
+            if entry:
+                series.append(_series_from_entry(item_id, entry))
+    elif mode == "top5":
+        take = limit or 5
+        for item_id, _total, entry in totals_by_item[:take]:
+            series.append(_series_from_entry(item_id, entry))
+    else:  # all
+        if aggregate is False:
+            for item_id, _total, entry in totals_by_item:
+                series.append(_series_from_entry(item_id, entry))
+        else:
+            agg_per_month: dict[str, float] = {m: 0.0 for m in month_list}
+            for _item_id, _total, entry in totals_by_item:
+                for month, value in entry["months"].items():
+                    agg_per_month[month] = agg_per_month.get(month, 0.0) + value
+            data = [
+                ReportDataPoint(period=month, value=agg_per_month.get(month, 0.0))
+                for month in month_list
+            ]
+            series.append(ReportSeries(label="Alle Artikel", data=data))
+
+    total_consumption = sum(total for _id, total, _entry in totals_by_item)
+    average_per_month = total_consumption / len(month_list) if month_list else 0.0
+    top_item = totals_by_item[0] if totals_by_item else None
+    kpis = ReportKpis(
+        totalConsumption=total_consumption,
+        averagePerMonth=average_per_month,
+        months=month_list,
+        topItem=ReportTopItem(
+            id=top_item[0],
+            name=top_item[2]["name"],
+            quantity=top_item[1],
+        )
+        if top_item
+        else None,
+    )
+    return ReportResponse(series=series, kpis=kpis)
+
+
+# ----------------------
+# Reporting (Verbrauch)
+# ----------------------
+@router.get("/report", response_model=ReportResponse)
+async def get_report(
+    from_: str = Query(..., alias="from", description="Startdatum (YYYY-MM-DD)"),
+    to: str = Query(..., description="Enddatum (YYYY-MM-DD)"),
+    mode: Literal["top5", "all", "selected"] = Query(..., description="Aggregationsmodus"),
+    item_ids: list[str] | None = Query(default=None),
+    category_id: str | None = Query(default=None),
+    aggregate: bool | None = Query(default=True),
+    limit: int | None = Query(default=5),
+    ctx: TenantContext = Depends(get_tenant_context),
+    user_ctx: CurrentUserContext = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> ReportResponse:
+    start_date = _parse_date(from_, "from")
+    end_date = _parse_date(to, "to")
+    return await _aggregate_consumption(
+        db=db,
+        ctx=ctx,
+        start=start_date,
+        end=end_date,
+        mode=mode,
+        item_ids=item_ids,
+        category_id=category_id,
+        aggregate=aggregate,
+        limit=limit,
+    )
+
+
+@router.get("/reports/consumption", response_model=ReportResponse)
+async def get_report_consumption(
+    from_: str = Query(..., alias="from", description="Startdatum (YYYY-MM-DD)"),
+    to: str = Query(..., description="Enddatum (YYYY-MM-DD)"),
+    mode: Literal["top5", "all", "selected"] = Query(..., description="Aggregationsmodus"),
+    item_ids: list[str] | None = Query(default=None),
+    category_id: str | None = Query(default=None),
+    aggregate: bool | None = Query(default=True),
+    limit: int | None = Query(default=5),
+    ctx: TenantContext = Depends(get_tenant_context),
+    user_ctx: CurrentUserContext = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> ReportResponse:
+    return await get_report(
+        from_=from_,
+        to=to,
+        mode=mode,
+        item_ids=item_ids,
+        category_id=category_id,
+        aggregate=aggregate,
+        limit=limit,
+        ctx=ctx,
+        user_ctx=user_ctx,
+        db=db,
+    )
+
+
+@router.get("/reports/export/{format}")
+async def export_report(
+    format: str = Path(..., description="csv oder excel"),
+    from_: str = Query(..., alias="from", description="Startdatum (YYYY-MM-DD)"),
+    to: str = Query(..., description="Enddatum (YYYY-MM-DD)"),
+    mode: Literal["top5", "all", "selected"] = Query(..., description="Aggregationsmodus"),
+    item_ids: list[str] | None = Query(default=None),
+    category_id: str | None = Query(default=None),
+    aggregate: bool | None = Query(default=True),
+    limit: int | None = Query(default=5),
+    ctx: TenantContext = Depends(get_tenant_context),
+    user_ctx: CurrentUserContext = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    if format not in {"csv", "excel"}:
+        raise HTTPException(status_code=400, detail={"error": {"code": "invalid_format", "message": "Format muss csv oder excel sein"}})
+
+    report = await get_report(
+        from_=from_,
+        to=to,
+        mode=mode,
+        item_ids=item_ids,
+        category_id=category_id,
+        aggregate=aggregate,
+        limit=limit,
+        ctx=ctx,
+        user_ctx=user_ctx,
+        db=db,
+    )
+
+    rows: list[tuple[str, str, float]] = []
+    for serie in report.series:
+        for point in serie.data:
+            rows.append((serie.label, point.period, point.value))
+
+    if format == "csv":
+        import csv
+
+        buf = StringIO()
+        writer = csv.writer(buf)
+        writer.writerow(["Artikel", "Monat", "Verbrauch"])
+        for artikel, month, value in rows:
+            writer.writerow([artikel, month, value])
+        buf.seek(0)
+        return StreamingResponse(
+            iter([buf.getvalue()]),
+            media_type="text/csv",
+            headers={"Content-Disposition": 'attachment; filename="verbrauch.csv"'},
+        )
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Verbrauch"
+    ws.append(["Artikel", "Monat", "Verbrauch"])
+    for artikel, month, value in rows:
+        ws.append([artikel, month, value])
+    out = BytesIO()
+    wb.save(out)
+    out.seek(0)
+    return StreamingResponse(
+        out,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": 'attachment; filename="verbrauch.xlsx"'},
+    )
+
+
+# ----------------------
+# Bestellungen (Offen/Erledigt)
+# ----------------------
+def _generate_order_number() -> str:
+    return f"ORDER-{uuid.uuid4().hex[:8].upper()}"
+
+
+def _order_item_to_out(order_item: InventoryOrderItem, item_map: dict[Any, Item]) -> OrderItemOut:
+    item = item_map.get(str(order_item.item_id))
+    return OrderItemOut(
+        id=str(order_item.id),
+        item_id=str(order_item.item_id),
+        quantity=order_item.quantity,
+        note=order_item.note,
+        item_name=item.name if item else None,
+        sku=item.sku if item else None,
+        barcode=item.barcode if item else None,
+        category_id=str(item.category_id) if item and item.category_id else None,
+    )
+
+
+def _order_to_out(order: InventoryOrder, item_map: dict[Any, Item]) -> OrderOut:
+    return OrderOut(
+        id=str(order.id),
+        number=order.number,
+        status=order.status,  # type: ignore[arg-type]
+        note=order.note,
+        created_at=order.created_at,
+        completed_at=order.completed_at,
+        canceled_at=order.canceled_at,
+        items=[_order_item_to_out(oi, item_map) for oi in order.items],
+    )
+
+
+async def _get_order_or_404(
+    *, order_id: str, ctx: TenantContext, db: AsyncSession, load_items: bool = False
+) -> InventoryOrder:
+    try:
+        order_uuid = uuid.UUID(str(order_id))
+    except (TypeError, ValueError):
+        raise HTTPException(
+            status_code=404,
+            detail={"error": {"code": "order_not_found", "message": "Bestellung nicht gefunden"}},
+        )
+    stmt = select(InventoryOrder).where(
+        InventoryOrder.tenant_id == ctx.tenant.id,
+        InventoryOrder.id == order_uuid,
+    )
+    if load_items:
+        stmt = stmt.options(selectinload(InventoryOrder.items))
+    order = await db.scalar(stmt)
+    if order is None:
+        raise HTTPException(
+            status_code=404,
+            detail={"error": {"code": "order_not_found", "message": "Bestellung nicht gefunden"}},
+        )
+    return order
+
+
+async def _items_by_ids(
+    *, db: AsyncSession, ctx: TenantContext, item_ids: set[Any]
+) -> dict[str, Item]:
+    if not item_ids:
+        return {}
+    normalized_ids: set[uuid.UUID] = set()
+    try:
+        for raw in item_ids:
+            normalized_ids.add(uuid.UUID(str(raw)))
+    except (TypeError, ValueError):
+        raise HTTPException(
+            status_code=400,
+            detail={"error": {"code": "invalid_item_id", "message": "Ungültige Item-ID"}},
+        )
+    rows = (
+        await db.scalars(
+            select(Item).where(
+                Item.tenant_id == ctx.tenant.id,
+                Item.id.in_(normalized_ids),
+            )
+        )
+    ).all()
+    return {str(row.id): row for row in rows}
+
+
+@router.get("/orders", response_model=list[OrderOut])
+async def list_orders(
+    status: Literal["OPEN", "COMPLETED", "CANCELED"] | None = Query(default=None),
+    limit: int = Query(default=100, ge=1, le=500),
+    ctx: TenantContext = Depends(get_tenant_context),
+    user_ctx: CurrentUserContext = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> list[OrderOut]:
+    stmt = (
+        select(InventoryOrder)
+        .where(InventoryOrder.tenant_id == ctx.tenant.id)
+        .options(selectinload(InventoryOrder.items))
+    )
+    if status:
+        stmt = stmt.where(InventoryOrder.status == status)
+    stmt = stmt.order_by(InventoryOrder.created_at.desc()).limit(limit)
+
+    orders = (await db.scalars(stmt)).all()
+    item_ids = {str(oi.item_id) for order in orders for oi in order.items}
+    item_map = await _items_by_ids(db=db, ctx=ctx, item_ids=item_ids)
+    return [_order_to_out(order, item_map) for order in orders]
+
+
+@router.post("/orders", response_model=OrderOut, status_code=201, dependencies=[Depends(require_owner_or_admin)])
+async def create_order(
+    payload: OrderCreate,
+    ctx: TenantContext = Depends(get_tenant_context),
+    db: AsyncSession = Depends(get_db),
+) -> OrderOut:
+    if not payload.items:
+        raise HTTPException(
+            status_code=400,
+            detail={"error": {"code": "items_required", "message": "Mindestens eine Position erforderlich"}},
+        )
+
+    item_ids = {entry.item_id for entry in payload.items}
+    item_map = await _items_by_ids(db=db, ctx=ctx, item_ids=item_ids)
+    missing = [iid for iid in item_ids if iid not in item_map]
+    if missing:
+        raise HTTPException(
+            status_code=404,
+            detail={"error": {"code": "item_not_found", "message": f"Artikel nicht gefunden: {', '.join(missing)}"}},
+        )
+
+    order = InventoryOrder(
+        tenant_id=ctx.tenant.id,
+        number=_generate_order_number(),
+        status="OPEN",
+        note=payload.note,
+    )
+    for entry in payload.items:
+        order.items.append(
+            InventoryOrderItem(
+                tenant_id=ctx.tenant.id,
+                item_id=item_map[entry.item_id].id,
+                quantity=entry.quantity,
+                note=entry.note,
+            )
+        )
+
+    db.add(order)
+    await db.flush()
+    await db.commit()
+
+    order = await _get_order_or_404(order_id=str(order.id), ctx=ctx, db=db, load_items=True)
+    return _order_to_out(order, item_map)
+
+
+@router.get("/orders/{order_id}", response_model=OrderOut)
+async def get_order(
+    order_id: str,
+    ctx: TenantContext = Depends(get_tenant_context),
+    user_ctx: CurrentUserContext = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> OrderOut:
+    order = await _get_order_or_404(order_id=order_id, ctx=ctx, db=db, load_items=True)
+    item_ids = {str(oi.item_id) for oi in order.items}
+    item_map = await _items_by_ids(db=db, ctx=ctx, item_ids=item_ids)
+    return _order_to_out(order, item_map)
+
+
+@router.post("/orders/{order_id}/complete", response_model=OrderOut, dependencies=[Depends(require_owner_or_admin)])
+async def complete_order(
+    order_id: str,
+    ctx: TenantContext = Depends(get_tenant_context),
+    db: AsyncSession = Depends(get_db),
+) -> OrderOut:
+    order = await _get_order_or_404(order_id=order_id, ctx=ctx, db=db, load_items=True)
+    if order.status != "OPEN":
+        raise HTTPException(
+            status_code=400,
+            detail={"error": {"code": "order_not_open", "message": "Nur offene Bestellungen können erledigt werden"}},
+        )
+
+    item_ids = {str(oi.item_id) for oi in order.items}
+    item_map = await _items_by_ids(db=db, ctx=ctx, item_ids=item_ids)
+
+    now = datetime.now(timezone.utc)
+    order.status = "COMPLETED"
+    order.completed_at = now
+
+    for order_item in order.items:
+        item = item_map.get(str(order_item.item_id))
+        if item is None:
+            raise HTTPException(
+                status_code=400,
+                detail={"error": {"code": "order_item_missing", "message": "Artikel für Bestellung fehlt"}},
+            )
+        item.quantity += order_item.quantity
+        movement = InventoryMovement(
+            tenant_id=ctx.tenant.id,
+            item_id=item.id,
+            client_tx_id=f"order-{order.id}-{order_item.id}",
+            type="IN",
+            barcode=item.barcode,
+            qty=order_item.quantity,
+            note=f"Order {order.number}",
+            created_at=now,
+        )
+        db.add(movement)
+
+    await db.commit()
+    await db.refresh(order)
+    return _order_to_out(order, item_map)
+
+
+@router.post("/orders/{order_id}/cancel", response_model=OrderOut, dependencies=[Depends(require_owner_or_admin)])
+async def cancel_order(
+    order_id: str,
+    ctx: TenantContext = Depends(get_tenant_context),
+    db: AsyncSession = Depends(get_db),
+) -> OrderOut:
+    order = await _get_order_or_404(order_id=order_id, ctx=ctx, db=db, load_items=True)
+    if order.status != "OPEN":
+        raise HTTPException(
+            status_code=400,
+            detail={"error": {"code": "order_not_open", "message": "Nur offene Bestellungen können storniert werden"}},
+        )
+
+    order.status = "CANCELED"
+    order.canceled_at = datetime.now(timezone.utc)
+    await db.commit()
+    await db.refresh(order)
+
+    item_ids = {oi.item_id for oi in order.items}
+    item_map = await _items_by_ids(db=db, ctx=ctx, item_ids=item_ids)
+    return _order_to_out(order, item_map)
+
+
+# ----------------------
+# Einstellungen (Tenant)
+# ----------------------
+MASS_EXPORT_COLUMNS = [
+    "Artikel-ID",
+    "Name",
+    "Barcode",
+    "Kategorie",
+    "Soll",
+    "Min",
+    "Bestand",
+    "Haltbarkeit",
+    "Charge",
+    "Kunden-ID",
+    "Lagerort",
+    "Preis",
+    "Beschreibung",
+    "Letzte Änderung",
+    "Letzte Bestellung",
+    "Bestellt",
+]
+
+
+def _settings_to_out(settings: TenantSetting) -> TenantSettingsOut:
+    return TenantSettingsOut(
+        id=str(settings.id),
+        company_name=settings.company_name,
+        contact_email=settings.contact_email,
+        order_email=settings.order_email,
+        auto_order_enabled=settings.auto_order_enabled,
+        auto_order_min=settings.auto_order_min,
+        export_format=settings.export_format,
+        address=settings.address,
+        phone=settings.phone,
+    )
+
+
+async def _get_or_create_settings(*, ctx: TenantContext, db: AsyncSession) -> TenantSetting:
+    settings = await db.scalar(
+        select(TenantSetting).where(TenantSetting.tenant_id == ctx.tenant.id)
+    )
+    if settings:
+        return settings
+    settings = TenantSetting(
+        tenant_id=ctx.tenant.id,
+        company_name="",
+        contact_email="",
+        order_email="",
+        auto_order_enabled=False,
+        auto_order_min=0,
+        export_format="xlsx",
+        address="",
+        phone="",
+    )
+    db.add(settings)
+    await db.commit()
+    await db.refresh(settings)
+    return settings
+
+
+@router.get("/settings", response_model=TenantSettingsOut)
+async def get_tenant_settings(
+    ctx: TenantContext = Depends(get_tenant_context),
+    user_ctx: CurrentUserContext = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> TenantSettingsOut:
+    settings = await _get_or_create_settings(ctx=ctx, db=db)
+    return _settings_to_out(settings)
+
+
+@router.put("/settings", response_model=TenantSettingsOut, dependencies=[Depends(require_owner_or_admin)])
+async def update_tenant_settings(
+    payload: TenantSettingsUpdate,
+    ctx: TenantContext = Depends(get_tenant_context),
+    db: AsyncSession = Depends(get_db),
+) -> TenantSettingsOut:
+    settings = await _get_or_create_settings(ctx=ctx, db=db)
+    settings.company_name = payload.company_name.strip()
+    settings.contact_email = payload.contact_email.strip()
+    settings.order_email = payload.order_email.strip()
+    settings.auto_order_enabled = payload.auto_order_enabled
+    settings.auto_order_min = payload.auto_order_min
+    settings.export_format = payload.export_format.strip() or "xlsx"
+    settings.address = payload.address.strip()
+    settings.phone = payload.phone.strip()
+
+    await db.commit()
+    await db.refresh(settings)
+    return _settings_to_out(settings)
+
+
+@router.get("/settings/export", dependencies=[Depends(require_owner_or_admin)])
+async def export_settings_inventory(
+    ctx: TenantContext = Depends(get_tenant_context),
+    db: AsyncSession = Depends(get_db),
+):
+    rows = (
+        await db.execute(
+            select(Item, Category)
+            .outerjoin(Category, Category.id == Item.category_id)
+            .where(Item.tenant_id == ctx.tenant.id)
+            .order_by(Item.name.asc())
+        )
+    ).all()
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Export"
+    ws.append(MASS_EXPORT_COLUMNS)
+
+    for item, category in rows:
+        ws.append(
+            [
+                item.sku,
+                item.name,
+                item.barcode,
+                category.name if category else "",
+                item.target_stock,
+                item.min_stock,
+                item.quantity,
+                "",
+                "",
+                str(ctx.tenant.id),
+                "",
+                "",
+                item.description or "",
+                "",
+                "",
+                "",
+            ]
+        )
+
+    buf = BytesIO()
+    wb.save(buf)
+    buf.seek(0)
+    return StreamingResponse(
+        buf,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": 'attachment; filename="settings_export.xlsx"'},
+    )
+
+
+@router.post("/settings/import", response_model=MassImportResult, dependencies=[Depends(require_owner_or_admin)])
+async def import_settings_inventory(
+    file: UploadFile = File(...),
+    ctx: TenantContext = Depends(get_tenant_context),
+    db: AsyncSession = Depends(get_db),
+) -> MassImportResult:
+    content = await file.read()
+    try:
+        wb = load_workbook(BytesIO(content))
+    except Exception:  # noqa: BLE001
+        raise HTTPException(
+            status_code=400,
+            detail={"error": {"code": "invalid_excel", "message": "Datei konnte nicht gelesen werden"}},
+        )
+    ws = wb.active
+    headers = [str(cell.value or "").strip() for cell in next(ws.iter_rows(min_row=1, max_row=1))]
+    missing = [col for col in MASS_EXPORT_COLUMNS if col not in headers]
+    if missing:
+        raise HTTPException(
+            status_code=400,
+            detail={"error": {"code": "missing_columns", "message": f"Fehlende Spalten: {', '.join(missing)}"}},
+        )
+    idx = {name: headers.index(name) for name in headers}
+
+    imported = 0
+    updated = 0
+    errors: list[dict[str, str]] = []
+
+    for row_num, row in enumerate(ws.iter_rows(min_row=2), start=2):
+        try:
+            sku_raw = str(row[idx["Artikel-ID"]].value or "").strip()
+            name = str(row[idx["Name"]].value or "").strip()
+            barcode = str(row[idx["Barcode"]].value or "").strip()
+            if not sku_raw or not name or not barcode:
+                raise ValueError("Artikel-ID, Name und Barcode sind Pflicht")
+
+            category_name = str(row[idx["Kategorie"]].value or "").strip()
+            category = await _category_by_name(db=db, ctx=ctx, name=category_name) if category_name else None
+            if category_name and category is None:
+                raise ValueError(f"Kategorie '{category_name}' nicht gefunden")
+
+            target_stock = int(row[idx["Soll"]].value or 0)
+            min_stock = int(row[idx["Min"]].value or 0)
+            quantity = int(row[idx["Bestand"]].value or 0)
+            description = str(row[idx["Beschreibung"]].value or "").strip()
+
+            normalized_sku = _normalize_sku(sku_raw)
+
+            item = await db.scalar(select(Item).where(Item.tenant_id == ctx.tenant.id, Item.sku == normalized_sku))
+            if item:
+                item.name = name
+                item.barcode = barcode
+                item.category_id = category.id if category else None
+                item.target_stock = target_stock
+                item.min_stock = min_stock
+                item.quantity = quantity
+                item.description = description
+                updated += 1
+            else:
+                new_item = Item(
+                    tenant_id=ctx.tenant.id,
+                    sku=normalized_sku,
+                    barcode=barcode,
+                    name=name,
+                    category_id=category.id if category else None,
+                    target_stock=target_stock,
+                    min_stock=min_stock,
+                    quantity=quantity,
+                    description=description,
+                )
+                db.add(new_item)
+                imported += 1
+        except Exception as e:  # noqa: BLE001
+            errors.append({"row": str(row_num), "error": str(e)})
+
+    await db.commit()
+    return MassImportResult(imported=imported, updated=updated, errors=errors)
+
+
+@router.post("/settings/test-email", response_model=TestEmailResponse, dependencies=[Depends(require_owner_or_admin)])
+async def send_test_email(
+    payload: TestEmailRequest,
+    ctx: TenantContext = Depends(get_tenant_context),
+    db: AsyncSession = Depends(get_db),
+) -> TestEmailResponse:
+    """
+    Sendet eine Test-E-Mail an die angegebene Adresse, nutzt SMTP-Konfiguration aus Settings.
+    """
+    if not settings.SMTP_HOST or not settings.SMTP_PORT or not settings.SMTP_FROM:
+        return TestEmailResponse(ok=False, error="SMTP Konfiguration fehlt")
+
+    import smtplib
+    from email.message import EmailMessage
+
+    message = EmailMessage()
+    message["Subject"] = "Test E-Mail Lagerverwaltung"
+    message["From"] = settings.SMTP_FROM
+    message["To"] = payload.email
+    message.set_content(f"Test E-Mail für Tenant {ctx.tenant.name} ({ctx.tenant.slug})")
+
+    try:
+        with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT, timeout=10) as smtp:
+            if settings.SMTP_USERNAME and settings.SMTP_PASSWORD:
+                smtp.starttls()
+                smtp.login(settings.SMTP_USERNAME, settings.SMTP_PASSWORD)
+            smtp.send_message(message)
+        return TestEmailResponse(ok=True, error=None)
+    except Exception as e:  # noqa: BLE001
+        return TestEmailResponse(ok=False, error=str(e))
+
+
+# ----------------------
+# Bestellwürdig (Empfehlungen)
+# ----------------------
+@router.get("/orders/recommended", response_model=ReorderResponse)
+async def get_reorder_recommendations(
+    ctx: TenantContext = Depends(get_tenant_context),
+    user_ctx: CurrentUserContext = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> ReorderResponse:
+    diff_expr = Item.target_stock - Item.quantity
+    q = select(Item).where(
+        Item.tenant_id == ctx.tenant.id,
+        Item.is_active.is_(True),
+        Item.target_stock > 0,
+        Item.quantity < Item.target_stock,
+    ).order_by(diff_expr.desc())
+
+    items = (await db.scalars(q)).all()
+    return ReorderResponse(
+        items=[
+            ReorderItem(
+                id=str(item.id),
+                name=item.name,
+                sku=item.sku,
+                barcode=item.barcode,
+                category_id=str(item.category_id) if item.category_id else None,
+                quantity=item.quantity,
+                target_stock=item.target_stock,
+                min_stock=item.min_stock,
+                recommended_qty=max(item.target_stock - item.quantity, item.min_stock),
+            )
+            for item in items
+        ]
+    )
+
+
+# ----------------------
 # Bewegungen (Bestandsbuchungen)
 # ----------------------
+@router.get("/movements", response_model=list[MovementOut])
+async def list_movements(
+    start: datetime | None = Query(default=None, description="Startzeitpunkt (inklusive, UTC oder lokal ISO8601)"),
+    end: datetime | None = Query(default=None, description="Endzeitpunkt (inklusive, UTC oder lokal ISO8601)"),
+    movement_type: Literal["IN", "OUT"] | None = Query(default=None, alias="type"),
+    category_id: str | None = Query(default=None),
+    item_ids: list[str] | None = Query(default=None, alias="item_ids"),
+    limit: int = Query(default=200, ge=1, le=1000, description="Maximale Anzahl zurückgegebener Bewegungen"),
+    ctx: TenantContext = Depends(get_tenant_context),
+    user_ctx: CurrentUserContext = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> list[MovementOut]:
+    q = (
+        select(InventoryMovement, Item, Category)
+        .join(Item, InventoryMovement.item_id == Item.id)
+        .outerjoin(Category, Category.id == Item.category_id)
+        .where(InventoryMovement.tenant_id == ctx.tenant.id)
+    )
+    if start:
+        q = q.where(InventoryMovement.created_at >= start)
+    if end:
+        q = q.where(InventoryMovement.created_at <= end)
+    if movement_type:
+        q = q.where(InventoryMovement.type == movement_type)
+    if category_id:
+        q = q.where(Item.category_id == category_id)
+    if item_ids:
+        q = q.where(Item.id.in_(item_ids))
+
+    rows = (
+        await db.execute(
+            q.order_by(InventoryMovement.created_at.desc()).limit(limit)
+        )
+    ).all()
+
+    def _movement_to_out(movement: InventoryMovement, item: Item | None) -> MovementOut:
+        return MovementOut(
+            id=str(movement.id),
+            item_id=str(movement.item_id),
+            item_name=item.name if item else None,
+            category_id=str(item.category_id) if item and item.category_id else None,
+            type=movement.type,
+            barcode=movement.barcode,
+            qty=movement.qty,
+            note=movement.note,
+            created_at=movement.created_at,
+            item=MovementItemOut(
+                id=str(item.id),
+                sku=item.sku,
+                barcode=item.barcode,
+                name=item.name,
+                category_id=str(item.category_id) if item.category_id else None,
+            )
+            if item
+            else None,
+        )
+
+    return [
+        _movement_to_out(movement=row[0], item=row[1])
+        for row in rows
+    ]
+
+
 @router.post("/movements", dependencies=[Depends(require_owner_or_admin)])
 async def create_movement(
     payload: MovementPayload,
@@ -456,6 +1333,85 @@ async def create_movement(
 
     category = await db.get(Category, item.category_id) if item.category_id else None
     return {"ok": True, "item": _item_out(item, category), "movement_id": str(movement.id), "duplicate": False}
+
+
+# ----------------------
+# Inventur (Bulk-Update & Export)
+# ----------------------
+@router.post("/inventory/bulk", response_model=InventoryBulkUpdateResult, dependencies=[Depends(require_owner_or_admin)])
+async def bulk_update_inventory(
+    payload: InventoryBulkUpdateRequest,
+    ctx: TenantContext = Depends(get_tenant_context),
+    db: AsyncSession = Depends(get_db),
+) -> InventoryBulkUpdateResult:
+    errors: list[str] = []
+    updated = 0
+
+    item_ids = [u.item_id for u in payload.updates]
+    if not item_ids:
+        return InventoryBulkUpdateResult(updated=0, errors=[])
+
+    items = (
+        await db.scalars(select(Item).where(Item.tenant_id == ctx.tenant.id, Item.id.in_(item_ids)))
+    ).all()
+    item_map = {str(item.id): item for item in items}
+
+    for entry in payload.updates:
+        item = item_map.get(entry.item_id)
+        if not item:
+            errors.append(f"Item {entry.item_id} not found for tenant")
+            continue
+        item.quantity = entry.quantity
+        updated += 1
+
+    await db.commit()
+    return InventoryBulkUpdateResult(updated=updated, errors=errors)
+
+
+@router.get("/inventory/export")
+async def export_inventory(
+    ctx: TenantContext = Depends(get_tenant_context),
+    user_ctx: CurrentUserContext = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    rows = (
+        await db.execute(
+            select(Item, Category)
+            .outerjoin(Category, Category.id == Item.category_id)
+            .where(Item.tenant_id == ctx.tenant.id)
+            .order_by(Item.name.asc())
+        )
+    ).all()
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Inventur"
+
+    headers = ["Artikel-ID", "Name", "Barcode", "Kategorie", "Soll", "Min", "Bestand"]
+    ws.append(headers)
+
+    for item, category in rows:
+        ws.append(
+            [
+                item.sku,
+                item.name,
+                item.barcode,
+                category.name if category else "",
+                item.target_stock,
+                item.min_stock,
+                item.quantity,
+            ]
+        )
+
+    buf = BytesIO()
+    wb.save(buf)
+    buf.seek(0)
+    filename = "inventur.xlsx"
+    return StreamingResponse(
+        buf,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
 
 
 # ----------------------

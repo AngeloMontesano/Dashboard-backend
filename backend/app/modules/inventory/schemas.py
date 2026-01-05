@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import List, Optional
+from typing import List, Literal, Optional
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -112,6 +112,27 @@ class SKUExistsResponse(BaseModel):
     normalized_sku: str
 
 
+class MovementItemOut(BaseModel):
+    id: str
+    sku: str
+    barcode: str
+    name: str
+    category_id: Optional[str] = None
+
+
+class MovementOut(BaseModel):
+    id: str
+    item_id: str
+    item_name: Optional[str] = None
+    category_id: Optional[str] = None
+    type: Literal["IN", "OUT"]
+    barcode: str
+    qty: int
+    note: Optional[str] = None
+    created_at: datetime
+    item: Optional[MovementItemOut] = None
+
+
 class MovementPayload(BaseModel):
     client_tx_id: str = Field(..., max_length=128)
     type: str = Field(..., pattern="^(IN|OUT)$")
@@ -126,3 +147,132 @@ class MovementPayload(BaseModel):
         if v not in {"IN", "OUT"}:
             raise ValueError("type must be IN or OUT")
         return v
+
+
+class InventoryUpdate(BaseModel):
+    item_id: str
+    quantity: int = Field(..., ge=0)
+
+
+class InventoryBulkUpdateRequest(BaseModel):
+    updates: List[InventoryUpdate]
+
+
+class InventoryBulkUpdateResult(BaseModel):
+    updated: int
+    errors: List[str] = []
+
+
+class ReportDataPoint(BaseModel):
+    period: str
+    value: float
+    item_id: Optional[str] = None
+    item_name: Optional[str] = None
+
+
+class ReportSeries(BaseModel):
+    label: str
+    itemId: Optional[str] = None
+    color: Optional[str] = None
+    data: List[ReportDataPoint]
+
+
+class ReportTopItem(BaseModel):
+    id: str
+    name: str
+    quantity: float
+
+
+class ReportKpis(BaseModel):
+    totalConsumption: float
+    averagePerMonth: float
+    months: List[str]
+    topItem: Optional[ReportTopItem] = None
+
+
+class ReportResponse(BaseModel):
+    series: List[ReportSeries]
+    kpis: ReportKpis
+
+
+class OrderItemInput(BaseModel):
+    item_id: str
+    quantity: int = Field(..., gt=0)
+    note: Optional[str] = Field(default=None, max_length=255)
+
+
+class OrderCreate(BaseModel):
+    note: Optional[str] = Field(default=None, max_length=1024)
+    items: List[OrderItemInput]
+
+
+class OrderItemOut(BaseModel):
+    id: str
+    item_id: str
+    quantity: int
+    note: Optional[str] = None
+    item_name: Optional[str] = None
+    sku: Optional[str] = None
+    barcode: Optional[str] = None
+    category_id: Optional[str] = None
+
+
+class OrderOut(BaseModel):
+    id: str
+    number: str
+    status: Literal["OPEN", "COMPLETED", "CANCELED"]
+    note: Optional[str] = None
+    created_at: datetime
+    completed_at: Optional[datetime] = None
+    canceled_at: Optional[datetime] = None
+    items: List[OrderItemOut]
+
+
+class TenantSettingsBase(BaseModel):
+    company_name: str = Field("", max_length=255)
+    contact_email: str = Field("", max_length=255)
+    order_email: str = Field("", max_length=255)
+    auto_order_enabled: bool = False
+    auto_order_min: int = Field(0, ge=0)
+    export_format: str = Field("xlsx", max_length=32)
+    address: str = Field("", max_length=512)
+    phone: str = Field("", max_length=64)
+
+
+class TenantSettingsUpdate(TenantSettingsBase):
+    pass
+
+
+class TenantSettingsOut(TenantSettingsBase):
+    id: str
+
+
+class MassImportResult(BaseModel):
+    imported: int
+    updated: int
+    errors: List[dict]
+
+
+class TestEmailRequest(BaseModel):
+    email: str = Field(..., max_length=255)
+
+
+class TestEmailResponse(BaseModel):
+    ok: bool
+    error: Optional[str] = None
+
+
+class ReorderItem(BaseModel):
+    id: str
+    name: str
+    sku: str
+    barcode: str
+    category_id: Optional[str] = None
+    quantity: int
+    target_stock: int
+    min_stock: int
+    recommended_qty: int
+
+
+class ReorderResponse(BaseModel):
+    items: List[ReorderItem]

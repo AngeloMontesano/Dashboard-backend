@@ -209,9 +209,14 @@ onMounted(loadSettings);
           <span class="form-label">Export-Format</span>
           <input v-model="state.settings.export_format" type="text" class="input" :disabled="state.loading" />
         </label>
-        <label class="form-field">
+        <label class="form-field checkbox-field">
+          <input
+            v-model="state.settings.auto_order_enabled"
+            type="checkbox"
+            :disabled="state.loading"
+            aria-label="Auto-Bestellung aktivieren"
+          />
           <span class="form-label">Auto-Bestellung aktiv</span>
-          <input v-model="state.settings.auto_order_enabled" type="checkbox" class="checkbox" :disabled="state.loading" />
         </label>
         <label class="form-field">
           <span class="form-label">Auto-Bestellung Minimum</span>

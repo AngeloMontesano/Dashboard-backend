@@ -40,6 +40,7 @@ class Settings(BaseSettings):
     SMTP_USER: str | None = Field(default=None, description="SMTP Benutzername")
     SMTP_PASSWORD: str | None = Field(default=None, description="SMTP Passwort")
     SMTP_FROM: str | None = Field(default=None, description="Absender für Test-E-Mails")
+    SMTP_USE_TLS: bool = Field(default=True, description="Ob StartTLS für SMTP verwendet werden soll")
 
 
 settings = Settings()

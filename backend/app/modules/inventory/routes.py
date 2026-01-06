@@ -3,6 +3,7 @@ from __future__ import annotations
 import uuid
 from datetime import date, datetime, timedelta, timezone
 from io import BytesIO, StringIO
+import socket
 from typing import Any, Literal
 
 from fastapi import APIRouter, Depends, File, HTTPException, Path, Query, UploadFile
@@ -58,6 +59,7 @@ from app.modules.inventory.schemas import (
     EmailSendResponse,
     TestEmailRequest,
     TestEmailResponse,
+    SmtpPingResponse,
     MassImportResult,
     TenantPingResponse,
     TenantOutPing,
@@ -1024,9 +1026,34 @@ async def cancel_order(
     return _order_to_out(order, item_map)
 
 
-def _send_email_message(*, to_email: str, subject: str, body: str) -> EmailSendResponse:
+def _smtp_ping() -> tuple[bool, list[str], str | None]:
     if not settings.SMTP_HOST or not settings.SMTP_PORT or not settings.SMTP_FROM:
-        return EmailSendResponse(ok=False, error="SMTP Konfiguration fehlt")
+        return False, [], "SMTP Konfiguration fehlt"
+
+    resolved_ips: list[str] = []
+    try:
+        addr_info = socket.getaddrinfo(settings.SMTP_HOST, settings.SMTP_PORT, proto=socket.IPPROTO_TCP)
+        resolved_ips = sorted({info[4][0] for info in addr_info})
+    except socket.gaierror as e:
+        return False, resolved_ips, f"DNS Lookup fehlgeschlagen für {settings.SMTP_HOST}: {e}"
+    except Exception as e:  # noqa: BLE001
+        return False, resolved_ips, f"Auflösung für {settings.SMTP_HOST} fehlgeschlagen: {e}"
+
+    try:
+        with socket.create_connection((settings.SMTP_HOST, settings.SMTP_PORT), timeout=5):
+            pass
+    except socket.timeout:
+        return False, resolved_ips, f"Timeout beim Verbindungsaufbau zu {settings.SMTP_HOST}:{settings.SMTP_PORT}"
+    except OSError as e:
+        return False, resolved_ips, f"Verbindungsaufbau zu {settings.SMTP_HOST}:{settings.SMTP_PORT} fehlgeschlagen ({e})"
+
+    return True, resolved_ips, None
+
+
+def _send_email_message(*, to_email: str, subject: str, body: str) -> EmailSendResponse:
+    ok, resolved_ips, ping_error = _smtp_ping()
+    if not ok:
+        return EmailSendResponse(ok=False, error=ping_error)
 
     import smtplib
     from email.message import EmailMessage
@@ -1044,8 +1071,12 @@ def _send_email_message(*, to_email: str, subject: str, body: str) -> EmailSendR
                 smtp.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
             smtp.send_message(message)
         return EmailSendResponse(ok=True, error=None)
+    except smtplib.SMTPAuthenticationError as e:  # noqa: BLE001
+        return EmailSendResponse(ok=False, error=f"SMTP Auth fehlgeschlagen: {e}")
+    except smtplib.SMTPException as e:  # noqa: BLE001
+        return EmailSendResponse(ok=False, error=f"SMTP Fehler: {e}")
     except Exception as e:  # noqa: BLE001
-        return EmailSendResponse(ok=False, error=str(e))
+        return EmailSendResponse(ok=False, error=f"E-Mail Versand fehlgeschlagen: {e}")
 
 
 def _format_order_email(
@@ -1416,8 +1447,9 @@ async def send_test_email(
     """
     Sendet eine Test-E-Mail an die angegebene Adresse, nutzt SMTP-Konfiguration aus Settings.
     """
-    if not settings.SMTP_HOST or not settings.SMTP_PORT or not settings.SMTP_FROM:
-        return TestEmailResponse(ok=False, error="SMTP Konfiguration fehlt")
+    ok, resolved_ips, ping_error = _smtp_ping()
+    if not ok:
+        return TestEmailResponse(ok=False, error=ping_error)
 
     import smtplib
     from email.message import EmailMessage
@@ -1435,8 +1467,27 @@ async def send_test_email(
                 smtp.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
             smtp.send_message(message)
         return TestEmailResponse(ok=True, error=None)
+    except smtplib.SMTPAuthenticationError as e:  # noqa: BLE001
+        return TestEmailResponse(ok=False, error=f"SMTP Auth fehlgeschlagen: {e}")
+    except smtplib.SMTPException as e:  # noqa: BLE001
+        return TestEmailResponse(ok=False, error=f"SMTP Fehler: {e}")
     except Exception as e:  # noqa: BLE001
-        return TestEmailResponse(ok=False, error=str(e))
+        return TestEmailResponse(ok=False, error=f"E-Mail Versand fehlgeschlagen: {e}")
+
+
+@router.get("/settings/smtp-ping", response_model=SmtpPingResponse, dependencies=[Depends(require_owner_or_admin)])
+async def smtp_ping() -> SmtpPingResponse:
+    """
+    Prüft DNS-Auflösung und TCP-Port-Erreichbarkeit der SMTP-Konfiguration.
+    """
+    ok, resolved_ips, error = _smtp_ping()
+    return SmtpPingResponse(
+        ok=ok,
+        error=error,
+        host=settings.SMTP_HOST,
+        port=settings.SMTP_PORT,
+        resolved_ips=resolved_ips,
+    )
 
 
 # ----------------------

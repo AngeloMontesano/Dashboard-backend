@@ -46,7 +46,8 @@ router.beforeEach((to) => {
   }
   if (to.meta.public) return true;
   if (!isAuthenticated()) {
-    return { name: 'login', query: { redirect: to.fullPath } };
+    const redirect = typeof window !== 'undefined' ? `${window.location.origin}/` : '/';
+    return { name: 'login', query: { redirect } };
   }
   return true;
 });

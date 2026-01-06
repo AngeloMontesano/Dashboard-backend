@@ -4,6 +4,8 @@ import UiPage from '@/components/ui/UiPage.vue';
 import UiSection from '@/components/ui/UiSection.vue';
 import UiToolbar from '@/components/ui/UiToolbar.vue';
 import { useAuth } from '@/composables/useAuth';
+import AuthReauthBanner from '@/components/auth/AuthReauthBanner.vue';
+import { useAuthIssueBanner } from '@/composables/useAuthIssueBanner';
 import {
   listOrders,
   completeOrder,
@@ -16,6 +18,7 @@ import {
 } from '@/api/inventory';
 
 const { state: authState } = useAuth();
+const { authIssue, authMessage, handleAuthError } = useAuthIssueBanner();
 
 type Order = Awaited<ReturnType<typeof listOrders>>[number];
 type ReorderItem = Awaited<ReturnType<typeof fetchReorderRecommendations>>['items'][number];
@@ -92,6 +95,13 @@ const filteredOpenOrders = computed(() => filteredOrders.value.filter((o) => o.s
 const filteredCompletedOrders = computed(() => filteredOrders.value.filter((o) => o.status === 'COMPLETED'));
 const filteredCanceledOrders = computed(() => filteredOrders.value.filter((o) => o.status === 'CANCELED'));
 
+function showError(err: unknown, fallback: string) {
+  const classified = handleAuthError(err);
+  const detail = classified.detailMessage || classified.userMessage || fallback;
+  state.error = classified.category === 'auth' ? classified.userMessage : `${fallback}: ${detail}`;
+  return classified;
+}
+
 async function loadOrders() {
   if (!authState.accessToken) return;
   state.loading = true;
@@ -99,7 +109,7 @@ async function loadOrders() {
   try {
     state.orders = await listOrders(authState.accessToken);
   } catch (err: any) {
-    state.error = err?.message || 'Bestellungen konnten nicht geladen werden';
+    showError(err, 'Bestellungen konnten nicht geladen werden');
   } finally {
     state.loading = false;
   }
@@ -111,9 +121,12 @@ async function loadRecommendations() {
     const res = await fetchReorderRecommendations(authState.accessToken);
     state.recommended = res.items || [];
     prefillRowsFromRecommended();
-  } catch {
-    // Fallback auf lokale Items, falls Endpoint (z.B. wegen Migration) fehlt
-    if (state.items.length) {
+  } catch (err: any) {
+    const classified = handleAuthError(err);
+    if (classified.category === 'auth') {
+      state.error = classified.userMessage;
+    } else if (state.items.length) {
+      // Fallback auf lokale Items, falls Endpoint (z.B. wegen Migration) fehlt
       state.recommended = state.items
         .filter(
           (item) =>
@@ -177,8 +190,13 @@ async function loadItems() {
           )
         }));
     }
-  } catch {
-    state.items = [];
+  } catch (err: any) {
+    const classified = handleAuthError(err);
+    if (classified.category === 'auth') {
+      state.error = classified.userMessage;
+    } else {
+      state.items = [];
+    }
   }
 
   if (!state.createRows.length) {
@@ -218,7 +236,7 @@ async function markComplete(orderId: string) {
     const updated = await completeOrder(authState.accessToken, orderId);
     state.orders = state.orders.map((o) => (o.id === updated.id ? updated : o));
   } catch (err: any) {
-    state.error = err?.message || 'Erledigen fehlgeschlagen';
+    showError(err, 'Erledigen fehlgeschlagen');
   } finally {
     state.completing[orderId] = false;
   }
@@ -231,7 +249,7 @@ async function markCanceled(orderId: string) {
     const updated = await cancelOrder(authState.accessToken, orderId);
     state.orders = state.orders.map((o) => (o.id === updated.id ? updated : o));
   } catch (err: any) {
-    state.error = err?.message || 'Stornieren fehlgeschlagen';
+    showError(err, 'Stornieren fehlgeschlagen');
   } finally {
     state.canceling[orderId] = false;
   }
@@ -243,10 +261,10 @@ async function sendEmail(orderId: string) {
   try {
     const res = await sendOrderEmail(authState.accessToken, orderId, {});
     if (!res.ok) {
-      state.error = res.error || 'E-Mail-Versand fehlgeschlagen';
+      showError(res.error, 'E-Mail-Versand fehlgeschlagen');
     }
   } catch (err: any) {
-    state.error = err?.message || 'E-Mail-Versand fehlgeschlagen';
+    showError(err, 'E-Mail-Versand fehlgeschlagen');
   } finally {
     state.emailing[orderId] = false;
   }
@@ -265,7 +283,7 @@ async function downloadPdf(orderId: string) {
     a.click();
     window.URL.revokeObjectURL(url);
   } catch (err: any) {
-    state.error = err?.message || 'PDF konnte nicht geladen werden';
+    showError(err, 'PDF konnte nicht geladen werden');
   } finally {
     state.downloading[orderId] = false;
   }
@@ -298,7 +316,7 @@ async function createNewOrder() {
     state.orderNote = '';
     await loadRecommendations();
   } catch (err: any) {
-    state.error = err?.message || 'Bestellung konnte nicht angelegt werden';
+    showError(err, 'Bestellung konnte nicht angelegt werden');
   } finally {
     state.creating = false;
   }
@@ -329,6 +347,14 @@ onMounted(async () => {
           </div>
         </template>
       </UiToolbar>
+
+      <AuthReauthBanner
+        v-if="authIssue"
+        class="mt-sm"
+        :message="authMessage"
+        retry-label="Neu laden"
+        @retry="() => loadOrders()"
+      />
 
       <div v-if="state.error" class="banner banner--error mt-sm">
         {{ state.error }}

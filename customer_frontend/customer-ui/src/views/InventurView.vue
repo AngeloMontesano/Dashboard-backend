@@ -5,8 +5,11 @@ import UiSection from '@/components/ui/UiSection.vue';
 import UiToolbar from '@/components/ui/UiToolbar.vue';
 import { useAuth } from '@/composables/useAuth';
 import { fetchItems, exportInventory, bulkUpdateInventory } from '@/api/inventory';
+import AuthReauthBanner from '@/components/auth/AuthReauthBanner.vue';
+import { useAuthIssueBanner } from '@/composables/useAuthIssueBanner';
 
 const { state: authState } = useAuth();
+const { authIssue, authMessage, handleAuthError } = useAuthIssueBanner();
 
 type Item = Awaited<ReturnType<typeof fetchItems>>['items'][number];
 
@@ -32,6 +35,12 @@ const totalItems = computed(() => state.items.length);
 const belowMin = computed(() => state.items.filter((i) => i.quantity < i.min_stock).length);
 const atTarget = computed(() => state.items.filter((i) => i.quantity >= i.target_stock).length);
 
+function showError(err: unknown, fallback: string) {
+  const classified = handleAuthError(err);
+  const detail = classified.detailMessage || classified.userMessage || fallback;
+  state.error = classified.category === 'auth' ? classified.userMessage : `${fallback}: ${detail}`;
+}
+
 async function loadItems() {
   if (!authState.accessToken) return;
   state.loading = true;
@@ -44,7 +53,7 @@ async function loadItems() {
       return acc;
     }, {} as Record<string, number>);
   } catch (err: any) {
-    state.error = err?.message || 'Inventur-Daten konnten nicht geladen werden';
+    showError(err, 'Inventur-Daten konnten nicht geladen werden');
   } finally {
     state.loading = false;
   }
@@ -63,7 +72,7 @@ async function handleExport() {
     a.click();
     window.URL.revokeObjectURL(url);
   } catch (err: any) {
-    state.error = err?.message || 'Export fehlgeschlagen';
+    showError(err, 'Export fehlgeschlagen');
   } finally {
     state.exporting = false;
   }
@@ -83,10 +92,7 @@ async function handleSave() {
     state.success = 'Inventur gespeichert';
     await loadItems();
   } catch (err: any) {
-    state.error =
-      err?.response?.data?.error?.message ||
-      err?.message ||
-      'Speichern fehlgeschlagen';
+    showError(err, 'Speichern fehlgeschlagen');
   } finally {
     state.saving = false;
   }
@@ -110,6 +116,14 @@ onMounted(loadItems);
           </div>
         </template>
       </UiToolbar>
+
+      <AuthReauthBanner
+        v-if="authIssue"
+        class="mt-sm"
+        :message="authMessage"
+        retry-label="Neu laden"
+        @retry="() => loadItems()"
+      />
 
       <div v-if="state.error" class="banner banner--error mt-sm">
         {{ state.error }}

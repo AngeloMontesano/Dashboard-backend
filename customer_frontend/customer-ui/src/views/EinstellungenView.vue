@@ -4,6 +4,8 @@ import UiPage from '@/components/ui/UiPage.vue';
 import UiSection from '@/components/ui/UiSection.vue';
 import UiToolbar from '@/components/ui/UiToolbar.vue';
 import { useAuth } from '@/composables/useAuth';
+import AuthReauthBanner from '@/components/auth/AuthReauthBanner.vue';
+import { useAuthIssueBanner } from '@/composables/useAuthIssueBanner';
 import {
   fetchSettings,
   updateSettings,
@@ -13,6 +15,7 @@ import {
 } from '@/api/inventory';
 
 const { state: authState } = useAuth();
+const { authIssue, authMessage, handleAuthError } = useAuthIssueBanner();
 
 type Settings = Awaited<ReturnType<typeof fetchSettings>>;
 
@@ -38,6 +41,13 @@ const state = reactive<{
   addressNumber: ''
 });
 
+function showError(err: unknown, fallback: string) {
+  const classified = handleAuthError(err);
+  const detail = classified.detailMessage || classified.userMessage || fallback;
+  state.error = classified.category === 'auth' ? classified.userMessage : `${fallback}: ${detail}`;
+  return classified.category === 'auth';
+}
+
 async function loadSettings() {
   if (!authState.accessToken) return;
   state.loading = true;
@@ -48,7 +58,7 @@ async function loadSettings() {
     state.addressStreet = split.street;
     state.addressNumber = split.number;
   } catch (err: any) {
-    state.error = err?.message || 'Einstellungen konnten nicht geladen werden';
+    showError(err, 'Einstellungen konnten nicht geladen werden');
   } finally {
     state.loading = false;
   }
@@ -64,7 +74,7 @@ async function saveSettings() {
     state.settings = await updateSettings(authState.accessToken, state.settings);
     state.success = 'Einstellungen gespeichert';
   } catch (err: any) {
-    state.error = err?.message || 'Speichern fehlgeschlagen';
+    showError(err, 'Speichern fehlgeschlagen');
   } finally {
     state.loading = false;
   }
@@ -81,7 +91,7 @@ async function handleExport() {
     a.click();
     window.URL.revokeObjectURL(url);
   } catch (err: any) {
-    state.error = err?.message || 'Export fehlgeschlagen';
+    showError(err, 'Export fehlgeschlagen');
   }
 }
 
@@ -98,7 +108,7 @@ async function handleImport(event: Event) {
     state.success = 'Import abgeschlossen';
     await loadSettings();
   } catch (err: any) {
-    state.error = err?.message || 'Import fehlgeschlagen';
+    showError(err, 'Import fehlgeschlagen');
   } finally {
     state.importing = false;
     target.value = '';
@@ -118,7 +128,7 @@ async function handleTestEmail() {
       state.success = 'Test-E-Mail gesendet';
     }
   } catch (err: any) {
-    state.error = err?.message || 'Test-E-Mail fehlgeschlagen';
+    showError(err, 'Test-E-Mail fehlgeschlagen');
   } finally {
     state.testing = false;
   }
@@ -160,6 +170,14 @@ onMounted(loadSettings);
           </div>
         </template>
       </UiToolbar>
+
+      <AuthReauthBanner
+        v-if="authIssue"
+        class="mt-sm"
+        :message="authMessage"
+        retry-label="Neu laden"
+        @retry="() => loadSettings()"
+      />
 
       <div v-if="state.error" class="banner banner--error mt-sm">
         {{ state.error }}

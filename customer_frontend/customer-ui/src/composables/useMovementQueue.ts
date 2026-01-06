@@ -36,6 +36,7 @@ export type MovementInput = {
 const DB_NAME = 'customer_app';
 const STORE_NAME = 'movement_queue';
 const MAX_RETRIES = 10;
+const QUEUE_EVENT_KEY = 'movement_queue_events';
 
 let dbPromise: Promise<IDBPDatabase> | null = null;
 let initPromise: Promise<void> | null = null;
@@ -124,6 +125,40 @@ const deriveIssueState = (entry: MovementRecord): UiIssueState => {
   return 'none';
 };
 
+type QueueEvent =
+  | { type: 'enqueue' | 'retry' | 'delete' | 'replace'; id: string; at?: string }
+  | { type: 'send_success'; id: string; retries: number; at?: string }
+  | { type: 'send_failed'; id: string; retries: number; category?: ErrorCategory; message?: string; at?: string };
+
+const recordQueueEvent = (event: QueueEvent) => {
+  if (typeof sessionStorage === 'undefined') return;
+  const enriched = { ...event, at: event.at || new Date().toISOString() };
+  try {
+    const raw = sessionStorage.getItem(QUEUE_EVENT_KEY);
+    const existing = raw ? (JSON.parse(raw) as QueueEvent[]) : [];
+    const next = [...existing, enriched].slice(-25);
+    sessionStorage.setItem(QUEUE_EVENT_KEY, JSON.stringify(next));
+  } catch {
+    // ignore logging failures
+  }
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('movement-queue-event', { detail: enriched }));
+  }
+};
+
+const normalizeInput = (input: MovementInput) => {
+  const barcode = (input.barcode || '').trim();
+  const qty = Math.max(1, Number(input.qty) || 0);
+  const note = input.note?.trim();
+  if (!barcode || qty < 1) return null;
+  return {
+    ...input,
+    barcode,
+    qty,
+    note: note || undefined
+  };
+};
+
 const sendEntry = async (entry: MovementRecord) => {
   if (!authState.accessToken || !hasWriteAccess.value) {
     const retries = Math.min(MAX_RETRIES, entry.retries + 1);
@@ -138,6 +173,13 @@ const sendEntry = async (entry: MovementRecord) => {
     };
     await updateRecord(failed);
     lastSyncError.value = failed.last_error || null;
+    recordQueueEvent({
+      type: 'send_failed',
+      id: entry.id,
+      retries,
+      category: failed.error_category,
+      message: failed.last_error
+    });
     return false;
   }
 
@@ -167,6 +209,7 @@ const sendEntry = async (entry: MovementRecord) => {
       stop_retry: false
     };
     await updateRecord(sent);
+    recordQueueEvent({ type: 'send_success', id: entry.id, retries: entry.retries });
     return true;
   } catch (error: any) {
     const classified = classifyError(error);
@@ -184,6 +227,13 @@ const sendEntry = async (entry: MovementRecord) => {
     };
     await updateRecord(failed);
     lastSyncError.value = classified.userMessage;
+    recordQueueEvent({
+      type: 'send_failed',
+      id: entry.id,
+      retries,
+      category: classified.category,
+      message: classified.userMessage
+    });
     if (classified.category === 'auth') {
       logout();
       delete api.defaults.headers.common.Authorization;
@@ -219,20 +269,33 @@ const processQueue = async () => {
 
 const enqueueMovement = async (input: MovementInput, options?: { silent?: boolean }) => {
   await ensureInitialized();
+  const normalized = normalizeInput(input);
+  if (!normalized) {
+    if (!options?.silent) {
+      pushToast({
+        title: 'Eingabe unvollständig',
+        description: 'Bitte Barcode und Menge prüfen.',
+        variant: 'warning',
+        onceKey: 'movement-validation'
+      });
+    }
+    return;
+  }
   const now = new Date().toISOString();
   const record: MovementRecord = {
     id: generateId(),
     created_at: now,
-    type: input.type,
-    barcode: input.barcode.trim(),
-    qty: input.qty,
-    note: input.note?.trim() || undefined,
+    type: normalized.type,
+    barcode: normalized.barcode,
+    qty: normalized.qty,
+    note: normalized.note,
     status: 'queued',
     retries: 0
   };
 
   await persistRecord(record);
   await loadRecords();
+  recordQueueEvent({ type: 'enqueue', id: record.id });
 
   if (typeof navigator !== 'undefined' && navigator.onLine) {
     await processQueue();
@@ -257,6 +320,7 @@ const retryEntry = async (id: string) => {
   await ensureInitialized();
   const entry = records.value.find((r) => r.id === id);
   if (!entry) return;
+  recordQueueEvent({ type: 'retry', id });
   const retrying: MovementRecord = {
     ...entry,
     status: 'queued',
@@ -274,12 +338,16 @@ const deleteEntry = async (id: string) => {
   const db = await openDatabase();
   await db.delete(STORE_NAME, id);
   records.value = records.value.filter((r) => r.id !== id);
+  recordQueueEvent({ type: 'delete', id });
 };
 
 const replaceEntry = async (id: string, input: MovementInput) => {
   await ensureInitialized();
+  const normalized = normalizeInput(input);
+  if (!normalized) return;
   await deleteEntry(id);
-  await enqueueMovement(input, { silent: true });
+  await enqueueMovement(normalized, { silent: true });
+  recordQueueEvent({ type: 'replace', id });
 };
 
 const syncNow = async () => {

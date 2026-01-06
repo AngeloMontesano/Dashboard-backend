@@ -27,6 +27,7 @@ from app.models.item_unit import ItemUnit
 from app.models.movement import InventoryMovement
 from app.models.order import InventoryOrder, InventoryOrderItem
 from app.models.tenant_setting import TenantSetting
+import app.modules.inventory.schemas as inv_schemas
 from app.modules.inventory.schemas import (
     CategoryCreate,
     CategoryOut,
@@ -1451,15 +1452,19 @@ async def send_test_email(
     return TestEmailResponse(ok=ok, error=error)
 
 
-@router.get("/settings/smtp-ping", response_model=SmtpPingResponse, dependencies=[Depends(require_owner_or_admin)])
-async def smtp_ping_endpoint(request: Request, db: AsyncSession = Depends(get_db)) -> SmtpPingResponse:
+@router.get(
+    "/settings/smtp-ping",
+    response_model=inv_schemas.SmtpPingResponse,
+    dependencies=[Depends(require_owner_or_admin)],
+)
+async def smtp_ping_endpoint(request: Request, db: AsyncSession = Depends(get_db)) -> inv_schemas.SmtpPingResponse:
     """
     Prüft DNS-Auflösung und TCP-Port-Erreichbarkeit der SMTP-Konfiguration.
     """
     email_settings = await _get_email_settings(db)
     request_id = getattr(request.state, "request_id", None)
     ok, resolved_ips, error = _smtp_ping(email_settings, request_id)
-    return SmtpPingResponse(
+    return inv_schemas.SmtpPingResponse(
         ok=ok,
         error=error,
         host=email_settings.host,

@@ -854,6 +854,11 @@
 - **Ziel**: SMTP/Settings-Abschnitt im Admin-Frontend wieder sichtbar machen (User meldete: „nichts mehr angezeigt“).
 - **Änderung**: Sections standardmäßig aufgeklappt (system/security/theme/flags/danger), Hinweisbox bei fehlendem Admin Key hinzugefügt, damit klar ist, warum Daten fehlen; Styles für Alert ergänzt.
 
+## Schritt 62 – NameError SmtpPingResponse behoben
+- **Datum/Uhrzeit**: 2026-01-06T18:50:00+00:00
+- **Ziel**: Uvicorn-Startfehler fixen (`NameError: SmtpPingResponse not defined` beim Laden von `inventory/routes.py`).
+- **Änderung**: Explizites Modul-Alias `inv_schemas` eingeführt und Decorator/Return-Type für `/inventory/settings/smtp-ping` darauf umgestellt, sodass die Klasse auch bei zirkulären Imports garantiert im Namespace liegt.
+
 ## Schritt 54 – Analyse Branchen-Artikel-Mapping (Schritt 1)
 - **Datum/Uhrzeit**: 2026-01-06T15:45:00+00:00
 - **Ziel**: Inventar für den Admin-Editor „Branche ↔ Artikel“ erstellen und Skalierungsprobleme für 1000+ Artikel bewerten.

@@ -16,6 +16,9 @@ type ItemsPage = components["schemas"]["ItemsPage"];
 type ItemsQuery = NonNullable<paths["/admin/inventory/items"]["get"]["parameters"]["query"]>;
 type ImportItemsResponse =
   paths["/admin/inventory/items/import"]["post"]["responses"]["200"]["content"]["application/json"];
+type IndustryAssignRequest = components["schemas"]["IndustryAssignTenantsRequest"];
+type IndustryAssignResponse =
+  paths["/admin/inventory/industries/{industry_id}/assign/tenants"]["post"]["responses"]["200"]["content"]["application/json"];
 
 function withAdmin(adminKey: string, actor?: string) {
   return { headers: adminHeaders(adminKey, actor) };
@@ -172,6 +175,20 @@ export async function setIndustryItems(
 ) {
   const res = await api.put<{ ok: boolean; count: number }>(
     `/admin/inventory/industries/${industryId}/items`,
+    payload,
+    withAdmin(adminKey, actor)
+  );
+  return res.data;
+}
+
+export async function assignIndustryItemsToTenants(
+  adminKey: string,
+  industryId: string,
+  payload: IndustryAssignRequest,
+  actor?: string
+) {
+  const res = await api.post<IndustryAssignResponse>(
+    `/admin/inventory/industries/${industryId}/assign/tenants`,
     payload,
     withAdmin(adminKey, actor)
   );

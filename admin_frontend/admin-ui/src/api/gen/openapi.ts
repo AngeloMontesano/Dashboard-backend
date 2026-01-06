@@ -1001,6 +1001,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/inventory/industries/{industry_id}/assign/tenants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Admin Assign Industry Items To Tenants */
+        post: operations["admin_assign_industry_items_to_tenants_admin_inventory_industries__industry_id__assign_tenants_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/system/info": {
         parameters: {
             query?: never;
@@ -1348,6 +1365,54 @@ export interface components {
         IndustryArticlesUpdate: {
             /** Item Ids */
             item_ids: string[];
+        };
+        /** IndustryAssignTenantsRequest */
+        IndustryAssignTenantsRequest: {
+            /**
+             * Tenant Ids
+             * @default null
+             */
+            tenant_ids: string[];
+            /**
+             * Initial Quantity
+             * @default 0
+             */
+            initial_quantity: number;
+            /**
+             * Preserve Existing Quantity
+             * @default true
+             */
+            preserve_existing_quantity: boolean;
+        };
+        /** IndustryAssignTenantResult */
+        IndustryAssignTenantResult: {
+            /** Tenant Id */
+            tenant_id: string;
+            /** Tenant Slug */
+            tenant_slug: string;
+            /** Tenant Name */
+            tenant_name: string;
+            /** Created */
+            created: number;
+            /** Skipped Existing */
+            skipped_existing: number;
+        };
+        /** IndustryAssignResponse */
+        IndustryAssignResponse: {
+            /** Industry Id */
+            industry_id: string;
+            /** Template Items */
+            template_items: number;
+            /** Affected Tenants */
+            affected_tenants: number;
+            /** Created Total */
+            created_total: number;
+            /** Skipped Total */
+            skipped_total: number;
+            /** Initial Quantity */
+            initial_quantity: number;
+            /** Results */
+            results: components["schemas"]["IndustryAssignTenantResult"][];
         };
         /** IndustryCreate */
         IndustryCreate: {
@@ -4845,6 +4910,44 @@ export interface operations {
                 };
                 content: {
                     "application/json": Record<string, never>;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_assign_industry_items_to_tenants_admin_inventory_industries__industry_id__assign_tenants_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-admin-key"?: string | null;
+                "x-admin-actor"?: string | null;
+            };
+            path: {
+                industry_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IndustryAssignTenantsRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IndustryAssignResponse"];
                 };
             };
             /** @description Validation Error */

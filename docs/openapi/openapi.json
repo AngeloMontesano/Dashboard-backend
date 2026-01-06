@@ -5884,6 +5884,91 @@
         }
       }
     },
+    "/admin/inventory/industries/{industry_id}/assign/tenants": {
+      "post": {
+        "tags": [
+          "admin",
+          "admin-inventory"
+        ],
+        "summary": "Admin Assign Industry Items To Tenants",
+        "operationId": "admin_assign_industry_items_to_tenants_admin_inventory_industries__industry_id__assign_tenants_post",
+        "parameters": [
+          {
+            "name": "industry_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Industry Id"
+            }
+          },
+          {
+            "name": "x-admin-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Key"
+            }
+          },
+          {
+            "name": "x-admin-actor",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Actor"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IndustryAssignTenantsRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IndustryAssignResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/admin/system/info": {
       "get": {
         "tags": [
@@ -6692,6 +6777,109 @@
           "item_ids"
         ],
         "title": "IndustryArticlesUpdate"
+      },
+      "IndustryAssignTenantsRequest": {
+        "properties": {
+          "tenant_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Tenant Ids",
+            "default": null
+          },
+          "initial_quantity": {
+            "type": "integer",
+            "title": "Initial Quantity",
+            "default": 0
+          },
+          "preserve_existing_quantity": {
+            "type": "boolean",
+            "title": "Preserve Existing Quantity",
+            "default": true
+          }
+        },
+        "type": "object",
+        "title": "IndustryAssignTenantsRequest"
+      },
+      "IndustryAssignTenantResult": {
+        "properties": {
+          "tenant_id": {
+            "type": "string",
+            "title": "Tenant Id"
+          },
+          "tenant_slug": {
+            "type": "string",
+            "title": "Tenant Slug"
+          },
+          "tenant_name": {
+            "type": "string",
+            "title": "Tenant Name"
+          },
+          "created": {
+            "type": "integer",
+            "title": "Created"
+          },
+          "skipped_existing": {
+            "type": "integer",
+            "title": "Skipped Existing"
+          }
+        },
+        "type": "object",
+        "required": [
+          "tenant_id",
+          "tenant_slug",
+          "tenant_name",
+          "created",
+          "skipped_existing"
+        ],
+        "title": "IndustryAssignTenantResult"
+      },
+      "IndustryAssignResponse": {
+        "properties": {
+          "industry_id": {
+            "type": "string",
+            "title": "Industry Id"
+          },
+          "template_items": {
+            "type": "integer",
+            "title": "Template Items"
+          },
+          "affected_tenants": {
+            "type": "integer",
+            "title": "Affected Tenants"
+          },
+          "created_total": {
+            "type": "integer",
+            "title": "Created Total"
+          },
+          "skipped_total": {
+            "type": "integer",
+            "title": "Skipped Total"
+          },
+          "initial_quantity": {
+            "type": "integer",
+            "title": "Initial Quantity"
+          },
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/IndustryAssignTenantResult"
+            },
+            "type": "array",
+            "title": "Results"
+          }
+        },
+        "type": "object",
+        "required": [
+          "industry_id",
+          "template_items",
+          "affected_tenants",
+          "created_total",
+          "skipped_total",
+          "initial_quantity",
+          "results"
+        ],
+        "title": "IndustryAssignResponse"
       },
       "IndustryCreate": {
         "properties": {

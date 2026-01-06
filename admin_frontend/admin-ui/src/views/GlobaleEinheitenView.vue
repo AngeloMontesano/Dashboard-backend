@@ -1,6 +1,6 @@
 <template>
   <UiPage>
-    <UiSection title="Globale Einheiten" subtitle="Einheiten für Artikel (UI-only, Backend-Endpunkte fehlen)">
+    <UiSection title="Globale Einheiten" subtitle="Einheiten für Artikel (Admin-weit, ohne Tenant-Kontext)">
       <template #actions>
         <button class="btnGhost small" :disabled="busy.load" @click="loadUnits">
           {{ busy.load ? "lädt..." : "Neu laden" }}
@@ -10,11 +10,7 @@
 
       <div class="table-card">
         <div class="stack">
-          <p class="section-subtitle">
-            Keine OpenAPI-Pfade für globale Einheiten vorhanden. Aktionen werden nur im UI gespeichert und dienen als
-            Vorbereitung, bis passende Backend-Endpunkte existieren. Einheiten sollten in Artikeln wiederverwendet
-            werden, sobald das Backend sie bereitstellt.
-          </p>
+          <p class="section-subtitle">Globale Einheiten werden direkt im Backend verwaltet. Semikolon-CSV und XLSX Import/Export stehen bereit.</p>
         </div>
       </div>
 
@@ -38,15 +34,43 @@
 
       <div class="table-card">
         <div class="table-card__header">
+          <div class="tableTitle">Import / Export</div>
+          <div class="text-muted text-small">Semikolon als CSV-Trenner. XLSX unterstützt.</div>
+        </div>
+        <div class="box stack">
+          <div class="row gap8 wrap">
+            <button class="btnGhost small" type="button" :disabled="busy.export" @click="exportUnits('csv')">
+              {{ busy.export ? "exportiert..." : "Export CSV" }}
+            </button>
+            <button class="btnGhost small" type="button" :disabled="busy.export" @click="exportUnits('xlsx')">
+              {{ busy.export ? "exportiert..." : "Export XLSX" }}
+            </button>
+            <label class="btnGhost small file-btn">
+              Datei wählen (csv/xlsx)
+              <input type="file" accept=".csv,.xlsx,.xls" @change="onFileSelected" />
+            </label>
+            <button class="btnPrimary small" type="button" :disabled="busy.import || !importFile" @click="importUnits">
+              {{ busy.import ? "importiert..." : "Import starten" }}
+            </button>
+          </div>
+          <ul class="bullets">
+            <li>CSV Header: <code>code;label;is_active</code> (Semikolon).</li>
+            <li>Bestehende Codes werden aktualisiert, neue Einheiten angelegt.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="table-card">
+        <div class="table-card__header">
           <div class="tableTitle">Einheiten</div>
-          <div class="text-muted text-small">UI-only, nicht im Backend gespeichert.</div>
+          <div class="text-muted text-small">Globale Liste aus dem Backend.</div>
         </div>
         <div class="tableWrap">
           <table class="table">
             <thead>
               <tr>
-                <th>Name</th>
-                <th>Beschreibung</th>
+                <th>Code</th>
+                <th>Bezeichnung</th>
                 <th>Status</th>
                 <th class="narrowCol"></th>
               </tr>
@@ -54,12 +78,12 @@
             <tbody>
               <tr
                 v-for="entry in filteredUnits"
-                :key="entry.id"
-                :class="{ rowActive: selectedId === entry.id }"
-                @click="select(entry.id)"
+                :key="entry.code"
+                :class="{ rowActive: selectedCode === entry.code }"
+                @click="select(entry.code)"
               >
-                <td>{{ entry.name }}</td>
-                <td class="text-muted text-small">{{ entry.description || "—" }}</td>
+                <td class="mono">{{ entry.code }}</td>
+                <td>{{ entry.label }}</td>
                 <td>
                   <span class="tag" :class="entry.is_active ? 'ok' : 'bad'">
                     {{ entry.is_active ? "aktiv" : "deaktiviert" }}
@@ -88,21 +112,29 @@
             <div class="modal__body">
               <div class="form-grid">
                 <label class="field">
-                  <span class="field-label">Name *</span>
-                  <input class="input" v-model.trim="modal.name" placeholder="z. B. Stück, kg, l" />
+                  <span class="field-label">Code *</span>
+                  <input class="input" v-model.trim="modal.code" placeholder="pcs, kg, l" :disabled="modal.mode === 'edit'" />
                 </label>
                 <label class="field">
-                  <span class="field-label">Beschreibung</span>
-                  <textarea class="input" rows="2" v-model="modal.description" placeholder="Optional"></textarea>
+                  <span class="field-label">Bezeichnung *</span>
+                  <input class="input" v-model.trim="modal.label" placeholder="z. B. Stück, Kilogramm" />
                 </label>
                 <label class="field checkbox">
                   <input type="checkbox" v-model="modal.is_active" />
                   <span>Aktiv</span>
                 </label>
               </div>
-              <div class="hint">Aktion ist UI-only; Backend-Endpunkte fehlen noch.</div>
             </div>
-            <div class="modal__footer">
+            <div class="modal__footer modal__footer--with-delete">
+              <button
+                v-if="modal.mode === 'edit'"
+                class="btnGhost small danger"
+                type="button"
+                :disabled="busy.save"
+                @click="removeFromModal"
+              >
+                Löschen
+              </button>
               <button class="btnGhost" type="button" @click="closeModal">Abbrechen</button>
               <button class="btnPrimary" type="button" :disabled="busy.save" @click="save">
                 {{ busy.save ? "speichert..." : "Speichern" }}
@@ -116,37 +148,45 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, ref } from "vue";
+import { computed, reactive, ref, onMounted } from "vue";
 import { useToast } from "../composables/useToast";
 import {
   useGlobalMasterdata,
   type GlobalUnit,
-  generateId,
 } from "../composables/useGlobalMasterdata";
+import {
+  fetchGlobalUnits,
+  upsertGlobalUnit,
+  deleteGlobalUnit,
+  importGlobalUnits,
+  exportGlobalUnits,
+} from "../api/globals";
 import UiPage from "../components/ui/UiPage.vue";
 import UiSection from "../components/ui/UiSection.vue";
 
-defineProps<{
+const props = defineProps<{
   adminKey: string;
   actor: string;
 }>();
 
 const { toast } = useToast();
-const { units, upsertUnit } = useGlobalMasterdata();
+const { units, upsertUnit, replaceUnits } = useGlobalMasterdata();
 
 const search = ref("");
-const selectedId = ref("");
+const selectedCode = ref("");
+const importFile = ref<File | null>(null);
 const busy = reactive({
   load: false,
   save: false,
+  import: false,
+  export: false,
 });
 
 const modal = reactive({
   open: false,
   mode: "create" as "create" | "edit",
-  id: "",
-  name: "",
-  description: "",
+  code: "",
+  label: "",
   is_active: true,
 });
 
@@ -155,7 +195,7 @@ const filteredUnits = computed(() => {
   const list = units.value || [];
   if (!term) return list;
   return list.filter(
-    (t) => t.name.toLowerCase().includes(term) || (t.description || "").toLowerCase().includes(term)
+    (t) => t.code.toLowerCase().includes(term) || (t.label || "").toLowerCase().includes(term)
   );
 });
 
@@ -163,25 +203,23 @@ function resetFilters() {
   search.value = "";
 }
 
-function select(id: string) {
-  selectedId.value = id;
+function select(code: string) {
+  selectedCode.value = code;
 }
 
 function openCreateModal() {
   modal.open = true;
   modal.mode = "create";
-  modal.id = "";
-  modal.name = "";
-  modal.description = "";
+  modal.code = "";
+  modal.label = "";
   modal.is_active = true;
 }
 
 function openEdit(entry: GlobalUnit) {
   modal.open = true;
   modal.mode = "edit";
-  modal.id = entry.id;
-  modal.name = entry.name;
-  modal.description = entry.description || "";
+  modal.code = entry.code;
+  modal.label = entry.label;
   modal.is_active = entry.is_active;
 }
 
@@ -189,32 +227,120 @@ function closeModal() {
   modal.open = false;
 }
 
-function save() {
-  const name = modal.name.trim();
-  if (!name) {
-    toast("Name ist Pflicht", "warning");
+async function loadUnits() {
+  if (!props.adminKey) {
+    toast("Admin Key erforderlich");
+    return;
+  }
+  busy.load = true;
+  try {
+    const res = await fetchGlobalUnits(props.adminKey, props.actor);
+    replaceUnits(res);
+    toast(`Einheiten geladen (${res.length})`);
+  } catch (e: any) {
+    toast(`Laden fehlgeschlagen: ${e?.message || e}`, "error");
+  } finally {
+    busy.load = false;
+  }
+}
+
+async function save() {
+  const code = modal.code.trim();
+  const label = modal.label.trim();
+  if (!code || !label) {
+    toast("Code und Bezeichnung sind Pflicht", "warning");
     return;
   }
   busy.save = true;
-  const payload: GlobalUnit = {
-    id: modal.id || generateId(),
-    name,
-    description: modal.description?.trim() || "",
-    is_active: modal.is_active,
-  };
-  upsertUnit(payload);
-  selectedId.value = payload.id;
-  toast(
-    modal.mode === "edit" ? "Einheit aktualisiert (UI-only, Backend fehlt)" : "Einheit angelegt (UI-only, Backend fehlt)",
-    "success"
-  );
-  busy.save = false;
+  try {
+    const payload: GlobalUnit = { code, label, is_active: modal.is_active };
+    const saved = await upsertGlobalUnit(props.adminKey, payload, props.actor);
+    upsertUnit(saved);
+    selectedCode.value = saved.code;
+    toast(modal.mode === "edit" ? "Einheit aktualisiert" : "Einheit angelegt", "success");
+    closeModal();
+  } catch (e: any) {
+    toast(`Speichern fehlgeschlagen: ${e?.message || e}`, "error");
+  } finally {
+    busy.save = false;
+  }
+}
+
+async function remove(entry: GlobalUnit) {
+  if (!window.confirm(`Einheit ${entry.code} löschen?`)) return;
+  try {
+    await deleteGlobalUnit(props.adminKey, entry.code, props.actor);
+    replaceUnits(units.value.filter((u) => u.code !== entry.code));
+    toast("Einheit gelöscht", "success");
+  } catch (e: any) {
+    toast(`Löschen fehlgeschlagen: ${e?.response?.data?.detail?.error?.message || e?.message || e}`, "error");
+  }
+}
+
+async function removeFromModal() {
+  const current = units.value.find((u) => u.code === modal.code);
+  if (!current) return;
+  await remove(current);
   closeModal();
 }
 
-function loadUnits() {
-  busy.load = true;
-  toast("Backend-Unterstützung fehlt – kein Ladevorgang möglich", "warning");
-  busy.load = false;
+function onFileSelected(event: Event) {
+  const files = (event.target as HTMLInputElement).files;
+  importFile.value = files && files.length ? files[0] : null;
 }
+
+async function importUnits() {
+  if (!importFile.value) {
+    toast("Bitte Datei wählen", "warning");
+    return;
+  }
+  busy.import = true;
+  try {
+    const res = await importGlobalUnits(props.adminKey, importFile.value, props.actor);
+    toast(`Importiert: ${res.imported}, aktualisiert: ${res.updated}`, res.errors?.length ? "warning" : "success");
+    await loadUnits();
+  } catch (e: any) {
+    toast(`Import fehlgeschlagen: ${e?.message || e}`, "error");
+  } finally {
+    busy.import = false;
+  }
+}
+
+async function exportUnits(format: "csv" | "xlsx") {
+  busy.export = true;
+  try {
+    const blob = await exportGlobalUnits(props.adminKey, format, props.actor);
+    const filename = `globale_einheiten.${format === "csv" ? "csv" : "xlsx"}`;
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    link.click();
+    URL.revokeObjectURL(url);
+    toast(`Export ${format.toUpperCase()} erstellt`);
+  } catch (e: any) {
+    toast(`Export fehlgeschlagen: ${e?.message || e}`, "error");
+  } finally {
+    busy.export = false;
+  }
+}
+
+onMounted(() => {
+  if (props.adminKey) {
+    loadUnits();
+  }
+});
 </script>
+
+<style scoped>
+.modal__footer--with-delete {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  padding-top: 12px;
+}
+
+.modal__footer--with-delete .btnGhost.danger {
+  margin-right: auto;
+}
+</style>

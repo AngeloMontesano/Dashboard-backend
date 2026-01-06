@@ -1,8 +1,11 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Query, Path
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Query, Path, Response
+from fastapi.responses import StreamingResponse
 from sqlalchemy import func, select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
+from io import BytesIO, StringIO
+from openpyxl import Workbook, load_workbook
 
 from app.core.deps import get_admin_actor, require_admin_key
 from app.core.db import get_db
@@ -25,6 +28,11 @@ from app.modules.inventory.schemas import (
     IndustryUpdate,
     IndustryArticlesUpdate,
 )
+
+CSV_DELIMITER = ";"
+CATEGORY_COLUMNS: tuple[str, ...] = ("name", "is_active", "is_system")
+UNIT_COLUMNS: tuple[str, ...] = ("code", "label", "is_active")
+
 
 router = APIRouter(prefix="/inventory", tags=["admin-inventory"], dependencies=[Depends(require_admin_key), Depends(get_admin_actor)])
 
@@ -123,6 +131,107 @@ async def admin_update_category(
     return _category_out(category)
 
 
+@router.delete("/categories/{category_id}", status_code=204)
+async def admin_delete_category(
+    category_id: str,
+    db: AsyncSession = Depends(get_db),
+) -> Response:
+    category = await db.get(Category, category_id)
+    if category is None or category.tenant_id is not None:
+        raise HTTPException(
+            status_code=404,
+            detail={"error": {"code": "category_not_found", "message": "Kategorie nicht gefunden"}},
+        )
+
+    # Entkopple Artikel von der Kategorie, damit Delete sauber funktioniert
+    items = (await db.scalars(select(Item).where(Item.category_id == category.id))).all()
+    for item in items:
+        item.category_id = None
+
+    await db.delete(category)
+    await db.commit()
+    return Response(status_code=204)
+
+
+@router.post("/categories/import")
+async def admin_import_categories(
+    file: UploadFile = File(...),
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    rows = _rows_from_csv_or_excel(file)
+    _ensure_columns(rows, CATEGORY_COLUMNS)
+
+    imported = 0
+    updated = 0
+    errors: list[dict[str, str]] = []
+    for idx, row in enumerate(rows, start=2):
+        try:
+            name = str(row.get("name") or "").strip()
+            if not name:
+                raise ValueError("name ist Pflicht")
+            is_active = str(row.get("is_active", "true")).strip().lower() in {"1", "true", "yes", "y"}
+            is_system = str(row.get("is_system", "true")).strip().lower() in {"1", "true", "yes", "y"}
+
+            existing = await db.scalar(
+                select(Category).where(Category.tenant_id.is_(None), func.lower(Category.name) == func.lower(name))
+            )
+            if existing:
+                existing.is_active = is_active
+                existing.is_system = is_system
+                updated += 1
+            else:
+                db.add(
+                    Category(
+                        tenant_id=None,
+                        name=name,
+                        is_system=is_system,
+                        is_active=is_active,
+                    )
+                )
+                imported += 1
+        except Exception as exc:  # noqa: BLE001
+            errors.append({"row": str(idx), "error": str(exc)})
+
+    await db.commit()
+    return {"imported": imported, "updated": updated, "errors": errors}
+
+
+@router.get("/categories/export")
+async def admin_export_categories(
+    format: str = Query("csv", pattern="^(csv|xlsx)$"),
+    db: AsyncSession = Depends(get_db),
+):
+    import csv
+
+    rows = (await db.scalars(select(Category).where(Category.tenant_id.is_(None)).order_by(Category.name.asc()))).all()
+    if format == "xlsx":
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Categories"
+        ws.append(list(CATEGORY_COLUMNS))
+        for cat in rows:
+            ws.append([cat.name, cat.is_active, cat.is_system])
+        out = BytesIO()
+        wb.save(out)
+        out.seek(0)
+        return StreamingResponse(
+            out,
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition": 'attachment; filename="global_categories.xlsx"'},
+        )
+
+    buf = StringIO()
+    writer = csv.DictWriter(buf, fieldnames=CATEGORY_COLUMNS, delimiter=CSV_DELIMITER)
+    writer.writeheader()
+    for cat in rows:
+        writer.writerow({"name": cat.name, "is_active": cat.is_active, "is_system": cat.is_system})
+    return StreamingResponse(
+        iter([buf.getvalue()]),
+        media_type="text/csv",
+        headers={"Content-Disposition": 'attachment; filename="global_categories.csv"'},
+    )
+
+
 @router.get("/units", response_model=list[ItemUnitOut])
 async def admin_list_units(db: AsyncSession = Depends(get_db)) -> list[ItemUnitOut]:
     rows = (await db.scalars(select(ItemUnit).order_by(ItemUnit.code.asc()))).all()
@@ -141,6 +250,97 @@ async def admin_upsert_unit(payload: ItemUnitOut, db: AsyncSession = Depends(get
     await db.commit()
     await db.refresh(unit)
     return ItemUnitOut(code=unit.code, label=unit.label, is_active=unit.is_active)
+
+
+@router.delete("/units/{code}", status_code=204)
+async def admin_delete_unit(code: str, db: AsyncSession = Depends(get_db)) -> Response:
+    unit = await db.get(ItemUnit, code)
+    if unit is None:
+        raise HTTPException(
+            status_code=404,
+            detail={"error": {"code": "unit_not_found", "message": "Einheit nicht gefunden"}},
+        )
+
+    # Prüfen, ob Einheit genutzt wird
+    in_use = await db.scalar(select(func.count()).select_from(Item).where(Item.unit == code))
+    if in_use:
+        raise HTTPException(
+            status_code=400,
+            detail={"error": {"code": "unit_in_use", "message": "Einheit wird von Artikeln verwendet"}},
+        )
+
+    await db.delete(unit)
+    await db.commit()
+    return Response(status_code=204)
+
+
+@router.post("/units/import")
+async def admin_import_units(
+    file: UploadFile = File(...),
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    rows = _rows_from_csv_or_excel(file)
+    _ensure_columns(rows, UNIT_COLUMNS)
+
+    imported = 0
+    updated = 0
+    errors: list[dict[str, str]] = []
+    for idx, row in enumerate(rows, start=2):
+        try:
+            code = str(row.get("code") or "").strip()
+            label = str(row.get("label") or "").strip()
+            if not code or not label:
+                raise ValueError("code und label sind Pflicht")
+            is_active = str(row.get("is_active", "true")).strip().lower() in {"1", "true", "yes", "y"}
+            unit = await db.get(ItemUnit, code)
+            if unit:
+                unit.label = label
+                unit.is_active = is_active
+                updated += 1
+            else:
+                db.add(ItemUnit(code=code, label=label, is_active=is_active))
+                imported += 1
+        except Exception as exc:  # noqa: BLE001
+            errors.append({"row": str(idx), "error": str(exc)})
+
+    await db.commit()
+    return {"imported": imported, "updated": updated, "errors": errors}
+
+
+@router.get("/units/export")
+async def admin_export_units(
+    format: str = Query("csv", pattern="^(csv|xlsx)$"),
+    db: AsyncSession = Depends(get_db),
+):
+    import csv
+
+    rows = (await db.scalars(select(ItemUnit).order_by(ItemUnit.code.asc()))).all()
+    if format == "xlsx":
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Units"
+        ws.append(list(UNIT_COLUMNS))
+        for unit in rows:
+            ws.append([unit.code, unit.label, unit.is_active])
+        out = BytesIO()
+        wb.save(out)
+        out.seek(0)
+        return StreamingResponse(
+            out,
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition": 'attachment; filename="global_units.xlsx"'},
+        )
+
+    buf = StringIO()
+    writer = csv.DictWriter(buf, fieldnames=UNIT_COLUMNS, delimiter=CSV_DELIMITER)
+    writer.writeheader()
+    for unit in rows:
+        writer.writerow({"code": unit.code, "label": unit.label, "is_active": unit.is_active})
+    return StreamingResponse(
+        iter([buf.getvalue()]),
+        media_type="text/csv",
+        headers={"Content-Disposition": 'attachment; filename="global_units.csv"'},
+    )
 
 
 @router.get("/items", response_model=ItemsPage)
@@ -274,43 +474,89 @@ async def admin_update_item(item_id: str, payload: ItemUpdate, db: AsyncSession 
     return _item_out_admin(item, category)
 
 
-@router.post("/items/import")
-async def admin_import_items(
-    file: UploadFile = File(...),
-    db: AsyncSession = Depends(get_db),
-):
+@router.delete("/items/{item_id}", status_code=204)
+async def admin_delete_item(item_id: str, db: AsyncSession = Depends(get_db)) -> Response:
+    item = await db.get(Item, item_id)
+    if item is None or item.tenant_id is not None:
+        raise HTTPException(
+            status_code=404,
+            detail={"error": {"code": "item_not_found", "message": "Artikel nicht gefunden"}},
+        )
+
+    await db.delete(item)
+    await db.commit()
+    return Response(status_code=204)
+
+
+def _rows_from_csv_or_excel(file: UploadFile) -> list[dict]:
     import csv
-    content = await file.read()
+
+    filename = (file.filename or "").lower()
+    if filename.endswith((".xlsx", ".xls")):
+        try:
+            wb = load_workbook(BytesIO(file.file.read()))
+            ws = wb.active
+        except Exception as exc:  # noqa: BLE001
+            raise HTTPException(status_code=400, detail={"error": {"code": "invalid_excel", "message": str(exc)}})
+        data: list[dict] = []
+        headers: list[str] = []
+        for idx, row in enumerate(ws.iter_rows(values_only=True), start=1):
+            if idx == 1:
+                headers = [str(cell).strip() if cell is not None else "" for cell in row]
+                continue
+            values: dict[str, str] = {}
+            for col_idx, header in enumerate(headers):
+                values[header] = row[col_idx] if col_idx < len(row) else None
+            data.append(values)
+        return data
+
+    # CSV mit Semikolon
+    content = file.file.read()
     try:
         text = content.decode("utf-8-sig")
     except UnicodeDecodeError:
         raise HTTPException(status_code=400, detail={"error": {"code": "invalid_encoding", "message": "CSV nicht UTF-8"}})
 
-    reader = csv.DictReader(text.splitlines())
+    reader = csv.DictReader(text.splitlines(), delimiter=CSV_DELIMITER)
     if not reader.fieldnames:
         raise HTTPException(status_code=400, detail={"error": {"code": "invalid_csv", "message": "CSV hat keine Header-Zeile"}})
+    return list(reader)
 
-    missing_columns = [col for col in CSV_COLUMNS if col not in reader.fieldnames]
+
+def _ensure_columns(rows: list[dict], required: tuple[str, ...]) -> None:
+    if not rows:
+        raise HTTPException(status_code=400, detail={"error": {"code": "empty_payload", "message": "Keine Daten gefunden"}})
+    headers = {key for key in rows[0].keys() if key is not None}
+    missing_columns = [col for col in required if col not in headers]
     if missing_columns:
         raise HTTPException(
             status_code=400,
             detail={"error": {"code": "missing_columns", "message": f"Fehlende Spalten: {', '.join(missing_columns)}"}},
         )
 
+
+@router.post("/items/import")
+async def admin_import_items(
+    file: UploadFile = File(...),
+    db: AsyncSession = Depends(get_db),
+):
+    rows = _rows_from_csv_or_excel(file)
+    _ensure_columns(rows, CSV_COLUMNS)
+
     imported = 0
     updated = 0
     errors: list[dict[str, str]] = []
 
-    for idx, row in enumerate(reader, start=2):
+    for idx, row in enumerate(rows, start=2):
         try:
-            sku_raw = row.get("sku", "").strip()
-            barcode = row.get("barcode", "").strip()
-            name = row.get("name", "").strip()
+            sku_raw = str(row.get("sku") or "").strip()
+            barcode = str(row.get("barcode") or "").strip()
+            name = str(row.get("name") or "").strip()
             if not sku_raw or not barcode or not name:
                 raise ValueError("sku, barcode und name sind Pflicht")
 
             normalized_sku = _normalize_sku(sku_raw, prefix_customer=False)
-            category_name = row.get("category", "")
+            category_name = str(row.get("category") or "")
             category = None
             if category_name:
                 category = await db.scalar(
@@ -377,9 +623,11 @@ async def admin_import_items(
 
 
 @router.get("/items/export")
-async def admin_export_items(db: AsyncSession = Depends(get_db)) -> dict:
+async def admin_export_items(
+    format: str = Query("csv", pattern="^(csv|xlsx)$"),
+    db: AsyncSession = Depends(get_db),
+):
     import csv
-    from io import StringIO
 
     rows = (
         await db.scalars(
@@ -394,8 +642,40 @@ async def admin_export_items(db: AsyncSession = Depends(get_db)) -> dict:
         cat_rows = (await db.scalars(select(Category).where(Category.id.in_(category_ids)))).all()
         categories = {c.id: c for c in cat_rows}
 
+    if format == "xlsx":
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Items"
+        ws.append(list(CSV_COLUMNS))
+        for item in rows:
+            ws.append(
+                [
+                    item.sku,
+                    item.barcode,
+                    item.name,
+                    item.description,
+                    item.quantity,
+                    item.unit,
+                    item.is_active,
+                    categories.get(item.category_id).name if item.category_id else "",
+                    item.min_stock,
+                    item.max_stock,
+                    item.target_stock,
+                    item.recommended_stock,
+                    item.order_mode,
+                ]
+            )
+        out = BytesIO()
+        wb.save(out)
+        out.seek(0)
+        return StreamingResponse(
+            out,
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition": 'attachment; filename="global_items.xlsx"'},
+        )
+
     buf = StringIO()
-    writer = csv.DictWriter(buf, fieldnames=CSV_COLUMNS)
+    writer = csv.DictWriter(buf, fieldnames=CSV_COLUMNS, delimiter=CSV_DELIMITER)
     writer.writeheader()
     for item in rows:
         writer.writerow(
@@ -415,8 +695,11 @@ async def admin_export_items(db: AsyncSession = Depends(get_db)) -> dict:
                 "order_mode": item.order_mode,
             }
         )
-
-    return {"csv": buf.getvalue()}
+    return StreamingResponse(
+        iter([buf.getvalue()]),
+        media_type="text/csv",
+        headers={"Content-Disposition": 'attachment; filename="global_items.csv"'},
+    )
 
 
 @router.get("/industries", response_model=list[IndustryOut])
@@ -474,6 +757,20 @@ async def admin_update_industry(
     await db.commit()
     await db.refresh(entry)
     return IndustryOut(id=str(entry.id), name=entry.name, description=entry.description, is_active=entry.is_active)
+
+
+@router.delete("/industries/{industry_id}", status_code=204)
+async def admin_delete_industry(
+    industry_id: str,
+    db: AsyncSession = Depends(get_db),
+) -> Response:
+    entry = await db.get(Industry, industry_id)
+    if entry is None:
+        raise HTTPException(status_code=404, detail={"error": {"code": "industry_not_found", "message": "Branche nicht gefunden"}})
+
+    await db.delete(entry)
+    await db.commit()
+    return Response(status_code=204)
 
 
 @router.get("/industries/{industry_id}/items", response_model=list[ItemOut])

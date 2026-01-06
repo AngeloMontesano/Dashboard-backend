@@ -844,6 +844,11 @@
 - **Offene Punkte**
   - Weitere UX/Fehlerdetails (z. B. Detail-Klappbox mit request_id) optional nachrüsten; Monitoring der neuen Logs empfohlen.
 
+## Schritt 60 – Alembic Revision gekürzt
+- **Datum/Uhrzeit**: 2026-01-06T18:20:00+00:00
+- **Ziel**: Fehler beim Migration-Run beheben (`value too long for type character varying(32)` in `alembic_version`).
+- **Änderung**: Revision-ID gekürzt und Datei auf `0013_add_use_tls_flag` umbenannt; Revision-String jetzt 23 Zeichen (<32), damit Update des `alembic_version`-Felds funktioniert.
+
 ## Schritt 54 – Analyse Branchen-Artikel-Mapping (Schritt 1)
 - **Datum/Uhrzeit**: 2026-01-06T15:45:00+00:00
 - **Ziel**: Inventar für den Admin-Editor „Branche ↔ Artikel“ erstellen und Skalierungsprobleme für 1000+ Artikel bewerten.

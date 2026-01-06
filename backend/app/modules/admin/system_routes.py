@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from email.message import EmailMessage
+import smtplib
 
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
@@ -9,6 +11,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
+from app.core.email_settings import EmailSettings, load_email_settings, upsert_email_settings
 from app.core.db import get_db
 
 
@@ -37,6 +40,26 @@ class SystemActionResponse(BaseModel):
     performed: bool
     detail: str
     timestamp: str
+
+
+class SystemEmailSettings(BaseModel):
+    host: str | None = None
+    port: int | None = None
+    user: str | None = None
+    from_email: str | None = None
+    has_password: bool = False
+
+
+class SystemEmailSettingsUpdate(BaseModel):
+    host: str | None = None
+    port: int | None = None
+    user: str | None = None
+    password: str | None = None
+    from_email: str | None = None
+
+
+class SystemEmailTestRequest(BaseModel):
+    email: str
 
 
 def _safe(value: str | None) -> str:
@@ -70,6 +93,58 @@ async def admin_system_info(db: AsyncSession = Depends(get_db)) -> SystemInfoRes
     )
 
 
+@router.get("/email", response_model=SystemEmailSettings)
+async def admin_system_email_settings(db: AsyncSession = Depends(get_db)) -> SystemEmailSettings:
+    email_settings = await load_email_settings(db)
+    return _email_settings_to_response(email_settings)
+
+
+@router.put("/email", response_model=SystemEmailSettings)
+async def admin_update_system_email_settings(
+    payload: SystemEmailSettingsUpdate,
+    db: AsyncSession = Depends(get_db),
+) -> SystemEmailSettings:
+    email_settings = await upsert_email_settings(
+        db,
+        host=payload.host,
+        port=payload.port,
+        user=payload.user,
+        password=payload.password,
+        from_email=payload.from_email,
+    )
+    return _email_settings_to_response(email_settings)
+
+
+@router.post("/email/test", response_model=SystemActionResponse)
+async def admin_system_email_test(
+    payload: SystemEmailTestRequest,
+    db: AsyncSession = Depends(get_db),
+) -> SystemActionResponse:
+    email_settings = await load_email_settings(db)
+    try:
+        _send_with_settings(
+            recipient=payload.email,
+            subject="SMTP Test",
+            body="Test-E-Mail aus den Admin Systemeinstellungen.",
+            email_settings=email_settings,
+        )
+        return SystemActionResponse(
+            action="email_test",
+            supported=True,
+            performed=True,
+            detail="Test-E-Mail gesendet",
+            timestamp=_now_iso(),
+        )
+    except Exception as exc:  # noqa: BLE001
+        return SystemActionResponse(
+            action="email_test",
+            supported=True,
+            performed=False,
+            detail=str(exc),
+            timestamp=_now_iso(),
+        )
+
+
 def _unsupported(action: str, detail: str) -> SystemActionResponse:
     return SystemActionResponse(
         action=action,
@@ -78,6 +153,34 @@ def _unsupported(action: str, detail: str) -> SystemActionResponse:
         detail=detail,
         timestamp=_now_iso(),
     )
+
+
+def _email_settings_to_response(email_settings: EmailSettings) -> SystemEmailSettings:
+    return SystemEmailSettings(
+        host=email_settings.host,
+        port=email_settings.port,
+        user=email_settings.user,
+        from_email=email_settings.from_email,
+        has_password=bool(email_settings.password),
+    )
+
+
+def _send_with_settings(recipient: str, subject: str, body: str, email_settings: EmailSettings) -> bool:
+    if not email_settings.host or not email_settings.port or not email_settings.from_email:
+        raise ValueError("SMTP Konfiguration fehlt")
+
+    message = EmailMessage()
+    message["Subject"] = subject
+    message["From"] = email_settings.from_email
+    message["To"] = recipient
+    message.set_content(body)
+
+    with smtplib.SMTP(email_settings.host, email_settings.port, timeout=10) as smtp:
+        if email_settings.user and email_settings.password:
+            smtp.starttls()
+            smtp.login(email_settings.user, email_settings.password)
+        smtp.send_message(message)
+    return True
 
 
 @router.post("/actions/cache-reset", response_model=SystemActionResponse)

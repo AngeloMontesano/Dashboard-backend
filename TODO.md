@@ -10,6 +10,11 @@
 - [H-01] Optionen für leichtes Monitoring ohne Grafana evaluieren – Epic H
 - [I-01] Felddefinitionen für globale/tenant-spezifische Kontakte dokumentieren – Epic I
 
+### Parallelisierungs-Empfehlung (Now)
+- Stream 1 (Backend/Docs): A-01 (Status-API Spezifikation) + B-01 (Globales Datenmodell) + H-01 (Monitoring-Optionen) parallel abstimmen.
+- Stream 2 (Customer UX): A-04 (Bootstrap Preflight) + C-02 (Reporting UX-Flow) + D-01 (KPI-Routen) in einem UX-Review-Slot bündeln.
+- Stream 3 (Admin/Docs): G-01 (Doku-Struktur) + I-01 (Kontakt-Felder) gemeinsam erarbeiten; Wechselwirkungen in Admin-Settings klären.
+
 ## Next
 - [A-05] Tenant-Status-View Texte/CTAs finalisieren – Epic A
 - [A-10] QA-Checkliste Tenant-Status (404/Headers/Mobile/Darkmode) – Epic A
@@ -24,6 +29,7 @@
 
 ## Later
 - [A-08] Status-Caching/Retry-Strategie implementieren (Konzept) – Epic A
+- [A-11] Proxy/404 Smoke-Test-Plan erstellen – Epic A
 - [B-10] Konzept Verteilung globaler Kataloge an Tenants dokumentieren – Epic B
 - [C-09] Export-Konzept (Button/Format) festlegen – Epic C
 - [D-08] QA-Checkliste Navigation KPI-Karten – Epic D

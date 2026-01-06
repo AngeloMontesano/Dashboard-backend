@@ -39,6 +39,7 @@ from app.modules.inventory.schemas import (
     OrderOut,
     OrderEmailRequest,
     TenantSettingsOut,
+    TenantSettingsUpdate,
     ReportResponse,
     ReportSeries,
     ReportDataPoint,
@@ -55,6 +56,9 @@ from app.modules.inventory.schemas import (
     RecommendedOrdersResponse,
     SKUExistsResponse,
     EmailSendResponse,
+    TestEmailRequest,
+    TestEmailResponse,
+    MassImportResult,
     TenantPingResponse,
     TenantOutPing,
 )

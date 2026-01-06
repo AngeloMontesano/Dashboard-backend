@@ -96,6 +96,6 @@
 - Keine Task-Änderungen; offene Punkte bleiben A-01 Abnahme, danach QA/Proxy (A-10/A-11).
 
 ## 2024-06-28
-- TENANT_STATUS-Spec um Implementierungs-Mapping ergänzt (Backend: `modules/public/routes.py::tenant_status`, Slug-Priorität, DB-Probe, 200-only).
-- EPIC_A API/Backend-Annahmen mit aktuellem Backend-Stand verknüpft, damit Coding-Startpunkte klar sind.
-- Offene Punkte: A-01 Review weiterhin ausstehend; QA-Checkliste (A-10) und Proxy-Testplan (A-11) noch offen, Coding-Tasks starten nach A-01 Freigabe.
+- Globale-Katalog-Spezifikation präzisiert (Paging-Metadaten, Fehlermeldungen `industry_in_use/category_in_use/item_in_use/forbidden_system_record`, cURL-Beispiele, QA-Checkliste) in `docs/openapi/GLOBAL_CATALOG.md`.
+- Ziel: Review von B-02/B-03 beschleunigen und Referenzfehler klar benennen; keine Änderungen an Tasks.
+- Offene Punkte: B-01/B-02 Review, danach Alembic-Entwurf (B-03) und Admin-UI-Navigation (B-04) starten.

@@ -535,3 +535,37 @@
   - Live-Suche reagiert schnell, vermeidet Doppel-Requests, nutzt Kategorie-Filter und hält UI ohne rohe Fehlermeldungen.
 - **Tests**
   - `npm run build` (customer_frontend/customer-ui) – erfolgreich, Warnung bzgl. Chunk-Größe unverändert.
+
+## Schritt 42 – Analyse Globale Einstellungen & OpenAPI-Abdeckung
+- **Datum/Uhrzeit**: 2026-01-06T03:30:00Z
+- **Ziel**: Grundlagen für „Globale Einstellungen“ im Admin-Frontend klären (Navigation, Views, API-Verfügbarkeit für globale Artikel/Kategorien/Typen/Branchen sowie Branchen-Mapping und Tenant-Branchenfeld).
+- **Was wurde geprüft**
+  - Navigation/Layout: `src/App.vue` zeigt einen statischen Block „Globale Einstellungen“ (Globale Artikel/Kategorien/Typen/Branchen), aber keine klickbaren Routen oder Views; aktive Sektionen sind nur `kunden`, `memberships`, `operations`, `users`, `settings`.
+  - Vorhandene Admin-API-Wrapper: `src/api/admin.ts` (Tenants, Users, Memberships, Audit, Diagnostics, Tenant-Settings), `src/api/platform.ts` (Health); beide nutzen die zentrale Axios-Instanz `src/api/client.ts` mit `/api`-Basis.
+  - OpenAPI (Admin-Frontend `src/api/gen/openapi.ts`): Inventar-Endpunkte vorhanden für Kategorien (`/inventory/categories` GET/POST, `/inventory/categories/{id}` PATCH) mit Schemata `CategoryCreate/Out/Update` (Name, is_active), Items (`/inventory/items` GET/POST, `/inventory/items/{id}` PATCH, SKU-Existenz, Import/Export) mit `ItemCreate/Update/Out` (SKU/Barcode/Name/Description/Quantity/Unit/is_active/category_id/...); Reporting/Orders/Settings/Movements ebenfalls enthalten.
+  - OpenAPI-Lücken: Keine Pfade/Schemata für globale Typen oder Branchen/Industries, kein Mapping Branche↔Artikel, kein Feld für Branche/Industry im `TenantSettings*`-Schema oder in `TenantUpdate`.
+- **Ergebnis**
+  - Für die geplanten Global-Views existieren nur Inventar-Kategorien/Items-Endpunkte; Typen/Branchen und Mapping sowie ein Tenant-Branchenfeld fehlen im OpenAPI. Navigation/Views für „Globale Einstellungen“ müssen neu aufgebaut werden; fehlende Endpunkte sind zu berücksichtigen (UI+TODO).
+
+## Schritt 43 – Globale Einstellungen UI (UI-only mangels Backend)
+- **Datum/Uhrzeit**: 2026-01-06T04:30:00Z
+- **Ziel**: Admin-Frontend um bedienbare „Globale Einstellungen“ erweitern (Artikel, Kategorien, Typen, Branchen inkl. Mapping) und Kundenbranche-Dropdown im Tenant-Formular ergänzen, trotz fehlender Backend-Endpunkte.
+- **Was wurde geändert**
+  - Neue zentrale Stammdaten-Composable `useGlobalMasterdata` mit geteiltem lokalem Zustand (Artikel, Kategorien, Typen, Branchen, Branchen→Artikel-Zuordnung) und ID-Helper; neue API-Wrapper `src/api/globals.ts` für vorhandene Inventar-Pfade (Categories/Items) auf Basis der OpenAPI-Typen.
+  - Navigation erweitert: Sidebar-Buttons und Routing für `globals-articles/-categories/-types/-industries`; `App.vue` rendert entsprechende Views mit Titeln/Breadcrumbs.
+  - Neue Views `GlobaleArtikelView`, `GlobaleKategorienView`, `GlobaleTypenView`, `GlobaleBranchenView`: jeweils Page/Section-Layout, Suche/Filter, Tabellen, Create/Edit-Dialoge, Status-Tags und Toasts. Mangels Backend sind alle Aktionen UI-only; Hinweise und Disabled-Reloads verdeutlichen fehlende Endpunkte. Branchen-View enthält UI-only Mapping Branche→Artikel (Checkbox-Multiselect).
+  - Tenant-Formular: Dropdown „Kundenbranche (UI-only)“ mit globalen Branchen aus dem gemeinsamen Zustand; Auswahl wird pro Tenant in `localStorage` gepuffert, da `TenantSettings` kein Branchenfeld bietet. Kein Einfluss auf Payload.
+  - TODO/Roadmap aktualisiert: fehlende Backend-Endpunkte für globale Stammdaten und Branchenfeld in Tenant-Settings dokumentiert.
+- **Tests**
+  - `npm run build` (admin_frontend/admin-ui)
+
+## Schritt 44 – Admin Globales: Einheiten & Import/Export Hinweis
+- **Datum/Uhrzeit**: 2026-01-06T05:20:00Z
+- **Ziel**: Korrektur „Globale Typen“ → „Globale Einheiten“, Import/Export-Anforderungen sichtbar machen und Backend-Lücken dokumentieren (admin-fähige Artikel-Import/Export-Endpunkte, Einheiten, Schreibschutz/Prefix-Regel für Kundenartikel).
+- **Was wurde geändert**
+  - Neue View `GlobaleEinheitenView` (UI-only mangels Endpunkte) und Navigation/Title angepasst; bestehende Typen-View entfernt.
+  - Artikel-View ergänzt um Import/Export-Sektion mit deaktivierten Aktionen und Hinweisen auf fehlende Admin-Endpunkte; Hinweise auf Schreibschutz für Admin-Artikel und `z_`-Prefix für Kundenartikel aufgenommen.
+  - Globals-Composable um Einheiten-State ergänzt; Artikel-Form nutzt globale Einheiten (Fallback auf Standardwerte).
+  - TODO/Roadmap erweitert um benötigte Backend-Endpunkte (Admin-Import/Export, Einheiten, Schreibschutz/Prefix).
+- **Tests**
+  - `npm run build` (admin_frontend/admin-ui)

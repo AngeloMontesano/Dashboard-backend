@@ -601,6 +601,18 @@
 - **Tests**
   - `npm run build` (admin_frontend/admin-ui)
 
+## Schritt 49 – Bekannte Lücken sichtbar machen
+- **Datum/Uhrzeit**: 2026-01-06T11:38:00+00:00
+- **Ziel**: Fehlende Backend-Funktionalität (Build/Commit, System-Actions) in Settings explizit kennzeichnen und Roadmap-Ergänzung für Backend-Follow-ups.
+- **Was wurde geändert**
+  - Settings/System: Backend-Build/Commit als nicht verfügbar markiert (kein Endpoint).
+  - Settings/Danger Zone: Hinweis auf fehlende Cache/Reindex-Endpoints ergänzt.
+  - Roadmap: Neues Task T6 für Backend-Gaps dokumentiert.
+- **Ergebnis**
+  - UI zeigt klar, dass Build/Commit und System-Actions fehlen; Backend-Arbeitsbedarf ist dokumentiert.
+- **Tests**
+  - `npm run build` (admin_frontend/admin-ui)
+
 ## Schritt 48 – Settings mit Build-Info ergänzt
 - **Datum/Uhrzeit**: 2026-01-06T11:26:00+00:00
 - **Ziel**: System-Abschnitt der Settings um verfügbare Build-/Versionsinformation ergänzen.

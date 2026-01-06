@@ -40,6 +40,10 @@
               <div class="muted">App Version (UI)</div>
             </div>
           </div>
+          <div class="kv">
+            <div class="k">Backend Build</div>
+            <div class="v muted">nicht verfügbar – Backend-Endpoint für Build/Commit fehlt.</div>
+          </div>
         </div>
 
         <div class="divider"></div>
@@ -111,7 +115,7 @@
         <div class="kvGrid">
           <div class="kv">
             <div class="k">Cache / Reindex</div>
-            <div class="v muted">Endpoint fehlt – nur Anzeige, keine Aktion verfügbar.</div>
+            <div class="v muted">Endpoint fehlt – nur Anzeige, keine Aktion verfügbar (siehe TODO).</div>
           </div>
           <div class="kv">
             <div class="k">System Restart</div>

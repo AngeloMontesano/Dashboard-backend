@@ -57,3 +57,7 @@
 ## 2024-06-26
 - EPIC_A QA-Checkliste verweist jetzt auf Proxy-Header-Matrix in TENANT_STATUS.md, damit A-10/A-11 konsistent prüfen.
 - Tasks unverändert; Fokus: A-01 Review, dann QA/Proxy-Checks.
+
+## 2024-06-27
+- Roadmap-Index-Referenz für A-01 erwähnt jetzt die Proxy-Header-Matrix (A-11 Vorbereitung) für konsistente QA.
+- Keine Task-Änderungen; nächste Schritte unverändert (A-01 Review, dann A-10/A-11).

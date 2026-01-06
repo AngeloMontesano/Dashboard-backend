@@ -195,6 +195,12 @@ class ReportResponse(BaseModel):
     kpis: ReportKpis
 
 
+class ItemUnitOut(BaseModel):
+    code: str
+    label: str
+    is_active: bool
+
+
 class OrderItemInput(BaseModel):
     item_id: str
     quantity: int = Field(..., gt=0)

@@ -101,11 +101,13 @@ const handleItemSelect = (event: { value: ItemOption }) => {
           v-model="dateRangeModel"
           selectionMode="range"
           :manualInput="false"
-          view="month"
-          dateFormat="mm/yy"
+          view="date"
+          dateFormat="dd.mm.yy"
           showIcon
+          showButtonBar
           placeholder="Zeitraum wählen"
           class="w-full"
+          @update:modelValue="(value) => emit('update:dateRange', value as [Date | null, Date | null])"
         />
         <small class="hint">Standard: letzte 30 Tage</small>
       </div>

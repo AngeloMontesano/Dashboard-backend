@@ -42,6 +42,17 @@
             </button>
           </nav>
 
+          <div class="sidebar-divider"></div>
+          <div class="navGroup">
+            <div class="navGroupTitle">Globale Einstellungen</div>
+            <ul class="navGroupList">
+              <li>Globale Artikel</li>
+              <li>Globale Kategorien</li>
+              <li>Globale Typen</li>
+              <li>Globale Branchen</li>
+            </ul>
+          </div>
+
           <!-- Bottom Area -->
           <div class="sideBottom">
             <!-- System Status -->
@@ -49,9 +60,9 @@
               <div class="sysTitle">System</div>
 
               <div class="sysRow">
-                <div class="statusPill" :class="api.ok ? 'ok' : 'bad'">
-                  <span class="dot"></span>
-                  <span>API {{ api.ok ? "erreichbar" : "nicht erreichbar" }}</span>
+                <div class="statusInline">
+                  <span class="statusDot" :class="api.ok ? 'ok' : 'bad'"></span>
+                  <span class="statusLabel">API erreichbar</span>
                 </div>
                 <button class="btnPrimary small" :disabled="api.busy" @click="checkApi">
                   {{ api.busy ? "prüfe..." : "Prüfen" }}
@@ -59,9 +70,9 @@
               </div>
 
             <div class="sysRow">
-              <div class="statusPill" :class="db.ok ? 'ok' : 'bad'">
-                <span class="dot"></span>
-                <span>DB {{ db.ok ? "erreichbar" : "nicht erreichbar" }}</span>
+              <div class="statusInline">
+                <span class="statusDot" :class="db.ok ? 'ok' : 'bad'"></span>
+                <span class="statusLabel">DB erreichbar</span>
               </div>
                 <button class="btnGhost small" :disabled="db.busy" @click="checkDb">
                   {{ db.busy ? "prüfe..." : "Prüfen" }}
@@ -212,8 +223,9 @@ import AdminOperationsView from "./views/AdminOperationsView.vue";
 const { toast } = useToast();
 const baseDomain = getBaseDomain();
 const apiBase = getBaseURL();
+const ADMIN_AUTH_STORAGE_KEY = "admin_auth";
 
-type OperationsTab = "overview" | "health" | "audit" | "snapshot" | "logs";
+type OperationsTab = "overview" | "health" | "audit" | "snapshot";
 
 /* Sidebar Sections */
 const sections = [
@@ -282,14 +294,16 @@ function setTenantContext(payload: { id: string; name: string; slug: string } | 
 
 function clearTenantContext() {
   setTenantContext(null);
-  toast("Tenant Auswahl entfernt");
 }
 
 function applyLogin(payload: { adminKey: string; actor: string }) {
   ui.adminKey = payload.adminKey;
   ui.actor = payload.actor || "admin";
   ui.authenticated = true;
-  toast("Admin Login erfolgreich, lade Portal...");
+  sessionStorage.setItem(
+    ADMIN_AUTH_STORAGE_KEY,
+    JSON.stringify({ adminKey: ui.adminKey, actor: ui.actor })
+  );
   quickRefresh();
 }
 
@@ -326,10 +340,9 @@ async function checkApi() {
   try {
     await platformHealth();
     api.ok = true;
-    toast("API erreichbar");
   } catch {
     api.ok = false;
-    toast("API nicht erreichbar");
+    toast("API nicht erreichbar", "danger");
   } finally {
     api.busy = false;
   }
@@ -340,10 +353,9 @@ async function checkDb() {
   try {
     await platformHealthDb();
     db.ok = true;
-    toast("DB erreichbar");
   } catch {
     db.ok = false;
-    toast("DB nicht erreichbar");
+    toast("DB nicht erreichbar", "danger");
   } finally {
     db.busy = false;
   }
@@ -364,12 +376,23 @@ function resetContext() {
   ui.adminKey = "";
   ui.actor = "";
   ui.authenticated = false;
-  toast("Admin Context zurückgesetzt");
+  sessionStorage.removeItem(ADMIN_AUTH_STORAGE_KEY);
 }
 
 /* Boot */
 onMounted(async () => {
   syncFromLocation();
+  const storedAuth = sessionStorage.getItem(ADMIN_AUTH_STORAGE_KEY);
+  if (storedAuth) {
+    try {
+      const parsed = JSON.parse(storedAuth) as { adminKey?: string; actor?: string };
+      ui.adminKey = parsed.adminKey || "";
+      ui.actor = parsed.actor || "";
+      ui.authenticated = Boolean(ui.adminKey);
+    } catch {
+      sessionStorage.removeItem(ADMIN_AUTH_STORAGE_KEY);
+    }
+  }
   window.addEventListener("popstate", syncFromLocation);
   await quickRefresh();
 });
@@ -377,13 +400,11 @@ onMounted(async () => {
 function onThemeSelect(event: Event) {
   const mode = (event.target as HTMLSelectElement).value as "light" | "dark" | "system";
   setTheme(mode);
-  toast(`Theme gesetzt: ${mode}`);
 }
 
 function openMemberships(tenantId: string) {
   goSection("memberships");
   if (tenantId) localStorage.setItem("adminSelectedTenantId", tenantId);
-  toast("Wechsle zu Tenant-User Verwaltung");
 }
 
 function logout() {
@@ -391,7 +412,6 @@ function logout() {
   ui.actor = "";
   ui.authenticated = false;
   ui.section = "kunden";
-  toast("Abgemeldet", "info");
   window.history.pushState({}, "", "/login");
 }
 
@@ -419,7 +439,7 @@ function syncFromLocation() {
 
   if (path === "/operations") {
     ui.section = "operations";
-    if (tabFromQuery && ["overview", "health", "audit", "snapshot", "logs"].includes(tabFromQuery)) {
+    if (tabFromQuery && ["overview", "health", "audit", "snapshot"].includes(tabFromQuery)) {
       operationsTab.value = tabFromQuery;
     } else {
       operationsTab.value = "overview";

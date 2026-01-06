@@ -12,8 +12,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = "0013_add_use_tls_to_system_email_settings"
-down_revision = "0012_system_email_settings"
+revision = "0014_add_use_tls_to_system_email_settings"
+down_revision = "0013_add_use_tls_flag"
 branch_labels = None
 depends_on = None
 

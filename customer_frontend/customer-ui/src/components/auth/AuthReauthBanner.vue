@@ -15,7 +15,11 @@ const emit = defineEmits<{
 const route = useRoute();
 const router = useRouter();
 
-const redirectTarget = computed(() => props.redirect || route.fullPath || '/');
+const redirectTarget = computed(() => {
+  if (props.redirect) return props.redirect;
+  if (typeof window !== 'undefined') return `${window.location.origin}/`;
+  return '/';
+});
 
 const goToLogin = () => {
   router.push({ name: 'login', query: { redirect: redirectTarget.value } });

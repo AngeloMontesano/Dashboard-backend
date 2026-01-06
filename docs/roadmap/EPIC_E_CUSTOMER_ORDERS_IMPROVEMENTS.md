@@ -35,6 +35,26 @@ Bestellungen schneller erfassen: „Bestellwürdig“ vorausgefüllt, Dialog fü
 - Prefill-Filter: `{reorderOnly: true}`.
 - Dialog-Form: Liste von `{itemId, quantity, note?}` mit Frontend-Validierung.
 
+### Bestell-Dialog Spezifikation (E-02)
+- Entry-Point: Button „Neue Bestellung“ in Bestellungen-View, optional CTA von Dashboard-Prefill.
+- Layout: Tabellarisch, Header-Zeile mit Spalten `Artikel`, `Menge`, `Notiz`, `Aktionen`.
+- Zeilen:
+  - Mindestens eine leere Zeile beim Öffnen, Plus-Button fügt neue Zeile hinzu, Minus entfernt (mindestens 1 Zeile bleibt).
+  - Artikel-Auswahl als Suchfeld (Prefix, 3+ Zeichen, Vorschlagsliste), Menge Numeric >0 (Integer), Notiz optional (Max 200 Zeichen).
+- Validierung:
+  - Pflichtfelder: Artikel, Menge >0; Validation bei Submit, keine roten Rahmen vor Eingabe.
+  - Inline-Hints unter dem Feld: „Bitte Artikel auswählen“, „Menge größer 0“.
+  - Disabled Submit, solange eine Zeile ungültig ist; Fehlermeldung gesammelt oberhalb der Tabelle: „Bitte unvollständige Zeilen korrigieren“.
+- UX/States:
+  - Busy-State: Buttons disabled, Spinner im Submit-Button.
+  - Keyboard: Tab-Reihenfolge Artikel → Menge → Notiz → Aktionen; Enter in Notiz fokussiert nächste Zeile.
+  - Fehler-Feedback: keine aggressiven roten Rahmen, stattdessen Hint + dezente Border-Farbe.
+- Aktionen:
+  - Submit: erstellt Bestellung mit allen validen Zeilen (leer Zeilen ignorieren).
+  - Cancel: schließt Dialog, reset auf initiale leere Zeile.
+  - Prefill „Bestellwürdig“ Badge sichtbar, setzt Filter `reorderOnly=true` und optional Checkbox im Dialog, die alle Artikel aus Bestellwürdig vorauswählt (Backend-Vorbereitung erforderlich).
+- Telemetrie (optional): Event „order_dialog_open“, „order_dialog_submit“, „order_dialog_cancel“ mit Zeilenzahl und Prefill-Flag, ohne PII.
+
 ## 9) Tasks (umsetzbar, klein)
 - **E-01** – Prefill-Logik definieren (Quelle: Dashboard/CTA oder Standard).  
   - Bereich: customer  

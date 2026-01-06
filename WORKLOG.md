@@ -523,3 +523,15 @@
   - Im UI verifizieren, dass Dark-Mode-Token-Anpassungen zu gewünschter Helligkeit führen und KPI-Navigation den gewünschten Kontext öffnet; optional weitere Chunk-Splitting-Optionen prüfen (Build-Warnung).
 - **Tests**
   - `npm run build` (customer_frontend/customer-ui) – erfolgreich, mit Hinweis auf Chunk-Größe.
+
+## Schritt 41 – Reporting-Filter UX nachschärfen (Debounce + Kategorie-Suggest)
+- **Datum/Uhrzeit**: 2026-01-06T02:05:00Z
+- **Ziel**: Filter im View „Berichte & Analysen“ responsiver machen: Suche mit Debounce/Abort, Kategorieabhängige Vorschläge und sichtbarer Suchstatus.
+- **Was wurde geändert**
+  - Debounced Artikelsuche verfeinert: Abbruch bestehender Requests, Suchstatus-Flag, und Default-Suggestions je gewählter Kategorie.
+  - Kategorie-Wechsel lädt Vorschlagsliste erneut (wenn kein Suchbegriff), Modus „Selektiert“ triggert automatische Kategorie-Suggestions.
+  - ReportFilters zeigt Ladezustand beim AutoComplete an.
+- **Ergebnis**
+  - Live-Suche reagiert schnell, vermeidet Doppel-Requests, nutzt Kategorie-Filter und hält UI ohne rohe Fehlermeldungen.
+- **Tests**
+  - `npm run build` (customer_frontend/customer-ui) – erfolgreich, Warnung bzgl. Chunk-Größe unverändert.

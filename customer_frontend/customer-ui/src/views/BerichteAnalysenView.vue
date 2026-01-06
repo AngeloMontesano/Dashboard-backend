@@ -46,6 +46,7 @@ let loadDebounceTimer: number | undefined;
 let searchDebounceTimer: number | undefined;
 let searchAbortController: AbortController | null = null;
 let lastSearchQuery = '';
+const searching = ref(false);
 
 const allItemOptions = computed<ItemOption[]>(() => {
   const map = new Map<string, ItemOption>();
@@ -247,6 +248,7 @@ function clearSearchController() {
 
 async function runItemSearch(query: string) {
   if (!authState.accessToken) return;
+  searching.value = true;
   clearSearchController();
   const controller = new AbortController();
   searchAbortController = controller;
@@ -272,6 +274,39 @@ async function runItemSearch(query: string) {
       life: 4000
     });
   } finally {
+    searching.value = false;
+    if (searchAbortController === controller) {
+      searchAbortController = null;
+    }
+  }
+}
+
+async function loadCategorySuggestions() {
+  if (!authState.accessToken || !filters.categoryId) return;
+  searching.value = true;
+  clearSearchController();
+  const controller = new AbortController();
+  searchAbortController = controller;
+  try {
+    const res = await fetchItems({
+      token: authState.accessToken,
+      category_id: filters.categoryId,
+      active: true,
+      page: 1,
+      page_size: 20,
+      signal: controller.signal
+    });
+    itemSuggestions.value = res.items.map(toItemOption);
+  } catch (err: any) {
+    if (controller.signal.aborted) return;
+    toast.add({
+      severity: 'warn',
+      summary: 'Suche fehlgeschlagen',
+      detail: stringifyError(err),
+      life: 4000
+    });
+  } finally {
+    searching.value = false;
     if (searchAbortController === controller) {
       searchAbortController = null;
     }
@@ -285,7 +320,14 @@ function searchItems(query: string) {
   if (!trimmed) {
     clearSearchController();
     lastSearchQuery = '';
-    itemSuggestions.value = filters.selectedItems.slice();
+    if (filters.categoryId) {
+      searchDebounceTimer = window.setTimeout(() => {
+        void loadCategorySuggestions();
+      }, 280);
+    } else {
+      itemSuggestions.value = filters.selectedItems.slice();
+      searching.value = false;
+    }
     return;
   }
 
@@ -325,7 +367,11 @@ watch(
     if (lastSearchQuery) {
       searchItems(lastSearchQuery);
     } else {
-      itemSuggestions.value = filters.selectedItems.slice();
+      if (filters.categoryId) {
+        void loadCategorySuggestions();
+      } else {
+        itemSuggestions.value = filters.selectedItems.slice();
+      }
     }
   }
 );
@@ -353,6 +399,9 @@ watch(
   (mode) => {
     if (mode !== 'selected') filters.selectedItems = [];
     if (mode === 'all') filters.aggregateAll = true;
+    if (mode === 'selected' && !lastSearchQuery && filters.categoryId) {
+      void loadCategorySuggestions();
+    }
     triggerDebouncedLoad();
   }
 );
@@ -412,6 +461,7 @@ onBeforeUnmount(() => {
       :topLimit="filters.topLimit"
       :loading="loading"
       :applying="applying"
+      :searching="searching"
       @update:dateRange="(value) => (filters.dateRange = value)"
       @update:mode="(value) => (filters.mode = value)"
       @update:category="(value) => (filters.categoryId = value)"

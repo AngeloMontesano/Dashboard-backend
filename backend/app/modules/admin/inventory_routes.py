@@ -13,6 +13,8 @@ from app.models.category import Category
 from app.models.item import Item
 from app.models.item_unit import ItemUnit
 from app.models.industry import Industry, IndustryArticle
+from app.models.tenant import Tenant
+from app.models.tenant_setting import TenantSetting
 from app.modules.inventory.routes import _normalize_sku, CSV_COLUMNS
 from app.modules.inventory.schemas import (
     CategoryCreate,
@@ -27,11 +29,17 @@ from app.modules.inventory.schemas import (
     IndustryOut,
     IndustryUpdate,
     IndustryArticlesUpdate,
+    IndustryAssignRequest,
+    IndustryAssignResponse,
+    IndustryAssignTenantResult,
+    IndustryMappingImportResult,
+    IndustryOverlapCounts,
 )
 
 CSV_DELIMITER = ";"
 CATEGORY_COLUMNS: tuple[str, ...] = ("name", "is_active", "is_system")
 UNIT_COLUMNS: tuple[str, ...] = ("code", "label", "is_active")
+INDUSTRY_MAPPING_COLUMNS: tuple[str, ...] = ("action", "sku", "barcode", "name", "category", "is_active", "item_id")
 
 
 router = APIRouter(prefix="/inventory", tags=["admin-inventory"], dependencies=[Depends(require_admin_key), Depends(get_admin_actor)])
@@ -702,6 +710,19 @@ async def admin_export_items(
     )
 
 
+@router.get("/industries/overlap-counts", response_model=IndustryOverlapCounts)
+async def admin_get_industry_overlap_counts(
+    item_ids: list[str] | None = Query(default=None),
+    db: AsyncSession = Depends(get_db),
+) -> IndustryOverlapCounts:
+    query = select(IndustryArticle.item_id, func.count(IndustryArticle.industry_id)).group_by(IndustryArticle.item_id)
+    if item_ids:
+        query = query.where(IndustryArticle.item_id.in_(item_ids))
+    rows = (await db.execute(query)).all()
+    counts = {str(item_id): int(count) for item_id, count in rows}
+    return IndustryOverlapCounts(counts=counts)
+
+
 @router.get("/industries", response_model=list[IndustryOut])
 async def admin_list_industries(db: AsyncSession = Depends(get_db)) -> list[IndustryOut]:
     rows = (await db.scalars(select(Industry).order_by(Industry.name.asc()))).all()
@@ -797,6 +818,166 @@ async def admin_list_industry_items(
     return [_item_out_admin(item, categories.get(item.category_id)) for item in mappings]
 
 
+@router.get("/industries/{industry_id}/items/export")
+async def admin_export_industry_items(
+    industry_id: str,
+    format: str = Query("csv", pattern="^(csv|xlsx)$"),
+    db: AsyncSession = Depends(get_db),
+):
+    import csv
+
+    industry = await db.get(Industry, industry_id)
+    if industry is None:
+        raise HTTPException(status_code=404, detail={"error": {"code": "industry_not_found", "message": "Branche nicht gefunden"}})
+
+    rows = (
+        await db.execute(
+            select(Item, Category)
+            .join(IndustryArticle, IndustryArticle.item_id == Item.id)
+            .outerjoin(Category, Category.id == Item.category_id)
+            .where(IndustryArticle.industry_id == industry.id)
+            .order_by(Item.name.asc())
+        )
+    ).all()
+
+    safe_name = industry.name.lower().replace(" ", "_") or industry.id
+    filename_base = f"industry_{safe_name}_items"
+
+    if format == "xlsx":
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Industry Items"
+        ws.append(list(INDUSTRY_MAPPING_COLUMNS))
+        for item, category in rows:
+            ws.append(
+                [
+                    "add",
+                    item.sku,
+                    item.barcode,
+                    item.name,
+                    category.name if category else "",
+                    item.is_active,
+                    str(item.id),
+                ]
+            )
+        out = BytesIO()
+        wb.save(out)
+        out.seek(0)
+        return StreamingResponse(
+            out,
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition": f'attachment; filename="{filename_base}.xlsx"'},
+        )
+
+    buf = StringIO()
+    writer = csv.DictWriter(buf, fieldnames=INDUSTRY_MAPPING_COLUMNS, delimiter=CSV_DELIMITER)
+    writer.writeheader()
+    for item, category in rows:
+        writer.writerow(
+            {
+                "action": "add",
+                "sku": item.sku,
+                "barcode": item.barcode,
+                "name": item.name,
+                "category": category.name if category else "",
+                "is_active": item.is_active,
+                "item_id": str(item.id),
+            }
+        )
+    return StreamingResponse(
+        iter([buf.getvalue()]),
+        media_type="text/csv",
+        headers={"Content-Disposition": f'attachment; filename="{filename_base}.csv"'},
+    )
+
+
+@router.post("/industries/{industry_id}/items/import", response_model=IndustryMappingImportResult)
+async def admin_import_industry_items(
+    industry_id: str,
+    file: UploadFile = File(...),
+    db: AsyncSession = Depends(get_db),
+) -> IndustryMappingImportResult:
+    industry = await db.get(Industry, industry_id)
+    if industry is None:
+        raise HTTPException(status_code=404, detail={"error": {"code": "industry_not_found", "message": "Branche nicht gefunden"}})
+
+    rows = _rows_from_csv_or_excel(file)
+    _ensure_columns(rows, ("sku",))
+
+    normalized_skus = {
+        _normalize_sku(str(row.get("sku") or "").strip(), prefix_customer=False)
+        for row in rows
+        if str(row.get("sku") or "").strip()
+    }
+    sku_map = {
+        item.sku: item
+        for item in (
+            await db.scalars(select(Item).where(Item.tenant_id.is_(None), Item.sku.in_(normalized_skus)))
+        ).all()
+    }
+
+    current_ids = set(
+        str(item_id)
+        for item_id in (
+            await db.scalars(select(IndustryArticle.item_id).where(IndustryArticle.industry_id == industry.id))
+        ).all()
+    )
+
+    additions: set[str] = set()
+    removals: set[str] = set()
+    errors: list[dict[str, str]] = []
+
+    for idx, row in enumerate(rows, start=2):
+        try:
+            action_raw = str(row.get("action") or "add").strip().lower()
+            if action_raw in {"", "add", "neu", "new", "+", "create"}:
+                action = "add"
+            elif action_raw in {"remove", "delete", "del", "rm", "subtract", "-"}:
+                action = "remove"
+            else:
+                raise ValueError("action muss 'add' oder 'remove' sein")
+
+            sku_raw = str(row.get("sku") or "").strip()
+            if not sku_raw:
+                raise ValueError("sku ist Pflicht")
+            normalized_sku = _normalize_sku(sku_raw, prefix_customer=False)
+            item = sku_map.get(normalized_sku)
+            if item is None:
+                raise ValueError(f"Artikel mit SKU '{sku_raw}' nicht gefunden")
+
+            item_id = str(item.id)
+            if action == "add":
+                additions.add(item_id)
+            else:
+                removals.add(item_id)
+        except Exception as exc:  # noqa: BLE001
+            errors.append({"row": str(idx), "error": str(exc)})
+
+    final_ids = (current_ids - removals) | additions
+    to_add = final_ids - current_ids
+    to_remove = current_ids - final_ids
+    skipped_missing = len([item_id for item_id in removals if item_id not in current_ids])
+
+    if to_remove:
+        await db.execute(
+            delete(IndustryArticle).where(
+                IndustryArticle.industry_id == industry.id,
+                IndustryArticle.item_id.in_(list(to_remove)),
+            )
+        )
+    for item_id in to_add:
+        db.add(IndustryArticle(industry_id=industry.id, item_id=item_id))
+
+    await db.commit()
+    return IndustryMappingImportResult(
+        added=len(to_add),
+        removed=len(to_remove),
+        skipped_missing=skipped_missing,
+        final_count=len(final_ids),
+        errors=errors,
+    )
+
+
 @router.put("/industries/{industry_id}/items")
 async def admin_set_industry_items(
     industry_id: str,
@@ -823,3 +1004,176 @@ async def admin_set_industry_items(
         db.add(IndustryArticle(industry_id=industry.id, item_id=item_id))
     await db.commit()
     return {"ok": True, "count": len(payload.item_ids)}
+
+
+@router.post("/industries/{industry_id}/assign-to-tenants", response_model=IndustryAssignResponse)
+async def admin_assign_industry_items(
+    industry_id: str,
+    payload: IndustryAssignRequest,
+    db: AsyncSession = Depends(get_db),
+) -> IndustryAssignResponse:
+    industry = await db.get(Industry, industry_id)
+    if industry is None:
+        raise HTTPException(status_code=404, detail={"error": {"code": "industry_not_found", "message": "Branche nicht gefunden"}})
+
+    source_items = (
+        await db.scalars(
+            select(Item)
+            .join(IndustryArticle, IndustryArticle.item_id == Item.id)
+            .where(IndustryArticle.industry_id == industry.id, Item.tenant_id.is_(None))
+        )
+    ).all()
+
+    if not source_items:
+        return IndustryAssignResponse(
+            industry_id=str(industry.id),
+            industry_name=industry.name,
+            total_items=0,
+            target_tenants=0,
+            created=0,
+            skipped_existing=0,
+            synced_admin_items=0,
+            missing_tenants=[],
+            mismatched_tenants=[],
+            inactive_tenants=[],
+            results=[],
+        )
+
+    requested_ids = set(payload.tenant_ids or [])
+
+    tenant_query = select(TenantSetting, Tenant).join(Tenant, Tenant.id == TenantSetting.tenant_id)
+    if requested_ids:
+        tenant_query = tenant_query.where(TenantSetting.tenant_id.in_(requested_ids))
+    else:
+        tenant_query = tenant_query.where(TenantSetting.industry_id == industry.id)
+
+    tenant_rows = (await db.execute(tenant_query)).all()
+    found_ids = {row[0].tenant_id for row in tenant_rows}
+    missing_tenants = [str(tid) for tid in requested_ids if tid not in found_ids]
+
+    mismatched_tenants: list[str] = []
+    inactive_tenants: list[str] = []
+    valid_tenants: list[tuple[TenantSetting, Tenant]] = []
+    for settings, tenant in tenant_rows:
+        if settings.industry_id != industry.id:
+            mismatched_tenants.append(str(settings.tenant_id))
+            continue
+        if tenant.is_active is False:
+            inactive_tenants.append(str(settings.tenant_id))
+            continue
+        valid_tenants.append((settings, tenant))
+
+    if not valid_tenants:
+        return IndustryAssignResponse(
+            industry_id=str(industry.id),
+            industry_name=industry.name,
+            total_items=len(source_items),
+            target_tenants=0,
+            created=0,
+            skipped_existing=0,
+            synced_admin_items=0,
+            missing_tenants=missing_tenants,
+            mismatched_tenants=mismatched_tenants,
+            inactive_tenants=inactive_tenants,
+            results=[],
+        )
+
+    source_by_sku = {item.sku: item for item in source_items}
+    source_skus = list(source_by_sku.keys())
+
+    tenant_ids = [settings.tenant_id for settings, _ in valid_tenants]
+    existing_map: dict = {}
+    if tenant_ids:
+        existing_items = (
+            await db.scalars(
+                select(Item)
+                .where(
+                    Item.tenant_id.in_(tenant_ids),
+                    Item.sku.in_(source_skus),
+                )
+            )
+        ).all()
+        for existing in existing_items:
+            existing_map.setdefault(existing.tenant_id, {})[existing.sku] = existing
+
+    total_created = 0
+    total_skipped = 0
+    total_synced = 0
+    tenant_results: list[IndustryAssignTenantResult] = []
+
+    for settings, tenant in valid_tenants:
+        existing_for_tenant: dict = existing_map.get(tenant.id, {})
+        created = 0
+        skipped_existing = 0
+        synced_admin_items = 0
+
+        for sku, src in source_by_sku.items():
+            existing = existing_for_tenant.get(sku)
+            if existing:
+                skipped_existing += 1
+                if existing.is_admin_created:
+                    if not payload.preserve_existing_quantity:
+                        existing.quantity = payload.initial_quantity
+                    existing.barcode = src.barcode
+                    existing.name = src.name
+                    existing.description = src.description
+                    existing.category_id = src.category_id
+                    existing.unit = src.unit
+                    existing.is_active = src.is_active
+                    existing.min_stock = src.min_stock
+                    existing.max_stock = src.max_stock
+                    existing.target_stock = src.target_stock
+                    existing.recommended_stock = src.recommended_stock
+                    existing.order_mode = src.order_mode
+                    synced_admin_items += 1
+                continue
+
+            db.add(
+                Item(
+                    tenant_id=tenant.id,
+                    sku=src.sku,
+                    barcode=src.barcode,
+                    name=src.name,
+                    description=src.description,
+                    category_id=src.category_id,
+                    quantity=payload.initial_quantity,
+                    unit=src.unit,
+                    is_active=src.is_active,
+                    min_stock=src.min_stock,
+                    max_stock=src.max_stock,
+                    target_stock=src.target_stock,
+                    recommended_stock=src.recommended_stock,
+                    order_mode=src.order_mode,
+                    is_admin_created=True,
+                )
+            )
+            created += 1
+
+        total_created += created
+        total_skipped += skipped_existing
+        total_synced += synced_admin_items
+        tenant_results.append(
+            IndustryAssignTenantResult(
+                tenant_id=str(settings.tenant_id),
+                tenant_slug=tenant.slug,
+                created=created,
+                skipped_existing=skipped_existing,
+                synced_admin_items=synced_admin_items,
+            )
+        )
+
+    await db.commit()
+
+    return IndustryAssignResponse(
+        industry_id=str(industry.id),
+        industry_name=industry.name,
+        total_items=len(source_items),
+        target_tenants=len(valid_tenants),
+        created=total_created,
+        skipped_existing=total_skipped,
+        synced_admin_items=total_synced,
+        missing_tenants=missing_tenants,
+        mismatched_tenants=mismatched_tenants,
+        inactive_tenants=inactive_tenants,
+        results=tenant_results,
+    )

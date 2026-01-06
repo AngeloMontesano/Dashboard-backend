@@ -1,7 +1,6 @@
 # Epic TODO
 
 ## Now
-- EPIC E: [E-02] Bestell-Dialog-UI spezifizieren (mehrere Artikel).
 - EPIC F: [F-03] Offline-Queue UX-Flow skizzieren.
 
 ## Next

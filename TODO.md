@@ -1,12 +1,7 @@
 # TODO
 
-## MUSS (kritisch)
-- Customer: Finale Dark-Mode-Visitenkontrolle und letzte UI-Politur (Artikel-Detailkarten/Empty-States); Light-Mode als Follow-up dokumentieren.
-- Customer: Build-Qualität sicherstellen (`npm run build`) und Smoke-Tests im Dark-Mode; `rg "primevue"` muss 0 Treffer liefern.
-- Docs: WORKLOG und Roadmap (`docs/roadmap/CUSTOMER_UI_PARITY_WITH_ADMIN.md`) aktuell halten; offene Paritätslücken dokumentieren.
-- Backend (vorherige Lücken, weiterhin kritisch): Migration `0009_create_inventory_orders` ausrollen; Reporting-Query-Fix deployen; globale Stammdaten-/Industrie-Endpunkte und Admin-konforme Artikelrestriktionen ergänzen.
-- Backend (Admin): System-Actions Endpoints mit echter Funktionalität hinterlegen (Cache Reset, Reindex, Restart) – aktuell bewusst nicht unterstützt (keine neuen Abhängigkeiten).
-- Admin-Frontend Branchen ↔ Artikel: Neue Import/Export- und Overlap-Endpoints deployen (Remote-OpenAPI aktualisieren) und UI gegen Live-Backend verifizieren; Delta-Import/Badge-Funktionalität ist lokal umgesetzt.
+## Now (Top 10)
+- [F-03] (EPIC_F_OFFLINE_QUEUE_ERROR_HANDLING) UX-Flow für Queue-Liste + Detail skizzieren.
 
 ## Next
 - [A-08] (EPIC_A_TENANT_RESOLUTION) Status-Caching/Retry-Strategie umsetzen.

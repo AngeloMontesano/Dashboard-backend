@@ -102,7 +102,7 @@
               </div>
               <div v-if="!selectedIndustryId" class="muted text-small">Bitte eine Branche wählen, um Zuordnungen zu laden.</div>
               <div v-else class="muted text-small">
-                Speichern ersetzt die Zuordnung (`item_ids`). Delta-Import/Export (CSV/XLSX) steht unten bereit: action add/remove, Pflichtfeld sku.
+                Speichern ersetzt die Zuordnung (`item_ids`). CSV/XLSX-Import für Mappings fehlt im Backend.
               </div>
             </div>
           </div>
@@ -177,9 +177,6 @@
                       <div class="text-muted text-small mono">{{ item.sku }} · {{ item.barcode || "—" }}</div>
                     </div>
                     <div class="row gap6">
-                      <span v-if="overlapBadge(item.id)" class="tag">
-                        {{ overlapBadge(item.id) }}
-                      </span>
                       <span v-if="finalItemIdSet.has(item.id)" class="tag">
                         Bereits zugeordnet
                       </span>
@@ -236,14 +233,9 @@
                       <div class="item-title">{{ row.item.name }}</div>
                       <div class="text-muted text-small mono">{{ row.item.sku }} · {{ row.item.barcode || "—" }}</div>
                     </div>
-                    <div class="row gap6">
-                      <span class="tag" :class="row.status === 'remove' ? 'bad' : row.status === 'add' ? 'ok' : ''">
-                        {{ row.status === "add" ? "Neu (pending)" : row.status === "remove" ? "Wird entfernt" : "Gespeichert" }}
-                      </span>
-                      <span v-if="overlapBadge(row.item.id)" class="tag">
-                        {{ overlapBadge(row.item.id) }}
-                      </span>
-                    </div>
+                    <span class="tag" :class="row.status === 'remove' ? 'bad' : row.status === 'add' ? 'ok' : ''">
+                      {{ row.status === "add" ? "Neu (pending)" : row.status === "remove" ? "Wird entfernt" : "Gespeichert" }}
+                    </span>
                   </label>
                 </div>
               </div>
@@ -271,105 +263,55 @@
 
       <div class="table-card">
         <div class="table-card__header">
-          <div class="tableTitle">Import / Export Branche ↔ Artikel</div>
-          <div class="text-muted text-small">Semikolon-CSV oder XLSX. Aktion add/remove, Pflichtfeld sku. Delta-Import ergänzt/entfernt ohne Replace.</div>
+          <div class="tableTitle">Branchen-Artikel auf Tenants anwenden</div>
+          <div class="text-muted text-small">
+            Weist allen Tenants mit dieser Branche fehlende Artikel hinzu. Neue Artikel starten mit Bestand 0; bestehende Bestände werden nicht verändert.
+          </div>
         </div>
         <div class="box stack">
-          <div class="row gap8 wrap align-center">
-            <button
-              class="btnGhost small"
-              type="button"
-              :disabled="!selectedIndustryId || busy.exportMapping"
-              @click="exportIndustryItems('csv')"
-            >
-              {{ busy.exportMapping ? "exportiert..." : "Export CSV" }}
-            </button>
-            <button
-              class="btnGhost small"
-              type="button"
-              :disabled="!selectedIndustryId || busy.exportMapping"
-              @click="exportIndustryItems('xlsx')"
-            >
-              {{ busy.exportMapping ? "exportiert..." : "Export XLSX" }}
-            </button>
-            <label class="btnGhost small file-btn">
-              Datei wählen (csv/xlsx)
-              <input type="file" accept=".xlsx,.xls,.csv" @change="onMappingFileSelected" />
+          <div class="row gap12 wrap align-center">
+            <label class="field">
+              <span class="field-label">Initialer Bestand</span>
+              <input
+                class="input"
+                type="number"
+                min="0"
+                v-model.number="assign.initialQuantity"
+                aria-label="Initialer Bestand für neue Artikel"
+              />
+            </label>
+            <label class="field checkbox">
+              <input type="checkbox" v-model="assign.preserveExisting" disabled />
+              <span>Bestehende Bestände unverändert lassen</span>
             </label>
             <button
               class="btnPrimary small"
               type="button"
-              :disabled="busy.importMapping || !mappingFile || !selectedIndustryId"
-              @click="importIndustryItems"
-            >
-              {{ busy.importMapping ? "importiert..." : "Import starten" }}
-            </button>
-          </div>
-          <ul class="bullets">
-            <li>Spalten: {{ mappingColumns.join(";") }}</li>
-            <li><code>action</code>: add (Standard) oder remove. <code>sku</code> ist Pflicht und verweist auf globale Artikel.</li>
-            <li>Delta-Import: Add fügt hinzu, Remove entfernt, bestehende Zuordnung bleibt bestehen.</li>
-          </ul>
-          <div v-if="mappingImportResult" class="assign-result">
-            <div class="row gap8 wrap align-center">
-              <span class="tag ok">Hinzugefügt: {{ mappingImportResult.added }}</span>
-              <span class="tag bad">Entfernt: {{ mappingImportResult.removed }}</span>
-              <span class="tag">Übersprungen: {{ mappingImportResult.skipped_missing }}</span>
-              <span class="text-muted text-small">Fehler: {{ mappingImportResult.errors.length }} · Gesamt: {{ mappingImportResult.final_count }}</span>
-            </div>
-            <div v-if="mappingImportResult.errors.length" class="hint text-small">
-              <div v-for="err in mappingImportResult.errors.slice(0, 5)" :key="err.row">Zeile {{ err.row }}: {{ err.error }}</div>
-              <div v-if="mappingImportResult.errors.length > 5">
-                … weitere Fehler ({{ mappingImportResult.errors.length - 5 }}) in der Datei
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="table-card">
-        <div class="table-card__header">
-          <div class="tableTitle">Branche auf Tenants anwenden</div>
-          <div class="text-muted text-small">
-            Weist alle Tenants mit dieser Branche die Artikel zu. Neue Artikel starten mit Bestand 0, bestehende Bestände bleiben unverändert.
-          </div>
-        </div>
-        <div class="box stack">
-          <div class="row gap8 wrap align-center">
-            <button
-              class="btnPrimary small"
-              type="button"
-              :disabled="!selectedIndustryId || busy.assignTenants"
+              :disabled="!selectedIndustryId || assign.busy"
               @click="assignToTenants"
             >
-              {{ busy.assignTenants ? "weist zu..." : "Auf Tenants anwenden" }}
+              {{ assign.busy ? "weist zu..." : "Fehlende Artikel jetzt anwenden" }}
             </button>
-            <span class="text-muted text-small">Zielt auf Tenants mit gesetzter `industry_id`.</span>
           </div>
-          <div v-if="assignResult" class="assign-result">
-            <div class="row gap8 wrap align-center">
-              <span class="tag ok">Neu: {{ assignResult.created }}</span>
-              <span class="tag">Übersprungen: {{ assignResult.skipped_existing }}</span>
-              <span class="tag">Synced (Admin): {{ assignResult.synced_admin_items }}</span>
-              <span class="text-muted text-small">Tenants: {{ assignResult.target_tenants }} · Artikel: {{ assignResult.total_items }}</span>
+          <div class="hint">
+            Ziel-Tenants: alle mit derselben Branche (`industry_id`). Nur fehlende Artikel werden angelegt; vorhandene Bestände bleiben bestehen.
+          </div>
+          <div v-if="assign.result" class="result-card">
+            <div class="row gap8 wrap text-small">
+              <span>Tenants: {{ assign.result.affected_tenants }}</span>
+              <span>Vorlagen: {{ assign.result.template_items }}</span>
+              <span>Neu angelegt: {{ assign.result.created_total }}</span>
+              <span>Übersprungen: {{ assign.result.skipped_total }}</span>
+              <span>Initialer Bestand: {{ assign.result.initial_quantity }}</span>
             </div>
-            <div v-if="assignResult.results.length" class="assign-tenant-grid">
-              <div v-for="row in assignResult.results" :key="row.tenant_id" class="assign-tenant-row">
-                <div class="text-small mono">{{ row.tenant_slug }}</div>
-                <div class="text-small">Neu: {{ row.created }} · Übersprungen: {{ row.skipped_existing }} · Synced: {{ row.synced_admin_items }}</div>
+            <div class="item-list compact">
+              <div v-for="row in assign.result.results" :key="row.tenant_id" class="item-row">
+                <div class="item-meta">
+                  <div class="item-title">{{ row.tenant_name }}</div>
+                  <div class="text-muted text-small mono">{{ row.tenant_slug }} · {{ row.tenant_id }}</div>
+                </div>
+                <span class="tag">{{ row.created }} neu / {{ row.skipped_existing }} übersprungen</span>
               </div>
-            </div>
-            <div
-              v-if="
-                assignResult.missing_tenants.length || assignResult.mismatched_tenants.length || assignResult.inactive_tenants.length
-              "
-              class="hint text-small"
-            >
-              <div v-if="assignResult.missing_tenants.length">Fehlende Tenants: {{ assignResult.missing_tenants.join(', ') }}</div>
-              <div v-if="assignResult.mismatched_tenants.length">
-                Andere Branche in Einstellungen: {{ assignResult.mismatched_tenants.join(', ') }}
-              </div>
-              <div v-if="assignResult.inactive_tenants.length">Inaktive Tenants übersprungen: {{ assignResult.inactive_tenants.join(', ') }}</div>
             </div>
           </div>
         </div>
@@ -439,9 +381,6 @@ import {
   fetchGlobalItems,
   fetchGlobalCategories,
   assignIndustryItemsToTenants,
-  exportIndustryMapping,
-  importIndustryMapping,
-  fetchIndustryOverlapCounts,
 } from "../api/globals";
 import { debounce } from "../utils/debounce";
 import UiPage from "../components/ui/UiPage.vue";
@@ -484,7 +423,6 @@ const initialAssignedIds = ref<string[]>([]);
 const pendingAdditions = ref<string[]>([]);
 const pendingRemovals = ref<string[]>([]);
 const knownItems = reactive<Record<string, GlobalItem>>({});
-const overlapCounts = ref<Record<string, number>>({});
 
 const selectedAvailableIds = ref<string[]>([]);
 const selectedAssignedIds = ref<string[]>([]);
@@ -498,14 +436,21 @@ const busy = reactive({
   loadMapping: false,
   saveMapping: false,
   assignTenants: false,
-  importMapping: false,
-  exportMapping: false,
 });
 
-const assignResult = ref<IndustryAssignResponse | null>(null);
-const mappingImportResult = ref<IndustryMappingImportResult | null>(null);
-const mappingFile = ref<File | null>(null);
-const mappingColumns = ["action", "sku", "barcode", "name", "category", "is_active", "item_id"];
+type IndustryAssignResponse = components["schemas"]["IndustryAssignResponse"];
+
+const assign = reactive<{
+  initialQuantity: number;
+  preserveExisting: boolean;
+  result: IndustryAssignResponse | null;
+  busy: boolean;
+}>({
+  initialQuantity: 0,
+  preserveExisting: true,
+  result: null,
+  busy: false,
+});
 
 const modal = reactive({
   open: false,
@@ -535,12 +480,6 @@ const assignedTotalPages = computed(() =>
 const hasPendingChanges = computed(
   () => pendingAdditions.value.length > 0 || pendingRemovals.value.length > 0
 );
-
-const overlapBadge = (id: string) => {
-  const count = overlapCounts.value[id];
-  if (!count || count <= 1) return "";
-  return `in ${count} Branchen`;
-};
 
 const finalItemIds = computed(() => {
   const base = new Set(initialAssignedIds.value);
@@ -582,15 +521,11 @@ watch(
   () => {
     selectedAvailableIds.value = [];
     selectedAssignedIds.value = [];
-    assignResult.value = null;
-    mappingImportResult.value = null;
     if (!selectedIndustryId.value) {
       assignedItems.value = [];
       initialAssignedIds.value = [];
       pendingAdditions.value = [];
       pendingRemovals.value = [];
-      overlapCounts.value = {};
-      mappingFile.value = null;
       return;
     }
   }
@@ -638,8 +573,6 @@ function selectIndustry(id: string) {
 
 function onIndustryChange() {
   assignedPage.value = 1;
-  mappingImportResult.value = null;
-  overlapCounts.value = {};
   loadIndustryMapping();
 }
 
@@ -671,28 +604,6 @@ function cacheItems(list: GlobalItem[]) {
   });
 }
 
-function collectRelevantItemIds(): string[] {
-  const ids = new Set<string>();
-  availableItems.value.forEach((item) => ids.add(item.id));
-  assignedItems.value.forEach((item) => ids.add(item.id));
-  pendingAdditions.value.forEach((id) => ids.add(id));
-  return Array.from(ids);
-}
-
-async function refreshOverlapCounts() {
-  const ids = collectRelevantItemIds();
-  if (!props.adminKey || !ids.length) {
-    overlapCounts.value = {};
-    return;
-  }
-  try {
-    const res = await fetchIndustryOverlapCounts(props.adminKey, ids, props.actor);
-    overlapCounts.value = res.counts || {};
-  } catch (e: any) {
-    toast(`Branchen-Überlappungen konnten nicht geladen werden: ${e?.message || e}`, "error");
-  }
-}
-
 async function loadAvailableItems() {
   if (!props.adminKey) return;
   busy.loadAvailable = true;
@@ -713,7 +624,6 @@ async function loadAvailableItems() {
     selectedAvailableIds.value = selectedAvailableIds.value.filter(
       (id) => availableIds.has(id) && !finalItemIdSet.value.has(id)
     );
-    await refreshOverlapCounts();
   } catch (e: any) {
     toast(`Artikel konnten nicht geladen werden: ${e?.message || e}`, "error");
   } finally {
@@ -756,7 +666,6 @@ async function loadIndustryMapping() {
     assignedPage.value = 1;
     cacheItems(res as GlobalItem[]);
     setIndustryArticles(selectedIndustryId.value, res.map((i) => i.id));
-    await refreshOverlapCounts();
   } catch (e: any) {
     toast(`Zuordnung konnte nicht geladen werden: ${e?.message || e}`, "error");
   } finally {
@@ -902,7 +811,6 @@ async function saveMapping() {
       .filter((row) => row.status !== "remove")
       .map((row) => row.item);
     selectedAssignedIds.value = [];
-    await refreshOverlapCounts();
     toast("Zuordnung gespeichert", "success");
   } catch (e: any) {
     toast(`Speichern fehlgeschlagen: ${e?.message || e}`, "error");
@@ -916,23 +824,27 @@ async function assignToTenants() {
     toast("Bitte Branche wählen", "warning");
     return;
   }
-  busy.assignTenants = true;
+  assign.busy = true;
+  assign.result = null;
   try {
     const res = await assignIndustryItemsToTenants(
       props.adminKey,
       selectedIndustryId.value,
-      { initial_quantity: 0, preserve_existing_quantity: true },
+      {
+        initial_quantity: assign.initialQuantity,
+        preserve_existing_quantity: assign.preserveExisting,
+      },
       props.actor
     );
-    assignResult.value = res;
+    assign.result = res;
     toast(
-      `Branchen-Artikel angewendet: ${res.created} neu, ${res.skipped_existing} übersprungen, ${res.target_tenants} Tenants`,
+      `Tenants aktualisiert: ${res.created_total} neue Artikel, ${res.skipped_total} bereits vorhanden`,
       "success"
     );
   } catch (e: any) {
-    toast(`Zuweisung fehlgeschlagen: ${e?.response?.data?.detail?.error?.message || e?.message || e}`, "error");
+    toast(`Zuweisung fehlgeschlagen: ${e?.message || e}`, "error");
   } finally {
-    busy.assignTenants = false;
+    assign.busy = false;
   }
 }
 
@@ -946,60 +858,6 @@ const canRemoveSelection = computed(
 function reloadAvailable() {
   availablePage.value = 1;
   loadAvailableItems();
-}
-
-function onMappingFileSelected(event: Event) {
-  const target = event.target as HTMLInputElement;
-  if (!target.files?.length) {
-    mappingFile.value = null;
-    return;
-  }
-  mappingFile.value = target.files[0];
-}
-
-async function exportIndustryItems(format: "csv" | "xlsx") {
-  if (!selectedIndustryId.value) {
-    toast("Bitte Branche wählen", "warning");
-    return;
-  }
-  busy.exportMapping = true;
-  try {
-    const blob = await exportIndustryMapping(props.adminKey, selectedIndustryId.value, format, props.actor);
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `industry_${selectedIndustryId.value}_items.${format}`;
-    link.click();
-    URL.revokeObjectURL(url);
-  } catch (e: any) {
-    toast(`Export fehlgeschlagen: ${e?.message || e}`, "error");
-  } finally {
-    busy.exportMapping = false;
-  }
-}
-
-async function importIndustryItems() {
-  if (!selectedIndustryId.value) {
-    toast("Bitte Branche wählen", "warning");
-    return;
-  }
-  if (!mappingFile.value) {
-    toast("Bitte Datei wählen", "warning");
-    return;
-  }
-  busy.importMapping = true;
-  try {
-    const res = await importIndustryMapping(props.adminKey, selectedIndustryId.value, mappingFile.value, props.actor);
-    mappingImportResult.value = res;
-    toast(`Import abgeschlossen: +${res.added}, -${res.removed}, Fehler ${res.errors.length}`, "success");
-    await loadIndustryMapping();
-    await refreshOverlapCounts();
-  } catch (e: any) {
-    toast(`Import fehlgeschlagen: ${e?.response?.data?.detail?.error?.message || e?.message || e}`, "error");
-  } finally {
-    busy.importMapping = false;
-    mappingFile.value = null;
-  }
 }
 
 function selectAllAvailablePage() {
@@ -1104,6 +962,14 @@ onMounted(() => {
   gap: 8px;
 }
 
+.item-list.compact {
+  grid-template-columns: 1fr;
+}
+
+.item-list.compact .item-row {
+  padding: 8px 10px;
+}
+
 .item-row {
   display: grid;
   grid-template-columns: auto 1fr auto;
@@ -1126,32 +992,16 @@ onMounted(() => {
   text-overflow: ellipsis;
 }
 
+.result-card {
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+}
+
 .pane-body.loading {
   opacity: 0.7;
-}
-
-.assign-result {
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 10px 12px;
-  background: var(--surface-1);
-  display: grid;
-  gap: 8px;
-}
-
-.assign-tenant-grid {
-  display: grid;
-  gap: 6px;
-}
-
-.assign-tenant-row {
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 8px 10px;
-  background: var(--surface-2);
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
 }
 
 @media (max-width: 960px) {

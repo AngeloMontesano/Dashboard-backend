@@ -20,6 +20,8 @@ import type {
   TenantSettingsUpdate,
   AdminSystemInfo,
   AdminSystemActionResponse,
+  SystemEmailSettings,
+  SystemEmailSettingsUpdate,
 } from "../types";
 
 import { api, adminHeaders } from "./client";
@@ -77,6 +79,7 @@ type TenantUserUpdatePayload = components["schemas"]["TenantUserUpdate"];
 type AdminLoginResponse = { admin_key: string; actor?: string };
 type AdminSystemInfoResponse = AdminSystemInfo;
 type AdminSystemActionResponseRaw = AdminSystemActionResponse;
+type AdminSystemEmailSettingsResponse = SystemEmailSettings;
 
 function withAdmin(adminKey: string, actor?: string) {
   return { headers: adminHeaders(adminKey, actor) };
@@ -171,6 +174,25 @@ export async function adminUpdateUser(adminKey: string, actor: string | undefine
 /* System */
 export async function adminGetSystemInfo(adminKey: string, actor?: string) {
   const res = await api.get<AdminSystemInfoResponse>("/admin/system/info", withAdmin(adminKey, actor));
+  return res.data;
+}
+
+export async function adminGetEmailSettings(adminKey: string, actor?: string) {
+  const res = await api.get<AdminSystemEmailSettingsResponse>("/admin/system/email", withAdmin(adminKey, actor));
+  return res.data;
+}
+
+export async function adminUpdateEmailSettings(adminKey: string, actor: string | undefined, payload: SystemEmailSettingsUpdate) {
+  const res = await api.put<AdminSystemEmailSettingsResponse>("/admin/system/email", payload, withAdmin(adminKey, actor));
+  return res.data;
+}
+
+export async function adminTestEmail(adminKey: string, actor: string | undefined, email: string) {
+  const res = await api.post<AdminSystemActionResponseRaw>(
+    "/admin/system/email/test",
+    { email },
+    withAdmin(adminKey, actor)
+  );
   return res.data;
 }
 

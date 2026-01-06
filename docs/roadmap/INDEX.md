@@ -31,3 +31,10 @@
 - [EPIC_G_DOCUMENTATION_AND_HELP](EPIC_G_DOCUMENTATION_AND_HELP.md)
 - [EPIC_H_MONITORING_LIGHTWEIGHT](EPIC_H_MONITORING_LIGHTWEIGHT.md)
 - [EPIC_I_CONTACT_DATA_AND_SUPPORT](EPIC_I_CONTACT_DATA_AND_SUPPORT.md)
+
+## Qualitätscheck
+- Alle Epic-Dateien existieren und sind hier verlinkt.
+- Jede Epic folgt dem Template (Ziel → Risiken) und enthält 8–20 Tasks mit ID, Bereich, Abhängigkeiten und Done-Kriterium.
+- TODO.md und Epic_TODO.md referenzieren die Task-IDs konsistent (Now/Next/Later).
+- WORKLOG.md/Epic_WORKLOG.md dokumentieren Datum, Änderungen und offene Punkte.
+- Standards aus `docs/standards/` sind oben verlinkt und gelten für alle geplanten Arbeiten.

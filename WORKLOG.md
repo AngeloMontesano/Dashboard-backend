@@ -6,3 +6,8 @@
 - JSON-Fehler im Browser: bei fehlendem Tenant oder Backend-404 erscheinen strukturierte JSON-Fehler (`{"error":{"code":"tenant_not_found",...}}`) aus FastAPI, sofern nicht durch TenantStatusView abgefangen.
 - Geänderte/erstellte Dateien: `docs/roadmap/INDEX.md`, `TODO.md`, `Epic_TODO.md`, `Epic_WORKLOG.md`, `WORKLOG.md`.
 - Offene Punkte: QA-Checkliste für Tenant-Status-UX noch ausstehend; Proxy-404-Verhalten nicht getestet (nur Code-Scan).
+
+## 2024-06-09
+- Epics gegen Template geprüft, Qualitätscheck-Liste in `docs/roadmap/INDEX.md` ergänzt.
+- Konsistenzprüfung TODO/Epic_TODO ↔ Epics/Task-IDs durchgeführt, keine Lücken gefunden.
+- Offene Punkte: QA-Checkliste Tenant-Status-UX weiterhin offen; Proxy-404-Verhalten bleibt zu testen.

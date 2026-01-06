@@ -255,16 +255,6 @@ export interface SmtpSettingsInput {
   use_tls: boolean;
 }
 
-export async function adminGetSmtpSettings(adminKey: string, actor?: string) {
-  const res = await api.get<SmtpSettings>("/admin/smtp/settings", withAdmin(adminKey, actor));
-  return res.data;
-}
-
-export async function adminUpdateSmtpSettings(adminKey: string, actor: string | undefined, payload: SmtpSettingsInput) {
-  const res = await api.put<SmtpSettings>("/admin/smtp/settings", payload, withAdmin(adminKey, actor));
-  return res.data;
-}
-
 export async function adminTestSmtp(adminKey: string, actor: string | undefined, email: string) {
   const res = await api.post<{ ok: boolean }>("/admin/smtp/settings/test", { email }, withAdmin(adminKey, actor));
   return res.data;

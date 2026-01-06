@@ -9222,51 +9222,5 @@
         "title": "ValidationError"
       }
     }
-  },
-  "tags": [
-    {
-      "name": "platform",
-      "description": "Basis Endpunkte f\u00fcr Health, Meta und DB Readiness."
-    },
-    {
-      "name": "inventory",
-      "description": "Inventory Endpoints mit Tenant-Kontext und Rollen-Checks."
-    },
-    {
-      "name": "admin",
-      "description": "Admin Endpunkte. Zugriff nur mit X-Admin-Key."
-    },
-    {
-      "name": "admin-tenants",
-      "description": "Tenant Verwaltung f\u00fcr Admin."
-    },
-    {
-      "name": "admin-users",
-      "description": "User Verwaltung f\u00fcr Admin."
-    },
-    {
-      "name": "admin-memberships",
-      "description": "Membership Verwaltung f\u00fcr Admin."
-    },
-    {
-      "name": "admin-roles",
-      "description": "Rollen Katalog."
-    },
-    {
-      "name": "admin-audit",
-      "description": "Admin Audit Log."
-    },
-    {
-      "name": "admin-diagnostics",
-      "description": "Daten Checks und Diagnosen."
-    },
-    {
-      "name": "admin-inventory",
-      "description": "Globale Stammdaten und Branchenverwaltung."
-    },
-    {
-      "name": "admin-system",
-      "description": "Systeminformationen und Admin-Operationen."
-    }
-  ]
+  }
 }

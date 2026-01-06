@@ -803,71 +803,47 @@
 - **Tests**
   - Nicht ausgeführt (Doku-/API-Check)
 
-## Schritt 58 – SMTP/Mail Analyse (Schritt 1 Vorgabe)
-- **Datum/Uhrzeit**: 2026-01-06T16:41:35+00:00
-- **Ziel**: Schritt 1 des Auftrags – OpenAPI prüfen, Repo nach SMTP-/Mail-Pfaden scannen, Soll/Ist dokumentieren.
-- **Gefundene OpenAPI-Endpunkte (Mail/SMTP)**
-  - Admin SMTP: `/admin/smtp/settings` (GET/PUT) mit `SmtpSettingsIn|Out` (host, port, from_email, user?, password?, use_tls, has_password), `/admin/smtp/settings/test` (POST `SmtpTestRequest { email }`, Response generisch `object`).
-  - Admin System E-Mail: `/admin/system/email` (GET/PUT `SystemEmailSettings|Update`), `/admin/system/email/test` (POST `SystemEmailTestRequest { email }` → `SystemActionResponse`).
-  - Inventory/Tenant: `/inventory/settings/smtp-ping` (GET `SmtpPingResponse { ok, error?, host?, port?, resolved_ips[], use_tls }`), `/inventory/settings/test-email` (POST `TestEmailRequest { email }` → `TestEmailResponse { ok, error? }`), `/inventory/orders/{order_id}/email` (POST `OrderEmailRequest { email?, note? }` → `EmailSendResponse { ok, error? }`).
-- **Repo-Scan Backend**
-  - `app/modules/admin/system_routes.py`: Implementiert `/admin/system/email` + `/admin/system/email/test`, lädt/speichert `SystemEmailSetting` (DB Tabelle via Alembic 0012). Versand synchron via `smtplib.SMTP`, StartTLS nur wenn user/password gesetzt, kein `use_tls`-Flag, Logging minimal, keine Request-ID-Weitergabe in Logs.
-  - `app/core/email_settings.py`: Quelle DB `system_email_settings`, Fallback ENV (`SMTP_HOST/PORT/USER/PASSWORD/FROM`). Kein Feld `use_tls` vorhanden.
-  - `app/modules/inventory/routes.py`: Enthält `_smtp_ping()` (DNS/TCP-Check) und Versand/Test-Mail für Tenants, aber nutzt ausschließlich `settings.SMTP_*` statt DB und referenziert mehrfach eine nicht definierte Variable/Helper `email_settings`/`_get_email_settings` → aktueller Code wirft NameError vor Versand. Logging nur `warning`, kein Request- oder Actor-Bezug.
-  - Admin-SMTP-Router gemäß OpenAPI (`/admin/smtp/settings[/**]`) existiert nicht im Code; auch kein Modell/Feld `use_tls`.
-- **Repo-Scan Frontend (Admin)**
-  - `src/api/admin.ts`: Wrapper für `/admin/system/email` (GET/PUT) und `/admin/system/email/test`; keine Wrapper für `/admin/smtp/*`.
-  - `src/views/AdminSettingsView.vue`: Script-State für `emailForm`/`testEmail`, aber Template rendert keinen SMTP/E-Mail-Abschnitt → UI zeigt/ändert keine SMTP-Daten, kein Test-Mail-Button. Aktuelle Sections nur System/Security/Theme/Flags/Danger.
-  - Generierte Typen (`src/api/gen/openapi.ts`) enthalten die Admin-SMTP-Pfade, werden aber nicht genutzt.
-- **Broken/Abweichungen (belegt durch Code)**
-  - `/inventory/settings/test-email` und `/inventory/orders/{order_id}/email` crashen, weil `email_settings`/`_get_email_settings` nicht definiert sind; auch `_send_email_message` referenziert diese Variable.
-  - SMTP-Ping/Test auf Tenant-Seite greifen immer auf ENV (`settings.SMTP_*`) zu, ignorieren gespeicherte System-Settings aus DB.
-  - OpenAPI-Pfade `/admin/smtp/settings` + `/admin/smtp/settings/test` fehlen vollständig im Backend und Frontend-UI.
-  - Keine Maskierung/`has_password`-Logik für Admin-E-Mail in UI, kein Request-ID-/Step-Logging rund um SMTP.
-- **Nächste Schritte**
-  - Gap-Analyse und Task-Liste in `TODO.md` ergänzen (max. 8 Tasks laut Auftrag).
-  - Backend SMTP-Test/Senden reparieren (DB-Quelle, request_id in Logs), Admin-SMTP-Endpunkte nach OpenAPI implementieren und UI anbinden.
+## Schritt 58 – Branchen-Artikel auf Tenants anwenden (API-Lücke dokumentiert)
+- **Datum/Uhrzeit**: 2026-01-06T16:45:00+00:00
+- **Ziel**: Anforderung klären, Branchen-Artikel automatisiert allen Tenants derselben `industry_id` zuzuweisen, ohne vorhandene Bestände zu löschen/auf 0 zu setzen.
+- **Was wurde geprüft**
+  - Remote-OpenAPI (`https://api.test.myitnetwork.de/openapi.json`) enthält keinen Admin-Endpunkt, um Branchen-Artikel auf Tenants zu klonen oder einen Bulk-Assign mit initialem Bestand 0 auszulösen.
+  - Es gibt nur `/admin/inventory/industries/{industry_id}/items` (GET/PUT) auf globaler Ebene, keine Tenant-spezifische Operation für Branchen-Bulk-Zuweisung.
+- **Ergebnis**
+  - Umsetzung blockiert auf Backend-Seite: Es fehlt ein Endpunkt wie „Admin assign industry items to tenants“ mit Option `initial_qty=0` und „skip if exists (preserve qty)“.
+  - TODO ergänzt, bis Backend-API vorliegt.
+- **Tests**
+  - Nicht ausgeführt (Doku-Update)
 
-## Schritt 59 – SMTP Fix + UI/Backend Umsetzung
-- **Datum/Uhrzeit**: 2026-01-06T17:20:00+00:00
-- **Ziel**: Fehlende Admin-SMTP-Endpunkte laut OpenAPI implementieren, Tenant-Mailversand reparieren, TLS/Passwort-Handling sichern und Admin-UI mit Testmail-Funktion ausstatten.
-- **Backend**
-  - Neues Alembic-Update `0013_add_use_tls_to_system_email_settings` (Bool `use_tls`), `SystemEmailSetting` Model aktualisiert.
-  - `EmailSettings` erweitert um `use_tls`, Config `SMTP_USE_TLS` ergänzt, DB-Layer lädt/speichert TLS-Flag.
-  - Gemeinsamer Helper `app/core/email_utils.py` für Ping+Send mit strukturierten Logs (request_id/host/port/use_tls, StartTLS/Auth/Send-Dauer) ohne Passwort-Leaks.
-  - Admin-Router `/admin/smtp/settings` (GET/PUT) + `/admin/smtp/settings/test` implementiert inkl. `has_password`/TLS und Test-Response mit request_id; Router im Admin-Namespace registriert.
-  - Inventory-Routen nutzen DB-basierte SMTP-Settings, Ping/Send via Helper; NameError entfernt, Testmail/Order-Mail liefern Fehlertexte statt Crash, Ping liefert `use_tls`.
-  - Admin-System-Testmail nutzt neuen Helper und loggt request_id.
-- **Frontend (Admin)**
-  - Neue Typen/Wrappers für SMTP (Get/Put/Test).
-  - Settings-View um SMTP-Sektion erweitert (Host/Port/From/User/Passwort-Status/StartTLS, Speichern + Testmail-Button mit request_id-Hinweis), nutzt zentrale API-Instanz und Toasts.
+## Schritt 59 – Branchen-Artikel auf Tenants anwenden (Backend + UI)
+- **Datum/Uhrzeit**: 2026-01-06T17:05:00+00:00
+- **Ziel**: Fehlenden Admin-Bulk-Endpunkt implementieren, der Branchen-Artikel allen Tenants mit gleicher `industry_id` zuweist (neu mit Bestand 0, bestehende Bestände unverändert), und die Aktion im Admin-Frontend verfügbar machen.
+- **Änderungen Backend**
+  - Neuer Endpoint `POST /admin/inventory/industries/{industry_id}/assign-to-tenants` mit `initial_quantity` (Default 0) und `preserve_existing_quantity` (Default true); berücksichtigt `TenantSetting.industry_id`, überspringt inaktive oder falsch konfigurierte Tenants, klont globale Branchen-Artikel als `is_admin_created` Items und synchronisiert Metadaten für bereits adminverwaltete Artikel, ohne Bestände zu verringern.
+  - OpenAPI regeneriert (`docs/openapi/openapi.json`) für den neuen Endpoint und Typen.
+- **Änderungen Frontend**
+  - API-Wrapper `assignIndustryItemsToTenants` + neue OpenAPI-Typen hinzugefügt.
+  - `GlobaleBranchenView.vue`: Aktionskarte „Branche auf Tenants anwenden“ mit Ergebnis-Summary (neu/übersprungen/synced, Tenants/Artikel, Warnungen für fehlende/inaktive/falsch konfigurierte Tenants) und Standard-Flow (Bestand 0 bei neuen Artikeln, keine Bestandsnullung bestehender Items).
 - **Offene Punkte**
-  - Weitere UX/Fehlerdetails (z. B. Detail-Klappbox mit request_id) optional nachrüsten; Monitoring der neuen Logs empfohlen.
+  - Import/Export für Branchen-Mappings sowie Overlap-Badges bleiben offen, bis passende Backend-APIs existieren.
+- **Tests**
+  - `npm run gen:types` (admin_frontend/admin-ui) – erfolgreich
+  - Build folgt nach Abschluss der UI-Anpassungen.
 
-## Schritt 60 – Alembic Revision gekürzt
-- **Datum/Uhrzeit**: 2026-01-06T18:20:00+00:00
-- **Ziel**: Fehler beim Migration-Run beheben (`value too long for type character varying(32)` in `alembic_version`).
-- **Änderung**: Revision-ID gekürzt und Datei auf `0013_add_use_tls_flag` umbenannt; Revision-String jetzt 23 Zeichen (<32), damit Update des `alembic_version`-Felds funktioniert.
-
-## Schritt 61 – Admin Settings sichtbar machen
-- **Datum/Uhrzeit**: 2026-01-06T18:35:00+00:00
-- **Ziel**: SMTP/Settings-Abschnitt im Admin-Frontend wieder sichtbar machen (User meldete: „nichts mehr angezeigt“).
-- **Änderung**: Sections standardmäßig aufgeklappt (system/security/theme/flags/danger), Hinweisbox bei fehlendem Admin Key hinzugefügt, damit klar ist, warum Daten fehlen; Styles für Alert ergänzt.
-
-## Schritt 62 – NameError SmtpPingResponse behoben
+## Schritt 60 – Branchen-Mapping Delta-Import/Export & Overlap-Badges
 - **Datum/Uhrzeit**: 2026-01-06T18:50:00+00:00
-- **Ziel**: Uvicorn-Startfehler fixen (`NameError: SmtpPingResponse not defined` beim Laden von `inventory/routes.py`).
-- **Änderung**: Explizites Modul-Alias `inv_schemas` eingeführt und Decorator/Return-Type für `/inventory/settings/smtp-ping` darauf umgestellt, sodass die Klasse auch bei zirkulären Imports garantiert im Namespace liegt.
-
-## Schritt 63 – Settings-Abschnitte garantiert anzeigen
-- **Datum/Uhrzeit**: 2026-01-06T19:05:00+00:00
-- **Ziel**: UI-Bug beheben, bei dem in den Admin-Einstellungen nichts eingeblendet wurde (Sections waren dennoch vorhanden, aber versteckt).
-- **Änderung**: Collapse-State auf `reactive` `sectionOpen` umgestellt (statt `ref`-Objekt) und Buttons/UI nutzen jetzt `sectionOpen.*`. Alle Abschnitte sind initial sichtbar, Umschalter klappen nur noch per Klick zu.
-
-## Schritt 64 – Settings Props/Helpers vervollständigt
-- **Datum/Uhrzeit**: 2026-01-06T19:20:00+00:00
-- **Ziel**: Konsolenfehler im Admin Settings View beseitigen (`computed` not defined, undefined props in Prod-Build).
-- **Änderung**: `computed`/`withDefaults` importiert, Props mit Defaults versehen (theme/adminKey/actor/apiBase/baseDomain), damit der View auch bei fehlenden übergebenen Props stabil rendert und keine doppelten Initialisierungen stattfinden.
+- **Ziel**: Offene Punkte beim Branchen-Artikel-Mapping abschließen: CSV/XLSX Delta-Import/Export und Overlap-Badges ohne N+1-Queries.
+- **Was wurde geändert**
+  - Backend: Neue Endpunkte `/admin/inventory/industries/overlap-counts` (aggregierte Zuordnungsanzahl je Item), `/admin/inventory/industries/{industry_id}/items/export` (CSV/XLSX) und `/admin/inventory/industries/{industry_id}/items/import` (Delta add/remove). Response-Schemas `IndustryMappingImportResult` und `IndustryOverlapCounts` ergänzt, OpenAPI regeneriert.
+  - Frontend Admin: `GlobaleBranchenView` erhält Import/Export-Karte (action add/remove, Pflicht sku), Import-Result-Summary inkl. Fehlerteaser, Overlap-Badges in beiden Paneelen via neuer API, Refresh nach Speichern/Import. API-Wrapper um Mapping-Import/Export und Overlap-Counts erweitert.
+  - Typen: `docs/openapi/openapi.json` neu generiert; OpenAPI-Typen für Admin/Customer aktualisiert.
+- **Ergebnis**
+  - Zwei-Paneele-Editor unterstützt Delta-CSV/XLSX und zeigt Branchen-Überlappungen performant ohne N+1. Backend liefert Aggregationen und Mapping-Import/Export.
+- **Tests**
+  - `python -m compileall app` (backend)
+  - `npm run build` (admin_frontend/admin-ui)
+- **Offene Punkte**
+  - Deployment und Remote-OpenAPI-Update für die neuen Endpunkte noch ausstehend (siehe TODO).
 
 ## Schritt 54 – Analyse Branchen-Artikel-Mapping (Schritt 1)
 - **Datum/Uhrzeit**: 2026-01-06T15:45:00+00:00

@@ -43,3 +43,7 @@
 ## 2024-06-16
 - Vorbereitung Umsetzung: Startpunkte für Coding geklärt (Stream 1: A-01 Spezifikation finalisieren → Backend-Stub; Stream 2: A-04 Bootstrap-Check + C-02/D-01 UX-Flow; Stream 3: G-01/I-01 Doku-/Felddesign).
 - Keine neuen Blocker; nächste Schritte sind Kickoff der Stream-Arbeiten.
+
+## 2024-06-17
+- Parallelisierung für Next/Later ergänzt (TODO): Stream 1 (A-05/A-10/B-02), Stream 2 (C-03/C-04/D-02), Stream 3 (E-03/E-04/E-05/F-04/F-05).
+- Ziel: spätere Tasks früh bündeln, um Reviews/UX-Guidelines gemeinsam zu nutzen.

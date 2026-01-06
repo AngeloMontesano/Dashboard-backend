@@ -21,6 +21,7 @@ class Settings(BaseSettings):
     # Token Laufzeiten (nur Konfiguration, keine Hardcodes in Code)
     ACCESS_TOKEN_EXPIRES_MIN: int = Field(15, description="Access Token TTL in Minuten")
     REFRESH_TOKEN_EXPIRES_DAYS: int = Field(30, description="Refresh Token TTL in Tagen")
+    REFRESH_TOKEN_GRACE_MIN: int = Field(5, description="Kulanzzeit in Minuten, in der abgelaufene Refresh Tokens noch akzeptiert werden")
 
     # Umgebung
     ENVIRONMENT: str = Field("prod", pattern="^(dev|prod)$")

@@ -56,7 +56,7 @@ cp .env.example .env
 ```
 Wichtige Keys (Repo-Root `.env`, von Compose geladen):
 - Datenbank: `DATABASE_URL`, `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`
-- Auth: `JWT_SECRET`, `JWT_ALGORITHM`, `ACCESS_TOKEN_EXPIRES_MIN`, `REFRESH_TOKEN_EXPIRES_DAYS`
+- Auth: `JWT_SECRET`, `JWT_ALGORITHM`, `ACCESS_TOKEN_EXPIRES_MIN`, `REFRESH_TOKEN_EXPIRES_DAYS`, `REFRESH_TOKEN_GRACE_MIN`
 - Domains: `BASE_DOMAIN` (z. B. `test.myitnetwork.de`), `BASE_ADMIN_DOMAIN`
 - Admin-Key: `ADMIN_API_KEY` (Header `X-Admin-Key`)
 - Umgebung: `ENVIRONMENT` (`prod`/`dev` beeinflusst Fehlerdetails)

@@ -392,7 +392,6 @@ const emailForm = ref<SmtpFormState>({
   has_password: false,
   use_tls: true,
   password: "",
-  use_tls: true,
 });
 const testEmail = ref("");
 const savingEmail = ref(false);

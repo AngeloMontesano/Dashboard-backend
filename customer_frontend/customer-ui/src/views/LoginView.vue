@@ -56,8 +56,12 @@ async function submit() {
   try {
     await login(email.value, password.value);
     push({ title: 'Login', description: 'Login erfolgreich', variant: 'success' });
-    const redirect = (route.query.redirect as string) || '/';
-    router.push(redirect);
+    const redirect = (route.query.redirect as string) || `${window.location.origin}/`;
+    if (/^https?:\/\//i.test(redirect)) {
+      window.location.href = redirect;
+    } else {
+      router.push(redirect);
+    }
   } catch (e: any) {
     console.error('Login failed', e?.response?.data || e);
     error.value = formatLoginError(e);

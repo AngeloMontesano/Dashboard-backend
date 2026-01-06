@@ -63,8 +63,8 @@ function persistAuth(update: StoredAuth) {
 function clearAuthAndRedirect() {
   sessionStorage.removeItem(STORAGE_KEY);
   delete api.defaults.headers.common.Authorization;
-  const redirect = encodeURIComponent(window.location.pathname + window.location.search);
-  window.location.href = `/login?redirect=${redirect}`;
+  const redirectTarget = `${window.location.origin}/`;
+  window.location.href = `/login?redirect=${encodeURIComponent(redirectTarget)}`;
 }
 
 async function refreshAccessToken(): Promise<string | null> {

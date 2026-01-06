@@ -20,3 +20,30 @@
   - Tabellen-Aktionszellen in Kategorien sollen die neue `.table-actions` Utility nutzen (bereits Klassen vorhanden, Utility greift nun global).
 - Umgesetzte Fixes:
   - Kategorien-Formular auf `.checkbox-field` mit einheitlichem Label-Style umgestellt.
+
+2026-01-06 (Folgeschritt 2)
+
+- Analysierte Views:
+  - Customer Frontend: Artikelverwaltung (Stammdaten + Create-Form)
+- Erkannte UI-Probleme:
+  - Checkboxen für Artikelstatus (bearbeiten/anlegen) nutzen lokale Styles; Abstände/Typografie weichen vom neuen Pattern ab.
+- Umgesetzte Fixes:
+  - Beide Artikelstatus-Checkboxen auf `.checkbox-field` umgestellt, inkl. einheitlicher Label-Typo und aria-labels; lokale `.checkbox`-Styles entfernt.
+
+2026-01-06 (Folgeschritt 3)
+
+- Analysierte Views:
+  - Customer Frontend: Bestellungen (Filterbereich + Tabellenaktionen)
+- Erkannte UI-Probleme:
+  - Filter (Status + Suche) liegen ungruppiert in einer breiten Grid-Reihe; auf mittleren Breakpoints gequetscht und ohne erklärende Hint.
+- Umgesetzte Fixes:
+  - Filter in eine kompakte `.filter-card two-column` überführt, mit klaren Labels und Hint für Suchverhalten; nutzt bestehende Utilities und reduziert Quetschung auf mittleren Breakpoints.
+
+2026-01-06 (Folgeschritt 4)
+
+- Analysierte Views:
+  - Customer Frontend: Bestellungen (Tabellen-Aktionsspalten)
+- Erkannte UI-Probleme:
+  - Aktionsspalten nicht eindeutig rechts ausgerichtet, Buttons wirken uneinheitlich platziert.
+- Umgesetzte Fixes:
+  - Aktionen-Spalten in allen Bestellungen-Tabellen rechts ausgerichtet (`text-right` + `.table-actions`), damit Buttons konsistent gebündelt sind.

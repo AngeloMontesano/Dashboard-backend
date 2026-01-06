@@ -94,3 +94,8 @@
 ## 2024-06-27
 - Roadmap-Index ergänzt: Spezifikations-Link A-01 weist nun explizit auf die Proxy-Header-Matrix hin (Vorbereitung A-11).
 - Keine Task-Änderungen; offene Punkte bleiben A-01 Abnahme, danach QA/Proxy (A-10/A-11).
+
+## 2024-06-28
+- Globale-Katalog-Spezifikation präzisiert (Paging-Metadaten, Fehlermeldungen `industry_in_use/category_in_use/item_in_use/forbidden_system_record`, cURL-Beispiele, QA-Checkliste) in `docs/openapi/GLOBAL_CATALOG.md`.
+- Ziel: Review von B-02/B-03 beschleunigen und Referenzfehler klar benennen; keine Änderungen an Tasks.
+- Offene Punkte: B-01/B-02 Review, danach Alembic-Entwurf (B-03) und Admin-UI-Navigation (B-04) starten.

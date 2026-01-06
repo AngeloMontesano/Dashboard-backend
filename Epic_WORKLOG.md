@@ -61,3 +61,7 @@
 ## 2024-06-27
 - Roadmap-Index-Referenz für A-01 erwähnt jetzt die Proxy-Header-Matrix (A-11 Vorbereitung) für konsistente QA.
 - Keine Task-Änderungen; nächste Schritte unverändert (A-01 Review, dann A-10/A-11).
+
+## 2024-06-28
+- EPIC_B Spezifikation `docs/openapi/GLOBAL_CATALOG.md` erweitert: Paging-Metadaten in Listen, zusätzliche Fehlercodes (`industry_in_use/category_in_use/item_in_use/forbidden_system_record`), cURL-Beispiele und QA-Checkliste.
+- Ziel: B-02 Review und anschließender Alembic-Entwurf (B-03) beschleunigen; keine neuen Tasks oder ID-Anpassungen.

@@ -1,12 +1,21 @@
 <template>
   <UiPage>
-    <UiSection title="Globale Branchen" subtitle="Branchen und Artikel-Zuordnung (Admin-API)">
+    <UiSection title="Globale Branchen" subtitle="Branchen und Artikel-Zuordnung (UI-only, Backend fehlt)">
       <template #actions>
         <button class="btnGhost small" :disabled="busy.load" @click="loadIndustries">
           {{ busy.load ? "lädt..." : "Neu laden" }}
         </button>
         <button class="btnPrimary small" @click="openCreateModal">Neu anlegen</button>
       </template>
+
+      <div class="table-card">
+        <div class="stack">
+          <p class="section-subtitle">
+            Keine OpenAPI-Pfade für Branchen oder Branchen→Artikel-Mapping vorhanden. Aktionen werden nur im UI
+            gespeichert, ein Backend-Speicher fehlt. Fehlende Endpunkte sind dokumentiert.
+          </p>
+        </div>
+      </div>
 
       <div class="filter-card">
         <div class="stack">
@@ -29,7 +38,7 @@
       <div class="table-card">
         <div class="table-card__header">
           <div class="tableTitle">Branchen</div>
-          <div class="text-muted text-small">Daten werden direkt aus der Admin-API geladen.</div>
+          <div class="text-muted text-small">UI-only, nicht im Backend gespeichert.</div>
         </div>
         <div class="tableWrap">
           <table class="table">
@@ -71,7 +80,7 @@
         <div class="table-card__header">
           <div class="tableTitle">Zugeordnete Artikel</div>
           <div class="text-muted text-small">
-            Änderungen an Zuordnungen werden sofort gespeichert.
+            UI-only Mapping. Speichern ohne Backend, damit Anforderungen sichtbar sind.
           </div>
         </div>
         <div class="box stack">
@@ -134,7 +143,7 @@
                   <span>Aktiv</span>
                 </label>
               </div>
-              <div class="hint">Änderungen werden sofort in der Datenbank gespeichert.</div>
+              <div class="hint">Aktion ist UI-only; Backend-Endpunkte fehlen noch.</div>
             </div>
             <div class="modal__footer">
               <button class="btnGhost" type="button" @click="closeModal">Abbrechen</button>
@@ -150,31 +159,23 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref, watch } from "vue";
+import { computed, reactive, ref, watch } from "vue";
 import { useToast } from "../composables/useToast";
 import {
   useGlobalMasterdata,
   type GlobalIndustry,
+  generateId,
 } from "../composables/useGlobalMasterdata";
 import UiPage from "../components/ui/UiPage.vue";
 import UiSection from "../components/ui/UiSection.vue";
-import {
-  adminCreateIndustry,
-  adminGetIndustryItems,
-  adminListGlobalItems,
-  adminListIndustries,
-  adminSetIndustryItems,
-  adminUpdateIndustry,
-} from "../api/admin";
 
-const props = defineProps<{
+defineProps<{
   adminKey: string;
   actor: string;
 }>();
 
 const { toast } = useToast();
-const { industries, items, industryArticles, upsertIndustry, setIndustryArticles, replaceIndustries, replaceItems } =
-  useGlobalMasterdata();
+const { industries, items, industryArticles, upsertIndustry, setIndustryArticles } = useGlobalMasterdata();
 
 const search = ref("");
 const selectedIndustryId = ref("");
@@ -204,17 +205,9 @@ const filteredIndustries = computed(() => {
 
 watch(
   () => selectedIndustryId.value,
-  async (id) => {
-    if (!id) {
-      selectedArticleIds.value = [];
-      return;
-    }
+  (id) => {
     const map = industryArticles.value || {};
-    if (map[id]) {
-      selectedArticleIds.value = [...map[id]];
-      return;
-    }
-    await loadIndustryItems(id);
+    selectedArticleIds.value = id ? [...(map[id] || [])] : [];
   }
 );
 
@@ -248,78 +241,27 @@ function closeModal() {
   modal.open = false;
 }
 
-async function loadIndustries() {
-  if (!props.adminKey) {
-    toast("Bitte Admin Key setzen", "warning");
-    return;
-  }
-  busy.load = true;
-  try {
-    const res = await adminListIndustries(props.adminKey, props.actor);
-    replaceIndustries(res as any);
-    toast(`Branchen geladen: ${res.length}`);
-  } catch (e: any) {
-    toast(e?.message || "Laden fehlgeschlagen", "error");
-  } finally {
-    busy.load = false;
-  }
-}
-
-async function ensureItemsLoaded() {
-  if (!props.adminKey) return;
-  if (items.value.length) return;
-  try {
-    const res = await adminListGlobalItems(props.adminKey, props.actor, { page_size: 200 });
-    replaceItems(res.items || []);
-  } catch (e: any) {
-    toast(e?.message || "Artikel konnten nicht geladen werden", "error");
-  }
-}
-
-async function save() {
+function save() {
   const name = modal.name.trim();
   if (!name) {
     toast("Name ist Pflicht", "warning");
     return;
   }
-  if (!props.adminKey) {
-    toast("Bitte Admin Key setzen", "warning");
-    return;
-  }
   busy.save = true;
-  try {
-    const payload = {
-      name,
-      description: modal.description?.trim() || "",
-      is_active: modal.is_active,
-    };
-    let saved: GlobalIndustry;
-    if (modal.mode === "edit" && modal.id) {
-      saved = await adminUpdateIndustry(props.adminKey, props.actor, modal.id, payload);
-    } else {
-      saved = await adminCreateIndustry(props.adminKey, props.actor, payload);
-    }
-    upsertIndustry(saved);
-    selectedIndustryId.value = saved.id;
-    toast(modal.mode === "edit" ? "Branche aktualisiert" : "Branche angelegt", "success");
-  } catch (e: any) {
-    toast(e?.message || "Speichern fehlgeschlagen", "error");
-  } finally {
-    busy.save = false;
-    closeModal();
-  }
-}
-
-async function loadIndustryItems(industryId: string) {
-  if (!props.adminKey) return;
-  try {
-    const res = await adminGetIndustryItems(props.adminKey, props.actor, industryId);
-    const ids = (res as any[]).map((i) => i.id);
-    setIndustryArticles(industryId, ids);
-    selectedArticleIds.value = ids;
-  } catch (e: any) {
-    toast(e?.message || "Zuordnung konnte nicht geladen werden", "error");
-  }
+  const payload: GlobalIndustry = {
+    id: modal.id || generateId(),
+    name,
+    description: modal.description?.trim() || "",
+    is_active: modal.is_active,
+  };
+  upsertIndustry(payload);
+  selectedIndustryId.value = payload.id;
+  toast(
+    modal.mode === "edit" ? "Branche aktualisiert (UI-only, Backend fehlt)" : "Branche angelegt (UI-only, Backend fehlt)",
+    "success"
+  );
+  busy.save = false;
+  closeModal();
 }
 
 function toggleArticle(id: string, event: Event) {
@@ -335,43 +277,20 @@ function resetMappingSelection() {
   selectedArticleIds.value = [];
 }
 
-async function saveMapping() {
+function saveMapping() {
   if (!selectedIndustryId.value) {
     toast("Bitte Branche wählen", "warning");
     return;
   }
-  if (!props.adminKey) {
-    toast("Bitte Admin Key setzen", "warning");
-    return;
-  }
   busy.save = true;
-  try {
-    await adminSetIndustryItems(props.adminKey, props.actor, selectedIndustryId.value, {
-      item_ids: selectedArticleIds.value,
-    });
-    setIndustryArticles(selectedIndustryId.value, selectedArticleIds.value);
-    toast("Zuordnung gespeichert", "success");
-  } catch (e: any) {
-    toast(e?.message || "Speichern fehlgeschlagen", "error");
-  } finally {
-    busy.save = false;
-  }
+  setIndustryArticles(selectedIndustryId.value, selectedArticleIds.value);
+  toast("Zuordnung gespeichert (UI-only, Backend fehlt)", "success");
+  busy.save = false;
 }
 
-onMounted(async () => {
-  if (props.adminKey) {
-    await Promise.all([loadIndustries(), ensureItemsLoaded()]);
-  }
-});
-
-watch(
-  () => props.adminKey,
-  (key, prev) => {
-    if (key && key !== prev) {
-      loadIndustries();
-      ensureItemsLoaded();
-    }
-  },
-  { immediate: true }
-);
+function loadIndustries() {
+  busy.load = true;
+  toast("Backend-Unterstützung fehlt – kein Ladevorgang möglich", "warning");
+  busy.load = false;
+}
 </script>

@@ -1358,6 +1358,15 @@ export interface components {
             /** Is Active */
             is_active: boolean;
         };
+        /** ItemUnitOut */
+        ItemUnitOut: {
+            /** Code */
+            code: string;
+            /** Label */
+            label: string;
+            /** Is Active */
+            is_active: boolean;
+        };
         /** ItemUpdate */
         ItemUpdate: {
             /** Sku */

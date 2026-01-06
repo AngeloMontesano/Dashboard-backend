@@ -7263,6 +7263,97 @@
             "type": "string",
             "title": "Id"
           },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "quantity": {
+            "type": "number",
+            "title": "Quantity"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "quantity"
+        ],
+        "title": "ReportTopItem"
+      },
+      "SKUExistsResponse": {
+        "properties": {
+          "exists": {
+            "type": "boolean",
+            "title": "Exists"
+          },
+          "normalized_sku": {
+            "type": "string",
+            "title": "Normalized Sku"
+          }
+        },
+        "type": "object",
+        "required": [
+          "exists",
+          "normalized_sku"
+        ],
+        "title": "SKUExistsResponse"
+      },
+      "TenantCreate": {
+        "properties": {
+          "slug": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 2,
+            "title": "Slug"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 2,
+            "title": "Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "slug",
+          "name"
+        ],
+        "title": "TenantCreate"
+      },
+      "TenantOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "slug": {
+            "type": "string",
+            "title": "Slug"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "slug",
+          "name",
+          "is_active"
+        ],
+        "title": "TenantOut"
+      },
+      "TenantOutPing": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
           "slug": {
             "type": "string",
             "title": "Slug"
@@ -7287,219 +7378,6 @@
         "description": "Minimaler Tenant Output für /inventory/ping."
       },
       "TenantPingResponse": {
-        "properties": {
-          "ok": {
-            "type": "boolean",
-            "title": "Ok"
-          },
-          "tenant": {
-            "$ref": "#/components/schemas/TenantOutPing"
-          }
-        },
-        "type": "object",
-        "required": [
-          "ok",
-          "tenant"
-        ],
-        "title": "TenantPingResponse",
-        "description": "Response Modell für /inventory/ping."
-      },
-      "TenantSettingsOut": {
-        "properties": {
-          "company_name": {
-            "type": "string",
-            "maxLength": 255,
-            "title": "Company Name",
-            "default": ""
-          },
-          "contact_email": {
-            "type": "string",
-            "maxLength": 255,
-            "title": "Contact Email",
-            "default": ""
-          },
-          "order_email": {
-            "type": "string",
-            "maxLength": 255,
-            "title": "Order Email",
-            "default": ""
-          },
-          "auto_order_enabled": {
-            "type": "boolean",
-            "title": "Auto Order Enabled",
-            "default": false
-          },
-          "auto_order_min": {
-            "type": "integer",
-            "minimum": 0.0,
-            "title": "Auto Order Min",
-            "default": 0
-          },
-          "export_format": {
-            "type": "string",
-            "maxLength": 32,
-            "title": "Export Format",
-            "default": "xlsx"
-          },
-          "address": {
-            "type": "string",
-            "maxLength": 512,
-            "title": "Address",
-            "default": ""
-          },
-          "address_postal_code": {
-            "type": "string",
-            "maxLength": 32,
-            "title": "Address Postal Code",
-            "default": ""
-          },
-          "address_city": {
-            "type": "string",
-            "maxLength": 128,
-            "title": "Address City",
-            "default": ""
-          },
-          "phone": {
-            "type": "string",
-            "maxLength": 64,
-            "title": "Phone",
-            "default": ""
-          },
-          "contact_name": {
-            "type": "string",
-            "maxLength": 255,
-            "title": "Contact Name",
-            "default": ""
-          },
-          "branch_number": {
-            "type": "string",
-            "maxLength": 64,
-            "title": "Branch Number",
-            "default": ""
-          },
-          "tax_number": {
-            "type": "string",
-            "maxLength": 64,
-            "title": "Tax Number",
-            "default": ""
-          },
-          "industry_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Industry Id"
-          },
-          "id": {
-            "type": "string",
-            "title": "Id"
-          }
-        },
-        "type": "object",
-        "required": [
-          "id"
-        ],
-        "title": "TenantSettingsOut"
-      },
-      "TenantSettingsUpdate": {
-        "properties": {
-          "company_name": {
-            "type": "string",
-            "maxLength": 255,
-            "title": "Company Name",
-            "default": ""
-          },
-          "contact_email": {
-            "type": "string",
-            "maxLength": 255,
-            "title": "Contact Email",
-            "default": ""
-          },
-          "order_email": {
-            "type": "string",
-            "maxLength": 255,
-            "title": "Order Email",
-            "default": ""
-          },
-          "auto_order_enabled": {
-            "type": "boolean",
-            "title": "Auto Order Enabled",
-            "default": false
-          },
-          "auto_order_min": {
-            "type": "integer",
-            "minimum": 0.0,
-            "title": "Auto Order Min",
-            "default": 0
-          },
-          "export_format": {
-            "type": "string",
-            "maxLength": 32,
-            "title": "Export Format",
-            "default": "xlsx"
-          },
-          "address": {
-            "type": "string",
-            "maxLength": 512,
-            "title": "Address",
-            "default": ""
-          },
-          "address_postal_code": {
-            "type": "string",
-            "maxLength": 32,
-            "title": "Address Postal Code",
-            "default": ""
-          },
-          "address_city": {
-            "type": "string",
-            "maxLength": 128,
-            "title": "Address City",
-            "default": ""
-          },
-          "phone": {
-            "type": "string",
-            "maxLength": 64,
-            "title": "Phone",
-            "default": ""
-          },
-          "contact_name": {
-            "type": "string",
-            "maxLength": 255,
-            "title": "Contact Name",
-            "default": ""
-          },
-          "branch_number": {
-            "type": "string",
-            "maxLength": 64,
-            "title": "Branch Number",
-            "default": ""
-          },
-          "tax_number": {
-            "type": "string",
-            "maxLength": 64,
-            "title": "Tax Number",
-            "default": ""
-          },
-          "industry_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Industry Id"
-          }
-        },
-        "type": "object",
-        "title": "TenantSettingsUpdate"
-      },
-      "TenantUpdate": {
         "properties": {
           "name": {
             "anyOf": [
@@ -7616,7 +7494,9 @@
           "role": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "string",
+                "maxLength": 255,
+                "minLength": 2
               },
               {
                 "type": "null"
@@ -7863,47 +7743,5 @@
         "title": "ValidationError"
       }
     }
-  },
-  "tags": [
-    {
-      "name": "platform",
-      "description": "Basis Endpunkte für Health, Meta und DB Readiness."
-    },
-    {
-      "name": "inventory",
-      "description": "Inventory Endpoints mit Tenant-Kontext und Rollen-Checks."
-    },
-    {
-      "name": "admin",
-      "description": "Admin Endpunkte. Zugriff nur mit X-Admin-Key."
-    },
-    {
-      "name": "admin-tenants",
-      "description": "Tenant Verwaltung für Admin."
-    },
-    {
-      "name": "admin-users",
-      "description": "User Verwaltung für Admin."
-    },
-    {
-      "name": "admin-memberships",
-      "description": "Membership Verwaltung für Admin."
-    },
-    {
-      "name": "admin-roles",
-      "description": "Rollen Katalog."
-    },
-    {
-      "name": "admin-audit",
-      "description": "Admin Audit Log."
-    },
-    {
-      "name": "admin-diagnostics",
-      "description": "Daten Checks und Diagnosen."
-    },
-    {
-      "name": "admin-inventory",
-      "description": "Globale Stammdaten und Branchenverwaltung."
-    }
-  ]
+  }
 }

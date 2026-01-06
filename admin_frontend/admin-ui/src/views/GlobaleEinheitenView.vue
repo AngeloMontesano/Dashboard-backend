@@ -1,12 +1,22 @@
 <template>
   <UiPage>
-    <UiSection title="Globale Einheiten" subtitle="Einheiten für Artikel (Admin-API)">
+    <UiSection title="Globale Einheiten" subtitle="Einheiten für Artikel (UI-only, Backend-Endpunkte fehlen)">
       <template #actions>
         <button class="btnGhost small" :disabled="busy.load" @click="loadUnits">
           {{ busy.load ? "lädt..." : "Neu laden" }}
         </button>
         <button class="btnPrimary small" @click="openCreateModal">Neu anlegen</button>
       </template>
+
+      <div class="table-card">
+        <div class="stack">
+          <p class="section-subtitle">
+            Keine OpenAPI-Pfade für globale Einheiten vorhanden. Aktionen werden nur im UI gespeichert und dienen als
+            Vorbereitung, bis passende Backend-Endpunkte existieren. Einheiten sollten in Artikeln wiederverwendet
+            werden, sobald das Backend sie bereitstellt.
+          </p>
+        </div>
+      </div>
 
       <div class="filter-card">
         <div class="stack">
@@ -29,14 +39,14 @@
       <div class="table-card">
         <div class="table-card__header">
           <div class="tableTitle">Einheiten</div>
-          <div class="text-muted text-small">Ergebnisse stammen direkt aus der Admin-API.</div>
+          <div class="text-muted text-small">UI-only, nicht im Backend gespeichert.</div>
         </div>
         <div class="tableWrap">
           <table class="table">
             <thead>
               <tr>
-                <th>Code</th>
-                <th>Bezeichnung</th>
+                <th>Name</th>
+                <th>Beschreibung</th>
                 <th>Status</th>
                 <th class="narrowCol"></th>
               </tr>
@@ -44,12 +54,12 @@
             <tbody>
               <tr
                 v-for="entry in filteredUnits"
-                :key="entry.code"
-                :class="{ rowActive: selectedId === entry.code }"
-                @click="select(entry.code)"
+                :key="entry.id"
+                :class="{ rowActive: selectedId === entry.id }"
+                @click="select(entry.id)"
               >
-                <td class="mono">{{ entry.code }}</td>
-                <td>{{ entry.label }}</td>
+                <td>{{ entry.name }}</td>
+                <td class="text-muted text-small">{{ entry.description || "—" }}</td>
                 <td>
                   <span class="tag" :class="entry.is_active ? 'ok' : 'bad'">
                     {{ entry.is_active ? "aktiv" : "deaktiviert" }}
@@ -78,19 +88,19 @@
             <div class="modal__body">
               <div class="form-grid">
                 <label class="field">
-                  <span class="field-label">Code *</span>
-                  <input class="input" v-model.trim="modal.code" placeholder="z. B. pcs, kg, l" :disabled="modal.mode === 'edit'" />
+                  <span class="field-label">Name *</span>
+                  <input class="input" v-model.trim="modal.name" placeholder="z. B. Stück, kg, l" />
                 </label>
                 <label class="field">
-                  <span class="field-label">Bezeichnung *</span>
-                  <input class="input" v-model.trim="modal.label" placeholder="z. B. Stück" />
+                  <span class="field-label">Beschreibung</span>
+                  <textarea class="input" rows="2" v-model="modal.description" placeholder="Optional"></textarea>
                 </label>
                 <label class="field checkbox">
                   <input type="checkbox" v-model="modal.is_active" />
                   <span>Aktiv</span>
                 </label>
               </div>
-              <div class="hint">Änderungen werden sofort in der Datenbank gespeichert.</div>
+              <div class="hint">Aktion ist UI-only; Backend-Endpunkte fehlen noch.</div>
             </div>
             <div class="modal__footer">
               <button class="btnGhost" type="button" @click="closeModal">Abbrechen</button>
@@ -106,23 +116,23 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref, watch } from "vue";
+import { computed, reactive, ref } from "vue";
 import { useToast } from "../composables/useToast";
 import {
   useGlobalMasterdata,
   type GlobalUnit,
+  generateId,
 } from "../composables/useGlobalMasterdata";
 import UiPage from "../components/ui/UiPage.vue";
 import UiSection from "../components/ui/UiSection.vue";
-import { adminListUnits, adminUpsertUnit } from "../api/admin";
 
-const props = defineProps<{
+defineProps<{
   adminKey: string;
   actor: string;
 }>();
 
 const { toast } = useToast();
-const { units, upsertUnit, replaceUnits } = useGlobalMasterdata();
+const { units, upsertUnit } = useGlobalMasterdata();
 
 const search = ref("");
 const selectedId = ref("");
@@ -134,8 +144,9 @@ const busy = reactive({
 const modal = reactive({
   open: false,
   mode: "create" as "create" | "edit",
-  code: "",
-  label: "",
+  id: "",
+  name: "",
+  description: "",
   is_active: true,
 });
 
@@ -144,7 +155,7 @@ const filteredUnits = computed(() => {
   const list = units.value || [];
   if (!term) return list;
   return list.filter(
-    (t) => t.code.toLowerCase().includes(term) || (t.label || "").toLowerCase().includes(term)
+    (t) => t.name.toLowerCase().includes(term) || (t.description || "").toLowerCase().includes(term)
   );
 });
 
@@ -159,16 +170,18 @@ function select(id: string) {
 function openCreateModal() {
   modal.open = true;
   modal.mode = "create";
-  modal.code = "";
-  modal.label = "";
+  modal.id = "";
+  modal.name = "";
+  modal.description = "";
   modal.is_active = true;
 }
 
 function openEdit(entry: GlobalUnit) {
   modal.open = true;
   modal.mode = "edit";
-  modal.code = entry.code;
-  modal.label = entry.label;
+  modal.id = entry.id;
+  modal.name = entry.name;
+  modal.description = entry.description || "";
   modal.is_active = entry.is_active;
 }
 
@@ -176,64 +189,32 @@ function closeModal() {
   modal.open = false;
 }
 
-async function save() {
-  if (!props.adminKey) {
-    toast("Bitte Admin Key setzen", "warning");
-    return;
-  }
-  const code = modal.code.trim();
-  const label = modal.label.trim();
-  if (!code || !label) {
-    toast("Code und Bezeichnung sind Pflicht", "warning");
+function save() {
+  const name = modal.name.trim();
+  if (!name) {
+    toast("Name ist Pflicht", "warning");
     return;
   }
   busy.save = true;
-  try {
-    const payload: GlobalUnit = {
-      code,
-      label,
-      is_active: modal.is_active,
-    };
-    const saved = await adminUpsertUnit(props.adminKey, props.actor, payload);
-    upsertUnit(saved);
-    selectedId.value = saved.code;
-    toast(modal.mode === "edit" ? "Einheit aktualisiert" : "Einheit angelegt", "success");
-  } catch (e: any) {
-    toast(e?.message || "Speichern fehlgeschlagen", "error");
-  } finally {
-    busy.save = false;
-    closeModal();
-  }
+  const payload: GlobalUnit = {
+    id: modal.id || generateId(),
+    name,
+    description: modal.description?.trim() || "",
+    is_active: modal.is_active,
+  };
+  upsertUnit(payload);
+  selectedId.value = payload.id;
+  toast(
+    modal.mode === "edit" ? "Einheit aktualisiert (UI-only, Backend fehlt)" : "Einheit angelegt (UI-only, Backend fehlt)",
+    "success"
+  );
+  busy.save = false;
+  closeModal();
 }
 
-async function loadUnits() {
-  if (!props.adminKey) {
-    toast("Bitte Admin Key setzen", "warning");
-    return;
-  }
+function loadUnits() {
   busy.load = true;
-  try {
-    const res = await adminListUnits(props.adminKey, props.actor);
-    replaceUnits(res as GlobalUnit[]);
-    toast(`Einheiten geladen: ${res.length}`);
-  } catch (e: any) {
-    toast(e?.message || "Laden fehlgeschlagen", "error");
-  } finally {
-    busy.load = false;
-  }
+  toast("Backend-Unterstützung fehlt – kein Ladevorgang möglich", "warning");
+  busy.load = false;
 }
-
-watch(
-  () => props.adminKey,
-  (key, prev) => {
-    if (key && key !== prev) {
-      loadUnits();
-    }
-  },
-  { immediate: true }
-);
-
-onMounted(() => {
-  if (props.adminKey) loadUnits();
-});
 </script>

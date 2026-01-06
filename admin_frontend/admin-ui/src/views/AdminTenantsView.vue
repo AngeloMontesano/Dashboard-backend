@@ -219,18 +219,19 @@
             <input class="input" v-model="settingsState.form.tax_number" :disabled="settingsState.loading" />
           </label>
           <label class="field">
-            <span class="field-label">Kundenbranche</span>
+            <span class="field-label">Kundenbranche (UI-only)</span>
             <select
               class="input"
-              v-model="settingsState.form.industry_id"
+              v-model="settingsState.industryId"
               :disabled="settingsState.loading"
+              @change="onIndustryChange"
             >
               <option value="">Keine Auswahl</option>
               <option v-for="branch in industries" :key="branch.id" :value="branch.id">
                 {{ branch.name }}
               </option>
             </select>
-            <div class="hint">Die Auswahl wird in den Tenant Settings gespeichert.</div>
+            <div class="hint">Backend-Feld fehlt; Auswahl wird nur lokal gemerkt und nicht gespeichert.</div>
           </label>
           <label class="field">
             <span class="field-label">Export-Format</span>
@@ -316,7 +317,7 @@ const emit = defineEmits<{
 }>();
 
 const { toast } = useToast();
-const { industries, replaceIndustries } = useGlobalMasterdata();
+const { industries } = useGlobalMasterdata();
 
 /* State */
 const tenants = ref<TenantOut[]>([]);
@@ -344,6 +345,7 @@ const settingsState = reactive<{
   form: TenantSettingsUpdate | null;
   addressStreet: string;
   addressNumber: string;
+  industryId: string;
 }>({
   loading: false,
   saving: false,
@@ -351,6 +353,7 @@ const settingsState = reactive<{
   form: null,
   addressStreet: "",
   addressNumber: "",
+  industryId: "",
 });
 
 /* Modal State */
@@ -362,6 +365,9 @@ const modal = reactive({
 
 const baseDomain = import.meta.env.VITE_BASE_DOMAIN || "test.myitnetwork.de";
 const tenantHost = computed(() => (selectedTenant.value ? `${selectedTenant.value.slug}.${baseDomain}` : ""));
+const TENANT_INDUSTRY_STORAGE_KEY = "adminTenantIndustrySelections";
+const tenantIndustrySelections = reactive<Record<string, string>>(loadTenantIndustrySelections());
+
 /* Filter */
 const filteredTenants = computed(() => {
   let list = tenants.value.slice();
@@ -377,6 +383,20 @@ const filteredTenants = computed(() => {
   if (prefix.length) return prefix;
   return list.filter((t) => t.slug.toLowerCase().includes(term) || t.name.toLowerCase().includes(term));
 });
+
+function loadTenantIndustrySelections(): Record<string, string> {
+  try {
+    const raw = localStorage.getItem(TENANT_INDUSTRY_STORAGE_KEY);
+    return raw ? (JSON.parse(raw) as Record<string, string>) : {};
+  } catch {
+    return {};
+  }
+}
+
+function persistIndustrySelection(tenantId: string, industryId: string) {
+  tenantIndustrySelections[tenantId] = industryId;
+  localStorage.setItem(TENANT_INDUSTRY_STORAGE_KEY, JSON.stringify(tenantIndustrySelections));
+}
 
 /* API: Load Tenants */
 async function loadTenants() {
@@ -489,8 +509,10 @@ function selectTenant(t: TenantOut) {
   emitSelectedTenant();
   if (t?.id) {
     loadTenantSettings(t.id);
+    applyIndustrySelection(t.id);
   } else {
     settingsState.form = null;
+    settingsState.industryId = "";
   }
 }
 
@@ -533,6 +555,7 @@ async function loadTenantSettings(tenantId: string) {
     const split = splitAddress(settingsState.form.address || "");
     settingsState.addressStreet = split.street;
     settingsState.addressNumber = split.number;
+    applyIndustrySelection(tenantId);
   } catch (e: any) {
     settingsState.error = stringifyError(e);
     toast(`Einstellungen konnten nicht geladen werden: ${settingsState.error}`);
@@ -560,6 +583,15 @@ async function saveTenantSettings() {
   } finally {
     settingsState.saving = false;
   }
+}
+
+function applyIndustrySelection(tenantId: string) {
+  settingsState.industryId = tenantIndustrySelections[tenantId] || "";
+}
+
+function onIndustryChange() {
+  if (!selectedTenant.value?.id) return;
+  persistIndustrySelection(selectedTenant.value.id, settingsState.industryId || "");
 }
 
 async function copyValue(value: string, label: string) {

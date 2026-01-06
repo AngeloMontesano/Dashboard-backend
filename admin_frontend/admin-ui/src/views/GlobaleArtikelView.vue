@@ -1,6 +1,6 @@
 <template>
   <UiPage>
-    <UiSection title="Globale Artikel" subtitle="Artikel-Stammdaten (ohne Tenant-Kontext)">
+    <UiSection title="Globale Artikel" subtitle="Artikel-Stammdaten (UI-only bis Backend-Endpunkte bereitstehen)">
       <template #actions>
         <button class="btnGhost small" :disabled="busy.load" @click="loadItems">
           {{ busy.load ? "lädt..." : "Neu laden" }}
@@ -9,27 +9,40 @@
       </template>
 
       <div class="table-card">
+        <div class="stack">
+          <p class="section-subtitle">
+            Keine Admin/OpenAPI-Endpunkte für globale Artikel ohne Tenant-Kontext vorhanden. Aktionen wirken nur lokal
+            im UI, Speicherung im Backend ist noch nicht möglich. Admin-Artikel sollen später schreibgeschützt für
+            Kunden sein; dafür fehlt aktuell die Backend-Unterstützung (Feld/Policy).
+          </p>
+        </div>
+      </div>
+
+      <div class="table-card">
         <div class="table-card__header">
           <div class="tableTitle">Import / Export</div>
-          <div class="text-muted text-small">Admin-Endpoints für globale Artikel nutzen CSV-Format wie im Tenant.</div>
+          <div class="text-muted text-small">
+            Inventar-Import/Export-Endpunkte existieren nur tenant-gebunden mit Bearer-Token. Für Admin fehlt ein
+            globaler Endpoint mit Admin-Key. Aktionen bleiben daher deaktiviert.
+          </div>
         </div>
         <div class="box stack">
           <div class="row gap8 wrap">
-            <button class="btnGhost small" type="button" :disabled="busy.exporting" @click="exportItems">
-              {{ busy.exporting ? "exportiert..." : "Export starten" }}
+            <button class="btnGhost small" type="button" disabled title="Backend-Endpunkt fehlt" @click="exportItems">
+              Export starten
             </button>
-            <label class="btnGhost small file-btn">
+            <label class="btnGhost small file-btn" aria-disabled="true">
               Datei wählen (xlsx/csv)
-              <input type="file" accept=".xlsx,.xls,.csv" @change="onFileSelected" />
+              <input type="file" accept=".xlsx,.xls,.csv" disabled @change="onFileSelected" />
             </label>
-            <button class="btnPrimary small" type="button" :disabled="busy.importing" @click="importItems">
-              {{ busy.importing ? "importiert..." : "Import starten" }}
+            <button class="btnPrimary small" type="button" disabled title="Backend-Endpunkt fehlt" @click="importItems">
+              Import starten
             </button>
           </div>
           <ul class="bullets">
             <li>CSV/XLSX Strukturen wie im Customer-Frontend (alle Felder, inkl. Kategorie/Einheit).</li>
-            <li>Admin-Artikel sind schreibgeschützt für Kunden-APIs.</li>
-            <li>Kunden-Artikel erhalten automatisch ein <code>z_</code>-Prefix im Customer-Backend.</li>
+            <li>Admin-Artikel müssen für Kunden gesperrt werden (Name/SKU/Barcode readonly) – Backend fehlt.</li>
+            <li>Kunden-Artikel sollen beim Anlegen einen <code>z_</code>-Prefix für SKU/Artikelnummer erhalten – Backend fehlt.</li>
           </ul>
         </div>
       </div>
@@ -59,7 +72,7 @@
       <div class="table-card">
         <div class="table-card__header">
           <div class="tableTitle">Artikel</div>
-          <div class="text-muted text-small">Daten werden live aus dem Backend geladen.</div>
+          <div class="text-muted text-small">Lokale UI-Daten. Kein Backend-Speicher.</div>
         </div>
         <div class="tableWrap">
           <table class="table">
@@ -129,7 +142,7 @@
                 <label class="field">
                   <span class="field-label">Einheit *</span>
                   <select class="input" v-model="modal.unit">
-                    <option v-for="u in units" :key="u.code" :value="u.code">{{ u.label }}</option>
+                    <option v-for="u in units" :key="u.id" :value="u.id">{{ u.name }}</option>
                   </select>
                 </label>
                 <label class="field">
@@ -160,7 +173,7 @@
                   <span>Aktiv</span>
                 </label>
               </div>
-              <div class="hint">Speichern legt den Artikel global ohne Tenant-Kontext an.</div>
+              <div class="hint">Aktion ist UI-only; Backend-Endpunkte fehlen noch.</div>
             </div>
             <div class="modal__footer">
               <button class="btnGhost" type="button" @click="closeModal">Abbrechen</button>
@@ -176,33 +189,24 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref, watch } from "vue";
+import { computed, reactive, ref } from "vue";
 import { useToast } from "../composables/useToast";
 import {
   getCategoryName,
   useGlobalMasterdata,
   type GlobalItem,
+  generateId,
 } from "../composables/useGlobalMasterdata";
 import UiPage from "../components/ui/UiPage.vue";
 import UiSection from "../components/ui/UiSection.vue";
-import {
-  adminCreateGlobalItem,
-  adminExportGlobalItems,
-  adminImportGlobalItems,
-  adminListGlobalCategories,
-  adminListGlobalItems,
-  adminListUnits,
-  adminUpdateGlobalItem,
-} from "../api/admin";
 
-const props = defineProps<{
+defineProps<{
   adminKey: string;
   actor: string;
 }>();
 
 const { toast } = useToast();
-const { items, categories, units: globalUnits, upsertItem, replaceItems, replaceCategories, replaceUnits } =
-  useGlobalMasterdata();
+const { items, categories, units: globalUnits, upsertItem } = useGlobalMasterdata();
 
 const search = ref("");
 const categoryFilter = ref("");
@@ -210,13 +214,11 @@ const selectedId = ref("");
 const busy = reactive({
   load: false,
   save: false,
-  importing: false,
-  exporting: false,
 });
 const defaultUnits = [
-  { code: "pcs", label: "Stück", is_active: true },
-  { code: "kg", label: "Kilogramm", is_active: true },
-  { code: "l", label: "Liter", is_active: true },
+  { id: "pcs", name: "Stück", is_active: true },
+  { id: "kg", name: "Kilogramm", is_active: true },
+  { id: "l", name: "Liter", is_active: true },
 ];
 const units = computed(() => (globalUnits.value.length ? globalUnits.value : defaultUnits));
 
@@ -228,7 +230,7 @@ const modal = reactive({
   sku: "",
   barcode: "",
   description: "",
-  unit: units.value[0]?.code || "",
+  unit: units.value[0]?.id || "",
   category_id: "",
   quantity: 0,
   min_stock: 0,
@@ -265,7 +267,7 @@ function openCreateModal() {
   modal.sku = "";
   modal.barcode = "";
   modal.description = "";
-  modal.unit = units.value[0]?.code || "pcs";
+  modal.unit = units[0].id;
   modal.category_id = "";
   modal.quantity = 0;
   modal.min_stock = 0;
@@ -293,150 +295,61 @@ function closeModal() {
   modal.open = false;
 }
 
-async function loadMasterdata() {
-  if (!props.adminKey) return;
-  busy.load = true;
-  try {
-    const [cats, itemRes, unitRes] = await Promise.all([
-      adminListGlobalCategories(props.adminKey, props.actor),
-      adminListGlobalItems(props.adminKey, props.actor, { page_size: 200 }),
-      adminListUnits(props.adminKey, props.actor),
-    ]);
-    replaceCategories(cats);
-    replaceItems(itemRes.items || []);
-    replaceUnits(unitRes);
-    toast("Globale Stammdaten geladen");
-  } catch (e: any) {
-    toast(e?.message || "Laden fehlgeschlagen", "error");
-  } finally {
-    busy.load = false;
-  }
-}
-
-async function save() {
+function save() {
   const name = modal.name.trim();
   const sku = modal.sku.trim();
   if (!name || !sku) {
     toast("Name und SKU sind Pflicht", "warning");
     return;
   }
-  if (!props.adminKey) {
-    toast("Bitte Admin Key setzen", "warning");
-    return;
-  }
   busy.save = true;
-  try {
-    const payload = {
-      name,
-      sku,
-      barcode: modal.barcode?.trim() || "",
-      description: modal.description?.trim() || "",
-      quantity: Number.isFinite(modal.quantity) ? Number(modal.quantity) : 0,
-      unit: modal.unit || "pcs",
-      is_active: modal.is_active,
-      category_id: modal.category_id || null,
-      min_stock: Number.isFinite(modal.min_stock) ? Number(modal.min_stock) : 0,
-      max_stock: Number.isFinite(modal.target_stock) ? Number(modal.target_stock) : 0,
-      target_stock: Number.isFinite(modal.target_stock) ? Number(modal.target_stock) : 0,
-      recommended_stock: Number.isFinite(modal.target_stock) ? Number(modal.target_stock) : 0,
-      order_mode: 0,
-    };
-    let saved: GlobalItem;
-    if (modal.mode === "edit" && modal.id) {
-      saved = await adminUpdateGlobalItem(props.adminKey, props.actor, modal.id, payload);
-    } else {
-      saved = await adminCreateGlobalItem(props.adminKey, props.actor, payload);
-    }
-    upsertItem(saved);
-    selectedId.value = saved.id;
-    toast(modal.mode === "edit" ? "Artikel aktualisiert" : "Artikel angelegt", "success");
-  } catch (e: any) {
-    toast(e?.message || "Speichern fehlgeschlagen", "error");
-  } finally {
-    busy.save = false;
-    closeModal();
-  }
+  const payload: GlobalItem = {
+    id: modal.id || generateId(),
+    name,
+    sku,
+    barcode: modal.barcode?.trim() || "",
+    description: modal.description?.trim() || "",
+    quantity: Number.isFinite(modal.quantity) ? Number(modal.quantity) : 0,
+    unit: modal.unit || "pcs",
+    is_active: modal.is_active,
+    category_id: modal.category_id || null,
+    min_stock: Number.isFinite(modal.min_stock) ? Number(modal.min_stock) : 0,
+    max_stock: Number.isFinite(modal.target_stock) ? Number(modal.target_stock) : 0,
+    target_stock: Number.isFinite(modal.target_stock) ? Number(modal.target_stock) : 0,
+    recommended_stock: Number.isFinite(modal.target_stock) ? Number(modal.target_stock) : 0,
+    order_mode: 0,
+    category_name: getCategoryName(modal.category_id) || null,
+  };
+  upsertItem(payload);
+  selectedId.value = payload.id;
+  toast(
+    modal.mode === "edit" ? "Artikel aktualisiert (UI-only, Backend fehlt)" : "Artikel angelegt (UI-only, Backend fehlt)",
+    "success"
+  );
+  busy.save = false;
+  closeModal();
 }
 
-async function loadItems() {
-  if (!props.adminKey) {
-    toast("Bitte Admin Key setzen", "warning");
-    return;
-  }
+function loadItems() {
   busy.load = true;
-  try {
-    const res = await adminListGlobalItems(props.adminKey, props.actor, { page_size: 200 });
-    replaceItems(res.items || []);
-    toast(`Artikel geladen: ${res.items?.length || 0}`);
-  } catch (e: any) {
-    toast(e?.message || "Laden fehlgeschlagen", "error");
-  } finally {
-    busy.load = false;
-  }
+  toast("Backend-Unterstützung fehlt – kein Ladevorgang möglich", "warning");
+  busy.load = false;
 }
 
-async function exportItems() {
-  if (!props.adminKey) {
-    toast("Bitte Admin Key setzen", "warning");
-    return;
-  }
-  busy.exporting = true;
-  try {
-    const res = await adminExportGlobalItems(props.adminKey, props.actor);
-    const blob = new Blob([res.csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "globale_artikel.csv";
-    link.click();
-    URL.revokeObjectURL(url);
-    toast("Export erstellt", "success");
-  } catch (e: any) {
-    toast(e?.message || "Export fehlgeschlagen", "error");
-  } finally {
-    busy.exporting = false;
-  }
+function exportItems() {
+  toast("Export nicht möglich: Admin-Endpoint fehlt (nur tenant-basierter Export vorhanden)", "warning");
 }
 
-async function importItems() {
-  if (!props.adminKey) {
-    toast("Bitte Admin Key setzen", "warning");
-    return;
-  }
+function importItems() {
   if (!importFile.value) {
     toast("Bitte Datei wählen (XLSX/CSV)", "warning");
     return;
   }
-  busy.importing = true;
-  try {
-    const res = await adminImportGlobalItems(props.adminKey, props.actor, importFile.value);
-    toast(`Import: ${res.imported} neu, ${res.updated} aktualisiert`, "success");
-    await loadItems();
-  } catch (e: any) {
-    toast(e?.message || "Import fehlgeschlagen", "error");
-  } finally {
-    busy.importing = false;
-  }
+  toast("Import nicht möglich: Admin-Endpoint fehlt (nur tenant-basierter Import vorhanden)", "warning");
 }
 
 function onFileSelected(event: Event) {
   const files = (event.target as HTMLInputElement).files;
   importFile.value = files && files.length ? files[0] : null;
 }
-
-watch(
-  () => props.adminKey,
-  (key, prev) => {
-    if (key && key !== prev) {
-      loadMasterdata();
-    }
-  },
-  { immediate: true }
-);
-
-onMounted(() => {
-  if (props.adminKey) {
-    loadMasterdata();
-  }
-});
 </script>

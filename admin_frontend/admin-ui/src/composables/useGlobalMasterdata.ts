@@ -9,9 +9,19 @@ export type GlobalItem = components["schemas"]["ItemOut"];
 export type GlobalItemCreate = components["schemas"]["ItemCreate"];
 export type GlobalItemUpdate = components["schemas"]["ItemUpdate"];
 
-export type GlobalUnit = components["schemas"]["ItemUnitOut"];
+export type GlobalUnit = {
+  id: string;
+  name: string;
+  description?: string;
+  is_active: boolean;
+};
 
-export type GlobalIndustry = components["schemas"]["IndustryOut"];
+export type GlobalIndustry = {
+  id: string;
+  name: string;
+  description?: string;
+  is_active: boolean;
+};
 
 type IndustryArticleMap = Record<string, string[]>;
 
@@ -53,7 +63,7 @@ function upsertItem(item: GlobalItem) {
 }
 
 function upsertUnit(entry: GlobalUnit) {
-  const idx = state.units.findIndex((c) => c.code === entry.code);
+  const idx = state.units.findIndex((c) => c.id === entry.id);
   if (idx >= 0) {
     state.units.splice(idx, 1, entry);
   } else {

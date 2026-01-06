@@ -569,3 +569,13 @@
   - TODO/Roadmap erweitert um benötigte Backend-Endpunkte (Admin-Import/Export, Einheiten, Schreibschutz/Prefix).
 - **Tests**
   - `npm run build` (admin_frontend/admin-ui)
+
+## Schritt 45 – OpenAPI aktualisiert (lokale Generierung, Konfliktarme Struktur)
+- **Datum/Uhrzeit**: 2026-01-06T05:50:00Z
+- **Ziel**: Defekte/inkonsistente `docs/openapi/openapi.json` reparieren und OpenAPI-Typen neu generieren, damit Codex ohne Merge-Konflikt-fördernde Manuelleingriffe arbeiten kann.
+- **Was wurde geändert**
+  - `docs/openapi/openapi.json` frisch per FastAPI `get_openapi` mit Dummy-ENV (ohne DB-Init) generiert; fehlerhafte Blöcke (Order E-Mail/PDF) damit bereinigt.
+  - `npm run gen:types` im Admin-Frontend ausgeführt, damit `src/api/gen/openapi.ts` zur neuen Spec passt (inkl. `/inventory/units` etc.).
+  - Build erneut ausgeführt, um Typkompatibilität sicherzustellen.
+- **Tests**
+  - `npm run build` (admin_frontend/admin-ui)

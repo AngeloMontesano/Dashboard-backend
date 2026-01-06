@@ -57,3 +57,20 @@
 ## 2024-06-26
 - EPIC_A QA-Checkliste verweist jetzt auf Proxy-Header-Matrix in TENANT_STATUS.md, damit A-10/A-11 konsistent prüfen.
 - Tasks unverändert; Fokus: A-01 Review, dann QA/Proxy-Checks.
+
+## 2024-06-27
+- Roadmap-Index-Referenz für A-01 erwähnt jetzt die Proxy-Header-Matrix (A-11 Vorbereitung) für konsistente QA.
+- Keine Task-Änderungen; nächste Schritte unverändert (A-01 Review, dann A-10/A-11).
+
+## 2024-06-28
+- EPIC_B Spezifikation `docs/openapi/GLOBAL_CATALOG.md` erweitert: Paging-Metadaten in Listen, zusätzliche Fehlercodes (`industry_in_use/category_in_use/item_in_use/forbidden_system_record`), cURL-Beispiele und QA-Checkliste.
+- Ziel: B-02 Review und anschließender Alembic-Entwurf (B-03) beschleunigen; keine neuen Tasks oder ID-Anpassungen.
+
+## 2024-06-29
+- Roadmap-Index verlinkt GLOBAL_CATALOG-Spezifikation; EPIC_B ergänzt um Paging-/Fehlercode-Annahmen und Akzeptanzkriterium.
+- Ziel: B-02/B-03 Reviewer haben zentrale Referenzen; keine Task-IDs geändert.
+- Status-Codes und Paging-Limits in GLOBAL_CATALOG.md dokumentiert; offene Punkte: B-01/B-02 Review, Schemas in openapi.json nachziehen, danach B-03/B-04.
+
+## 2024-06-30
+- GLOBAL_CATALOG.md ergänzt um Headerpflicht (`X-Admin-Key`, optional `X-Admin-Actor`) und Response-Envelope-Hinweis (kein zusätzliches `data`, Listen mit `{total, limit, offset}`); EPIC_B/Index entsprechend angepasst.
+- Ziel: Header-/Envelope-Kontrakt für B-02/B-03 festziehen; Tasks unverändert, offene Punkte bleiben Schema-Sync in openapi.json und Start B-03/B-04.

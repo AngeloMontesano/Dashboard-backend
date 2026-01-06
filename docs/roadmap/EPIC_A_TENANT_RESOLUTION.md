@@ -89,6 +89,11 @@ Frontend zeigt für unbekannte/inaktive Subdomains eine klare Seite statt JSON. 
   - Dateien/Bereiche: Epic QA-Abschnitt, README QA  
   - Abhängigkeiten: A-05  
   - Done: Checkliste in Doku, deckt 404-Fallback, Tenant not found/inaktiv/unavailable, Header-Szenarien, Mobile/Darkmode, Proxy-Forwarding.
+- **A-11** – Proxy/404 Smoke-Test-Plan erstellen (Reverse Proxy Verhalten).  
+  - Bereich: docs/devops  
+  - Dateien/Bereiche: Epic QA-Abschnitt, ggf. `docs/` Test-Notiz  
+  - Abhängigkeiten: A-10  
+  - Done: Plan beschreibt Aufrufpfade (mit/ohne Subdomain, falsche Slugs), erwartete Responses (UI-Seite statt JSON), benötigte Proxy-Header (`X-Forwarded-Host`), und manuelle Schritte.
 
 ## QA-Checkliste (A-10)
 - 404-Fallback: Route `/:pathMatch(.*)*` führt zu TenantStatusView, kein rohes JSON.

@@ -23,3 +23,8 @@
 ## 2024-06-13
 - QA-Checkliste (A-10) als eigene Section in EPIC_A ergänzt, Szenarien detailliert (404-Fallback, Header-Kombinationen, Mobile/Darkmode).
 - Keine Änderungen an anderen Epics; Fokus auf QA-Dokumentation.
+
+## 2024-06-14
+- EPIC_A um Task A-11 ergänzt (Proxy/404 Smoke-Test-Plan), Backlog in TODO aktualisiert.
+- Epic_TODO ebenfalls mit A-11 ergänzt für Konsistenz der Tasklisten.
+- Weitere Epics unverändert.

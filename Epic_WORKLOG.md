@@ -65,3 +65,7 @@
 ## 2024-06-28
 - EPIC_B Spezifikation `docs/openapi/GLOBAL_CATALOG.md` erweitert: Paging-Metadaten in Listen, zusätzliche Fehlercodes (`industry_in_use/category_in_use/item_in_use/forbidden_system_record`), cURL-Beispiele und QA-Checkliste.
 - Ziel: B-02 Review und anschließender Alembic-Entwurf (B-03) beschleunigen; keine neuen Tasks oder ID-Anpassungen.
+
+## 2024-06-29
+- Roadmap-Index verlinkt GLOBAL_CATALOG-Spezifikation; EPIC_B ergänzt um Paging-/Fehlercode-Annahmen und Akzeptanzkriterium.
+- Ziel: B-02/B-03 Reviewer haben zentrale Referenzen; keine Task-IDs geändert.

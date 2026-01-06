@@ -99,3 +99,8 @@
 - Globale-Katalog-Spezifikation präzisiert (Paging-Metadaten, Fehlermeldungen `industry_in_use/category_in_use/item_in_use/forbidden_system_record`, cURL-Beispiele, QA-Checkliste) in `docs/openapi/GLOBAL_CATALOG.md`.
 - Ziel: Review von B-02/B-03 beschleunigen und Referenzfehler klar benennen; keine Änderungen an Tasks.
 - Offene Punkte: B-01/B-02 Review, danach Alembic-Entwurf (B-03) und Admin-UI-Navigation (B-04) starten.
+
+## 2024-06-29
+- Roadmap-Index um GLOBAL_CATALOG-Spezifikation verlinkt; EPIC_B API-Annahmen und Akzeptanzkriterien mit Paging-/Fehlercode-Details ergänzt.
+- Ziel: Reviewer finden B-02/B-03 Referenzen zentral, keine Task-IDs geändert.
+- Offene Punkte: B-01/B-02 Review abschließen, Schemas in `docs/openapi/openapi.json` nachziehen, dann B-03/B-04 starten.

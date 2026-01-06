@@ -157,14 +157,24 @@
                 <div v-else-if="!availableItems.length" class="muted text-small">Keine Artikel gefunden.</div>
                 <div v-else class="item-list">
                   <label v-for="item in availableItems" :key="item.id" class="item-row">
-                    <input type="checkbox" :value="item.id" v-model="selectedAvailableIds" :disabled="!selectedIndustryId" />
+                    <input
+                      type="checkbox"
+                      :value="item.id"
+                      v-model="selectedAvailableIds"
+                      :disabled="!selectedIndustryId || finalItemIdSet.has(item.id)"
+                    />
                     <div class="item-meta">
                       <div class="item-title">{{ item.name }}</div>
                       <div class="text-muted text-small mono">{{ item.sku }} · {{ item.barcode || "—" }}</div>
                     </div>
-                    <span class="tag" :class="item.is_active ? 'ok' : 'bad'">
-                      {{ item.is_active ? "aktiv" : "inaktiv" }}
-                    </span>
+                    <div class="row gap6">
+                      <span v-if="finalItemIdSet.has(item.id)" class="tag">
+                        Bereits zugeordnet
+                      </span>
+                      <span class="tag" :class="item.is_active ? 'ok' : 'bad'">
+                        {{ item.is_active ? "aktiv" : "inaktiv" }}
+                      </span>
+                    </div>
                   </label>
                 </div>
               </div>
@@ -383,6 +393,8 @@ const finalItemIds = computed(() => {
   pendingRemovals.value.forEach((id) => base.delete(id));
   return Array.from(base);
 });
+
+const finalItemIdSet = computed(() => new Set(finalItemIds.value));
 
 const assignedRows = computed(() => {
   const removalSet = new Set(pendingRemovals.value);

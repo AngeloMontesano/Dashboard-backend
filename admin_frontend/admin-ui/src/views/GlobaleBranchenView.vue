@@ -437,28 +437,7 @@ const busy = reactive({
   assignTenants: false,
 });
 
-type IndustryAssignResponse = components["schemas"]["IndustryAssignResponse"];
 
-const assign = reactive<{
-  initialQuantity: number;
-  preserveExisting: boolean;
-  result: IndustryAssignResponse | null;
-  busy: boolean;
-}>({
-  initialQuantity: 0,
-  preserveExisting: true,
-  result: null,
-  busy: false,
-});
-
-const modal = reactive({
-  open: false,
-  mode: "create" as "create" | "edit",
-  id: "",
-  name: "",
-  description: "",
-  is_active: true,
-});
 
 const filteredIndustries = computed(() => {
   const term = search.value.trim().toLowerCase();

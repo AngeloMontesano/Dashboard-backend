@@ -11,6 +11,8 @@ export type ItemUpdatePayload = components["schemas"]["ItemUpdate"];
 
 export type GlobalUnit = components["schemas"]["ItemUnitOut"];
 export type GlobalIndustry = components["schemas"]["IndustryOut"];
+export type IndustryAssignRequest = components["schemas"]["IndustryAssignRequest"];
+export type IndustryAssignResponse = components["schemas"]["IndustryAssignResponse"];
 
 type ItemsPage = components["schemas"]["ItemsPage"];
 type ItemsQuery = NonNullable<paths["/admin/inventory/items"]["get"]["parameters"]["query"]>;
@@ -172,6 +174,20 @@ export async function setIndustryItems(
 ) {
   const res = await api.put<{ ok: boolean; count: number }>(
     `/admin/inventory/industries/${industryId}/items`,
+    payload,
+    withAdmin(adminKey, actor)
+  );
+  return res.data;
+}
+
+export async function assignIndustryItemsToTenants(
+  adminKey: string,
+  industryId: string,
+  payload: IndustryAssignRequest,
+  actor?: string
+) {
+  const res = await api.post<IndustryAssignResponse>(
+    `/admin/inventory/industries/${industryId}/assign-to-tenants`,
     payload,
     withAdmin(adminKey, actor)
   );

@@ -6,10 +6,12 @@ import {
   createItem,
   fetchCategories,
   fetchItems,
+  fetchUnits,
   importItems,
   updateItem,
   type Category,
-  type Item
+  type Item,
+  type ItemUnit
 } from '@/api/inventory';
 import { useAuth } from '@/composables/useAuth';
 import BaseInput from '@/components/common/BaseInput.vue';
@@ -24,6 +26,7 @@ const canOpenModals = computed(() => Boolean(authState.accessToken));
 const isLoggedIn = computed(() => isAuthenticated());
 
 const categories = ref<Category[]>([]);
+const units = ref<ItemUnit[]>([]);
 const items = ref<Item[]>([]);
 const total = ref(0);
 
@@ -125,6 +128,7 @@ const showCreateCard = computed(() => showCreate.value);
 const categoryOptions = computed(() =>
   categories.value.map((cat) => ({ label: cat.name, value: cat.id }))
 );
+const unitOptions = computed(() => units.value.map((u) => ({ label: u.label, value: u.code })));
 
 function resetCreateForm() {
   createForm.sku = '';
@@ -182,6 +186,22 @@ async function loadCategories() {
   if (!authState.accessToken) return;
   const data = await fetchCategories(authState.accessToken);
   categories.value = data.filter((c: Category) => c.is_active);
+}
+
+async function loadUnits() {
+  if (!authState.accessToken) return;
+  try {
+    const data = await fetchUnits(authState.accessToken);
+    units.value = data.filter((u) => u.is_active);
+  } catch {
+    units.value = [
+      { code: 'pcs', label: 'Stück', is_active: true },
+      { code: 'kg', label: 'Kilogramm', is_active: true },
+      { code: 'g', label: 'Gramm', is_active: true },
+      { code: 'l', label: 'Liter', is_active: true },
+      { code: 'ml', label: 'Milliliter', is_active: true }
+    ];
+  }
 }
 
 async function loadItems() {
@@ -527,6 +547,7 @@ function closeCreateCard() {
 
 onMounted(async () => {
   if (!isLoggedIn.value) return;
+  await loadUnits();
   await loadCategories();
   await loadItems();
   await nextTick();
@@ -537,11 +558,13 @@ watch(
   () => authState.accessToken,
   async (token) => {
     if (token) {
+      await loadUnits();
       await loadCategories();
       await loadItems();
     } else {
       categories.value = [];
       items.value = [];
+      units.value = [];
     }
   }
 );
@@ -773,7 +796,10 @@ watch(
           </label>
           <label>
             <span>Einheit *</span>
-            <input v-model="editForm.unit" :disabled="!hasWriteAccess" />
+            <select v-model="editForm.unit" :disabled="!hasWriteAccess">
+              <option value="">Bitte wählen</option>
+              <option v-for="u in unitOptions" :key="u.value" :value="u.value">{{ u.label }}</option>
+            </select>
             <small v-if="!editForm.unit">Einheit ist erforderlich.</small>
           </label>
           <label>
@@ -846,7 +872,12 @@ watch(
         </BaseField>
 
         <BaseField label="Einheit" :required="true" :error="!createForm.unit ? 'Einheit ist erforderlich.' : ''">
-          <BaseInput ref="createUnitInput" v-model="createForm.unit" />
+          <BaseSelect
+            ref="createUnitInput"
+            v-model="createForm.unit"
+            :options="unitOptions"
+            placeholder="Bitte wählen"
+          />
         </BaseField>
 
         <BaseField label="Kategorie">

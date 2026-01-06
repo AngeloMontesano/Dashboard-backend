@@ -159,6 +159,7 @@ const handleItemSelect = (event: { value: ItemOption }) => {
           filter
           placeholder="Artikel wählen"
           class="w-full"
+          @filter="(event) => emit('search-items', event.value)"
         />
         <div class="chips" v-if="selectedItems.length">
           <Tag
@@ -181,6 +182,7 @@ const handleItemSelect = (event: { value: ItemOption }) => {
           placeholder="SKU, Barcode oder Name"
           forceSelection
           class="w-full"
+          :delay="0"
           @complete="(e) => emit('search-items', e.query)"
           @item-select="handleItemSelect"
         />

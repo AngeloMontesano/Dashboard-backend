@@ -159,6 +159,41 @@
 - **Was ist offen**
   - Backend/Schema-Abgleich der erweiterten OpenAPI-Definitionen bleibt offen; Remote-Zugriff ist kein Blocker mehr.
 
+## MIG-CUST-UI-PARITY – Phase 2 Start
+- Datum/Uhrzeit: 2026-01-08T15:00:00Z
+- Task-ID: MIG-CUST-UI-PLAN
+- Plan vor Umsetzung: Phase-2-Vorbereitung – Dokumentation anlegen/aktualisieren (`docs/roadmap/CUSTOMER_UI_PARITY_WITH_ADMIN.md`, `TODO.md` Scope neu priorisieren, `WORKLOG.md` fortschreiben) und anschließend Admin-Styles in das Customer-Frontend übernehmen (Tokens/Base/Layout/Utilities), bevor die Layout-Shell vereinheitlicht wird.
+- Ergebnis: Roadmap erstellt (`docs/roadmap/CUSTOMER_UI_PARITY_WITH_ADMIN.md`), TODO priorisiert auf PrimeVue-Removal/Parity-Fokus, WORKLOG-Eintrag für Phase 2 angelegt.
+- Nächste Schritte: Nach Dokumentation Admin-Styles kopieren (Task MIG-CUST-UI-STYLE), dann Layout-Shell auf Admin-Struktur heben (Task MIG-CUST-UI-SHELL).
+
+- Datum/Uhrzeit: 2026-01-08T15:10:00Z
+- Task-ID: MIG-CUST-UI-STYLE
+- Plan vor Umsetzung: Admin-Styles (tokens/base/layout/utilities) ins Customer-Frontend übernehmen, Token-Aliaising für bestehende Customer-Variablen erhalten, PrimeVue-spezifische Selektoren aus Layout entfernen und globale Importe (main.ts) auf neue Styles ergänzen. Keine Funktionalitätsänderung, nur Styling-Grundlagen.
+- Ergebnis: Admin-Token/Style-Dateien übernommen (`src/styles/tokens.css`, `base.css`, `layout.css`, `utilities.css`), Legacy-Aliasse für vorhandene Customer-Klassen ergänzt, PrimeVue-spezifische Selektoren entfernt. `main.ts` lädt jetzt `base.css`. Das Layout nutzt nun Admin-Farb-/Spacing-Tokens und Toast-/Button-Kompatibilität.
+- Geänderte Dateien: `customer_frontend/customer-ui/src/styles/tokens.css`, `customer_frontend/customer-ui/src/styles/base.css` (neu), `customer_frontend/customer-ui/src/styles/layout.css`, `customer_frontend/customer-ui/src/styles/utilities.css`, `customer_frontend/customer-ui/src/main.ts`.
+- Nächste Schritte: Nach Style-Übernahme Layout-Shell/Komponenten auf Admin-Struktur anpassen (Task MIG-CUST-UI-SHELL).
+
+- Datum/Uhrzeit: 2026-01-08T15:25:00Z
+- Task-ID: MIG-CUST-UI-SHELL
+- Plan vor Umsetzung: App-Shell (App.vue, Sidebar, Topbar, ToastHost) auf Admin-Struktur bringen: Klassen/Markup an Admin-Layout angleichen, Toast-Komponente auf Admin-Toast-Styles umstellen, Root-Class auf `.app` für neuen Base-Style setzen. Keine PrimeVue-Abhängigkeiten hinzufügen.
+- Ergebnis: App-Shell nutzt nun `.app` + `.shell` Layout (Admin-Grid), Sidebar/Topbar-Markup auf Admin-Navigation/Topbar-Klassen umgestellt, ToastHost rendert im Admin-Stil (`toastHost`/`toastCard`). Login nutzt `auth-shell` Background-Gradient, Toast global statt doppelt. Theme-Class bleibt `theme-dark` only.
+- Geänderte Dateien: `customer_frontend/customer-ui/src/App.vue`, `customer_frontend/customer-ui/src/components/layout/Sidebar.vue`, `customer_frontend/customer-ui/src/components/layout/Topbar.vue`, `customer_frontend/customer-ui/src/components/common/ToastHost.vue`.
+- Nächste Schritte: Nach Shell-Angleichung PrimeVue entfernen und Reporting-Komponenten ersetzen (Task MIG-CUST-UI-PRIME).
+
+- Datum/Uhrzeit: 2026-01-08T15:40:00Z
+- Task-ID: MIG-CUST-UI-PRIME
+- Plan vor Umsetzung: PrimeVue aus dem Customer-Frontend entfernen (package.json/lock, main.ts Plugins/Imports, CSS), alle PrimeVue-Komponenten in Reports/Dashboard durch native oder bestehende UI ersetzen (Dropdown/MultiSelect/Calendar/DataTable/Card/Button/Toast/Spinner/Tag/Chart). Falls Ersatz minimal, einfache Inputs/Selects/Tabellen nutzen und TODOs markieren. Danach Build prüfen.
+- Ergebnis: PrimeVue-Dependencies entfernt (package.json/lock, main.ts), Reports-UI auf native/Admin-Stil umgestellt: Filter mit nativen Date-/Select-Inputs + Chips, Export-Buttons mit Admin-Buttons, KPI/Charts mit eigenen Spinnern und Chart.js Canvas-Rendering, Tabelle ohne DataTable/Tag. Toasts nutzen internes Toast-System. PrimeVue-Imports/-CSS vollständig eliminiert. Build verifiziert (`npm run build` im Customer).
+- Geänderte Dateien: `customer_frontend/customer-ui/package.json`, `customer_frontend/customer-ui/package-lock.json`, `customer_frontend/customer-ui/src/main.ts`, `customer_frontend/customer-ui/src/components/reports/ReportFilters.vue`, `customer_frontend/customer-ui/src/components/reports/ReportExportButtons.vue`, `customer_frontend/customer-ui/src/components/reports/ReportKpiCards.vue`, `customer_frontend/customer-ui/src/components/reports/ReportCharts.vue`, `customer_frontend/customer-ui/src/views/BerichteAnalysenView.vue`.
+- Nächste Schritte: Nach Removal gezielte View-Politur pro Screen (Phase 4) und abschließender Build/PrimeVue-Grep.
+
+- Datum/Uhrzeit: 2026-01-08T16:10:00Z
+- Task-ID: MIG-CUST-UI-VIEWS
+- Plan vor Umsetzung: Phase 4 starten – zentrale Views auf Admin-Look heben (Cards/Sections/Buttons/Tables) ohne Logikänderungen. Fokus: Dashboard, Artikelverwaltung, Lagerbewegungen, Inventur, Bestellungen, Einstellungen. Struktur auf `UiPage`/`section`-Pattern, Buttons auf `btnPrimary/btnGhost`, Tabellen auf `.tableWrap/.table`, Banner/Filterleisten auf Admin-Stil. Danach Build und PrimeVue-Grep zur Sicherung.
+- Ergebnis: Buttons/Tabellen/Banner kompatibel zum Admin-Stil harmonisiert (btnPrimary/btnGhost, tableWrap/table, Banner/Alert/Badges/SR-only Styles in `layout.css`/`utilities.css`). Views angepasst: Dashboard Action-Button, Lagerbewegungen (Buttons/TableWrap), Inventur (Buttons/Banner/TableWrap), Artikelverwaltung (Header/Detail-/Create-/Import-Buttons), Einstellungen (Toolbar/Testmail Buttons). Compatibility-Layer ergänzt für page-head, alerts, badges, pagination, toolbar-fields, sr-only. TODO aktualisiert (Rest-Views Bestellungen/Kategorien-Feinschliff). Build folgt.
+- Geänderte Dateien: `customer_frontend/customer-ui/src/styles/layout.css`, `customer_frontend/customer-ui/src/styles/utilities.css`, `customer_frontend/customer-ui/src/views/DashboardView.vue`, `customer_frontend/customer-ui/src/views/LagerbewegungenView.vue`, `customer_frontend/customer-ui/src/views/InventurView.vue`, `customer_frontend/customer-ui/src/views/ArtikelverwaltungView.vue`, `customer_frontend/customer-ui/src/views/EinstellungenView.vue`, `TODO.md`.
+- Nächste Schritte: Restliche Views (Bestellungen/Kategorien) und Detail-Politur prüfen, dann finalen Build/PrimeVue-Grep und visuelle Kontrolle Dark-Mode.
+
 ## Schritt 12 – UI-Harmonisierung Task 1 (Ist-Aufnahme)
 - **Datum/Uhrzeit**: 2026-01-05T15:43:05+00:00
 - **Ziel**: Bestandsaufnahme für Design-Harmonisierung (Global Styles, PrimeVue, Tokens, Layout-Bausteine) in Admin- und Customer-Frontend.

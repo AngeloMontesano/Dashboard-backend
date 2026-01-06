@@ -42,20 +42,20 @@ function onThemeChange(event: Event) {
 <template>
   <header class="topbar">
     <div>
-      <p class="topbar__eyebrow">Kundenportal</p>
-      <h1 class="topbar__title">{{ title }}</h1>
+      <div class="pageTitle">{{ title }}</div>
+      <div class="crumbs">Kundenportal</div>
     </div>
-    <div class="topbar__actions">
-      <label class="button button--ghost inline-field">
+    <div class="section-actions">
+      <div class="toggle">
         <span>Theme</span>
         <select class="input" :value="theme" @change="onThemeChange">
           <option value="system">System</option>
           <option value="light">Light</option>
           <option value="dark">Dark</option>
         </select>
-      </label>
-      <button type="button" class="button button--ghost">Hilfe</button>
-      <button type="button" class="button button--primary" @click="handleLogout">Abmelden</button>
+      </div>
+      <button type="button" class="btnGhost small">Hilfe</button>
+      <button type="button" class="btnPrimary small" @click="handleLogout">Abmelden</button>
     </div>
   </header>
 </template>

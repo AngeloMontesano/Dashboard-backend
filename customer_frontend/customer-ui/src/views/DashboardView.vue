@@ -157,7 +157,7 @@ onMounted(loadDashboard);
   <UiPage>
     <UiSection title="Dashboard" subtitle="Wichtigste Kennzahlen für dein Lager auf einen Blick.">
       <template #actions>
-        <button class="button button--primary" type="button" @click="loadDashboard" :disabled="state.loading">
+        <button class="btnPrimary small" type="button" @click="loadDashboard" :disabled="state.loading">
           {{ state.loading ? 'Aktualisiere...' : 'Aktualisieren' }}
         </button>
       </template>

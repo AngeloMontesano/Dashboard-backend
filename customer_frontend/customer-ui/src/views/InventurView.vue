@@ -104,9 +104,9 @@ onMounted(loadItems);
         </template>
         <template #end>
           <div class="action-row">
-            <button class="button button--ghost" type="button" @click="loadItems" :disabled="state.loading">Neu laden</button>
-            <button class="button button--ghost" type="button" @click="handleExport" :disabled="state.exporting">Export</button>
-            <button class="button button--primary" type="button" @click="handleSave" :disabled="state.saving">Speichern</button>
+            <button class="btnGhost small" type="button" @click="loadItems" :disabled="state.loading">Neu laden</button>
+            <button class="btnGhost small" type="button" @click="handleExport" :disabled="state.exporting">Export</button>
+            <button class="btnPrimary small" type="button" @click="handleSave" :disabled="state.saving">Speichern</button>
           </div>
         </template>
       </UiToolbar>
@@ -137,7 +137,7 @@ onMounted(loadItems);
       </div>
 
       <div class="mt-lg">
-        <div class="table-wrapper" v-if="state.items.length">
+        <div class="tableWrap" v-if="state.items.length">
           <table class="table">
             <thead>
               <tr>

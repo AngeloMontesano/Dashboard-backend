@@ -2,3 +2,5 @@
   - Frontend: admin & customer  
   - Endpoint/View: `/admin/login`, `/admin/tenants/{tenant_id}/users/{user_id}/set-password`, `/inventory/items/*`, `/inventory/movements`, `/inventory/report*`
 - Frontend nutzt für die Typ-Generierung verbindlich die lokale Kopie `docs/openapi/openapi.json`; Remote-Schema-Zugriff bleibt optional und ist nicht mehr Bestandteil dieser Roadmap.
+- Neue Admin-/Inventory-Endpunkte für globale Stammdaten bereitstellen (Artikel/Kategorien/Typen/Branchen plus Branchen→Artikel-Mapping) ohne Tenant-Kontext, damit die Admin-Views aus `Globale Einstellungen` mehr als UI-only liefern können.
+- Tenant-Settings um Branchen-/Industrie-Feld erweitern (Schema + Admin-/Inventory-PUT/GET), damit die Dropdown-Auswahl in `AdminTenantsView` persistent gespeichert werden kann.

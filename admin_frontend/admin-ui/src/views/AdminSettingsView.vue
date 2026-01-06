@@ -265,6 +265,8 @@ import { useToast } from "../composables/useToast";
 import pkg from "../../package.json";
 import type { AdminSystemInfo } from "../types";
 
+type ThemeMode = "light" | "dark" | "system";
+
 const props = withDefaults(
   defineProps<{
     apiOk: boolean;
@@ -395,6 +397,17 @@ function loadEmailSettings() {
       smtpLoaded.has_password = res.has_password;
     })
     .catch((e) => {
+      // Falls keine Settings existieren (404), mit leeren Defaults weiterarbeiten.
+      if (e?.response?.status === 404) {
+        smtpSettings.host = "";
+        smtpSettings.port = 587;
+        smtpSettings.from_email = "";
+        smtpSettings.user = "";
+        smtpSettings.password = "";
+        smtpSettings.use_tls = true;
+        smtpLoaded.has_password = false;
+        return;
+      }
       toast(`SMTP Settings laden fehlgeschlagen: ${asError(e)}`, "danger");
     })
     .finally(() => {

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel, EmailStr, Field, validator
+from pydantic import BaseModel, EmailStr, Field
 
 from app.modules.admin.smtp_settings_service import (
     SmtpConfig,
@@ -51,7 +51,8 @@ class SmtpTestRequest(BaseModel):
 async def get_smtp_settings() -> SmtpSettingsOut:
     config = load_smtp_settings() or get_active_smtp_settings()
     if not config:
-        raise HTTPException(status_code=404, detail="Keine SMTP Konfiguration gefunden")
+        # Leere Defaults zurückgeben, damit das UI ausgefüllt werden kann.
+        return SmtpSettingsOut(host="", port=587, from_email="", user=None, use_tls=True, has_password=False)
     return SmtpSettingsOut.from_config(config)
 
 
@@ -66,6 +67,8 @@ async def test_smtp_settings(payload: SmtpTestRequest) -> dict:
     """
     Sendet eine Test-Mail mit der aktuell hinterlegten SMTP-Konfiguration.
     """
+    if not get_active_smtp_settings():
+        raise HTTPException(status_code=400, detail="SMTP Konfiguration fehlt")
     # Verwende die gespeicherten Settings; _send_email_message nutzt die aktiven (inkl. Fallback ENV).
     result = _send_email_message(
         to_email=payload.email,

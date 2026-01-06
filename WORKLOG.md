@@ -187,6 +187,13 @@
 - Geänderte Dateien: `customer_frontend/customer-ui/package.json`, `customer_frontend/customer-ui/package-lock.json`, `customer_frontend/customer-ui/src/main.ts`, `customer_frontend/customer-ui/src/components/reports/ReportFilters.vue`, `customer_frontend/customer-ui/src/components/reports/ReportExportButtons.vue`, `customer_frontend/customer-ui/src/components/reports/ReportKpiCards.vue`, `customer_frontend/customer-ui/src/components/reports/ReportCharts.vue`, `customer_frontend/customer-ui/src/views/BerichteAnalysenView.vue`.
 - Nächste Schritte: Nach Removal gezielte View-Politur pro Screen (Phase 4) und abschließender Build/PrimeVue-Grep.
 
+- Datum/Uhrzeit: 2026-01-08T16:10:00Z
+- Task-ID: MIG-CUST-UI-VIEWS
+- Plan vor Umsetzung: Phase 4 starten – zentrale Views auf Admin-Look heben (Cards/Sections/Buttons/Tables) ohne Logikänderungen. Fokus: Dashboard, Artikelverwaltung, Lagerbewegungen, Inventur, Bestellungen, Einstellungen. Struktur auf `UiPage`/`section`-Pattern, Buttons auf `btnPrimary/btnGhost`, Tabellen auf `.tableWrap/.table`, Banner/Filterleisten auf Admin-Stil. Danach Build und PrimeVue-Grep zur Sicherung.
+- Ergebnis: Buttons/Tabellen/Banner kompatibel zum Admin-Stil harmonisiert (btnPrimary/btnGhost, tableWrap/table, Banner/Alert/Badges/SR-only Styles in `layout.css`/`utilities.css`). Views angepasst: Dashboard Action-Button, Lagerbewegungen (Buttons/TableWrap), Inventur (Buttons/Banner/TableWrap), Artikelverwaltung (Header/Detail-/Create-/Import-Buttons), Einstellungen (Toolbar/Testmail Buttons). Compatibility-Layer ergänzt für page-head, alerts, badges, pagination, toolbar-fields, sr-only. TODO aktualisiert (Rest-Views Bestellungen/Kategorien-Feinschliff). Build folgt.
+- Geänderte Dateien: `customer_frontend/customer-ui/src/styles/layout.css`, `customer_frontend/customer-ui/src/styles/utilities.css`, `customer_frontend/customer-ui/src/views/DashboardView.vue`, `customer_frontend/customer-ui/src/views/LagerbewegungenView.vue`, `customer_frontend/customer-ui/src/views/InventurView.vue`, `customer_frontend/customer-ui/src/views/ArtikelverwaltungView.vue`, `customer_frontend/customer-ui/src/views/EinstellungenView.vue`, `TODO.md`.
+- Nächste Schritte: Restliche Views (Bestellungen/Kategorien) und Detail-Politur prüfen, dann finalen Build/PrimeVue-Grep und visuelle Kontrolle Dark-Mode.
+
 ## Schritt 12 – UI-Harmonisierung Task 1 (Ist-Aufnahme)
 - **Datum/Uhrzeit**: 2026-01-05T15:43:05+00:00
 - **Ziel**: Bestandsaufnahme für Design-Harmonisierung (Global Styles, PrimeVue, Tokens, Layout-Bausteine) in Admin- und Customer-Frontend.

@@ -608,17 +608,17 @@ watch(
         <p class="section-subtitle">Artikel, Barcodes und Mindestbestände verwalten.</p>
       </div>
       <div class="page-head__actions">
-        <button class="button button--ghost" type="button" @click="handleNavigateCategories">
+        <button class="btnGhost small" type="button" @click="handleNavigateCategories">
           Kategorien verwalten
         </button>
-        <button class="button button--ghost" type="button" @click="openImportModal" :disabled="!canOpenModals">
+        <button class="btnGhost small" type="button" @click="openImportModal" :disabled="!canOpenModals">
           Import CSV
         </button>
-        <button class="button button--ghost" type="button" @click="handleExportAll" :disabled="isExporting">
+        <button class="btnGhost small" type="button" @click="handleExportAll" :disabled="isExporting">
           {{ isExporting ? 'Exportiert...' : 'Export CSV' }}
         </button>
         <button
-          class="button button--primary"
+          class="btnPrimary small"
           type="button"
           @click="openCreateCard"
           :disabled="!canOpenModals"
@@ -725,12 +725,12 @@ watch(
         <p v-else>Keine Artikel gefunden. Nutze "Neuen Artikel anlegen" oder importiere per CSV.</p>
       </div>
       <div class="pagination">
-        <button class="button button--ghost" type="button" :disabled="filters.page <= 1" @click="filters.page -= 1">
+        <button class="btnGhost small" type="button" :disabled="filters.page <= 1" @click="filters.page -= 1">
           Zurück
         </button>
         <span>Seite {{ filters.page }}</span>
         <button
-          class="button button--ghost"
+          class="btnGhost small"
           type="button"
           :disabled="filters.page * filters.page_size >= total"
           @click="filters.page += 1"
@@ -747,9 +747,9 @@ watch(
           <h3 class="card__title">Ausgewählter Artikel: {{ selectedArticle.name }} ({{ selectedArticle.sku }})</h3>
         </div>
         <div class="detail-card__actions">
-          <button class="button button--ghost" type="button" @click="resetEditForm">Zurücksetzen</button>
+          <button class="btnGhost small" type="button" @click="resetEditForm">Zurücksetzen</button>
           <button
-            class="button button--primary"
+            class="btnPrimary small"
             type="button"
             :disabled="!isEditValid || !hasWriteAccess || isSaving"
             @click="handleSaveSelected"
@@ -845,9 +845,9 @@ watch(
           <p class="card__hint">Pflichtfelder: Artikelnummer, Name, Barcode, Einheit.</p>
         </div>
         <div class="detail-card__actions">
-          <button class="button button--ghost" type="button" @click="resetCreateForm">Zurücksetzen</button>
-          <button class="button button--ghost" type="button" @click="closeCreateCard">Abbrechen</button>
-          <button class="button button--primary" type="button" :disabled="!isCreateValid || isSaving" @click="handleCreate">
+          <button class="btnGhost small" type="button" @click="resetCreateForm">Zurücksetzen</button>
+          <button class="btnGhost small" type="button" @click="closeCreateCard">Abbrechen</button>
+          <button class="btnPrimary small" type="button" :disabled="!isCreateValid || isSaving" @click="handleCreate">
             {{ isSaving ? 'Speichert...' : 'Speichern' }}
           </button>
         </div>
@@ -948,7 +948,7 @@ watch(
           <p class="eyebrow">Import</p>
           <h3>CSV Import</h3>
         </div>
-        <button class="button button--ghost" type="button" @click="closeImportModal">Schließen</button>
+        <button class="btnGhost small" type="button" @click="closeImportModal">Schließen</button>
       </header>
 
       <div v-if="importError" class="alert alert--error">{{ importError }}</div>
@@ -963,7 +963,7 @@ watch(
         <p>Wähle eine CSV-Datei (UTF-8, Komma getrennt).</p>
         <input type="file" accept=".csv" @change="handleImportFile" />
         <div class="form-actions">
-          <button class="button button--primary" type="button" :disabled="!importFile" @click="importStep = 2">
+          <button class="btnPrimary small" type="button" :disabled="!importFile" @click="importStep = 2">
             Weiter
           </button>
         </div>
@@ -996,8 +996,8 @@ watch(
           </table>
         </div>
         <div class="form-actions">
-          <button class="button button--ghost" type="button" @click="importStep = 1">Zurück</button>
-          <button class="button button--primary" type="button" :disabled="!isMappingValid" @click="importStep = 3">
+          <button class="btnGhost small" type="button" @click="importStep = 1">Zurück</button>
+          <button class="btnPrimary small" type="button" :disabled="!isMappingValid" @click="importStep = 3">
             Weiter
           </button>
         </div>
@@ -1006,11 +1006,11 @@ watch(
       <div v-if="importStep === 3" class="wizard-step">
         <p>Import starten. Pflichtfelder müssen zugeordnet sein.</p>
         <div class="form-actions">
-          <button class="button button--ghost" type="button" @click="importStep = 2">Zurück</button>
-          <button class="button button--primary" type="button" :disabled="importLoading" @click="startImport">
+          <button class="btnGhost small" type="button" @click="importStep = 2">Zurück</button>
+          <button class="btnPrimary small" type="button" :disabled="importLoading" @click="startImport">
             {{ importLoading ? 'Import läuft...' : 'Import starten' }}
           </button>
-          <button class="button button--ghost" type="button" @click="closeImportModal">Schließen</button>
+          <button class="btnGhost small" type="button" @click="closeImportModal">Schließen</button>
         </div>
         <div v-if="!importLoading && (importResult.created || importResult.updated || importResult.errors.length)" class="import-result">
           <p>Erstellt: {{ importResult.created }}</p>

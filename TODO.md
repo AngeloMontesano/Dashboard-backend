@@ -1,7 +1,7 @@
 # TODO
 
 ## MUSS (kritisch)
-- Customer: Restliche Views (Dashboard, Artikelverwaltung, Kategorien, Lagerbewegungen, Inventur, Bestellungen, Einstellungen) auf Admin-Card/Button/Table-Stil heben; Dark-Mode visuell gegen Admin prüfen.
+- Customer: Restliche Views auf Admin-Stil finalisieren (insb. Bestellungen, Kategorien-Feinschliff, Artikel-Detailkarten) und Dark-Mode gegen Admin prüfen.
 - Customer: Build-Qualität sicherstellen (`npm run build`) und Smoke-Tests im Dark-Mode; `rg "primevue"` muss 0 Treffer liefern.
 - Docs: WORKLOG und Roadmap (`docs/roadmap/CUSTOMER_UI_PARITY_WITH_ADMIN.md`) aktuell halten; offene Paritätslücken dokumentieren.
 - Backend (vorherige Lücken, weiterhin kritisch): Migration `0009_create_inventory_orders` ausrollen; Reporting-Query-Fix deployen; globale Stammdaten-/Industrie-Endpunkte und Admin-konforme Artikelrestriktionen ergänzen.

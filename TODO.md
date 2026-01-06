@@ -1,24 +1,18 @@
 # TODO
 
 ## MUSS (kritisch)
-- Admin: Logs-Tab in `AdminOperationsView` -> Backend-Endpoint anbinden (Tab aktuell ausgeblendet).
-- Customer: Shell-Mobile-Breakpoints fertigstellen (<1100px umgesetzt); weitere Feinjustierung/Sidebar-Toggle optional prüfen.
-- Customer: Reporting-PDF über API-Export statt DOM-Kopie (umgesetzt); Server-Export weiter verifizieren.
-- Backend: Migration `0009_create_inventory_orders` ausrollen; Reporting-Query-Fix (GROUP BY) deployen, damit Dashboard/Bestellungen/Inventur/Reporting keine 422/500 mehr liefern.
-- Backend/Admin: Globale Stammdaten-Endpunkte für Artikel/Kategorien/Typen/Branchen sowie Branchen→Artikel-Mapping ohne Tenant-Kontext bereitstellen; Admin-Views sind aktuell UI-only.
-- Backend/Admin: Tenant-Settings um Branchen-/Industrie-Feld erweitern (OpenAPI, Admin-/Inventory-Endpunkte); Dropdown in `AdminTenantsView` ist UI-only.
-- Backend/Admin: Admin-fähige Inventar-Import/Export-Endpunkte (Artikel, alle Felder) sowie globale Einheiten-Endpoints bereitstellen; aktuell nur tenant-basierte Bearer-Endpunkte vorhanden.
-- Backend: Admin-Artikel für Kunden schreibgeschützt machen (Name/SKU/Barcode readonly) und Kunden-Artikel bei Anlage automatisch mit `z_`-Prefix versehen; Admin-/Customer-APIs fehlen dafür.
+- Customer: Restliche Views (Dashboard, Artikelverwaltung, Kategorien, Lagerbewegungen, Inventur, Bestellungen, Einstellungen) auf Admin-Card/Button/Table-Stil heben; Dark-Mode visuell gegen Admin prüfen.
+- Customer: Build-Qualität sicherstellen (`npm run build`) und Smoke-Tests im Dark-Mode; `rg "primevue"` muss 0 Treffer liefern.
+- Docs: WORKLOG und Roadmap (`docs/roadmap/CUSTOMER_UI_PARITY_WITH_ADMIN.md`) aktuell halten; offene Paritätslücken dokumentieren.
+- Backend (vorherige Lücken, weiterhin kritisch): Migration `0009_create_inventory_orders` ausrollen; Reporting-Query-Fix deployen; globale Stammdaten-/Industrie-Endpunkte und Admin-konforme Artikelrestriktionen ergänzen.
 
 ## SOLL (UX/Konsistenz/Performance/Accessibility)
-- Admin: Tenants/Memberships mit Server-Paging und Validierung (Settings-Form, Delete-Confirms über Dialog-Komponente) ausstatten.
-- Admin: Theme-Toggle zusätzlich in der Topbar platzieren; Confirm-Dialog für Danger-Aktionen mit Fokus-Management nutzen.
-- Customer: Queue-Operationen (Lagerbewegungen) mit Confirm für „Queue leeren“ und klaren Empty/Loading-States ergänzen.
-- Customer: Einstellungen-Form validieren (Pflichtfelder, Busy/Disable pro Aktion), Test-E-Mail Feedback inline anzeigen.
-- Customer: Bestellungen weiter verfeinern (Row-Busy ergänzt; leere Zustände/Fehler-Feedback weiter verbessern).
-- Beide: Zentrale Fehler-Helfer (stringifyError) und einheitliche Toast/Overlay-Styles auf Token-Basis verwenden.
+- Customer: Filter-/Form-Controls auf Admin-Input-Pattern (Pills, Focus-Ring) vereinheitlichen; Table-Leer-States harmonisieren.
+- Customer: Queue-/Bestell-Views mit klaren Busy/Confirm-Flows und konsistenter Button-Hierarchie ausstatten.
+- Admin/Customer: Gemeinsame Toast/Overlay-Styles auf Token-Basis konsolidieren und A11y-Labels für Filter/Selects ergänzen.
+- Admin: Tenants/Memberships mit Server-Paging und Validierungen inkl. Confirm-Dialogen ausstatten; Theme-Toggle in Topbar ergänzen.
 
 ## KANN (Nice-to-have)
-- Dashboard- und Reporting-KPIs serverseitig aggregieren, um Mehrfach-Requests/Caching zu vermeiden.
-- Snapshot-Funktion (Admin) optional serverseitig speichern/teilen und Tenant/Host deutlich kennzeichnen.
-- PrimeVue-Overlays/Charts an Theme-Tokens anpassen und A11y-Labels für Filter/Selects ergänzen.
+- Customer/Admin: Serverseitige Aggregationen für KPIs/Reporting zur Reduktion von Requests/Caching-Bedarf.
+- Customer: Snapshot/Export-Optionen für Dashboard/Reporting anbieten (Server-basiert, teilbar).
+- Admin: Verbesserte Hinweise/Badges für Tenant/Host-Kontext und optionale Snapshot-Freigabe.

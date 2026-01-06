@@ -106,7 +106,10 @@
                   </span>
                 </td>
                 <td class="text-right">
-                  <button class="btnGhost small" type="button" @click.stop="openEdit(item)">Bearbeiten</button>
+                  <div class="row gap8">
+                    <button class="btnGhost small" type="button" @click.stop="openEdit(item)">Bearbeiten</button>
+                    <button class="btnGhost small danger" type="button" @click.stop="remove(item)">Löschen</button>
+                  </div>
                 </td>
               </tr>
               <tr v-if="!items.length">

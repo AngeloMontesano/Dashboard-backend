@@ -5,11 +5,17 @@ import { useMovementQueue, type MovementRecord } from '@/composables/useMovement
 import { useOnlineStatus } from '@/composables/useOnlineStatus';
 import { useToast } from '@/composables/useToast';
 import { useAuth } from '@/composables/useAuth';
+import UiPage from '@/components/ui/UiPage.vue';
+import UiSection from '@/components/ui/UiSection.vue';
+import UiToolbar from '@/components/ui/UiToolbar.vue';
+import { RouterLink } from 'vue-router';
 
 const barcode = ref('');
 const qty = ref<number>(1);
 const note = ref('');
 const barcodeInput = ref<HTMLInputElement | null>(null);
+const clearing = ref(false);
+const submitting = ref<{ IN: boolean; OUT: boolean }>({ IN: false, OUT: false });
 
 const { isOnline } = useOnlineStatus();
 const { state: authState } = useAuth();
@@ -21,37 +27,46 @@ const {
   clearSent,
   hasPending,
   syncing,
-  lastSyncError
+  lastSyncError,
+  deriveIssueState,
+  attentionCount
 } = useMovementQueue();
 const { push: pushToast } = useToast();
 
 const recentMovements = computed(() => movements.value.slice(0, 30));
+const issueCount = computed(() => attentionCount.value);
 
-const statusTone = (status: MovementRecord['status']) => {
-  switch (status) {
-    case 'sent':
-      return 'success';
-    case 'sending':
-      return 'info';
-    case 'failed':
-      return 'danger';
-    case 'queued':
-    default:
+const statusTone = (item: MovementRecord) => {
+  const state = deriveIssueState(item);
+  switch (state) {
+    case 'auth':
       return 'warning';
+    case 'blocked':
+      return 'danger';
+    case 'retrying':
+      return 'info';
+    case 'waiting':
+      return 'warning';
+    default:
+      return item.status === 'sent' ? 'success' : 'neutral';
   }
 };
 
-const statusLabel = (status: MovementRecord['status']) => {
-  switch (status) {
-    case 'sent':
-      return 'Gesendet';
-    case 'sending':
-      return 'Senden...';
-    case 'failed':
-      return 'Fehlgeschlagen';
-    case 'queued':
+const statusLabel = (item: MovementRecord) => {
+  const state = deriveIssueState(item);
+  switch (state) {
+    case 'auth':
+      return 'Anmeldung nötig';
+    case 'blocked':
+      return 'Blockiert';
+    case 'retrying':
+      return 'Retry geplant';
+    case 'waiting':
+      return 'Wartet';
     default:
-      return 'Wartend';
+      if (item.status === 'sent') return 'Gesendet';
+      if (item.status === 'sending') return 'Senden...';
+      return 'Wartet';
   }
 };
 
@@ -83,126 +98,214 @@ const submitMovement = async (type: 'IN' | 'OUT') => {
   }
 
   const normalizedQty = Math.max(1, Number(qty.value) || 1);
+  submitting.value[type] = true;
 
-  await enqueueMovement({
-    type,
-    barcode: barcode.value,
-    qty: normalizedQty,
-    note: note.value
-  });
+  try {
+    await enqueueMovement({
+      type,
+      barcode: barcode.value,
+      qty: normalizedQty,
+      note: note.value
+    });
+    await resetForm();
+  } finally {
+    submitting.value[type] = false;
+  }
+};
 
-  await resetForm();
+const handleClearSent = async () => {
+  if (clearing.value) return;
+  clearing.value = true;
+  try {
+    await clearSent();
+  } finally {
+    clearing.value = false;
+  }
 };
 </script>
 
 <template>
-  <section class="page-section">
-    <header class="page-section__header">
-      <div>
-        <p class="eyebrow">Scannen & Buchen</p>
-        <h2 class="section-title">Lagerbewegungen</h2>
-        <p class="section-subtitle">
-          Buche Bestandsänderungen auch offline. Die Queue synchronisiert automatisch.
-        </p>
+  <UiPage>
+    <UiSection title="Lagerbewegungen" subtitle="Buche Bestandsänderungen auch offline. Die Queue synchronisiert automatisch.">
+      <UiToolbar>
+        <template #start>
+          <StatusPill :label="isOnline ? 'Online' : 'Offline'" :tone="isOnline ? 'success' : 'warning'" />
+        </template>
+        <template #end>
+          <div class="action-row">
+            <button class="btnGhost small" type="button" @click="syncNow" :disabled="syncing" :aria-busy="syncing">
+              <span class="btn-label">
+                <span v-if="syncing" class="btn-spinner" aria-hidden="true"></span>
+                Sync jetzt
+              </span>
+            </button>
+            <button
+              class="btnGhost small"
+              type="button"
+              @click="handleClearSent"
+              :disabled="clearing"
+              :aria-busy="clearing"
+            >
+              <span class="btn-label">
+                <span v-if="clearing" class="btn-spinner" aria-hidden="true"></span>
+                Queue leeren
+              </span>
+            </button>
+            <RouterLink class="btnGhost small badge-button" :to="{ name: 'sync-probleme' }">
+              Fehler ansehen
+              <span class="badge-counter" v-if="issueCount">{{ issueCount }}</span>
+            </RouterLink>
+          </div>
+        </template>
+      </UiToolbar>
+
+      <div class="form-grid">
+        <div class="field">
+          <label for="barcode">Barcode</label>
+          <input
+            id="barcode"
+            ref="barcodeInput"
+            v-model="barcode"
+            class="input"
+            type="text"
+            autocomplete="off"
+            placeholder="Barcode scannen oder eingeben"
+            :disabled="!hasWriteAccess"
+            autofocus
+          />
+        </div>
+        <div class="field">
+          <label for="qty">Menge</label>
+          <input
+            id="qty"
+            v-model.number="qty"
+            class="input"
+            type="number"
+            min="1"
+            step="1"
+            placeholder="Anzahl"
+            :disabled="!hasWriteAccess"
+          />
+        </div>
+        <div class="field">
+          <label for="note">Notiz (optional)</label>
+          <input
+            id="note"
+            v-model="note"
+            class="input"
+            type="text"
+            placeholder="Chargeninfo oder Kommentar"
+            :disabled="!hasWriteAccess"
+          />
+        </div>
       </div>
-      <div class="actions">
-        <StatusPill :label="isOnline ? 'Online' : 'Offline'" :tone="isOnline ? 'success' : 'warning'" />
-        <button class="button button--ghost" type="button" @click="syncNow" :disabled="syncing">
-          Sync jetzt
+
+      <div class="action-row">
+        <button
+          class="btnGhost small"
+          type="button"
+          @click="submitMovement('OUT')"
+          :disabled="!hasWriteAccess || submitting.OUT"
+          :aria-busy="submitting.OUT"
+        >
+          <span class="btn-label">
+            <span v-if="submitting.OUT" class="btn-spinner" aria-hidden="true"></span>
+            Bestand reduzieren
+          </span>
         </button>
-        <button class="button button--ghost" type="button" @click="clearSent">
-          Queue leeren
+        <button
+          class="btnPrimary small"
+          type="button"
+          @click="submitMovement('IN')"
+          :disabled="!hasWriteAccess || submitting.IN"
+          :aria-busy="submitting.IN"
+        >
+          <span class="btn-label">
+            <span v-if="submitting.IN" class="btn-spinner" aria-hidden="true"></span>
+            Bestand erhöhen
+          </span>
         </button>
       </div>
-    </header>
 
-    <div class="form-grid" style="margin-bottom: 16px">
-      <div class="field">
-        <label for="barcode">Barcode</label>
-        <input
-          id="barcode"
-          ref="barcodeInput"
-          v-model="barcode"
-          class="input"
-          type="text"
-          autocomplete="off"
-          placeholder="Barcode scannen oder eingeben"
-          :disabled="!hasWriteAccess"
-          autofocus
-        />
+      <div class="callout">
+        <span>
+          Wartende Einträge: {{ hasPending ? 'Ja' : 'Nein' }} • Probleme: {{ issueCount }}
+          <span v-if="lastSyncError">• Letzte Meldung: {{ lastSyncError }}</span>
+        </span>
+        <RouterLink class="link" :to="{ name: 'sync-probleme' }">Fehlerzentrum öffnen</RouterLink>
       </div>
-      <div class="field">
-        <label for="qty">Menge</label>
-        <input
-          id="qty"
-          v-model.number="qty"
-          class="input"
-          type="number"
-          min="1"
-          step="1"
-          placeholder="Anzahl"
-          :disabled="!hasWriteAccess"
-        />
+
+      <div class="tableWrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Zeitpunkt</th>
+              <th>Typ</th>
+              <th>Barcode</th>
+              <th>Menge</th>
+              <th>Notiz</th>
+              <th>Status</th>
+              <th>Versuche</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="item in recentMovements" :key="item.id">
+              <td>{{ new Date(item.created_at).toLocaleString() }}</td>
+              <td>{{ item.type === 'IN' ? 'Bestand erhöhen' : 'Bestand reduzieren' }}</td>
+              <td>{{ item.barcode }}</td>
+              <td>{{ item.qty }}</td>
+              <td>{{ item.note || '—' }}</td>
+              <td>
+                <StatusPill :label="statusLabel(item)" :tone="statusTone(item)" />
+              </td>
+              <td>
+                <span v-if="item.status === 'failed' && item.last_error" class="text-danger">
+                  {{ item.retries }} ({{ item.last_error }})
+                </span>
+                <span v-else>{{ item.retries }}</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
-      <div class="field">
-        <label for="note">Notiz (optional)</label>
-        <input
-          id="note"
-          v-model="note"
-          class="input"
-          type="text"
-          placeholder="Chargeninfo oder Kommentar"
-          :disabled="!hasWriteAccess"
-        />
-      </div>
-    </div>
-
-    <div class="actions" style="margin-bottom: 8px">
-      <button class="button button--ghost" type="button" @click="submitMovement('OUT')" :disabled="!hasWriteAccess">
-        Bestand reduzieren
-      </button>
-      <button class="button button--primary" type="button" @click="submitMovement('IN')" :disabled="!hasWriteAccess">
-        Bestand erhöhen
-      </button>
-    </div>
-
-    <p v-if="hasPending" class="section-subtitle">
-      Wartende Einträge: {{ hasPending ? 'Ja' : 'Nein' }} | Status: {{ syncing ? 'Sync läuft' : 'Bereit' }}
-    </p>
-    <p v-if="lastSyncError" class="section-subtitle" style="color: var(--color-danger)">
-      Letzter Fehler: {{ lastSyncError }}
-    </p>
-
-    <table class="table">
-      <thead>
-        <tr>
-          <th>Zeitpunkt</th>
-          <th>Typ</th>
-          <th>Barcode</th>
-          <th>Menge</th>
-          <th>Notiz</th>
-          <th>Status</th>
-          <th>Versuche</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="item in recentMovements" :key="item.id">
-          <td>{{ new Date(item.created_at).toLocaleString() }}</td>
-          <td>{{ item.type === 'IN' ? 'Bestand erhöhen' : 'Bestand reduzieren' }}</td>
-          <td>{{ item.barcode }}</td>
-          <td>{{ item.qty }}</td>
-          <td>{{ item.note || '—' }}</td>
-          <td>
-            <StatusPill :label="statusLabel(item.status)" :tone="statusTone(item.status)" />
-          </td>
-          <td>
-            <span v-if="item.status === 'failed' && item.last_error" style="color: var(--color-danger)">
-              {{ item.retries }} ({{ item.last_error }})
-            </span>
-            <span v-else>{{ item.retries }}</span>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </section>
+    </UiSection>
+  </UiPage>
 </template>
+
+<style scoped>
+.badge-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.badge-counter {
+  min-width: 1.5rem;
+  height: 1.5rem;
+  padding: 0 0.35rem;
+  border-radius: 999px;
+  background: var(--danger-soft, #ffe5e5);
+  color: var(--danger, #b42318);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.75rem;
+}
+
+.callout {
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.75rem;
+  margin: 0.5rem 0 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.callout .link {
+  font-weight: 600;
+}
+</style>

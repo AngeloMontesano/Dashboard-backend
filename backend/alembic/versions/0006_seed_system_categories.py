@@ -22,7 +22,7 @@ def upgrade() -> None:
     categories = [
         {"id": "00000000-0000-0000-0000-000000000101", "name": "Allgemein"},
         {"id": "00000000-0000-0000-0000-000000000102", "name": "Verbrauchsmaterial"},
-        {"id": "00000000-0000-0000-0000-000000000103", "name": "Ersatzteile"},
+        {"id": "00000000-0000-0000-0000-000000000103", "name": "Obst"},
     ]
     uuid_param = sa.bindparam("id", type_=postgresql.UUID())
     for cat in categories:

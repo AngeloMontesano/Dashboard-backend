@@ -90,11 +90,21 @@ Frontend zeigt für unbekannte/inaktive Subdomains eine klare Seite statt JSON. 
   - Abhängigkeiten: A-05  
   - Done: Checkliste in Doku, deckt 404-Fallback, Tenant not found/inaktiv/unavailable, Header-Szenarien, Mobile/Darkmode, Proxy-Forwarding.
 
+## QA-Checkliste (A-10)
+- 404-Fallback: Route `/:pathMatch(.*)*` führt zu TenantStatusView, kein rohes JSON.
+- Tenant not found: Subdomain/Slug unbekannt → UI-Text + Aktionen (Retry, Startseite/Support).
+- Tenant inactive: Inaktive Tenant-DB-Flag → UI-Text + Aktionen, keine JSON-Fehler sichtbar.
+- Service unavailable: DB down oder Timeout → UI-Text mit Grund, Retry-Button funktioniert.
+- Header-Szenarien: Mit/ohne `X-Forwarded-Host`, mit/ohne `X-Tenant-Slug`; Status-API liefert konsistenten Status.
+- Mobile/Darkmode: TenantStatusView bleibt lesbar/bedienbar, Actions/Links erreichbar.
+- Proxy: Weitergeleitete Hosts ohne Subdomain zeigen „not_found“ und kein Stacktrace/JSON.
+
 ## 10) Akzeptanzkriterien
 - Unbekannte/Inactive Tenant-Subdomain zeigt eine gestaltete Seite, kein JSON.
 - Router-Fallback zeigt 404-Seite, nicht leere Shell.
 - Tenant-Status-API antwortet ohne Auth mit Status ok/not_found/inactive/unavailable.
 - Retry/Support-Links funktionieren; Host/Tenant-Slug im UI sichtbar.
+- QA-Checkliste A-10 ist vorhanden und getestet (404-Fallback, Tenant not found/inaktiv/unavailable, Proxy-Header, Mobile, Darkmode).
 - QA-Checkliste A-10 ist vorhanden und getestet (404-Fallback, Tenant not found/inaktiv/unavailable, Proxy-Header, Mobile, Darkmode).
 
 ## 11) Risiken/Offene Punkte

@@ -19,3 +19,7 @@
 ## 2024-06-12
 - EPIC_A um präzisierte QA-Checkliste (A-10) erweitert; Akzeptanzkriterien referenzieren die Checkliste.
 - TODO-Backlog spiegelt A-10 jetzt in „Next“ wider.
+
+## 2024-06-13
+- QA-Checkliste (A-10) als eigene Section in EPIC_A ergänzt, Szenarien detailliert (404-Fallback, Header-Kombinationen, Mobile/Darkmode).
+- Keine Änderungen an anderen Epics; Fokus auf QA-Dokumentation.

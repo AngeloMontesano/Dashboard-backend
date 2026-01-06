@@ -26,3 +26,7 @@
 - EPIC_A QA-Checkliste konkretisiert (404-Fallback, Tenant not found/inaktiv/unavailable, Proxy-Header, Mobile, Darkmode).
 - TODO-Backlog um A-10 (QA-Checkliste Tenant-Status) in „Next“ ergänzt.
 - Offene Punkte: Proxy-404-Verhalten weiterhin ungetestet; QA-Checkliste noch umzusetzen.
+
+## 2024-06-13
+- QA-Checkliste (A-10) als eigene Section in EPIC_A ergänzt und Szenarien konkretisiert (404-Fallback, Header-Kombinationen, Mobile/Darkmode).
+- Offene Punkte bleiben: Proxy-404-Verhalten praktisch testen, QA-Checkliste durcharbeiten.

@@ -829,9 +829,14 @@ watch(
               <option :value="3">3 - Automatisch nachbestellen</option>
             </select>
           </label>
-          <label class="checkbox">
-            <input type="checkbox" v-model="editForm.is_active" :disabled="!hasWriteAccess" />
-            <span>Aktiv</span>
+          <label class="checkbox-field">
+            <input
+              type="checkbox"
+              v-model="editForm.is_active"
+              :disabled="!hasWriteAccess"
+              aria-label="Artikel ist aktiv"
+            />
+            <span class="form-label">Aktiv</span>
           </label>
         </div>
       </div>
@@ -887,9 +892,9 @@ watch(
         </BaseField>
 
         <BaseField label="Artikel ist aktiv" hint="Inaktive Artikel werden nicht in Auswahl und Buchungen angeboten.">
-          <label class="checkbox">
-            <input type="checkbox" v-model="createForm.is_active" />
-            <span>Aktiv</span>
+          <label class="checkbox-field">
+            <input type="checkbox" v-model="createForm.is_active" aria-label="Artikel ist aktiv" />
+            <span class="form-label">Aktiv</span>
           </label>
         </BaseField>
 
@@ -1171,13 +1176,6 @@ watch(
 
 .form-section h4 {
   margin: 0 0 4px;
-}
-
-.checkbox {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 8px;
 }
 
 .form-actions {

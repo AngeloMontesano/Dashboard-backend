@@ -1,9 +1,9 @@
 ## Muss
-- Bestellungen: Tabellenaktionen in allen Views (`Kategorien`, ggf. weitere) an neue `.table-actions`-Utility anbinden, um konsistente Button-Abstände sicherzustellen.
+- Checkbox-Pattern weiter ausrollen: insbesondere Artikelverwaltung (Bestand & Flags) auf `.checkbox-field` umstellen, damit Checkbox-Größen/Labels konsistent sind.
 
 ## Soll
-- Checkbox-Patterns angleichen: Weitere Checkboxen (z. B. Artikelverwaltung) auf `.checkbox-field` oder bestehende Komponenten migrieren, damit Typografie/Abstände überall gleich sind.
 - Filter-Layouts prüfen: Status- und Suchfelder in Bestellungen eventuell in einer kompakten Toolbar zusammenführen, damit Kennzahlen oben mehr Luft bekommen.
+- Tabellenaktionen sichten: verbleibende Views auf Nutzung von `.table-actions` prüfen, falls weitere Aktionsspalten hinzukommen.
 
 ## Kann
 - Tabelle „Bestellungen“: Spaltenausrichtung (z. B. Nummer/Status linksbündig, Aktionen rechts) per Utility nachziehen für bessere Lesbarkeit.

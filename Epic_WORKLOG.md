@@ -33,3 +33,7 @@
 - A-01 spezifiziert: neues Dokument `docs/openapi/TENANT_STATUS.md` (Request/Response, Header-Priorität, Reason-Codes, OpenAPI-Verweis).
 - EPIC_A API/Backend-Annahmen mit Verweis auf Spezifikation ergänzt; TODO-Deliverables (Stream 1) präzisiert.
 - Nächste Schritte: Review/Abnahme A-01, danach QA-Checkliste A-10 und Proxy-Tests A-11 vorbereiten.
+
+## 2024-06-21
+- Roadmap-Index ergänzt um Spezifikations-Links (TENANT_STATUS.md, openapi.json) zur zentralen Referenz der A-01-Quelle.
+- Keine Änderungen an Epic-Tasks; A-01 bleibt im Review, QA/Proxy-Arbeiten (A-10/A-11) folgen danach.

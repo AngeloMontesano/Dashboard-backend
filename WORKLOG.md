@@ -60,3 +60,8 @@
 - Draft für A-01 erstellt: `docs/openapi/TENANT_STATUS.md` beschreibt Request/Response, Header-Reihenfolge, Reason-Codes und OpenAPI-Schema-Referenz.
 - EPIC_A ergänzt (API/Backend-Annahmen) um Verweis auf das neue Spec-Dokument; TODO-Deliverables (Stream 1) aktualisiert.
 - Offene Punkte: Review/Abnahme A-01-Spec; Proxy-404-Tests (A-11) weiterhin offen, QA-Checkliste (A-10) noch umzusetzen.
+
+## 2024-06-21
+- Roadmap-Index um Spezifikations-Links ergänzt (TENANT_STATUS.md + openapi.json), damit A-01-Referenz zentral auffindbar ist.
+- Keine Änderungen an Tasks; Fokus bleibt auf Review der A-01-Spec und nachgelagerter QA (A-10/A-11).
+- Offene Punkte unverändert: A-01 Review, Proxy-404-Szenarien testen.

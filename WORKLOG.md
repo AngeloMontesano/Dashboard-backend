@@ -613,6 +613,17 @@
 - **Tests**
   - `npm run build` (admin_frontend/admin-ui)
 
+## Schritt 50 – Backend-Gaps vermerken (Build/Commit, System Actions)
+- **Datum/Uhrzeit**: 2026-01-06T11:50:00+00:00
+- **Ziel**: T6 abschließen, indem fehlende Backend-Endpunkte konkret im TODO verankert und in der Roadmap als erledigt dokumentiert werden.
+- **Was wurde geändert**
+  - TODO (MUSS) ergänzt: Backend-Build/Commit-Endpoint (z. B. `/admin/build-info`) liefern; System-Actions (Cache Reset, Reindex, Restart) als Admin-Endpoints bereitstellen.
+  - Roadmap `ADMIN_SETTINGS_REFACTOR` T6 auf Done gesetzt (Backend-Gaps dokumentiert).
+- **Ergebnis**
+  - Fehlende Server-Funktionen sind explizit als Backend-Follow-up festgehalten; Settings-Hinweise bleiben UI-only, bis Endpoints existieren.
+- **Tests**
+  - Keine neuen Tests notwendig (nur Doku).
+
 ## Schritt 48 – Settings mit Build-Info ergänzt
 - **Datum/Uhrzeit**: 2026-01-06T11:26:00+00:00
 - **Ziel**: System-Abschnitt der Settings um verfügbare Build-/Versionsinformation ergänzen.

@@ -11,5 +11,5 @@
   - Sicherstellen, dass Benutzer-Funktionen im Benutzer-Menüpunkt liegen und Settings nur noch Systemkonfiguration zeigt.
 - **T5 (Doku & QS)** – Done
   - WORKLOG/TODO aktualisieren und Admin-Frontend-Build ausführen.
-- **T6 (Backend-Gaps dokumentieren)** – Not Done
-  - Fehlende System-Actions (Cache Reset/Reindex/Restart) und Backend-Build/Commit-Infos erfassen und als Backend-Follow-up festhalten.
+- **T6 (Backend-Gaps dokumentieren)** – Done
+  - Fehlende System-Actions (Cache Reset/Reindex/Restart) und Backend-Build/Commit-Infos erfassen und als Backend-Follow-up festhalten (TODO ergänzt).

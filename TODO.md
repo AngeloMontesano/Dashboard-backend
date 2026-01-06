@@ -10,6 +10,16 @@
 - [H-01] Optionen für leichtes Monitoring ohne Grafana evaluieren – Epic H
 - [I-01] Felddefinitionen für globale/tenant-spezifische Kontakte dokumentieren – Epic I
 
+### Parallelisierungs-Empfehlung (Now)
+- Stream 1 (Backend/Docs): A-01 (Status-API Spezifikation) + B-01 (Globales Datenmodell) + H-01 (Monitoring-Optionen) parallel abstimmen.
+- Stream 2 (Customer UX): A-04 (Bootstrap Preflight) + C-02 (Reporting UX-Flow) + D-01 (KPI-Routen) in einem UX-Review-Slot bündeln.
+- Stream 3 (Admin/Docs): G-01 (Doku-Struktur) + I-01 (Kontakt-Felder) gemeinsam erarbeiten; Wechselwirkungen in Admin-Settings klären.
+
+### Parallelisierungs-Empfehlung (Next/Later)
+- Stream 1: A-05/A-10 (Tenant-Status UX/QA), B-02 (Admin-API Spezifikation) – gleiche Review-Runde nutzen.
+- Stream 2: C-03/C-04 (Reporting Komponenten), D-02 (Router-Interface Prefill) – gemeinsam definieren und stubben.
+- Stream 3: E-03/E-04/E-05 (Order-Dialog Konzept/Validierung), F-04/F-05 (Queue-Komponenten/Retry) – geteilte Guidelines für UX/Fehlertexte anwenden.
+
 ## Next
 - [A-05] Tenant-Status-View Texte/CTAs finalisieren – Epic A
 - [A-10] QA-Checkliste Tenant-Status (404/Headers/Mobile/Darkmode) – Epic A
@@ -24,6 +34,7 @@
 
 ## Later
 - [A-08] Status-Caching/Retry-Strategie implementieren (Konzept) – Epic A
+- [A-11] Proxy/404 Smoke-Test-Plan erstellen – Epic A
 - [B-10] Konzept Verteilung globaler Kataloge an Tenants dokumentieren – Epic B
 - [C-09] Export-Konzept (Button/Format) festlegen – Epic C
 - [D-08] QA-Checkliste Navigation KPI-Karten – Epic D

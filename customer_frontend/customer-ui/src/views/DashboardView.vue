@@ -171,6 +171,7 @@ onMounted(loadDashboard);
           label="Offene Bestellungen"
           :value="state.metrics.openOrders.toLocaleString('de-DE')"
           :hint="state.loading ? 'Lade...' : 'Aktuell offene Bestellungen'"
+          to="/bestellungen"
         />
         <UiStatCard
           label="Bestände stabil"
@@ -181,11 +182,13 @@ onMounted(loadDashboard);
           label="Bewegungen heute"
           :value="state.metrics.movementsToday.toLocaleString('de-DE')"
           :hint="state.loading ? 'Lade...' : 'Ein- und Ausgänge seit 00:00'"
+          to="/lagerbewegungen"
         />
         <UiStatCard
           label="Bestellwürdig"
           :value="state.metrics.recommended.toLocaleString('de-DE')"
           hint="Artikel unter Sollbestand"
+          :to="{ path: '/bestellungen', query: { tab: 'bestellwuerdig' } }"
         />
       </div>
     </UiSection>

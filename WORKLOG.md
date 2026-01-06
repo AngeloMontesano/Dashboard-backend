@@ -709,3 +709,28 @@
   - Build erneut ausgeführt, um Typkompatibilität sicherzustellen.
 - **Tests**
   - `npm run build` (admin_frontend/admin-ui)
+
+## Schritt 49 – Fehlerzentrum & Queue-UX (Customer)
+- **Datum/Uhrzeit**: 2026-01-06T12:21:24+00:00
+- **Ziel**: Offline-First Queue-Fehler sichtbarer und verständlicher machen, Toast-Spam vermeiden, gezielte Aktionen pro Fehlerklasse anbieten.
+- **Was wurde analysiert**
+  - Queue/Sync liegt in `customer_frontend/customer-ui/src/composables/useMovementQueue.ts` (IndexedDB `movement_queue`, Retries/Backoff/stop_retry).
+  - Fehlerdarstellung bisher über Toasts und `lastSyncError`-Strings mit rohen Axios-Meldungen.
+- **Was wurde geändert**
+  - Neue Fehlerklassifizierung (`src/utils/errorClassify.ts`) mit Kategorien/Aktionshinweisen; `stringifyError` nutzt diese Kurztexte.
+  - `useMovementQueue` refaktoriert: globale State/Watcher, Stop-Retry für 4xx/401, freundliche Messages, Einzel-Retry/Delete/Edit, Badge-Zähler.
+  - Neue View „Fehlgeschlagene Buchungen“ (`src/views/FehlgeschlageneBuchungenView.vue`) mit Liste, Status-Chips, Detail-Accordion und Aktionen (Login, Retry, Edit, Delete).
+  - Sidebar/Topbar zeigen Badge-Count, Lagerbewegungen-View verlinkt aufs Fehlerzentrum und vermeidet rohe Fehltexte.
+  - Dokumentation ergänzt (`docs/standards/ERROR_HANDLING.md`), TODO um Folgeaufgaben (Validierung/Telemetry/Messages) erweitert.
+- **Tests**
+  - `npm run build` (customer_frontend/customer-ui)
+
+## Schritt 50 – Dashboard-Auth-Fehler entschärfen
+- **Datum/Uhrzeit**: 2026-01-06T12:40:00+00:00
+- **Ziel**: Abgelaufene oder ungültige Sessions im Dashboard nicht mehr als rohe HTTP-Fehler anzeigen, sondern mit verständlicher Meldung und Login-Redirect reagieren.
+- **Was wurde geändert**
+  - Dashboard-Loader nutzt `classifyError` und bündelt Fehler mit freundlichen Texten statt „Request failed with status code ...“.
+  - 401/403 Fälle lösen einen Login-Redirect aus; Banner zeigt klar „Sitzung abgelaufen oder keine Berechtigung“.
+  - TODO ergänzt für roll-out des Auth-Handlings in weiteren Views.
+- **Tests**
+  - `npm run build` (customer_frontend/customer-ui)

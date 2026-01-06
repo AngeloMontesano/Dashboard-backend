@@ -1,9 +1,9 @@
+import { classifyError } from './errorClassify';
+
 export function stringifyError(err: unknown): string {
-  if (err instanceof Error) return err.message;
-  if (typeof err === 'string') return err;
-  try {
-    return JSON.stringify(err);
-  } catch {
-    return 'Unbekannter Fehler';
+  const classified = classifyError(err);
+  if (classified.detailMessage && classified.detailMessage !== classified.userMessage) {
+    return classified.detailMessage;
   }
+  return classified.userMessage;
 }

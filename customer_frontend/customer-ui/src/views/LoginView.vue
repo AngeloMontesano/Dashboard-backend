@@ -27,6 +27,7 @@ import { useRouter, useRoute } from 'vue-router';
 import { useAuth } from '@/composables/useAuth';
 import { useToast } from '@/composables/useToast';
 import UiPage from '@/components/ui/UiPage.vue';
+import { classifyError } from '@/utils/errorClassify';
 
 const email = ref('');
 const password = ref('');
@@ -38,25 +39,11 @@ const { login } = useAuth();
 const { push } = useToast();
 
 function formatLoginError(e: any): string {
-  const responseData = e?.response?.data;
-  const status = e?.response?.status;
-  const errorPayload = responseData?.error;
-
-  if (errorPayload) {
-    const code = errorPayload.code ? ` (${errorPayload.code})` : '';
-    const baseMessage = errorPayload.message || 'Login fehlgeschlagen';
-    const firstDetail = Array.isArray(errorPayload.details) ? errorPayload.details[0] : null;
-    const detailMessage = firstDetail?.msg;
-    const detailLoc = Array.isArray(firstDetail?.loc) ? firstDetail.loc.join('.') : '';
-    const detail = detailMessage ? `${detailLoc ? `${detailLoc}: ` : ''}${detailMessage}` : '';
-    return detail ? `${baseMessage}${code} – ${detail}` : `${baseMessage}${code}`;
+  const classified = classifyError(e);
+  if (classified.detailMessage && classified.detailMessage !== classified.userMessage) {
+    return `${classified.userMessage} (${classified.detailMessage})`;
   }
-
-  if (status === 422) {
-    return 'Ungültige Eingabe (422)';
-  }
-
-  return e?.message || 'Login fehlgeschlagen';
+  return classified.userMessage || 'Login fehlgeschlagen';
 }
 
 async function submit() {

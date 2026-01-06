@@ -755,3 +755,15 @@
   - Queue: Bewegungs-Eingaben werden validiert (Barcode/QTY), Fehlerzentrum-Formular zeigt Feldhinweise; Queue-Aktions- und Refresh-Events landen in Session-Logs + Events für spätere Telemetrie.
 - **Tests**
   - `npm run build` (customer_frontend/customer-ui)
+
+## Schritt 53 – Customer Inputs & Leer-States harmonisiert
+- **Datum/Uhrzeit**: 2026-01-06T14:40:00+00:00
+- **Ziel**: Admin-Input-/Focus-Pattern und einheitliche Tabellen-Leer-States in den Customer-Views Bestellungen, Kategorien, Inventur sowie Berichte nachziehen.
+- **Was wurde geändert**
+  - Input/Select-Styles auf Token-Basis vereinheitlicht (Pill-Radius, Platzhalter-Ton, Focus-Ring); Bestellungen- und Kategorien-Filter/Formulare nutzen `BaseField`/`BaseInput`/`BaseSelect`.
+  - `UiEmptyState` neu gestylt und in Tabellen-Leerläufen der Bestellungen-, Kategorien-, Inventur- und Berichte-Ansichten eingesetzt inkl. Reload-/CTA-Buttons.
+  - Status-Pills in Bestellungen ergänzt und Tabellenstatus/Filter lesbarer gemacht; TODO um Folge-Regressionstests nach der UI-Harmonisierung bereinigt.
+- **Ergebnis**
+  - Customer-Views folgen dem Admin-Look (Pill-Focus-Ring) und zeigen konsistente, wiederverwendbare Empty-States ohne gemischte Platzhalter-Texte.
+- **Tests**
+  - Nicht ausgeführt (UI-Styling)

@@ -3,6 +3,10 @@ import { onMounted, reactive, computed } from 'vue';
 import UiPage from '@/components/ui/UiPage.vue';
 import UiSection from '@/components/ui/UiSection.vue';
 import UiToolbar from '@/components/ui/UiToolbar.vue';
+import UiEmptyState from '@/components/ui/UiEmptyState.vue';
+import BaseField from '@/components/common/BaseField.vue';
+import BaseInput from '@/components/common/BaseInput.vue';
+import BaseSelect from '@/components/common/BaseSelect.vue';
 import { useAuth } from '@/composables/useAuth';
 import AuthReauthBanner from '@/components/auth/AuthReauthBanner.vue';
 import { useAuthIssueBanner } from '@/composables/useAuthIssueBanner';
@@ -23,7 +27,15 @@ const { authIssue, authMessage, handleAuthError } = useAuthIssueBanner();
 type Order = Awaited<ReturnType<typeof listOrders>>[number];
 type ReorderItem = Awaited<ReturnType<typeof fetchReorderRecommendations>>['items'][number];
 type ItemOption = Awaited<ReturnType<typeof fetchItems>>['items'][number];
-type OrderRow = { id: string; itemId: string; quantity: number; note: string };
+type OrderRow = { id: string; itemId: string | null; quantity: number; note: string };
+type FilterStatus = 'ALL' | 'OPEN' | 'COMPLETED' | 'CANCELED';
+
+const statusOptions: { label: string; value: FilterStatus }[] = [
+  { label: 'Alle', value: 'ALL' },
+  { label: 'Offen', value: 'OPEN' },
+  { label: 'Erledigt', value: 'COMPLETED' },
+  { label: 'Storniert', value: 'CANCELED' }
+];
 
 const state = reactive<{
   orders: Order[];
@@ -38,7 +50,7 @@ const state = reactive<{
   creating: boolean;
   createRows: OrderRow[];
   orderNote: string;
-  filters: { status: 'ALL' | 'OPEN' | 'COMPLETED' | 'CANCELED'; search: string };
+  filters: { status: FilterStatus; search: string };
 }>({
   orders: [],
   loading: false,
@@ -57,6 +69,7 @@ const state = reactive<{
 
 let rowId = 0;
 const nextRowId = () => `row-${Date.now()}-${rowId++}`;
+const hasItemSelection = (row: OrderRow): row is OrderRow & { itemId: string } => Boolean(row.itemId);
 
 const selectableItems = computed(() => {
   const map = new Map<string, { value: string; label: string }>();
@@ -94,6 +107,12 @@ const filteredOrders = computed(() =>
 const filteredOpenOrders = computed(() => filteredOrders.value.filter((o) => o.status === 'OPEN'));
 const filteredCompletedOrders = computed(() => filteredOrders.value.filter((o) => o.status === 'COMPLETED'));
 const filteredCanceledOrders = computed(() => filteredOrders.value.filter((o) => o.status === 'CANCELED'));
+
+const statusClass = (status: Order['status']) => {
+  if (status === 'COMPLETED') return 'status-pill status-pill--success';
+  if (status === 'CANCELED') return 'status-pill status-pill--danger';
+  return 'status-pill status-pill--info';
+};
 
 function showError(err: unknown, fallback: string) {
   const classified = handleAuthError(err);
@@ -207,7 +226,11 @@ async function loadItems() {
 function prefillRowsFromRecommended(force = false) {
   if (!state.recommended.length) return;
   if (state.createRows.length && !force) return;
-  const existingIds = new Set(state.createRows.map((row) => row.itemId));
+  const existingIds = new Set(
+    state.createRows
+      .map((row) => row.itemId)
+      .filter(Boolean) as string[]
+  );
   const additions = state.recommended
     .filter((item) => !existingIds.has(item.id))
     .map((item) => ({
@@ -222,7 +245,7 @@ function prefillRowsFromRecommended(force = false) {
 }
 
 function addEmptyRow() {
-  state.createRows = [...state.createRows, { id: nextRowId(), itemId: '', quantity: 1, note: '' }];
+  state.createRows = [...state.createRows, { id: nextRowId(), itemId: null, quantity: 1, note: '' }];
 }
 
 function removeRow(rowId: string) {
@@ -294,7 +317,7 @@ async function createNewOrder() {
   if (!state.createRows.length && state.recommended.length) {
     prefillRowsFromRecommended(true);
   }
-  const validRows = state.createRows.filter((row) => row.itemId && row.quantity > 0);
+  const validRows = state.createRows.filter(hasItemSelection).filter((row) => row.quantity > 0);
   if (!validRows.length) {
     state.error = 'Bitte mindestens einen Artikel und eine Menge hinterlegen';
     return;
@@ -361,24 +384,17 @@ onMounted(async () => {
       </div>
 
       <div class="form-grid mt-md">
-        <label class="form-field">
-          <span class="form-label">Status-Filter</span>
-          <select v-model="state.filters.status" class="input">
-            <option value="ALL">Alle</option>
-            <option value="OPEN">Offen</option>
-            <option value="COMPLETED">Erledigt</option>
-            <option value="CANCELED">Storniert</option>
-          </select>
-        </label>
-        <label class="form-field span-2">
-          <span class="form-label">Suche</span>
-          <input
+        <BaseField label="Status-Filter">
+          <BaseSelect v-model="state.filters.status" :options="statusOptions" />
+        </BaseField>
+        <BaseField label="Suche">
+          <BaseInput
             v-model="state.filters.search"
             type="text"
-            class="input"
-            placeholder="Suche nach Nummer, Notiz oder Artikel"
+            placeholder="Nummer, Notiz oder Artikel"
+            autocomplete="off"
           />
-        </label>
+        </BaseField>
       </div>
 
       <div class="cards-grid mt-md">
@@ -416,18 +432,13 @@ onMounted(async () => {
             <tbody>
               <tr v-for="row in state.createRows" :key="row.id">
                 <td>
-                  <select v-model="row.itemId" class="input">
-                    <option value="">Bitte wählen</option>
-                    <option v-for="option in selectableItems" :key="option.value" :value="option.value">
-                      {{ option.label }}
-                    </option>
-                  </select>
+                  <BaseSelect v-model="row.itemId" :options="selectableItems" placeholder="Artikel auswählen" />
                 </td>
                 <td>
-                  <input v-model.number="row.quantity" type="number" min="1" class="input" />
+                  <BaseInput v-model.number="row.quantity" type="number" min="1" />
                 </td>
                 <td>
-                  <input v-model="row.note" type="text" class="input" placeholder="optional" />
+                  <BaseInput v-model="row.note" type="text" placeholder="Notiz (optional)" />
                 </td>
                 <td>
                   <button class="btnGhost small" type="button" @click="removeRow(row.id)">
@@ -438,7 +449,12 @@ onMounted(async () => {
             </tbody>
           </table>
         </div>
-        <p v-else class="placeholder mt-sm">Keine Zeilen vorhanden. Bestellwürdige Artikel werden beim Anlegen übernommen.</p>
+        <UiEmptyState
+          v-else
+          class="mt-sm"
+          title="Keine Positionen ausgewählt"
+          description="Bestellwürdige Artikel werden automatisch vorgeschlagen."
+        />
 
         <div class="action-row mt-sm">
           <button
@@ -455,10 +471,9 @@ onMounted(async () => {
         </div>
 
         <div class="form-grid mt-sm">
-          <label class="form-field span-2">
-            <span class="form-label">Notiz zur Bestellung</span>
-            <input v-model="state.orderNote" type="text" class="input" placeholder="optional" />
-          </label>
+          <BaseField label="Notiz zur Bestellung">
+            <BaseInput v-model="state.orderNote" type="text" placeholder="optional" />
+          </BaseField>
         </div>
       </div>
 
@@ -478,7 +493,7 @@ onMounted(async () => {
               <tr v-for="order in filteredOpenOrders" :key="order.id">
                 <td>{{ order.number }}</td>
                 <td>{{ order.items.length }}</td>
-                <td>{{ order.status }}</td>
+                <td><span :class="statusClass(order.status)">{{ order.status }}</span></td>
                 <td class="table-actions">
                   <button class="btnGhost small" type="button" @click="downloadPdf(order.id)" :disabled="state.downloading[order.id]">
                     PDF
@@ -507,7 +522,21 @@ onMounted(async () => {
             </tbody>
           </table>
         </div>
-        <p v-else class="placeholder mt-sm">Keine offenen Bestellungen vorhanden (Filter berücksichtigen).</p>
+        <UiEmptyState
+          v-else
+          class="mt-sm"
+          title="Keine offenen Bestellungen"
+          description="Filter berücksichtigen oder neue Bestellung anlegen."
+        >
+          <template #actions>
+            <button class="btnPrimary small" type="button" @click="createNewOrder" :disabled="state.creating">
+              Bestellung anlegen
+            </button>
+            <button class="btnGhost small" type="button" @click="loadOrders" :disabled="state.loading">
+              Neu laden
+            </button>
+          </template>
+        </UiEmptyState>
       </div>
 
       <div class="mt-lg">
@@ -526,7 +555,7 @@ onMounted(async () => {
               <tr v-for="order in filteredCompletedOrders" :key="order.id">
                 <td>{{ order.number }}</td>
                 <td>{{ order.items.length }}</td>
-                <td>{{ order.status }}</td>
+                <td><span :class="statusClass(order.status)">{{ order.status }}</span></td>
                 <td class="table-actions">
                   <button class="btnGhost small" type="button" @click="downloadPdf(order.id)" :disabled="state.downloading[order.id]">
                     PDF
@@ -539,7 +568,18 @@ onMounted(async () => {
             </tbody>
           </table>
         </div>
-        <p v-else class="placeholder mt-sm">Keine erledigten Bestellungen (Filter berücksichtigen).</p>
+        <UiEmptyState
+          v-else
+          class="mt-sm"
+          title="Keine erledigten Bestellungen"
+          description="Filter prüfen oder abgeschlossene Bestellungen später erneut laden."
+        >
+          <template #actions>
+            <button class="btnGhost small" type="button" @click="loadOrders" :disabled="state.loading">
+              Neu laden
+            </button>
+          </template>
+        </UiEmptyState>
       </div>
 
       <div class="mt-lg">
@@ -558,7 +598,7 @@ onMounted(async () => {
               <tr v-for="order in filteredCanceledOrders" :key="order.id">
                 <td>{{ order.number }}</td>
                 <td>{{ order.items.length }}</td>
-                <td>{{ order.status }}</td>
+                <td><span :class="statusClass(order.status)">{{ order.status }}</span></td>
                 <td class="table-actions">
                   <button class="btnGhost small" type="button" @click="downloadPdf(order.id)" :disabled="state.downloading[order.id]">
                     PDF
@@ -571,7 +611,18 @@ onMounted(async () => {
             </tbody>
           </table>
         </div>
-        <p v-else class="placeholder mt-sm">Keine stornierten Bestellungen (Filter berücksichtigen).</p>
+        <UiEmptyState
+          v-else
+          class="mt-sm"
+          title="Keine stornierten Bestellungen"
+          description="Filter berücksichtigen oder offene Bestellungen zur Kontrolle laden."
+        >
+          <template #actions>
+            <button class="btnGhost small" type="button" @click="loadOrders" :disabled="state.loading">
+              Neu laden
+            </button>
+          </template>
+        </UiEmptyState>
       </div>
 
       <div class="mt-lg">
@@ -598,7 +649,18 @@ onMounted(async () => {
             </tbody>
           </table>
         </div>
-        <p v-else class="placeholder mt-sm">Keine bestellwürdigen Artikel.</p>
+        <UiEmptyState
+          v-else
+          class="mt-sm"
+          title="Keine bestellwürdigen Artikel"
+          description="Alle Artikel liegen aktuell auf oder über dem Sollbestand."
+        >
+          <template #actions>
+            <button class="btnGhost small" type="button" @click="loadRecommendations">
+              Empfohlene Artikel neu laden
+            </button>
+          </template>
+        </UiEmptyState>
       </div>
     </UiSection>
   </UiPage>

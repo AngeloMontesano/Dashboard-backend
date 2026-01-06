@@ -113,25 +113,26 @@ class SKUExistsResponse(BaseModel):
     normalized_sku: str
 
 
-class MovementItemOut(BaseModel):
-    id: str
+class RecommendedOrderItem(BaseModel):
+    item_id: str
     sku: str
     barcode: str
     name: str
+    quantity: int
+    min_stock: int
+    target_stock: int
+    recommended_stock: int
+    order_mode: int
+    recommended_qty: int
+    shortage: int
     category_id: Optional[str] = None
+    category_name: Optional[str] = None
+    unit: str
 
 
-class MovementOut(BaseModel):
-    id: str
-    item_id: str
-    item_name: Optional[str] = None
-    category_id: Optional[str] = None
-    type: Literal["IN", "OUT"]
-    barcode: str
-    qty: int
-    note: Optional[str] = None
-    created_at: datetime
-    item: Optional[MovementItemOut] = None
+class RecommendedOrdersResponse(BaseModel):
+    items: list[RecommendedOrderItem]
+    total: int
 
 
 class MovementPayload(BaseModel):

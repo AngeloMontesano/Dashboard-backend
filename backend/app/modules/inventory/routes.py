@@ -49,13 +49,8 @@ from app.modules.inventory.schemas import (
     MovementItemOut,
     MovementOut,
     MovementPayload,
-    MassImportResult,
-    TestEmailRequest,
-    TestEmailResponse,
-    OrderEmailRequest,
-    EmailSendResponse,
-    TenantSettingsOut,
-    TenantSettingsUpdate,
+    RecommendedOrderItem,
+    RecommendedOrdersResponse,
     SKUExistsResponse,
     TenantPingResponse,
     TenantOutPing,
@@ -250,6 +245,74 @@ def _item_out(item: Item, category: Category | None) -> ItemOut:
         order_mode=item.order_mode,
         is_admin_created=item.is_admin_created,
     )
+
+
+# ----------------------
+# Bestellvorschläge
+# ----------------------
+@router.get("/orders/recommended", response_model=RecommendedOrdersResponse)
+async def list_recommended_orders(
+    ctx: TenantContext = Depends(get_tenant_context),
+    user_ctx: CurrentUserContext = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> RecommendedOrdersResponse:
+    rows = (
+        await db.scalars(
+            select(Item)
+            .where(
+                Item.tenant_id == ctx.tenant.id,
+                Item.is_active.is_(True),
+                Item.order_mode.in_([2, 3]),
+            )
+            .order_by(Item.name.asc())
+        )
+    ).all()
+
+    category_ids = {row.category_id for row in rows if row.category_id}
+    categories: dict[Any, Category] = {}
+    if category_ids:
+        cat_rows = (await db.scalars(select(Category).where(Category.id.in_(category_ids)))).all()
+        categories = {c.id: c for c in cat_rows}
+
+    recommended: list[RecommendedOrderItem] = []
+    for item in rows:
+        target_level = item.target_stock or item.recommended_stock or item.min_stock
+        shortage = max(target_level - item.quantity, 0)
+        if shortage == 0 and item.min_stock and item.quantity < item.min_stock:
+            shortage = item.min_stock - item.quantity
+
+        if shortage <= 0:
+            continue
+
+        recommended_qty = shortage
+        if item.max_stock:
+            max_allowed = max(item.max_stock - item.quantity, 0)
+            recommended_qty = min(recommended_qty, max_allowed) if max_allowed else 0
+
+        if recommended_qty <= 0:
+            continue
+
+        category = categories.get(item.category_id)
+        recommended.append(
+            RecommendedOrderItem(
+                item_id=str(item.id),
+                sku=item.sku,
+                barcode=item.barcode,
+                name=item.name,
+                quantity=item.quantity,
+                min_stock=item.min_stock,
+                target_stock=item.target_stock,
+                recommended_stock=item.recommended_stock,
+                order_mode=item.order_mode,
+                recommended_qty=recommended_qty,
+                shortage=shortage,
+                category_id=str(item.category_id) if item.category_id else None,
+                category_name=category.name if category else None,
+                unit=item.unit,
+            )
+        )
+
+    return RecommendedOrdersResponse(items=recommended, total=len(recommended))
 
 
 @router.get("/items", response_model=ItemsPage)

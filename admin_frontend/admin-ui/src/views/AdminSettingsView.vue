@@ -9,6 +9,10 @@
       </div>
 
       <div class="box">
+        <div v-if="!adminKey" class="alert warn">
+          <div class="alertTitle">Admin Key erforderlich</div>
+          <div class="alertText">Bitte Admin Key setzen, damit System- und SMTP-Daten geladen werden.</div>
+        </div>
         <section class="settingsSection">
           <div class="sectionHeader">
             <div class="sectionTitle">System</div>
@@ -329,26 +333,15 @@ import type {
   SmtpSettingsOut,
 } from "../types";
 
-type ThemeMode = "light" | "dark" | "system";
-
-const props = withDefaults(
-  defineProps<{
-    apiOk: boolean;
-    dbOk: boolean;
-    actor?: string;
-    adminKey?: string;
-    theme?: string;
-    apiBase?: string;
-    baseDomain?: string;
-  }>(),
-  {
-    actor: "",
-    adminKey: "",
-    theme: "system",
-    apiBase: "",
-    baseDomain: "",
-  }
-);
+const props = defineProps<{
+  apiOk: boolean;
+  dbOk: boolean;
+  actor: string;
+  adminKey: string;
+  theme: string;
+  apiBase: string;
+  baseDomain: string;
+}>();
 
 const emit = defineEmits<{
   (e: "setTheme", theme: "light" | "dark" | "system"): void;
@@ -357,12 +350,12 @@ const emit = defineEmits<{
 
 const { toast } = useToast();
 const sectionCollapsed = ref({
-  system: true,
-  security: true,
-  theme: true,
-  flags: true,
+  system: false,
+  security: false,
+  theme: false,
+  flags: false,
   smtp: false,
-  danger: true,
+  danger: false,
 });
 const themes = [
   { id: "system", label: "System" },
@@ -582,5 +575,23 @@ async function sendTestEmail() {
   display: inline-flex;
   gap: 8px;
   align-items: center;
+}
+
+.alert{
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  border-radius: var(--radius2);
+  padding: 10px 12px;
+  margin-bottom: 12px;
+}
+.alert.warn{
+  border-color: var(--orange-500, #f59e0b);
+}
+.alertTitle{
+  font-weight: 600;
+}
+.alertText{
+  color: var(--muted);
+  font-size: 13px;
 }
 </style>

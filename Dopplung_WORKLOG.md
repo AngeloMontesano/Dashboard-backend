@@ -37,6 +37,9 @@
 | admin_frontend/admin-ui/src/styles/layout.css:466-476 ↔ customer_frontend/customer-ui/src/styles/layout.css:430-437 | Link/Mono Utility | beide | `.link`/`.mono` doppelt mit nahezu identischen Tokens; nur danger-Farbe/Token-Namen abweichend |
 | admin_frontend/admin-ui/src/styles/utilities.css:233-238 ↔ customer_frontend/customer-ui/src/styles/utilities.css:283-288 | Action-Row Utility | beide | `action-row` identisch (flex/gap/wrap); doppelte Pflege ohne Wertabweichung |
 | admin_frontend/admin-ui/src/styles/utilities.css:269-274 ↔ customer_frontend/customer-ui/src/styles/utilities.css:269-274 | Pill-Row Utility | beide | `pill-row` identisch (flex/wrap/gap); reine Dublette ohne Wertabweichung |
+| admin_frontend/admin-ui/src/styles/utilities.css:240-244 ↔ customer_frontend/customer-ui/src/styles/layout.css:515-516 | Card-Grid Utility | beide | `card-grid`/`cards-grid` nahezu gleiches Grid/Minmax, abweichendes Gap (space-6 vs space-12) |
+| admin_frontend/admin-ui/src/styles/utilities.css:252-262 ↔ customer_frontend/customer-ui/src/views/EinstellungenView.vue:200-265 | Form-Grid/Field Utility | beide | Customer view nutzt Utility-Klassen (`form-grid`, `.align-self-end`) inline; kein Abweichungswert, doppelte Pflege durch scoped Kontext |
+| admin_frontend/admin-ui/src/styles/layout.css:390-407 ↔ customer_frontend/customer-ui/src/styles/layout.css:382-400 | TableWrap/Table Styles | beide | TableWrap/Table haben gleiche Struktur/Padding; Radius/Background/THead-Colors leicht abweichend |
 
 Notizen:
 - Alle Fundstellen stammen aus Schritt 1 (Inventarisierung). Noch keine Deklaration wurde verändert.

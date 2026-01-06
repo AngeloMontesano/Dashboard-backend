@@ -16,7 +16,7 @@ from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 
 from app.core.db import get_db
-from app.core.config import settings
+from app.core.email_settings import EmailSettings, load_email_settings
 from app.core.deps_auth import CurrentUserContext, get_current_user, require_owner_or_admin
 from app.core.deps_tenant import get_tenant_context
 from app.core.tenant import TenantContext
@@ -1060,15 +1060,15 @@ def _send_email_message(*, to_email: str, subject: str, body: str) -> EmailSendR
 
     message = EmailMessage()
     message["Subject"] = subject
-    message["From"] = settings.SMTP_FROM
+    message["From"] = email_settings.from_email
     message["To"] = to_email
     message.set_content(body)
 
     try:
-        with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT, timeout=10) as smtp:
-            if settings.SMTP_USER and settings.SMTP_PASSWORD:
+        with smtplib.SMTP(email_settings.host, email_settings.port, timeout=10) as smtp:
+            if email_settings.user and email_settings.password:
                 smtp.starttls()
-                smtp.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
+                smtp.login(email_settings.user, email_settings.password)
             smtp.send_message(message)
         return EmailSendResponse(ok=True, error=None)
     except smtplib.SMTPAuthenticationError as e:  # noqa: BLE001
@@ -1175,8 +1175,9 @@ async def send_order_email(
     if not recipient:
         return EmailSendResponse(ok=False, error="Kein Empfänger konfiguriert")
 
+    email_settings = await _get_email_settings(db)
     subject, body = _format_order_email(order, item_map, recipient, payload.note)
-    return _send_email_message(to_email=recipient, subject=subject, body=body)
+    return _send_email_message(to_email=recipient, subject=subject, body=body, email_settings=email_settings)
 
 
 @router.get("/orders/{order_id}/pdf")
@@ -1456,15 +1457,15 @@ async def send_test_email(
 
     message = EmailMessage()
     message["Subject"] = "Test E-Mail Lagerverwaltung"
-    message["From"] = settings.SMTP_FROM
+    message["From"] = email_settings.from_email
     message["To"] = payload.email
     message.set_content(f"Test E-Mail für Tenant {ctx.tenant.name} ({ctx.tenant.slug})")
 
     try:
-        with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT, timeout=10) as smtp:
-            if settings.SMTP_USER and settings.SMTP_PASSWORD:
+        with smtplib.SMTP(email_settings.host, email_settings.port, timeout=10) as smtp:
+            if email_settings.user and email_settings.password:
                 smtp.starttls()
-                smtp.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
+                smtp.login(email_settings.user, email_settings.password)
             smtp.send_message(message)
         return TestEmailResponse(ok=True, error=None)
     except smtplib.SMTPAuthenticationError as e:  # noqa: BLE001

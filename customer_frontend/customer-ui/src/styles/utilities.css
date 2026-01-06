@@ -116,6 +116,13 @@
   background: var(--color-surface-muted);
 }
 
+.app-root.theme-dark .auth-shell {
+  background:
+    radial-gradient(900px 520px at 15% 10%, rgba(59, 91, 219, 0.18), transparent 62%),
+    radial-gradient(760px 460px at 82% 16%, rgba(22, 163, 74, 0.12), transparent 64%),
+    var(--surface-0);
+}
+
 .auth-card {
   width: min(420px, 100%);
 }

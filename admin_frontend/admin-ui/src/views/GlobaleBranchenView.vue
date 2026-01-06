@@ -261,6 +261,54 @@
         </div>
       </div>
 
+      <div class="table-card">
+        <div class="table-card__header">
+          <div class="tableTitle">Branche auf Tenants anwenden</div>
+          <div class="text-muted text-small">
+            Weist alle Tenants mit dieser Branche die Artikel zu. Neue Artikel starten mit Bestand 0, bestehende Bestände bleiben unverändert.
+          </div>
+        </div>
+        <div class="box stack">
+          <div class="row gap8 wrap align-center">
+            <button
+              class="btnPrimary small"
+              type="button"
+              :disabled="!selectedIndustryId || busy.assignTenants"
+              @click="assignToTenants"
+            >
+              {{ busy.assignTenants ? "weist zu..." : "Auf Tenants anwenden" }}
+            </button>
+            <span class="text-muted text-small">Zielt auf Tenants mit gesetzter `industry_id`.</span>
+          </div>
+          <div v-if="assignResult" class="assign-result">
+            <div class="row gap8 wrap align-center">
+              <span class="tag ok">Neu: {{ assignResult.created }}</span>
+              <span class="tag">Übersprungen: {{ assignResult.skipped_existing }}</span>
+              <span class="tag">Synced (Admin): {{ assignResult.synced_admin_items }}</span>
+              <span class="text-muted text-small">Tenants: {{ assignResult.target_tenants }} · Artikel: {{ assignResult.total_items }}</span>
+            </div>
+            <div v-if="assignResult.results.length" class="assign-tenant-grid">
+              <div v-for="row in assignResult.results" :key="row.tenant_id" class="assign-tenant-row">
+                <div class="text-small mono">{{ row.tenant_slug }}</div>
+                <div class="text-small">Neu: {{ row.created }} · Übersprungen: {{ row.skipped_existing }} · Synced: {{ row.synced_admin_items }}</div>
+              </div>
+            </div>
+            <div
+              v-if="
+                assignResult.missing_tenants.length || assignResult.mismatched_tenants.length || assignResult.inactive_tenants.length
+              "
+              class="hint text-small"
+            >
+              <div v-if="assignResult.missing_tenants.length">Fehlende Tenants: {{ assignResult.missing_tenants.join(', ') }}</div>
+              <div v-if="assignResult.mismatched_tenants.length">
+                Andere Branche in Einstellungen: {{ assignResult.mismatched_tenants.join(', ') }}
+              </div>
+              <div v-if="assignResult.inactive_tenants.length">Inaktive Tenants übersprungen: {{ assignResult.inactive_tenants.join(', ') }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div v-if="modal.open">
         <div class="modal-backdrop" @click="closeModal"></div>
         <div class="modal-panel" @click.stop>
@@ -324,10 +372,14 @@ import {
   setIndustryItems,
   fetchGlobalItems,
   fetchGlobalCategories,
+  assignIndustryItemsToTenants,
 } from "../api/globals";
+import type { components } from "../api/gen/openapi";
 import { debounce } from "../utils/debounce";
 import UiPage from "../components/ui/UiPage.vue";
 import UiSection from "../components/ui/UiSection.vue";
+
+type IndustryAssignResponse = components["schemas"]["IndustryAssignResponse"];
 
 const props = defineProps<{
   adminKey: string;
@@ -374,7 +426,10 @@ const busy = reactive({
   loadAvailable: false,
   loadMapping: false,
   saveMapping: false,
+  assignTenants: false,
 });
+
+const assignResult = ref<IndustryAssignResponse | null>(null);
 
 const modal = reactive({
   open: false,
@@ -445,6 +500,7 @@ watch(
   () => {
     selectedAvailableIds.value = [];
     selectedAssignedIds.value = [];
+    assignResult.value = null;
     if (!selectedIndustryId.value) {
       assignedItems.value = [];
       initialAssignedIds.value = [];
@@ -743,6 +799,31 @@ async function saveMapping() {
   }
 }
 
+async function assignToTenants() {
+  if (!selectedIndustryId.value) {
+    toast("Bitte Branche wählen", "warning");
+    return;
+  }
+  busy.assignTenants = true;
+  try {
+    const res = await assignIndustryItemsToTenants(
+      props.adminKey,
+      selectedIndustryId.value,
+      { initial_quantity: 0, preserve_existing_quantity: true },
+      props.actor
+    );
+    assignResult.value = res;
+    toast(
+      `Branchen-Artikel angewendet: ${res.created} neu, ${res.skipped_existing} übersprungen, ${res.target_tenants} Tenants`,
+      "success"
+    );
+  } catch (e: any) {
+    toast(`Zuweisung fehlgeschlagen: ${e?.response?.data?.detail?.error?.message || e?.message || e}`, "error");
+  } finally {
+    busy.assignTenants = false;
+  }
+}
+
 const canAddSelection = computed(
   () => !!selectedIndustryId.value && selectedAvailableIds.value.length > 0
 );
@@ -881,6 +962,30 @@ onMounted(() => {
 
 .pane-body.loading {
   opacity: 0.7;
+}
+
+.assign-result {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  background: var(--surface-1);
+  display: grid;
+  gap: 8px;
+}
+
+.assign-tenant-grid {
+  display: grid;
+  gap: 6px;
+}
+
+.assign-tenant-row {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  background: var(--surface-2);
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
 }
 
 @media (max-width: 960px) {

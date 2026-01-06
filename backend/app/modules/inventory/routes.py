@@ -54,16 +54,18 @@ from app.modules.inventory.schemas import (
     MovementItemOut,
     MovementOut,
     MovementPayload,
+    OrderEmailRequest,
     RecommendedOrderItem,
     RecommendedOrdersResponse,
     SKUExistsResponse,
-    EmailSendResponse,
-    TestEmailRequest,
-    TestEmailResponse,
-    SmtpPingResponse,
-    MassImportResult,
+    TenantSettingsOut,
+    TenantSettingsUpdate,
     TenantPingResponse,
     TenantOutPing,
+    TestEmailRequest,
+    TestEmailResponse,
+    MassImportResult,
+    EmailSendResponse,
 )
 from app.modules.admin.smtp_settings_service import get_active_smtp_settings, SmtpConfig
 

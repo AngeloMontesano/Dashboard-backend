@@ -767,3 +767,13 @@
   - Customer-Views folgen dem Admin-Look (Pill-Focus-Ring) und zeigen konsistente, wiederverwendbare Empty-States ohne gemischte Platzhalter-Texte.
 - **Tests**
   - Nicht ausgeführt (UI-Styling)
+
+- Datum/Uhrzeit: 2026-01-06T15:36:33Z
+- Task-ID: EPIC-ROADMAP-SETUP
+- Was analysiert/geändert:
+  - Standards unter `docs/standards` geprüft (API/Frontend/Error/Design/Darkmode/Theme Tokens).
+  - Bestandsaufnahme 404/Not-Found: Customer-Router ohne Catch-All (unbekannte Pfade resultieren in Router-Navigation-Fehler/leerem View, Server liefert bei fehlender Route JSON `{error:{code:"http_error",message:"Not Found"}}`), Admin-Frontend ohne Router (Navigation rein per UI, 404 nur serverseitig bei fehlenden Assets), Backend `/` oder unbekannte Pfade liefern standardisierte JSON-Fehler via `register_exception_handlers`, Tenant-Resolver (`core/tenant.py`) gibt 404 `tenant_not_found` JSON bei fehlendem/inaktivem Tenant oder fehlendem Host/Slug; Reverse-Proxy-Annahme: Host aus `X-Forwarded-Host` + `BASE_DOMAIN`, Fallback `localhost`.
+  - Public/Health-Endpunkte identifiziert: `/health`, `/health/db`, `/meta`, `/metrics` (Prometheus), alle ohne Auth.
+  - Doku-Struktur erstellt: `docs/roadmap/INDEX.md` mit Epic-Template/Standards, neue Epics A–I mit Tasks/Akzeptanzkriterien, TODO/Epic_TODO priorisiert, Epic_WORKLOG angelegt.
+- Ergebnis: Roadmap-Epics vollständig angelegt, Template verbindlich dokumentiert, priorisierte Next Steps in TODO/Epic_TODO.
+- Nächste Schritte: Umsetzung der Now-Tasks (Tenant-Status-Endpoint + Frontend-Status-Flow, globale Katalog-Spezifikation, Reporting-Filter-Konzept etc.).

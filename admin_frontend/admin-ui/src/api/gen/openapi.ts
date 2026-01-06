@@ -90,6 +90,23 @@ export interface paths {
         patch: operations["update_category_inventory_categories__category_id__patch"];
         trace?: never;
     };
+    "/inventory/orders/recommended": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Reorder Recommendations */
+        get: operations["get_reorder_recommendations_inventory_orders_recommended_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/inventory/items": {
         parameters: {
             query?: never;
@@ -363,23 +380,6 @@ export interface paths {
          * @description Sendet eine Test-E-Mail an die angegebene Adresse, nutzt SMTP-Konfiguration aus Settings.
          */
         post: operations["send_test_email_inventory_settings_test_email_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/inventory/orders/recommended": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Reorder Recommendations */
-        get: operations["get_reorder_recommendations_inventory_orders_recommended_get"];
-        put?: never;
-        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -947,6 +947,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/inventory/industries/overlap-counts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Admin Get Industry Overlap Counts */
+        get: operations["admin_get_industry_overlap_counts_admin_inventory_industries_overlap_counts_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/inventory/industries": {
         parameters: {
             query?: never;
@@ -995,6 +1012,57 @@ export interface paths {
         /** Admin Set Industry Items */
         put: operations["admin_set_industry_items_admin_inventory_industries__industry_id__items_put"];
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/inventory/industries/{industry_id}/items/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Admin Export Industry Items */
+        get: operations["admin_export_industry_items_admin_inventory_industries__industry_id__items_export_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/inventory/industries/{industry_id}/items/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Admin Import Industry Items */
+        post: operations["admin_import_industry_items_admin_inventory_industries__industry_id__items_import_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/inventory/industries/{industry_id}/assign-to-tenants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Admin Assign Industry Items */
+        post: operations["admin_assign_industry_items_admin_inventory_industries__industry_id__assign_to_tenants_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1269,6 +1337,14 @@ export interface components {
              */
             file: string;
         };
+        /** Body_admin_import_industry_items_admin_inventory_industries__industry_id__items_import_post */
+        Body_admin_import_industry_items_admin_inventory_industries__industry_id__items_import_post: {
+            /**
+             * File
+             * Format: binary
+             */
+            file: string;
+        };
         /** Body_admin_import_items_admin_inventory_items_import_post */
         Body_admin_import_items_admin_inventory_items_import_post: {
             /**
@@ -1349,6 +1425,59 @@ export interface components {
             /** Item Ids */
             item_ids: string[];
         };
+        /** IndustryAssignRequest */
+        IndustryAssignRequest: {
+            /** Tenant Ids */
+            tenant_ids?: string[] | null;
+            /**
+             * Initial Quantity
+             * @default 0
+             */
+            initial_quantity: number;
+            /**
+             * Preserve Existing Quantity
+             * @default true
+             */
+            preserve_existing_quantity: boolean;
+        };
+        /** IndustryAssignResponse */
+        IndustryAssignResponse: {
+            /** Industry Id */
+            industry_id: string;
+            /** Industry Name */
+            industry_name: string;
+            /** Total Items */
+            total_items: number;
+            /** Target Tenants */
+            target_tenants: number;
+            /** Created */
+            created: number;
+            /** Skipped Existing */
+            skipped_existing: number;
+            /** Synced Admin Items */
+            synced_admin_items: number;
+            /** Missing Tenants */
+            missing_tenants: string[];
+            /** Mismatched Tenants */
+            mismatched_tenants: string[];
+            /** Inactive Tenants */
+            inactive_tenants: string[];
+            /** Results */
+            results: components["schemas"]["IndustryAssignTenantResult"][];
+        };
+        /** IndustryAssignTenantResult */
+        IndustryAssignTenantResult: {
+            /** Tenant Id */
+            tenant_id: string;
+            /** Tenant Slug */
+            tenant_slug: string;
+            /** Created */
+            created: number;
+            /** Skipped Existing */
+            skipped_existing: number;
+            /** Synced Admin Items */
+            synced_admin_items: number;
+        };
         /** IndustryCreate */
         IndustryCreate: {
             /** Name */
@@ -1363,6 +1492,19 @@ export interface components {
              * @default true
              */
             is_active: boolean;
+        };
+        /** IndustryMappingImportResult */
+        IndustryMappingImportResult: {
+            /** Added */
+            added: number;
+            /** Removed */
+            removed: number;
+            /** Skipped Missing */
+            skipped_missing: number;
+            /** Final Count */
+            final_count: number;
+            /** Errors */
+            errors: Record<string, never>[];
         };
         /** IndustryOut */
         IndustryOut: {
@@ -1380,6 +1522,13 @@ export interface components {
             is_active: boolean;
             /** Id */
             id: string;
+        };
+        /** IndustryOverlapCounts */
+        IndustryOverlapCounts: {
+            /** Counts */
+            counts: {
+                [key: string]: number;
+            };
         };
         /** IndustryUpdate */
         IndustryUpdate: {
@@ -1641,46 +1790,73 @@ export interface components {
             /** Is Active */
             is_active?: boolean | null;
         };
-        /** MovementItemOut */
-        MovementItemOut: {
-            /** Id */
-            id: string;
+        /**
+         * MovementOut
+         * @description Backwards-compatible alias kept for admin inventory imports.
+         */
+        MovementOut: {
             /** Sku */
             sku: string;
             /** Barcode */
             barcode: string;
             /** Name */
             name: string;
+            /**
+             * Description
+             * @default
+             */
+            description: string;
+            /**
+             * Quantity
+             * @default 0
+             */
+            quantity: number;
+            /**
+             * Unit
+             * @default pcs
+             */
+            unit: string;
+            /**
+             * Is Active
+             * @default true
+             */
+            is_active: boolean;
             /** Category Id */
             category_id?: string | null;
-        };
-        /** MovementOut */
-        MovementOut: {
+            /**
+             * Min Stock
+             * @default 0
+             */
+            min_stock: number;
+            /**
+             * Max Stock
+             * @default 0
+             */
+            max_stock: number;
+            /**
+             * Target Stock
+             * @default 0
+             */
+            target_stock: number;
+            /**
+             * Recommended Stock
+             * @default 0
+             */
+            recommended_stock: number;
+            /**
+             * Order Mode
+             * @default 0
+             */
+            order_mode: number;
             /** Id */
             id: string;
-            /** Item Id */
-            item_id: string;
-            /** Item Name */
-            item_name?: string | null;
-            /** Category Id */
-            category_id?: string | null;
+            /** Category Name */
+            category_name?: string | null;
             /**
-             * Type
-             * @enum {string}
+             * Is Admin Created
+             * @default false
              */
-            type: "IN" | "OUT";
-            /** Barcode */
-            barcode: string;
-            /** Qty */
-            qty: number;
-            /** Note */
-            note?: string | null;
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-            item?: components["schemas"]["MovementItemOut"] | null;
+            is_admin_created: boolean;
         };
         /** MovementPayload */
         MovementPayload: {
@@ -1763,6 +1939,44 @@ export interface components {
             canceled_at?: string | null;
             /** Items */
             items: components["schemas"]["OrderItemOut"][];
+        };
+        /** RecommendedOrderItem */
+        RecommendedOrderItem: {
+            /** Item Id */
+            item_id: string;
+            /** Sku */
+            sku: string;
+            /** Barcode */
+            barcode: string;
+            /** Name */
+            name: string;
+            /** Quantity */
+            quantity: number;
+            /** Min Stock */
+            min_stock: number;
+            /** Target Stock */
+            target_stock: number;
+            /** Recommended Stock */
+            recommended_stock: number;
+            /** Order Mode */
+            order_mode: number;
+            /** Recommended Qty */
+            recommended_qty: number;
+            /** Shortage */
+            shortage: number;
+            /** Category Id */
+            category_id?: string | null;
+            /** Category Name */
+            category_name?: string | null;
+            /** Unit */
+            unit: string;
+        };
+        /** RecommendedOrdersResponse */
+        RecommendedOrdersResponse: {
+            /** Items */
+            items: components["schemas"]["RecommendedOrderItem"][];
+            /** Total */
+            total: number;
         };
         /** RefreshRequest */
         RefreshRequest: {
@@ -2376,6 +2590,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CategoryOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_reorder_recommendations_inventory_orders_recommended_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReorderResponse"];
                 };
             };
             /** @description Validation Error */
@@ -3086,37 +3331,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TestEmailResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_reorder_recommendations_inventory_orders_recommended_get: {
-        parameters: {
-            query?: never;
-            header?: {
-                authorization?: string | null;
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ReorderResponse"];
                 };
             };
             /** @description Validation Error */
@@ -4648,6 +4862,40 @@ export interface operations {
             };
         };
     };
+    admin_get_industry_overlap_counts_admin_inventory_industries_overlap_counts_get: {
+        parameters: {
+            query?: {
+                item_ids?: string[] | null;
+            };
+            header?: {
+                "x-admin-key"?: string | null;
+                "x-admin-actor"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IndustryOverlapCounts"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     admin_list_industries_admin_inventory_industries_get: {
         parameters: {
             query?: never;
@@ -4845,6 +5093,118 @@ export interface operations {
                 };
                 content: {
                     "application/json": Record<string, never>;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_export_industry_items_admin_inventory_industries__industry_id__items_export_get: {
+        parameters: {
+            query?: {
+                format?: string;
+            };
+            header?: {
+                "x-admin-key"?: string | null;
+                "x-admin-actor"?: string | null;
+            };
+            path: {
+                industry_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_import_industry_items_admin_inventory_industries__industry_id__items_import_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-admin-key"?: string | null;
+                "x-admin-actor"?: string | null;
+            };
+            path: {
+                industry_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_admin_import_industry_items_admin_inventory_industries__industry_id__items_import_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IndustryMappingImportResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_assign_industry_items_admin_inventory_industries__industry_id__assign_to_tenants_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-admin-key"?: string | null;
+                "x-admin-actor"?: string | null;
+            };
+            path: {
+                industry_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IndustryAssignRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IndustryAssignResponse"];
                 };
             };
             /** @description Validation Error */

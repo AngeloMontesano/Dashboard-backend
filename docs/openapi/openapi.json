@@ -299,6 +299,55 @@
         }
       }
     },
+    "/inventory/orders/recommended": {
+      "get": {
+        "tags": [
+          "inventory"
+        ],
+        "summary": "Get Reorder Recommendations",
+        "operationId": "get_reorder_recommendations_inventory_orders_recommended_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReorderResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/inventory/items": {
       "get": {
         "tags": [
@@ -375,7 +424,7 @@
             "required": false,
             "schema": {
               "type": "integer",
-              "maximum": 200,
+              "maximum": 500,
               "minimum": 1,
               "default": 50,
               "title": "Page Size"
@@ -1851,55 +1900,6 @@
         }
       }
     },
-    "/inventory/orders/recommended": {
-      "get": {
-        "tags": [
-          "inventory"
-        ],
-        "summary": "Get Reorder Recommendations",
-        "operationId": "get_reorder_recommendations_inventory_orders_recommended_get",
-        "parameters": [
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ReorderResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/inventory/movements": {
       "get": {
         "tags": [
@@ -2009,11 +2009,11 @@
               "type": "integer",
               "maximum": 1000,
               "minimum": 1,
-              "description": "Maximale Anzahl zurückgegebener Bewegungen",
+              "description": "Maximale Anzahl zur\u00fcckgegebener Bewegungen",
               "default": 200,
               "title": "Limit"
             },
-            "description": "Maximale Anzahl zurückgegebener Bewegungen"
+            "description": "Maximale Anzahl zur\u00fcckgegebener Bewegungen"
           },
           {
             "name": "authorization",
@@ -2609,7 +2609,7 @@
           "admin-tenants"
         ],
         "summary": "Admin Delete Tenant",
-        "description": "Löscht einen Tenant nur mit expliziter Bestätigung.\nAufruf: DELETE /admin/tenants/{tenant_id}?confirm=true",
+        "description": "L\u00f6scht einen Tenant nur mit expliziter Best\u00e4tigung.\nAufruf: DELETE /admin/tenants/{tenant_id}?confirm=true",
         "operationId": "admin_delete_tenant_admin_tenants__tenant_id__delete",
         "parameters": [
           {
@@ -3311,7 +3311,7 @@
           "admin-audit"
         ],
         "summary": "Admin Get Audit",
-        "description": "Liefert Audit Log Einträge mit optionalen Filtern.",
+        "description": "Liefert Audit Log Eintr\u00e4ge mit optionalen Filtern.",
         "operationId": "admin_get_audit_admin_audit_get",
         "parameters": [
           {
@@ -3503,7 +3503,7 @@
           "admin-diagnostics"
         ],
         "summary": "Admin Diagnostics",
-        "description": "Diagnostik für typische Dateninkonsistenzen.\nLiefert nur Read-Informationen, keine Änderungen.",
+        "description": "Diagnostik f\u00fcr typische Dateninkonsistenzen.\nLiefert nur Read-Informationen, keine \u00c4nderungen.",
         "operationId": "admin_diagnostics_admin_diagnostics_get",
         "parameters": [
           {
@@ -5884,6 +5884,91 @@
         }
       }
     },
+    "/admin/inventory/industries/{industry_id}/assign-to-tenants": {
+      "post": {
+        "tags": [
+          "admin",
+          "admin-inventory"
+        ],
+        "summary": "Admin Assign Industry Items",
+        "operationId": "admin_assign_industry_items_admin_inventory_industries__industry_id__assign_to_tenants_post",
+        "parameters": [
+          {
+            "name": "industry_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Industry Id"
+            }
+          },
+          {
+            "name": "x-admin-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Key"
+            }
+          },
+          {
+            "name": "x-admin-actor",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Actor"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IndustryAssignRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IndustryAssignResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/admin/system/info": {
       "get": {
         "tags": [
@@ -5891,7 +5976,7 @@
           "admin-system"
         ],
         "summary": "Admin System Info",
-        "description": "Systeminformationen (Version, Commit, DB-Status) für Admins.",
+        "description": "Systeminformationen (Version, Commit, DB-Status) f\u00fcr Admins.",
         "operationId": "admin_system_info_admin_system_info_get",
         "parameters": [
           {
@@ -5958,7 +6043,7 @@
           "admin-system"
         ],
         "summary": "Admin System Cache Reset",
-        "description": "Platzhalter für Cache-Invalidierung (noch kein Cache-Backend vorhanden).",
+        "description": "Platzhalter f\u00fcr Cache-Invalidierung (noch kein Cache-Backend vorhanden).",
         "operationId": "admin_system_cache_reset_admin_system_actions_cache_reset_post",
         "parameters": [
           {
@@ -6025,7 +6110,7 @@
           "admin-system"
         ],
         "summary": "Admin System Reindex",
-        "description": "Platzhalter für Reindex (noch keine Index-Engine angebunden).",
+        "description": "Platzhalter f\u00fcr Reindex (noch keine Index-Engine angebunden).",
         "operationId": "admin_system_reindex_admin_system_actions_reindex_post",
         "parameters": [
           {
@@ -6092,7 +6177,7 @@
           "admin-system"
         ],
         "summary": "Admin System Restart",
-        "description": "Platzhalter für Restart (nicht unterstützt ohne Orchestrator Hook).",
+        "description": "Platzhalter f\u00fcr Restart (nicht unterst\u00fctzt ohne Orchestrator Hook).",
         "operationId": "admin_system_restart_admin_system_actions_restart_post",
         "parameters": [
           {
@@ -6692,6 +6777,146 @@
           "item_ids"
         ],
         "title": "IndustryArticlesUpdate"
+      },
+      "IndustryAssignRequest": {
+        "properties": {
+          "tenant_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tenant Ids"
+          },
+          "initial_quantity": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Initial Quantity",
+            "default": 0
+          },
+          "preserve_existing_quantity": {
+            "type": "boolean",
+            "title": "Preserve Existing Quantity",
+            "default": true
+          }
+        },
+        "type": "object",
+        "title": "IndustryAssignRequest"
+      },
+      "IndustryAssignResponse": {
+        "properties": {
+          "industry_id": {
+            "type": "string",
+            "title": "Industry Id"
+          },
+          "industry_name": {
+            "type": "string",
+            "title": "Industry Name"
+          },
+          "total_items": {
+            "type": "integer",
+            "title": "Total Items"
+          },
+          "target_tenants": {
+            "type": "integer",
+            "title": "Target Tenants"
+          },
+          "created": {
+            "type": "integer",
+            "title": "Created"
+          },
+          "skipped_existing": {
+            "type": "integer",
+            "title": "Skipped Existing"
+          },
+          "synced_admin_items": {
+            "type": "integer",
+            "title": "Synced Admin Items"
+          },
+          "missing_tenants": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Missing Tenants"
+          },
+          "mismatched_tenants": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Mismatched Tenants"
+          },
+          "inactive_tenants": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Inactive Tenants"
+          },
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/IndustryAssignTenantResult"
+            },
+            "type": "array",
+            "title": "Results"
+          }
+        },
+        "type": "object",
+        "required": [
+          "industry_id",
+          "industry_name",
+          "total_items",
+          "target_tenants",
+          "created",
+          "skipped_existing",
+          "synced_admin_items",
+          "missing_tenants",
+          "mismatched_tenants",
+          "inactive_tenants",
+          "results"
+        ],
+        "title": "IndustryAssignResponse"
+      },
+      "IndustryAssignTenantResult": {
+        "properties": {
+          "tenant_id": {
+            "type": "string",
+            "title": "Tenant Id"
+          },
+          "tenant_slug": {
+            "type": "string",
+            "title": "Tenant Slug"
+          },
+          "created": {
+            "type": "integer",
+            "title": "Created"
+          },
+          "skipped_existing": {
+            "type": "integer",
+            "title": "Skipped Existing"
+          },
+          "synced_admin_items": {
+            "type": "integer",
+            "title": "Synced Admin Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "tenant_id",
+          "tenant_slug",
+          "created",
+          "skipped_existing",
+          "synced_admin_items"
+        ],
+        "title": "IndustryAssignTenantResult"
       },
       "IndustryCreate": {
         "properties": {
@@ -7388,23 +7613,44 @@
         "type": "object",
         "title": "MembershipUpdate"
       },
-      "MovementItemOut": {
+      "MovementOut": {
         "properties": {
-          "id": {
-            "type": "string",
-            "title": "Id"
-          },
           "sku": {
             "type": "string",
+            "maxLength": 64,
             "title": "Sku"
           },
           "barcode": {
             "type": "string",
+            "maxLength": 64,
             "title": "Barcode"
           },
           "name": {
             "type": "string",
+            "maxLength": 255,
             "title": "Name"
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 1024,
+            "title": "Description",
+            "default": ""
+          },
+          "quantity": {
+            "type": "integer",
+            "title": "Quantity",
+            "default": 0
+          },
+          "unit": {
+            "type": "string",
+            "maxLength": 32,
+            "title": "Unit",
+            "default": "pcs"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "default": true
           },
           "category_id": {
             "anyOf": [
@@ -7416,28 +7662,37 @@
               }
             ],
             "title": "Category Id"
-          }
-        },
-        "type": "object",
-        "required": [
-          "id",
-          "sku",
-          "barcode",
-          "name"
-        ],
-        "title": "MovementItemOut"
-      },
-      "MovementOut": {
-        "properties": {
+          },
+          "min_stock": {
+            "type": "integer",
+            "title": "Min Stock",
+            "default": 0
+          },
+          "max_stock": {
+            "type": "integer",
+            "title": "Max Stock",
+            "default": 0
+          },
+          "target_stock": {
+            "type": "integer",
+            "title": "Target Stock",
+            "default": 0
+          },
+          "recommended_stock": {
+            "type": "integer",
+            "title": "Recommended Stock",
+            "default": 0
+          },
+          "order_mode": {
+            "type": "integer",
+            "title": "Order Mode",
+            "default": 0
+          },
           "id": {
             "type": "string",
             "title": "Id"
           },
-          "item_id": {
-            "type": "string",
-            "title": "Item Id"
-          },
-          "item_name": {
+          "category_name": {
             "anyOf": [
               {
                 "type": "string"
@@ -7446,72 +7701,23 @@
                 "type": "null"
               }
             ],
-            "title": "Item Name"
+            "title": "Category Name"
           },
-          "category_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Category Id"
-          },
-          "type": {
-            "type": "string",
-            "enum": [
-              "IN",
-              "OUT"
-            ],
-            "title": "Type"
-          },
-          "barcode": {
-            "type": "string",
-            "title": "Barcode"
-          },
-          "qty": {
-            "type": "integer",
-            "title": "Qty"
-          },
-          "note": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Note"
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Created At"
-          },
-          "item": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/MovementItemOut"
-              },
-              {
-                "type": "null"
-              }
-            ]
+          "is_admin_created": {
+            "type": "boolean",
+            "title": "Is Admin Created",
+            "default": false
           }
         },
         "type": "object",
         "required": [
-          "id",
-          "item_id",
-          "type",
+          "sku",
           "barcode",
-          "qty",
-          "created_at"
+          "name",
+          "id"
         ],
-        "title": "MovementOut"
+        "title": "MovementOut",
+        "description": "Backwards-compatible alias kept for admin inventory imports."
       },
       "MovementPayload": {
         "properties": {
@@ -7812,6 +8018,117 @@
           "items"
         ],
         "title": "OrderOut"
+      },
+      "RecommendedOrderItem": {
+        "properties": {
+          "item_id": {
+            "type": "string",
+            "title": "Item Id"
+          },
+          "sku": {
+            "type": "string",
+            "title": "Sku"
+          },
+          "barcode": {
+            "type": "string",
+            "title": "Barcode"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "quantity": {
+            "type": "integer",
+            "title": "Quantity"
+          },
+          "min_stock": {
+            "type": "integer",
+            "title": "Min Stock"
+          },
+          "target_stock": {
+            "type": "integer",
+            "title": "Target Stock"
+          },
+          "recommended_stock": {
+            "type": "integer",
+            "title": "Recommended Stock"
+          },
+          "order_mode": {
+            "type": "integer",
+            "title": "Order Mode"
+          },
+          "recommended_qty": {
+            "type": "integer",
+            "title": "Recommended Qty"
+          },
+          "shortage": {
+            "type": "integer",
+            "title": "Shortage"
+          },
+          "category_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category Id"
+          },
+          "category_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category Name"
+          },
+          "unit": {
+            "type": "string",
+            "title": "Unit"
+          }
+        },
+        "type": "object",
+        "required": [
+          "item_id",
+          "sku",
+          "barcode",
+          "name",
+          "quantity",
+          "min_stock",
+          "target_stock",
+          "recommended_stock",
+          "order_mode",
+          "recommended_qty",
+          "shortage",
+          "unit"
+        ],
+        "title": "RecommendedOrderItem"
+      },
+      "RecommendedOrdersResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/RecommendedOrderItem"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total"
+        ],
+        "title": "RecommendedOrdersResponse"
       },
       "RefreshRequest": {
         "properties": {
@@ -8256,7 +8573,7 @@
           "is_active"
         ],
         "title": "TenantOutPing",
-        "description": "Minimaler Tenant Output für /inventory/ping."
+        "description": "Minimaler Tenant Output f\u00fcr /inventory/ping."
       },
       "TenantPingResponse": {
         "properties": {
@@ -8274,7 +8591,7 @@
           "tenant"
         ],
         "title": "TenantPingResponse",
-        "description": "Response Modell für /inventory/ping."
+        "description": "Response Modell f\u00fcr /inventory/ping."
       },
       "TenantSettingsOut": {
         "properties": {
@@ -8835,5 +9152,51 @@
         "title": "ValidationError"
       }
     }
-  }
+  },
+  "tags": [
+    {
+      "name": "platform",
+      "description": "Basis Endpunkte f\u00fcr Health, Meta und DB Readiness."
+    },
+    {
+      "name": "inventory",
+      "description": "Inventory Endpoints mit Tenant-Kontext und Rollen-Checks."
+    },
+    {
+      "name": "admin",
+      "description": "Admin Endpunkte. Zugriff nur mit X-Admin-Key."
+    },
+    {
+      "name": "admin-tenants",
+      "description": "Tenant Verwaltung f\u00fcr Admin."
+    },
+    {
+      "name": "admin-users",
+      "description": "User Verwaltung f\u00fcr Admin."
+    },
+    {
+      "name": "admin-memberships",
+      "description": "Membership Verwaltung f\u00fcr Admin."
+    },
+    {
+      "name": "admin-roles",
+      "description": "Rollen Katalog."
+    },
+    {
+      "name": "admin-audit",
+      "description": "Admin Audit Log."
+    },
+    {
+      "name": "admin-diagnostics",
+      "description": "Daten Checks und Diagnosen."
+    },
+    {
+      "name": "admin-inventory",
+      "description": "Globale Stammdaten und Branchenverwaltung."
+    },
+    {
+      "name": "admin-system",
+      "description": "Systeminformationen und Admin-Operationen."
+    }
+  ]
 }

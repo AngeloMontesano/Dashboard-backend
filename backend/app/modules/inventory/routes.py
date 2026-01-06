@@ -49,11 +49,18 @@ from app.modules.inventory.schemas import (
     MovementItemOut,
     MovementOut,
     MovementPayload,
+    OrderEmailRequest,
     RecommendedOrderItem,
     RecommendedOrdersResponse,
     SKUExistsResponse,
+    TenantSettingsOut,
+    TenantSettingsUpdate,
     TenantPingResponse,
     TenantOutPing,
+    TestEmailRequest,
+    TestEmailResponse,
+    MassImportResult,
+    EmailSendResponse,
 )
 
 router = APIRouter(prefix="/inventory", tags=["inventory"])

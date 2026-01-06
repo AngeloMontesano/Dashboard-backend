@@ -47,3 +47,7 @@
 ## 2024-06-17
 - Parallelisierung für Next/Later ergänzt (TODO): Stream 1 (A-05/A-10/B-02), Stream 2 (C-03/C-04/D-02), Stream 3 (E-03/E-04/E-05/F-04/F-05).
 - Ziel: spätere Tasks früh bündeln, um Reviews/UX-Guidelines gemeinsam zu nutzen.
+
+## 2024-06-18
+- Umsetzungsvorbereitung konkretisiert: Stream 1 startet mit A-01 Draft in `docs/openapi` + Backend-Router-Stubs; Stream 2 legt UX-Wireframes für A-04/C-02/D-01 an; Stream 3 entwirft Felder/Abschnitte für G-01/I-01.
+- Keine neuen Blocker; offene QA-Themen (Proxy-404) bleiben offen, erst nach A-10/A-11 anpacken.

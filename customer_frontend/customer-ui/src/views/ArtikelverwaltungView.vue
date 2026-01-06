@@ -817,9 +817,9 @@ watch(
           </label>
 <!--          <label>
             <span>Empfohlen</span>
--->    
             <input type="number" min="0" v-model.number="editForm.recommended_stock" :disabled="!hasWriteAccess" />
           </label>
+        -->
           <label>
             <span>Bestell-Modus</span>
             <select v-model.number="editForm.order_mode" :disabled="!hasWriteAccess">

@@ -130,6 +130,32 @@
 
         <section class="settingsSection">
           <div class="sectionHeader">
+            <div class="sectionTitle">Email / SMTP</div>
+            <button class="btnGhost small" @click="toggleSection('email')" :aria-expanded="!sectionCollapsed.email">
+              {{ sectionCollapsed.email ? "Aufklappen" : "Einklappen" }}
+            </button>
+          </div>
+          <div v-if="!sectionCollapsed.email" class="kvGrid">
+            <div class="kv">
+              <div class="k">Hinweis</div>
+              <div class="v">
+                <div class="muted">
+                  SMTP wird aktuell zentral konfiguriert (Host z. B. mail.myitnetwork.de). Anpassungen sind hier
+                  noch nicht editierbar.
+                </div>
+                <div class="muted">
+                  Bitte die SMTP-Einstellungen im Backend pflegen; Test/Reachability erfolgt über die vorhandenen
+                  Health/Ping-Checks.
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div class="divider"></div>
+
+        <section class="settingsSection">
+          <div class="sectionHeader">
             <div class="sectionTitle">Feature Flags (UI)</div>
             <button class="btnGhost small" @click="toggleSection('flags')" :aria-expanded="!sectionCollapsed.flags">
               {{ sectionCollapsed.flags ? "Aufklappen" : "Einklappen" }}
@@ -192,15 +218,26 @@ import type { AdminSystemInfo, SystemEmailSettings, SystemEmailSettingsUpdate } 
 
 type ThemeMode = "light" | "dark" | "system";
 
-const props = defineProps<{
-  apiOk: boolean;
-  dbOk: boolean;
-  actor: string;
-  adminKey: string;
-  theme: string;
-  apiBase: string;
-  baseDomain: string;
-}>();
+type ThemeMode = "light" | "dark" | "system";
+
+const props = withDefaults(
+  defineProps<{
+    apiOk: boolean;
+    dbOk: boolean;
+    actor?: string;
+    adminKey?: string;
+    theme?: string;
+    apiBase?: string;
+    baseDomain?: string;
+  }>(),
+  {
+    actor: "",
+    adminKey: "",
+    theme: "system",
+    apiBase: "",
+    baseDomain: "",
+  }
+);
 
 const emit = defineEmits<{
   (e: "setTheme", theme: "light" | "dark" | "system"): void;
@@ -213,6 +250,7 @@ const sectionCollapsed = ref({
   security: true,
   theme: true,
   flags: true,
+  email: true,
   danger: true,
 });
 const themes = [

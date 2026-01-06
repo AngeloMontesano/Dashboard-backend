@@ -790,6 +790,19 @@
 - **Tests**
   - `npm run build` (admin_frontend/admin-ui) – nicht erneut ausgeführt, UI-only Feinschliff
 
+## Schritt 57 – OpenAPI-Validierung der offenen Punkte
+- **Datum/Uhrzeit**: 2026-01-06T16:30:00+00:00
+- **Ziel**: Offene Aufgaben (Mapping-Import/Export, Überschneidungs-Badges) gegen die aktuelle Remote-OpenAPI prüfen.
+- **Was wurde geprüft**
+  - `https://api.test.myitnetwork.de/openapi.json` liefert unverändert nur `/admin/inventory/industries` (GET/POST/PATCH/DELETE) und `/admin/inventory/industries/{industry_id}/items` (GET/PUT). Keine CSV/XLSX Import-/Export-Endpunkte für Branchen-Mappings vorhanden.
+  - `page_size` für `/admin/inventory/items` ist max. 200 (default 50); Kategorie/Status/q-Filter bestätigt.
+  - Keine Aggregations-/Overlap-API (z. B. „in X Branchen“) vorhanden.
+- **Ergebnis**
+  - UI bleibt ohne Import/Export-Buttons; TODO-Einträge für Backend-Endpunkte bleiben bestehen.
+  - Überschneidungs-Badges weiterhin nicht umsetzbar ohne neue API; Dokumentation belassen.
+- **Tests**
+  - Nicht ausgeführt (Doku-/API-Check)
+
 ## Schritt 54 – Analyse Branchen-Artikel-Mapping (Schritt 1)
 - **Datum/Uhrzeit**: 2026-01-06T15:45:00+00:00
 - **Ziel**: Inventar für den Admin-Editor „Branche ↔ Artikel“ erstellen und Skalierungsprobleme für 1000+ Artikel bewerten.

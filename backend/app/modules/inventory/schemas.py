@@ -142,6 +142,13 @@ class MovementItemOut(ItemOut):
     pass
 
 
+class MovementOut(MovementItemOut):
+    """
+    Backwards-compatible alias kept for admin inventory imports.
+    """
+    pass
+
+
 class MovementPayload(BaseModel):
     client_tx_id: str = Field(..., max_length=128)
     type: str = Field(..., pattern="^(IN|OUT)$")

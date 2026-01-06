@@ -316,7 +316,7 @@ const emit = defineEmits<{
 }>();
 
 const { toast } = useToast();
-const { industries } = useGlobalMasterdata();
+const { industries, replaceIndustries } = useGlobalMasterdata();
 
 /* State */
 const tenants = ref<TenantOut[]>([]);

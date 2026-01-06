@@ -39,3 +39,7 @@
 ## 2024-06-15
 - Parallelisierung ergänzt: drei Streams in TODO (Backend/Docs, Customer UX, Admin/Docs) für gleichzeitige Bearbeitung der Now-Tasks.
 - Keine neuen fachlichen Findings; Fokus auf Beschleunigung der Planungs-/QA-Arbeiten.
+
+## 2024-06-16
+- Vorbereitung Umsetzung: Startpunkte für Coding geklärt (Stream 1: A-01 Spezifikation finalisieren → Backend-Stub; Stream 2: A-04 Bootstrap-Check + C-02/D-01 UX-Flow; Stream 3: G-01/I-01 Doku-/Felddesign).
+- Keine neuen Blocker; nächste Schritte sind Kickoff der Stream-Arbeiten.

@@ -48,6 +48,9 @@ export type TenantUserOut = {
 export type AdminSystemInfo = {
   app_version: string;
   environment: string;
+  build_timestamp: string;
+  build_branch: string;
+  image_tag?: string | null;
   git_commit?: string | null;
   db: string;
   db_error?: string;

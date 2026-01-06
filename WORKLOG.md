@@ -638,6 +638,21 @@
   - `npm run build` (admin_frontend/admin-ui)
   - `python -m compileall app` (backend)
 
+## Schritt 52 – Build/Commit-Infos aus ENV, UI bereinigt
+- **Datum/Uhrzeit**: 2026-01-06T12:45:00+00:00
+- **Ziel**: Echte Build-/Commit-Metadaten per ENV ausliefern, nicht unterstützte System-Actions klar kennzeichnen, ohne neue Abhängigkeiten.
+- **Was wurde geändert**
+  - Backend Config: neue ENV-Felder `BUILD_TIMESTAMP`, `BUILD_BRANCH`, `IMAGE_TAG` (Defaults `unknown`), `GIT_COMMIT` jetzt mit Default; alle über `/admin/system/info` auslieferbar.
+  - Backend System-Routes: Response-Modelle (Pydantic) für `/info` und Actions; Actions liefern `supported=false` mit Hinweis „Nicht konfiguriert in diesem System“ bzw. Restart-Hinweis.
+  - Docker Compose (backend): ENV-Platzhalter für Build-Metadaten ergänzt (CI-/lokal überschreibbar).
+  - Frontend Settings: Backend-Build-Anzeige erweitert (Commit, Branch, Timestamp, Image, DB-Status), Danger-Zone-Texte auf „nicht unterstützt“/„Restart via Docker/Portainer“ reduziert.
+  - TODO: optionale zukünftige Features (Redis, Search, Restart-Hook) klar als nicht Teil dieser Aufgabe markiert; Deployment-ENV für Build/Commit als MUSS aufgenommen.
+- **Ergebnis**
+  - Keine Dummy-Texte mehr: Build-/Commit-Infos kommen aus ENV; System-Actions sind explizit als nicht unterstützt gekennzeichnet.
+- **Tests**
+  - `npm run build` (admin_frontend/admin-ui)
+  - `python -m compileall app` (backend)
+
 ## Schritt 48 – Settings mit Build-Info ergänzt
 - **Datum/Uhrzeit**: 2026-01-06T11:26:00+00:00
 - **Ziel**: System-Abschnitt der Settings um verfügbare Build-/Versionsinformation ergänzen.

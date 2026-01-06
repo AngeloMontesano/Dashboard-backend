@@ -44,10 +44,12 @@
             <div class="k">Backend Build</div>
             <div class="v">
               <div v-if="systemInfo">
-                <div class="mono">{{ systemInfo.git_commit || "–" }}</div>
-                <div class="muted">
-                  {{ systemInfo.app_version }} · {{ systemInfo.environment }} · {{ systemInfo.timestamp }}
-                </div>
+                <div class="mono">{{ systemInfo.git_commit || "unknown" }}</div>
+                <div class="muted">Branch: {{ systemInfo.build_branch || "unknown" }}</div>
+                <div class="muted">Build: {{ systemInfo.build_timestamp || "unknown" }}</div>
+                <div class="muted">App: {{ systemInfo.app_version }} · {{ systemInfo.environment }}</div>
+                <div class="muted" v-if="systemInfo.image_tag">Image: {{ systemInfo.image_tag }}</div>
+                <div class="muted">DB Status: {{ systemInfo.db }}</div>
                 <div v-if="systemInfo.db_error" class="errorText">DB Fehler: {{ systemInfo.db_error }}</div>
               </div>
               <div v-else class="muted">noch nicht geladen</div>
@@ -125,30 +127,16 @@
           <div class="kv">
             <div class="k">Cache / Reindex</div>
             <div class="v">
-              <div class="muted">Endpoint vorhanden, aktuell nicht unterstützt (supported=false).</div>
-              <div class="muted">Aktion wird nicht ausgeführt.</div>
+              <div class="muted">Nicht unterstützt in diesem Deployment.</div>
+              <div class="muted">Kein Cache/Search konfiguriert.</div>
             </div>
           </div>
           <div class="kv">
             <div class="k">System Restart</div>
             <div class="v">
-              <div class="muted">Endpoint vorhanden, aktuell nicht unterstützt (supported=false).</div>
-              <div class="muted">Restart wird nicht über API ausgelöst.</div>
+              <div class="muted">Restart erfolgt außerhalb der Anwendung (Docker/Portainer).</div>
+              <div class="muted">Kein API-gestützter Restart konfiguriert.</div>
             </div>
-          </div>
-        </div>
-
-        <div class="divider"></div>
-
-        <div class="sectionTitle">Danger Zone / System Actions</div>
-        <div class="kvGrid">
-          <div class="kv">
-            <div class="k">Cache / Reindex</div>
-            <div class="v muted">Endpoint fehlt – nur Anzeige, keine Aktion verfügbar (siehe TODO).</div>
-          </div>
-          <div class="kv">
-            <div class="k">System Restart</div>
-            <div class="v muted">Kein Admin-Endpoint vorhanden; Operation muss serverseitig bereitgestellt werden.</div>
           </div>
         </div>
       </div>

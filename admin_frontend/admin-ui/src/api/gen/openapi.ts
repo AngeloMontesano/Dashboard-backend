@@ -1001,6 +1001,86 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/system/info": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Admin System Info
+         * @description Systeminformationen (Version, Commit, DB-Status) für Admins.
+         */
+        get: operations["admin_system_info_admin_system_info_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/system/actions/cache-reset": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Admin System Cache Reset
+         * @description Platzhalter für Cache-Invalidierung (noch kein Cache-Backend vorhanden).
+         */
+        post: operations["admin_system_cache_reset_admin_system_actions_cache_reset_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/system/actions/reindex": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Admin System Reindex
+         * @description Platzhalter für Reindex (noch keine Index-Engine angebunden).
+         */
+        post: operations["admin_system_reindex_admin_system_actions_reindex_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/system/actions/restart": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Admin System Restart
+         * @description Platzhalter für Restart (nicht unterstützt ohne Orchestrator Hook).
+         */
+        post: operations["admin_system_restart_admin_system_actions_restart_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/ping": {
         parameters: {
             query?: never;
@@ -1768,6 +1848,40 @@ export interface components {
             exists: boolean;
             /** Normalized Sku */
             normalized_sku: string;
+        };
+        /** SystemActionResponse */
+        SystemActionResponse: {
+            /** Action */
+            action: string;
+            /** Supported */
+            supported: boolean;
+            /** Performed */
+            performed: boolean;
+            /** Detail */
+            detail: string;
+            /** Timestamp */
+            timestamp: string;
+        };
+        /** SystemInfoResponse */
+        SystemInfoResponse: {
+            /** App Version */
+            app_version: string;
+            /** Git Commit */
+            git_commit: string;
+            /** Build Timestamp */
+            build_timestamp: string;
+            /** Build Branch */
+            build_branch: string;
+            /** Image Tag */
+            image_tag?: string | null;
+            /** Environment */
+            environment: string;
+            /** Db */
+            db: string;
+            /** Db Error */
+            db_error?: string | null;
+            /** Timestamp */
+            timestamp: string;
         };
         /** TenantCreate */
         TenantCreate: {
@@ -4731,6 +4845,134 @@ export interface operations {
                 };
                 content: {
                     "application/json": Record<string, never>;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_system_info_admin_system_info_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-admin-key"?: string | null;
+                "x-admin-actor"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SystemInfoResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_system_cache_reset_admin_system_actions_cache_reset_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-admin-key"?: string | null;
+                "x-admin-actor"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SystemActionResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_system_reindex_admin_system_actions_reindex_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-admin-key"?: string | null;
+                "x-admin-actor"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SystemActionResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_system_restart_admin_system_actions_restart_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-admin-key"?: string | null;
+                "x-admin-actor"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SystemActionResponse"];
                 };
             };
             /** @description Validation Error */

@@ -33,6 +33,7 @@ Frontend zeigt für unbekannte/inaktive Subdomains eine klare Seite statt JSON. 
 - Neuer öffentlicher Endpoint `GET /api/public/tenant-status?slug=` liefert `{status: ok|not_found|inactive|unavailable, host, slug}`.
 - Bestehende Tenant-Resolve-Logik bleibt; Status-Endpoint nutzt dieselbe Prüfung ohne Login.
 - Proxy leitet Subdomain-Host in `X-Forwarded-Host` weiter.
+- Spezifikation: `docs/openapi/TENANT_STATUS.md`, Schema `PublicTenantStatus` in `docs/openapi/openapi.json` (Typen via `npm run gen:types(:local)`).
 
 ## 8) Daten (konzeptionell)
 - Response `tenant-status`: `status` Enum, `slug`, `host`, optional `reason`/`is_active`.
@@ -89,6 +90,11 @@ Frontend zeigt für unbekannte/inaktive Subdomains eine klare Seite statt JSON. 
   - Dateien/Bereiche: Epic QA-Abschnitt, README QA  
   - Abhängigkeiten: A-05  
   - Done: Checkliste in Doku, deckt 404-Fallback, Tenant not found/inaktiv/unavailable, Header-Szenarien, Mobile/Darkmode, Proxy-Forwarding.
+- **A-11** – Proxy/404 Smoke-Test-Plan erstellen (Reverse Proxy Verhalten).  
+  - Bereich: docs/devops  
+  - Dateien/Bereiche: Epic QA-Abschnitt, ggf. `docs/` Test-Notiz  
+  - Abhängigkeiten: A-10  
+  - Done: Plan beschreibt Aufrufpfade (mit/ohne Subdomain, falsche Slugs), erwartete Responses (UI-Seite statt JSON), benötigte Proxy-Header (`X-Forwarded-Host`), und manuelle Schritte.
 
 ## QA-Checkliste (A-10)
 - 404-Fallback: Route `/:pathMatch(.*)*` führt zu TenantStatusView, kein rohes JSON.
@@ -103,8 +109,8 @@ Frontend zeigt für unbekannte/inaktive Subdomains eine klare Seite statt JSON. 
 - Unbekannte/Inactive Tenant-Subdomain zeigt eine gestaltete Seite, kein JSON.
 - Router-Fallback zeigt 404-Seite, nicht leere Shell.
 - Tenant-Status-API antwortet ohne Auth mit Status ok/not_found/inactive/unavailable.
+- Tenant-Status-API liefert für alle Pfade HTTP 200, Fehlerzustände liegen ausschließlich in `status`/`reason`.
 - Retry/Support-Links funktionieren; Host/Tenant-Slug im UI sichtbar.
-- QA-Checkliste A-10 ist vorhanden und getestet (404-Fallback, Tenant not found/inaktiv/unavailable, Proxy-Header, Mobile, Darkmode).
 - QA-Checkliste A-10 ist vorhanden und getestet (404-Fallback, Tenant not found/inaktiv/unavailable, Proxy-Header, Mobile, Darkmode).
 
 ## 11) Risiken/Offene Punkte

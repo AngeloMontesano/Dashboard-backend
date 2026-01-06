@@ -16,11 +16,11 @@
         <section class="settingsSection">
           <div class="sectionHeader">
             <div class="sectionTitle">System</div>
-            <button class="btnGhost small" @click="toggleSection('system')" :aria-expanded="!sectionCollapsed.system">
-              {{ sectionCollapsed.system ? "Aufklappen" : "Einklappen" }}
+            <button class="btnGhost small" @click="toggleSection('system')" :aria-expanded="sectionOpen.system">
+              {{ sectionOpen.system ? "Einklappen" : "Aufklappen" }}
             </button>
           </div>
-          <div v-if="!sectionCollapsed.system" class="kvGrid">
+          <div v-if="sectionOpen.system" class="kvGrid">
             <div class="kv">
               <div class="k">API Base</div>
               <div class="v mono">{{ apiBase }}</div>
@@ -73,11 +73,11 @@
         <section class="settingsSection">
           <div class="sectionHeader">
             <div class="sectionTitle">Security &amp; Auth</div>
-            <button class="btnGhost small" @click="toggleSection('security')" :aria-expanded="!sectionCollapsed.security">
-              {{ sectionCollapsed.security ? "Aufklappen" : "Einklappen" }}
+            <button class="btnGhost small" @click="toggleSection('security')" :aria-expanded="sectionOpen.security">
+              {{ sectionOpen.security ? "Einklappen" : "Aufklappen" }}
             </button>
           </div>
-          <div v-if="!sectionCollapsed.security" class="kvGrid">
+          <div v-if="sectionOpen.security" class="kvGrid">
             <div class="kv">
               <div class="k">Admin Key Länge</div>
               <div class="v">{{ adminKey ? adminKey.length : 0 }} Zeichen</div>
@@ -98,7 +98,7 @@
             </div>
           </div>
 
-          <div class="row gap8 wrap" v-if="!sectionCollapsed.security">
+          <div class="row gap8 wrap" v-if="sectionOpen.security">
             <button class="btnGhost" :disabled="!adminKey && !actor" @click="$emit('resetContext')">
               Admin Context zurücksetzen
             </button>
@@ -110,11 +110,11 @@
         <section class="settingsSection">
           <div class="sectionHeader">
             <div class="sectionTitle">Theme &amp; UI</div>
-            <button class="btnGhost small" @click="toggleSection('theme')" :aria-expanded="!sectionCollapsed.theme">
-              {{ sectionCollapsed.theme ? "Aufklappen" : "Einklappen" }}
+            <button class="btnGhost small" @click="toggleSection('theme')" :aria-expanded="sectionOpen.theme">
+              {{ sectionOpen.theme ? "Einklappen" : "Aufklappen" }}
             </button>
           </div>
-          <div v-if="!sectionCollapsed.theme" class="kvGrid">
+          <div v-if="sectionOpen.theme" class="kvGrid">
             <div class="kv">
               <div class="k">Theme</div>
               <div class="v">
@@ -203,11 +203,11 @@
         <section class="settingsSection">
           <div class="sectionHeader">
             <div class="sectionTitle">Feature Flags (UI)</div>
-            <button class="btnGhost small" @click="toggleSection('flags')" :aria-expanded="!sectionCollapsed.flags">
-              {{ sectionCollapsed.flags ? "Aufklappen" : "Einklappen" }}
+            <button class="btnGhost small" @click="toggleSection('flags')" :aria-expanded="sectionOpen.flags">
+              {{ sectionOpen.flags ? "Einklappen" : "Aufklappen" }}
             </button>
           </div>
-          <div v-if="!sectionCollapsed.flags" class="kvGrid">
+          <div v-if="sectionOpen.flags" class="kvGrid">
             <div class="kv">
               <div class="v">
                 <ul class="bullets">
@@ -225,11 +225,11 @@
         <section class="settingsSection">
           <div class="sectionHeader">
             <div class="sectionTitle">SMTP &amp; Testmail</div>
-            <button class="btnGhost small" @click="toggleSection('smtp')" :aria-expanded="!sectionCollapsed.smtp">
-              {{ sectionCollapsed.smtp ? "Aufklappen" : "Einklappen" }}
+            <button class="btnGhost small" @click="toggleSection('smtp')" :aria-expanded="sectionOpen.smtp">
+              {{ sectionOpen.smtp ? "Einklappen" : "Aufklappen" }}
             </button>
           </div>
-          <div v-if="!sectionCollapsed.smtp" class="stack">
+          <div v-if="sectionOpen.smtp" class="stack">
             <div class="kvGrid">
               <div class="field">
                 <div class="k">Host</div>
@@ -287,11 +287,11 @@
         <section class="settingsSection">
           <div class="sectionHeader">
             <div class="sectionTitle">Danger Zone / System Actions</div>
-            <button class="btnGhost small" @click="toggleSection('danger')" :aria-expanded="!sectionCollapsed.danger">
-              {{ sectionCollapsed.danger ? "Aufklappen" : "Einklappen" }}
+            <button class="btnGhost small" @click="toggleSection('danger')" :aria-expanded="sectionOpen.danger">
+              {{ sectionOpen.danger ? "Einklappen" : "Aufklappen" }}
             </button>
           </div>
-          <div v-if="!sectionCollapsed.danger" class="kvGrid">
+          <div v-if="sectionOpen.danger" class="kvGrid">
             <div class="kv">
               <div class="k">Cache / Reindex</div>
               <div class="v">
@@ -318,7 +318,7 @@
   AdminSettingsView
   - Systemweite Einstellungen, Security-Hinweise, Theme & Flags
 */
-import { ref, watch } from "vue";
+import { ref, watch, reactive } from "vue";
 import {
   adminGetSystemInfo,
   adminGetSmtpSettings,
@@ -349,13 +349,13 @@ const emit = defineEmits<{
 }>();
 
 const { toast } = useToast();
-const sectionCollapsed = ref({
-  system: false,
-  security: false,
-  theme: false,
-  flags: false,
-  smtp: false,
-  danger: false,
+const sectionOpen = reactive({
+  system: true,
+  security: true,
+  theme: true,
+  flags: true,
+  smtp: true,
+  danger: true,
 });
 const themes = [
   { id: "system", label: "System" },
@@ -395,11 +395,8 @@ function onThemeChange(themeId: ThemeMode) {
   emit("setTheme", themeId);
 }
 
-function toggleSection(section: keyof typeof sectionCollapsed.value) {
-  sectionCollapsed.value = {
-    ...sectionCollapsed.value,
-    [section]: !sectionCollapsed.value[section],
-  };
+function toggleSection(section: keyof typeof sectionOpen) {
+  sectionOpen[section] = !sectionOpen[section];
 }
 
 async function loadSystemInfo() {

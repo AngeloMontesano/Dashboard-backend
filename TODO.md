@@ -1,5 +1,3 @@
-# TODO
-
 ## Now (Top 10)
 - [A-01] (EPIC_A_TENANT_RESOLUTION) Tenant-Status-API spezifizieren.
 - [A-04] (EPIC_A_TENANT_RESOLUTION) Bootstrap-Preflight für Tenant-Status definieren.

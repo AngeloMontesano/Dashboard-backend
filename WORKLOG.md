@@ -831,7 +831,22 @@
 - Was analysiert/geändert:
   - Bestell-Dialog-UI spezifiziert (tabellarisch): Spalten Artikel/Menge/Notiz, min. eine Zeile, Add/Remove, Keyboard-Flow, Busy-State.
   - Validierungsregeln ohne rote Rahmen, Inline-Hints, Submit nur bei vollständigen Zeilen; Fehlerhinweis oberhalb der Tabelle.
-  - Prefill „Bestellwürdig“ als Badge/Flag dokumentiert (reorderOnly), Option für automatische Vorbelegung vorbereitet.
-  - EPIC_E aktualisiert; TODO/Epic_TODO bereinigt (E-02 erledigt).
+- Prefill „Bestellwürdig“ als Badge/Flag dokumentiert (reorderOnly), Option für automatische Vorbelegung vorbereitet.
+- EPIC_E aktualisiert; TODO/Epic_TODO bereinigt (E-02 erledigt).
 - Ergebnis: E-02 (Dialog-Konzept) abgeschlossen, Basis für Komponentenbau und Backend-Abgleich gelegt.
 - Nächste Schritte: E-06 Prefill-Implementierung planen, E-07 Storno-Konzept ausarbeiten.
+
+- Datum/Uhrzeit: 2026-01-06T20:39:20+00:00
+- Task-ID: ROADMAP-EPICS-REFRESH
+- Was analysiert/geändert: Standards revalidiert; Frontends/Backend auf Routing, Tenant-Resolution, Reverse-Proxy-Annahmen, 404/JSON-Verhalten gescannt; Roadmap-Index auf nicht verhandelbare Standards verlinkt; TODO/Epic_TODO priorisiert.
+- Ergebnis: Index listet verbindliche Regeln (Axios-/API-/OpenAPI-/Design-/Error-/Darkmode-Standards); Prioritäten pro Epic aktualisiert (Now/Next/Later). Bestandsaufnahme der 404/Not-Found und JSON-Fehlerzustände dokumentiert.
+- 404/Not-Found Zustände:
+  - Customer-Frontend: Vue-Router mit Catch-All `/:pathMatch(.*)*` → `TenantStatusView` zeigt „Seite nicht gefunden“ bei gültigem Tenant oder Statusseiten bei `not_found`/`inactive`/`unavailable` (`customer_frontend/customer-ui/src/router/index.ts`, `src/views/TenantStatusView.vue`).
+  - Admin-Frontend: kein Router; `App.vue` liest `window.location.pathname` und mappt bekannte Pfade auf Sections, unbekannte Pfade fallen auf Default „kunden“ zurück und benötigen Server-Rewrite auf `index.html`, sonst serverseitiger 404.
+  - Backend: FastAPI mit globalem HTTPException-Handler liefert bei unbekannten Routen `{"error":{"code":"http_error","message":"Not Found"}}` plus `X-Request-Id`; Tenant-Resolve-Fehler aus `core/tenant.py` erzeugen 404 `tenant_not_found`. `/public/tenant-status` meldet `ok|not_found|inactive|unavailable`.
+  - Proxy/Host-Annahmen: Tenant-Ableitung nutzt `X-Forwarded-Host` oder `Host` gegen `BASE_DOMAIN`, Fallback `localhost`; fehlender Slug führt zu 404-Statusschema.
+- JSON-Fehler im Browser:
+  - Backend-404/Validation/Unhandled Errors werden in das Standard-JSON `{error:{code,message,details?}}` gekapselt (`app/core/errors.py`), inkl. `X-Request-Id`.
+  - Customer-Frontend verhindert rohe JSON-Ausgabe durch Tenant-Status-View und Router-Catch-All; Admin-Frontend erhält bei fehlendem Server-Rewrite einen serverseitigen 404/JSON.
+- Geänderte Dateien: `docs/roadmap/INDEX.md`, `TODO.md`, `Epic_TODO.md`, `Epic_WORKLOG.md`, `WORKLOG.md`.
+- Offene Punkte: Admin-Frontend-Deployment braucht Rewrite-Regel für unbekannte Pfade; Tenant-Status-Routing/Retry laut Epic A umsetzen; Monitoring/Docs-Epics in Now/Next abarbeiten.

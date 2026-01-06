@@ -17,3 +17,7 @@
 - Keine weiteren Befunde zu 404-/JSON-Verhalten; offene Punkte bleiben unverändert.
 - Offene Punkte: QA-Checkliste Tenant-Status-UX offen; Proxy-404-Verhalten weiterhin ungetestet.
 - Hinweis ergänzt: OpenAPI Single Point of Truth ist `https://api.test.myitnetwork.de/openapi.json`, lokale `docs/openapi/openapi.json` spiegelt den Stand für Typgenerierung.
+
+## 2024-06-11
+- Roadmap-Index mit Typgenerierungsbefehlen ergänzt (`npm run gen:types`, `npm run gen:types:local`) und Zielpfad `src/api/gen/openapi.ts` festgehalten.
+- Offene Punkte unverändert: QA-Checkliste Tenant-Status-UX, Proxy-404-Verhalten noch zu testen.

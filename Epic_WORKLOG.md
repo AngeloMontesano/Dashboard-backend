@@ -11,3 +11,7 @@
 - Roadmap-Index um Backlog-/Log-Quellen ergänzt (TODO, Epic_TODO, WORKLOGs) zur schnelleren Referenz je Epic.
 - Keine weiteren Anpassungen an Epic-Inhalten nötig; Epics bleiben template-konform.
 - OpenAPI Single Point of Truth im Index erwähnt (`https://api.test.myitnetwork.de/openapi.json`) als Referenz für alle API-bezogenen Tasks.
+
+## 2024-06-11
+- Typgenerierungsbefehle (remote/local) und Zielpfad `src/api/gen/openapi.ts` im Roadmap-Index ergänzt, damit API-bezogene Epics denselben Workflow nutzen.
+- Keine Anpassungen an Epic-Inhalten selbst; nur Navigations-/Referenzupdate.

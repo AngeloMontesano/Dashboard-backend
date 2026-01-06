@@ -8,6 +8,7 @@
 - [Error Handling](../standards/ERROR_HANDLING.md): Fehlerklassifizierung (`auth`, `client`, `server`, `network`, `unknown`), keine rohen HTTP-Fehler im UI, stattdessen Liste/Badges mit passenden Aktionen (Retry/Login/Edit).
 - [Darkmode/Theme Tokens](../standards/DARKMODE.md) & [THEME_TOKENS](../standards/THEME_TOKENS.md): Theme-State via `useTheme`, Persistenz in `localStorage`, `data-theme` am Root; alle Farben/Abstände/Radii über Tokens.
 - OpenAPI Quelle (Single Point of Truth): `https://api.test.myitnetwork.de/openapi.json` – lokale `docs/openapi/openapi.json` spiegelt diesen Stand, Generierung erfolgt darüber.
+- Typgenerierung: `npm run gen:types` (remote Quelle) oder `npm run gen:types:local` (lokale Datei); Ausgabedatei pro Frontend: `src/api/gen/openapi.ts` (nicht manuell editieren).
 
 ## Epic-Template (verbindlich)
 1. Ziel

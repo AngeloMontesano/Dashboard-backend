@@ -16,7 +16,7 @@
 - Stream 3 (Admin/Docs): G-01 (Doku-Struktur) + I-01 (Kontakt-Felder) gemeinsam erarbeiten; Wechselwirkungen in Admin-Settings klären.
 
 #### Deliverables je Stream (Now)
-- Stream 1: Draft `docs/openapi/` Ergänzungen für A-01, Datenmodell-Skizze für B-01, Kurzvergleich Monitoring-Optionen (H-01) als Markdown-Notiz.
+- Stream 1: Draft `docs/openapi/` Ergänzungen für A-01 (`TENANT_STATUS.md`), Datenmodell-Skizze für B-01, Kurzvergleich Monitoring-Optionen (H-01) als Markdown-Notiz.
 - Stream 2: Low-fi Wireframes (A-04, C-02, D-01) und Navigation/Prefill-Flows als Diagramm/Markdown.
 - Stream 3: Informationsarchitektur der Doku (G-01) + Felddefinitionen/Abschnitte für Kontakte (I-01) als Übersichtstabelle.
 

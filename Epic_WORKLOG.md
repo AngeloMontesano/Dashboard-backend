@@ -26,4 +26,5 @@
 
 ## 2024-06-14
 - EPIC_A um Task A-11 ergänzt (Proxy/404 Smoke-Test-Plan), Backlog in TODO aktualisiert.
+- Epic_TODO ebenfalls mit A-11 ergänzt für Konsistenz der Tasklisten.
 - Weitere Epics unverändert.

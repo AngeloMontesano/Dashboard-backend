@@ -34,3 +34,4 @@
 ## 2024-06-14
 - EPIC_A um Task A-11 ergänzt (Proxy/404 Smoke-Test-Plan mit Header-Kombinationen und erwarteten UI-States).
 - TODO-Liste „Later“ um A-11 erweitert, Umsetzung steht noch aus.
+- Epic_TODO um A-11 ergänzt, damit Tasklisten konsistent sind.

@@ -28,3 +28,8 @@
 - EPIC_A um Task A-11 ergänzt (Proxy/404 Smoke-Test-Plan), Backlog in TODO aktualisiert.
 - Epic_TODO ebenfalls mit A-11 ergänzt für Konsistenz der Tasklisten.
 - Weitere Epics unverändert.
+
+## 2024-06-20
+- A-01 spezifiziert: neues Dokument `docs/openapi/TENANT_STATUS.md` (Request/Response, Header-Priorität, Reason-Codes, OpenAPI-Verweis).
+- EPIC_A API/Backend-Annahmen mit Verweis auf Spezifikation ergänzt; TODO-Deliverables (Stream 1) präzisiert.
+- Nächste Schritte: Review/Abnahme A-01, danach QA-Checkliste A-10 und Proxy-Tests A-11 vorbereiten.

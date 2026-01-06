@@ -33,6 +33,7 @@ Frontend zeigt für unbekannte/inaktive Subdomains eine klare Seite statt JSON. 
 - Neuer öffentlicher Endpoint `GET /api/public/tenant-status?slug=` liefert `{status: ok|not_found|inactive|unavailable, host, slug}`.
 - Bestehende Tenant-Resolve-Logik bleibt; Status-Endpoint nutzt dieselbe Prüfung ohne Login.
 - Proxy leitet Subdomain-Host in `X-Forwarded-Host` weiter.
+- Spezifikation: `docs/openapi/TENANT_STATUS.md`, Schema `PublicTenantStatus` in `docs/openapi/openapi.json` (Typen via `npm run gen:types(:local)`).
 
 ## 8) Daten (konzeptionell)
 - Response `tenant-status`: `status` Enum, `slug`, `host`, optional `reason`/`is_active`.
@@ -109,7 +110,6 @@ Frontend zeigt für unbekannte/inaktive Subdomains eine klare Seite statt JSON. 
 - Router-Fallback zeigt 404-Seite, nicht leere Shell.
 - Tenant-Status-API antwortet ohne Auth mit Status ok/not_found/inactive/unavailable.
 - Retry/Support-Links funktionieren; Host/Tenant-Slug im UI sichtbar.
-- QA-Checkliste A-10 ist vorhanden und getestet (404-Fallback, Tenant not found/inaktiv/unavailable, Proxy-Header, Mobile, Darkmode).
 - QA-Checkliste A-10 ist vorhanden und getestet (404-Fallback, Tenant not found/inaktiv/unavailable, Proxy-Header, Mobile, Darkmode).
 
 ## 11) Risiken/Offene Punkte

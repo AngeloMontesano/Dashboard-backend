@@ -51,3 +51,12 @@
 ## 2024-06-18
 - Umsetzungsvorbereitung konkretisiert: Stream 1 startet mit A-01 Draft in `docs/openapi` + Backend-Router-Stubs; Stream 2 legt UX-Wireframes für A-04/C-02/D-01 an; Stream 3 entwirft Felder/Abschnitte für G-01/I-01.
 - Keine neuen Blocker; offene QA-Themen (Proxy-404) bleiben offen, erst nach A-10/A-11 anpacken.
+
+## 2024-06-19
+- TODO ergänzt um klare Deliverables pro Stream (Now): Stream 1 Draft-Specs/Monitoring-Notiz, Stream 2 Wireframes/Flow-Diagramme, Stream 3 IA und Feldtabellen.
+- Ziel: ersten Artefakte je Stream vorziehen, um danach Coding zu starten; keine neuen Blocker.
+
+## 2024-06-20
+- Draft für A-01 erstellt: `docs/openapi/TENANT_STATUS.md` beschreibt Request/Response, Header-Reihenfolge, Reason-Codes und OpenAPI-Schema-Referenz.
+- EPIC_A ergänzt (API/Backend-Annahmen) um Verweis auf das neue Spec-Dokument; TODO-Deliverables (Stream 1) aktualisiert.
+- Offene Punkte: Review/Abnahme A-01-Spec; Proxy-404-Tests (A-11) weiterhin offen, QA-Checkliste (A-10) noch umzusetzen.

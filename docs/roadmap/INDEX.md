@@ -1,12 +1,10 @@
 # Roadmap Index
 
 ## Standards (nicht verhandelbar)
-- [Frontend Rules](../standards/FRONTEND_RULES.md): Eine Axios-Quelle pro App, Basis-URL immer `/api`, keine Host-Ermittlung im Frontend, Tenant-Header nur über die vorgesehenen Helper.
-- [API Clients](../standards/API_CLIENTS.md): Admin-Client mit Pflichtheader `X-Admin-Key`, Customer-Client mit Tenant-Headern aus `getTenantHeaders()`, Timeouts zentral (15s/20s), keine zusätzlichen `axios.create` Instanzen.
-- [OpenAPI Types](../standards/OPENAPI_TYPES.md): Typen werden aus `docs/openapi/openapi.json` generiert, Wrapper nutzen ausschließlich diese Typen, `openapi.ts` ist unverändert generiert.
-- [Component/Design/CSS Standards](../standards/DESIGN_SYSTEM.md), [COMPONENT_CONVENTIONS](../standards/COMPONENT_CONVENTIONS.md), [CSS_AND_UI_CONVENTIONS](../standards/CSS_AND_UI_CONVENTIONS.md): Styles über Tokens/Utilities, keine Inline-Styles, UI-Bausteine unter `src/components/ui/`, PrimeVue bleibt nur im Customer-Frontend-historie ersetzt.
-- [Error Handling](../standards/ERROR_HANDLING.md): Fehlerklassifizierung (`auth`, `client`, `server`, `network`, `unknown`), keine rohen HTTP-Fehler im UI, Retry-/Login-/Edit-Aktionen pro Kategorie.
-- [Darkmode/Theme Tokens](../standards/DARKMODE.md) & [THEME_TOKENS](../standards/THEME_TOKENS.md): Light/Dark per `useTheme`, Persistenz in `localStorage`, Tokens definieren alle Farben/Abstände; `data-theme` am Root setzen.
+- API/Routing: [Frontend Rules](../standards/FRONTEND_RULES.md) & [API Clients](../standards/API_CLIENTS.md) – exakt eine Axios-Instanz je App, Basis-URL immer `/api`, keine Host-Ermittlung im Frontend, Header nur über `getTenantHeaders()`/`adminHeaders()`, Admin-Requests mit `X-Admin-Key` (+ optional `X-Admin-Actor`), Timeouts 15s (Admin) / 20s (Customer).
+- Typen: [OpenAPI Types](../standards/OPENAPI_TYPES.md) – Source of Truth ist `https://api.test.myitnetwork.de/openapi.json` (lokal gespiegelt unter `docs/openapi/openapi.json`), Generierung nur über `gen:types`, keine manuellen Änderungen an `openapi.ts`.
+- UI/Design: [DESIGN_SYSTEM](../standards/DESIGN_SYSTEM.md), [COMPONENT_CONVENTIONS](../standards/COMPONENT_CONVENTIONS.md), [CSS_AND_UI_CONVENTIONS](../standards/CSS_AND_UI_CONVENTIONS.md) – Styles ausschließlich über Tokens/Utilities, keine Inline-Styles, Views nutzen UI-Bausteine unter `src/components/ui/`, PrimeVue bleibt nur im Customer-Frontend soweit vorhanden.
+- Fehler/Darkmode: [ERROR_HANDLING](../standards/ERROR_HANDLING.md) – Fehlerklassifizierung (`auth`, `client`, `server`, `network`, `unknown`), keine rohen HTTP-Meldungen im UI; [DARKMODE](../standards/DARKMODE.md) & [THEME_TOKENS](../standards/THEME_TOKENS.md) – `useTheme` pro App, Persistenz in `localStorage`, `data-theme` am Root, alle Farben/Abstände aus Tokens.
 
 ## Epic-Template (verbindlich)
 1. Ziel

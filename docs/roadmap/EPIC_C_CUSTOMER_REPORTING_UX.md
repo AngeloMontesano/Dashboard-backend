@@ -1,0 +1,103 @@
+# EPIC C – Customer Reporting UX
+
+## 1) Ziel
+Berichte & Analysen mit klarer, performanter UX, inkl. Live-Suche, Mehrfachauswahl, Kategorie-Filter, Zeitraumsteuerung und optionalem Export.
+
+## 2) Problem heute
+- Reporting-Filter begrenzt, kein konsistenter Mehrfachauswahl-Flow.
+- Leere Zustände und Performance-Hinweise fehlen.
+- Export-Verhalten uneinheitlich.
+
+## 3) Scope
+- Customer-Frontend Reporting-Views und Komponenten.
+- Filter UX: Live-Suche nach Artikeln (Prefix), Multi-Select, Kategorie-Filter, Zeitraum, Top-5 Default.
+- Export optional (Konzept + UI-Platzhalter).
+
+## 4) Nicht-Ziele
+- Keine Backend-Query-Optimierung in diesem Epic.
+- Keine neue Chart-Bibliothek; bestehendes Setup nutzen.
+- Keine Persistenz von Filter-Presets über Sessions hinaus.
+
+## 5) User Journeys
+- User öffnet Berichte, sieht Top-5 Items standardmäßig.
+- User tippt Prefix, erhält Vorschläge, wählt mehrere Artikel + Kategorien.
+- User setzt Zeitraum (Preset + Custom) und aktualisiert Charts/Tabellen live.
+- Optionaler Export: Klick → Download/Modal mit Hinweis auf Umfang.
+
+## 6) UI/UX Regeln
+- Filterleiste mit klaren Labels und Tooltips für Performance.
+- Chips für aktive Filter, leicht entfernbar.
+- Leere Zustände mit Hinweis „Keine Daten im Zeitraum“ und Aktion „Filter zurücksetzen“.
+- Ladezustände mit Skeleton/Spinner, keine UI-Sprünge.
+
+## 7) API/Backend Annahmen
+- Reporting-Endpunkte unterstützen Query-Parameter `query`, `categories`, `item_ids`, `from`, `to`, `limit`.
+- Live-Suche nutzt bestehenden Items-Endpunkt mit Prefix-Filter.
+- Export-Endpunkt liefert Datei-Response; optional Stub falls nicht bereit.
+
+## 8) Daten (konzeptionell)
+- Filter-State: `{query: string, categories: string[], itemIds: string[], dateRange: {from, to}, limit: number}`.
+- Response: KPIs, Serien, Top-Listen; vereinheitlichter Typ für Charts/Tabelle.
+
+## 9) Tasks (umsetzbar, klein)
+- **C-01** – Filter-API/Parameter validieren und dokumentieren (Reporting/Items).  
+  - Bereich: docs/backend  
+  - Dateien/Bereiche: docs/openapi, Epic Abschnitt  
+  - Abhängigkeiten: keine  
+  - Done: Parameter und Limits festgehalten.
+- **C-02** – UX-Flow-Skizze für Reporting-Startseite mit Top-5 Default.  
+  - Bereich: docs/ui  
+  - Dateien/Bereiche: Wireframe/Markdown  
+  - Abhängigkeiten: keine  
+  - Done: Flow beschrieben.
+- **C-03** – Live-Suche-Komponente (Prefix) entwerfen inkl. Debounce.  
+  - Bereich: customer  
+  - Dateien/Bereiche: `src/components/reports`  
+  - Abhängigkeiten: C-01  
+  - Done: Komponentenkonzept + Props/API.
+- **C-04** – Mehrfachauswahl für Artikel/Kategorien definieren (Chips + Dropdown).  
+  - Bereich: customer  
+  - Dateien/Bereiche: Filter-Komponenten  
+  - Abhängigkeiten: C-03  
+  - Done: UI-Spezifikation fertig.
+- **C-05** – Zeitraum-Presets + freies Datum (Calendar oder Inputs) planen.  
+  - Bereich: customer  
+  - Dateien/Bereiche: Filter-Komponenten  
+  - Abhängigkeiten: keine  
+  - Done: Presets definiert (7/30/90 Tage, Custom).
+- **C-06** – Top-5 Default + freie Auswahl Logik dokumentieren.  
+  - Bereich: customer  
+  - Dateien/Bereiche: View-Logikbeschreibung  
+  - Abhängigkeiten: C-02  
+  - Done: Default-Limit + Override beschrieben.
+- **C-07** – Leere Zustände/Fehlerzustände Texte definieren.  
+  - Bereich: docs/ui  
+  - Dateien/Bereiche: Epic Abschnitt  
+  - Abhängigkeiten: keine  
+  - Done: Texte und Aktionen hinterlegt.
+- **C-08** – Lade- und Performance-Hinweise (Throttling, Max-Limit) dokumentieren.  
+  - Bereich: docs  
+  - Dateien/Bereiche: Epic Abschnitt  
+  - Abhängigkeiten: C-01  
+  - Done: Hinweise fixiert.
+- **C-09** – Export-Konzept (Button, Progress, Format) festlegen.  
+  - Bereich: customer/docs  
+  - Dateien/Bereiche: Epic Abschnitt, UI-Notiz  
+  - Abhängigkeiten: C-01  
+  - Done: UI/Fehlermeldungen dokumentiert.
+- **C-10** – QA-Checkliste (Filter-Kombinationen, Mobile, Darkmode) erstellen.  
+  - Bereich: docs  
+  - Dateien/Bereiche: QA-Abschnitt  
+  - Abhängigkeiten: C-04–C-06  
+  - Done: Prüfschritte definiert.
+
+## 10) Akzeptanzkriterien
+- Reporting zeigt Top-5 Default und reagiert auf Mehrfachfilter ohne Reload.
+- Live-Suche liefert Vorschläge ab 2 Zeichen, debounce aktiv.
+- Leere Zustände und Fehlertexte sichtbar mit Reset-Action.
+- Export-Option dokumentiert oder umgesetzt (Button sichtbar, Verhalten klar).
+
+## 11) Risiken/Offene Punkte
+- Performance bei großen Datenmengen; evtl. Backend-Limits nötig.
+- Export-Größe/Timeouts unklar.
+- UX-Overload riskant; Filter müssen kompakt bleiben.

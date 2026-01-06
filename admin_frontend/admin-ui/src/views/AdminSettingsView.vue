@@ -4,7 +4,7 @@
       <div class="cardHeader">
         <div>
           <div class="cardTitle">Einstellungen</div>
-          <div class="cardHint">System, Security, Theme, Feature Flags</div>
+          <div class="cardHint">System, Security, Theme, Feature Flags, Email</div>
         </div>
       </div>
 
@@ -185,10 +185,10 @@
   - Systemweite Einstellungen, Security-Hinweise, Theme & Flags
 */
 import { ref, watch } from "vue";
-import { adminGetSystemInfo } from "../api/admin";
+import { adminGetSystemInfo, adminGetEmailSettings, adminUpdateEmailSettings, adminTestEmail } from "../api/admin";
 import { useToast } from "../composables/useToast";
 import pkg from "../../package.json";
-import type { AdminSystemInfo } from "../types";
+import type { AdminSystemInfo, SystemEmailSettings, SystemEmailSettingsUpdate } from "../types";
 
 const props = defineProps<{
   apiOk: boolean;
@@ -222,6 +222,25 @@ const localTheme = ref((props.theme as "light" | "dark" | "system") || "system")
 const grafanaUrl = import.meta.env.VITE_GRAFANA_URL || "http://localhost:3000";
 const buildInfo = (import.meta.env.VITE_BUILD_INFO as string | undefined) || pkg.version;
 const systemInfo = ref<AdminSystemInfo | null>(null);
+const openSections = ref<Record<string, boolean>>({
+  system: true,
+  security: true,
+  theme: true,
+  flags: true,
+  email: true,
+  danger: false,
+});
+const emailForm = ref<SystemEmailSettings & { password: string }>({
+  host: "",
+  port: null,
+  user: "",
+  from_email: "",
+  has_password: false,
+  password: "",
+});
+const testEmail = ref("");
+const savingEmail = ref(false);
+const testingEmail = ref(false);
 
 function onThemeChange(themeId: "light" | "dark" | "system") {
   localTheme.value = themeId;
@@ -265,9 +284,11 @@ watch(
   (key, prev) => {
     if (key && key !== prev) {
       loadSystemInfo();
+      loadEmailSettings();
     }
     if (!key) {
       systemInfo.value = null;
+      mapEmailSettings({ host: "", port: null, user: "", from_email: "", has_password: false });
     }
   },
   { immediate: true }
@@ -275,6 +296,36 @@ watch(
 </script>
 
 <style scoped>
+.stack{
+  display: grid;
+  gap: 12px;
+}
+.collapsible{
+  border: 1px solid var(--border);
+  border-radius: var(--radius2);
+  background: var(--surface2);
+  padding: 12px;
+  box-shadow: var(--shadow);
+}
+.collapsibleHeader{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.sectionHint{
+  color: var(--muted);
+  font-size: 12px;
+}
+.fieldGrid{
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 10px;
+}
+.field .k{
+  margin-bottom: 4px;
+}
 .themeSelector{
   display: flex;
   gap: 12px;

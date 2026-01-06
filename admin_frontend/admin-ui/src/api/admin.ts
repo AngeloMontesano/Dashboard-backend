@@ -18,6 +18,8 @@ import type {
   TenantUserApiOut,
   TenantSettingsOut,
   TenantSettingsUpdate,
+  AdminSystemInfo,
+  AdminSystemActionResponse,
 } from "../types";
 
 import { api, adminHeaders } from "./client";
@@ -73,6 +75,8 @@ type TenantUserCreatePayload = components["schemas"]["TenantUserCreate"];
 type TenantUserUpdatePayload = components["schemas"]["TenantUserUpdate"];
 
 type AdminLoginResponse = { admin_key: string; actor?: string };
+type AdminSystemInfoResponse = AdminSystemInfo;
+type AdminSystemActionResponseRaw = AdminSystemActionResponse;
 
 function withAdmin(adminKey: string, actor?: string) {
   return { headers: adminHeaders(adminKey, actor) };
@@ -161,6 +165,27 @@ export async function adminCreateUser(adminKey: string, actor: string | undefine
 
 export async function adminUpdateUser(adminKey: string, actor: string | undefined, userId: string, payload: UserUpdate) {
   const res = await api.patch<UserOut>(`/admin/users/${userId}`, payload, withAdmin(adminKey, actor));
+  return res.data;
+}
+
+/* System */
+export async function adminGetSystemInfo(adminKey: string, actor?: string) {
+  const res = await api.get<AdminSystemInfoResponse>("/admin/system/info", withAdmin(adminKey, actor));
+  return res.data;
+}
+
+export async function adminSystemCacheReset(adminKey: string, actor?: string) {
+  const res = await api.post<AdminSystemActionResponseRaw>("/admin/system/actions/cache-reset", null, withAdmin(adminKey, actor));
+  return res.data;
+}
+
+export async function adminSystemReindex(adminKey: string, actor?: string) {
+  const res = await api.post<AdminSystemActionResponseRaw>("/admin/system/actions/reindex", null, withAdmin(adminKey, actor));
+  return res.data;
+}
+
+export async function adminSystemRestart(adminKey: string, actor?: string) {
+  const res = await api.post<AdminSystemActionResponseRaw>("/admin/system/actions/restart", null, withAdmin(adminKey, actor));
   return res.data;
 }
 

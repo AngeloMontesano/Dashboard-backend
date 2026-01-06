@@ -30,65 +30,108 @@
 
           <!-- Navigation -->
           <nav class="nav">
-            <button
-              v-for="item in sections"
-              :key="item.id"
-              class="navItem"
-              :class="{ active: ui.section === item.id }"
-              @click="goSection(item.id)"
-            >
-              <span class="navIcon">{{ item.icon }}</span>
-              <span class="navLabel">{{ item.label }}</span>
-            </button>
-          </nav>
-
-          <div class="sidebar-divider"></div>
-          <div class="navGroup">
-            <div class="navGroupTitle">Globale Einstellungen</div>
-            <div class="navGroupList">
-              <button
-                v-for="item in globalSections"
-                :key="item.id"
-                class="navItem"
-                :class="{ active: ui.section === item.id }"
-                @click="goSection(item.id)"
-              >
-                <span class="navIcon">{{ item.icon }}</span>
-                <span class="navLabel">{{ item.label }}</span>
-              </button>
+            <div class="navGroup">
+              <div class="navGroupTitle">Kunden Einstellungen</div>
+              <div class="navGroupList">
+                <button
+                  v-for="item in customerSections"
+                  :key="item.id"
+                  class="navItem"
+                  :class="{ active: ui.section === item.id }"
+                  @click="goSection(item.id)"
+                >
+                  <span class="navIcon">{{ item.icon }}</span>
+                  <span class="navLabel">{{ item.label }}</span>
+                </button>
+              </div>
             </div>
-          </div>
+
+            <div class="sidebar-divider"></div>
+
+            <div class="navGroup">
+              <div class="navGroupTitle">Globale Einstellungen</div>
+              <div class="navGroupList">
+                <button
+                  v-for="item in globalSections"
+                  :key="item.id"
+                  class="navItem"
+                  :class="{ active: ui.section === item.id }"
+                  @click="goSection(item.id)"
+                >
+                  <span class="navIcon">{{ item.icon }}</span>
+                  <span class="navLabel">{{ item.label }}</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="sidebar-divider"></div>
+
+            <div class="navGroup">
+              <div class="navGroupTitle">Admin Dashboard</div>
+              <div class="navGroupList">
+                <button
+                  v-for="item in adminDashboardSections"
+                  :key="item.id"
+                  class="navItem"
+                  :class="{ active: ui.section === item.id }"
+                  @click="goSection(item.id)"
+                >
+                  <span class="navIcon">{{ item.icon }}</span>
+                  <span class="navLabel">{{ item.label }}</span>
+                </button>
+              </div>
+            </div>
+          </nav>
 
           <!-- Bottom Area -->
           <div class="sideBottom">
             <!-- System Status -->
-            <div class="sysBlock">
-              <div class="sysTitle">System</div>
-              <div class="sysRow compact">
-                <div class="statusInline">
-                  <span class="statusDot statusDot--lg" :class="api.ok ? 'ok' : 'bad'"></span>
-                  <span class="statusLabel">API erreichbar</span>
+            <div class="navGroup">
+              <div class="navGroupTitle">System</div>
+              <div class="sysBlock">
+                <div class="sysRow compact">
+                  <div class="statusInline">
+                    <span class="statusDot statusDot--lg" :class="api.ok ? 'ok' : 'bad'"></span>
+                    <span class="statusLabel">API erreichbar</span>
+                  </div>
                 </div>
-              </div>
-              <div class="sysRow compact">
-                <div class="statusInline">
-                  <span class="statusDot statusDot--lg" :class="db.ok ? 'ok' : 'bad'"></span>
-                  <span class="statusLabel">DB erreichbar</span>
+                <div class="sysRow compact">
+                  <div class="statusInline">
+                    <span class="statusDot statusDot--lg" :class="db.ok ? 'ok' : 'bad'"></span>
+                    <span class="statusLabel">DB erreichbar</span>
+                  </div>
                 </div>
+                <div class="hint">Status wird beim Login automatisch geprüft.</div>
               </div>
-              <div class="hint">Status wird beim Login automatisch geprüft.</div>
             </div>
 
             <div class="divider"></div>
 
             <!-- Theme Quick Toggle -->
-            <div class="toggle">
-              <span>Theme</span>
-              <select class="input full-width theme-select" :value="theme.value" @change="onThemeSelect">
-                <option value="system">System</option>
-                <option value="light">Light</option>
-                <option value="dark">Dark</option>
-              </select>
+            <div class="navGroup">
+              <div class="navGroupTitle">Theme</div>
+              <div class="themeOptions">
+                <label class="themeOption">
+                  <input
+                    type="radio"
+                    name="theme"
+                    value="dark"
+                    :checked="themeSelection.value === 'dark'"
+                    @change="onThemeToggle('dark')"
+                  />
+                  <span class="navLabel">Dark</span>
+                </label>
+                <label class="themeOption">
+                  <input
+                    type="radio"
+                    name="theme"
+                    value="light"
+                    :checked="themeSelection.value === 'light'"
+                    @change="onThemeToggle('light')"
+                  />
+                  <span class="navLabel">Light</span>
+                </label>
+              </div>
             </div>
           </div>
         </aside>
@@ -245,12 +288,15 @@ const ADMIN_AUTH_STORAGE_KEY = "admin_auth";
 type OperationsTab = "overview" | "health" | "audit" | "snapshot";
 
 /* Sidebar Sections */
-const sections = [
+const customerSections = [
   { id: "kunden", label: "Kunden", icon: "👥" },
-  { id: "memberships", label: "Tenant-User", icon: "🧩" },
-  { id: "operations", label: "Operations", icon: "🛠️" },
-  { id: "users", label: "Benutzer", icon: "👤" },
+  { id: "memberships", label: "Kunden User", icon: "🧩" },
+] as const;
+
+const adminDashboardSections = [
+  { id: "users", label: "Admin User", icon: "👤" },
   { id: "settings", label: "Einstellungen", icon: "⚙️" },
+  { id: "operations", label: "Operations", icon: "🛠️" },
 ] as const;
 
 const globalSections = [
@@ -260,8 +306,10 @@ const globalSections = [
   { id: "globals-industries", label: "Globale Branchen", icon: "🏭" },
 ] as const;
 
+type CustomerSectionId = (typeof customerSections)[number]["id"];
+type AdminDashboardSectionId = (typeof adminDashboardSections)[number]["id"];
 type GlobalSectionId = (typeof globalSections)[number]["id"];
-type SectionId = (typeof sections)[number]["id"] | GlobalSectionId;
+type SectionId = CustomerSectionId | AdminDashboardSectionId | GlobalSectionId;
 
 const globalSectionPaths: Record<GlobalSectionId, string> = {
   "globals-articles": "/globals/articles",
@@ -282,6 +330,9 @@ const ui = reactive({
 const operationsTab = ref<OperationsTab>("overview");
 const { theme, resolvedTheme, setTheme } = useTheme();
 const appThemeClass = computed(() => (resolvedTheme.value === "dark" ? "theme-dark" : "theme-classic"));
+const themeSelection = computed<"light" | "dark">(() =>
+  theme.value === "system" ? resolvedTheme.value : theme.value
+);
 
 const tenantContext = reactive({
   id: localStorage.getItem("adminSelectedTenantId") || "",
@@ -347,7 +398,7 @@ const pageTitle = computed(() => {
   const m: Record<SectionId, string> = {
     kunden: "Kunden",
     users: "Benutzer",
-    memberships: "Tenant-User",
+    memberships: "Kunden User",
     operations: "Operations",
     settings: "Einstellungen",
     "globals-articles": "Globale Artikel",
@@ -440,8 +491,7 @@ onMounted(async () => {
   await quickRefresh();
 });
 
-function onThemeSelect(event: Event) {
-  const mode = (event.target as HTMLSelectElement).value as "light" | "dark" | "system";
+function onThemeToggle(mode: "light" | "dark") {
   setTheme(mode);
 }
 
@@ -593,12 +643,15 @@ onBeforeUnmount(() => {
   border: 2px solid rgba(255, 255, 255, 0.15);
 }
 
-.theme-select {
-  color: var(--text);
+.themeOptions {
+  display: grid;
+  gap: 6px;
 }
 
-.theme-select option {
-  color: #111;
-  background: #f7f7f7;
+.themeOption {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text);
 }
 </style>

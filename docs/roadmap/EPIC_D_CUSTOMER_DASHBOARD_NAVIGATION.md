@@ -32,6 +32,20 @@ KPI-Karten im Customer-Dashboard sind klickbar und führen zu den passenden Deta
 - Prefill-Filter: `{status: 'open'}`, `{date: today}`, `{reorderOnly: true}`.
 - State-Transfer über Router-Query oder globalen Store.
 
+### Klick-Logik (D-03)
+- Komponenten: `UiStatCard` erhält Props `to` (RouteLocationRaw), `prefill` (optional Filterobjekt), `aria-label`.
+- Navigation: `router.push({ name: <route>, query: prefillQuery })`, `prefillQuery` baut aus obigen Prefill-Objekten (z. B. `status=open`, `date=today`, `reorderOnly=true`).
+- Ziele:
+  - Offene Bestellungen → Route `bestellungen` mit `status=open`.
+  - Bewegungen heute → Route `lagerbewegungen` mit `date=today`.
+  - Bestellwürdig → Route `bestellungen` mit `reorderOnly=true`.
+- UX:
+  - Ganze Karte klickbar (`role="button"`, `tabindex="0"`), `aria-label` mit Zielbeschreibung.
+  - Hover/Active-State per Tokens, Fokus-Ring sichtbar.
+  - Tooltip optional: „Zur Bestellungen mit Filter …“.
+- Fehlerfälle:
+  - Wenn Router-Navigation fehlschlägt, einmalige Toast/Hint („Navigation nicht möglich“), kein Spam.
+
 ## 9) Tasks (umsetzbar, klein)
 - **D-01** – Ziel-Routen und Filterparameter festlegen.  
   - Bereich: docs/customer  

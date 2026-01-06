@@ -1,10 +1,6 @@
 # Epic TODO
 
 ## Now
-- EPIC A: [A-02] Public `tenant-status` Endpoint bauen und anbinden; [A-05] Tenant-Status-View erstellen.
-- EPIC B: [B-01] Datenmodell für globale Kataloge finalisieren; [B-02] Admin-API-Spezifikation schreiben.
-- EPIC C: [C-03] Live-Suche-Komponente (Prefix+Debounce) konzipieren.
-- EPIC D: [D-03] KPI-Karten klickbar machen mit Fokus/ARIA.
 - EPIC E: [E-02] Bestell-Dialog-UI spezifizieren (mehrere Artikel).
 - EPIC F: [F-03] Offline-Queue UX-Flow skizzieren.
 

@@ -39,6 +39,15 @@ Berichte & Analysen mit klarer, performanter UX, inkl. Live-Suche, Mehrfachauswa
 - Filter-State: `{query: string, categories: string[], itemIds: string[], dateRange: {from, to}, limit: number}`.
 - Response: KPIs, Serien, Top-Listen; vereinheitlichter Typ für Charts/Tabelle.
 
+### Live-Suche Komponente (C-03)
+- Zweck: Artikel-Prefix-Suche für Reporting-Filter, Mehrfachauswahl via Chips.
+- Trigger: ab 2 Zeichen, debounce 250–300ms, request-cancel bei neuem Input.
+- Datenquelle: bestehender Items-Endpunkt (`GET /inventory/items?query=<prefix>&limit=10`) über zentrale Axios-Instanz und `getTenantHeaders()`.
+- UI: Eingabe + Dropdown mit Loader/Empty-State, Option „Alle entfernen“, Chips für ausgewählte Items, Keyboard-Support (Arrow/Enter/Escape).
+- Fehler: nutzt `classifyError`; bei Netzwerk/Server Fehler-Hinweis im Dropdown, kein Toast-Spam.
+- Caching: Memory-Cache für letzte 10 Queries (prefix-basiert), Treffer 60s halten, um wiederholte Eingaben zu beschleunigen.
+- Props/Events (Vue): `modelValue: ItemOption[]`, `placeholder`, `loading` (readonly), `@update:modelValue` (array), `@search` (internal, nicht public).
+
 ## 9) Tasks (umsetzbar, klein)
 - **C-01** – Filter-API/Parameter validieren und dokumentieren (Reporting/Items).  
   - Bereich: docs/backend  

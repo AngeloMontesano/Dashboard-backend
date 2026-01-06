@@ -694,3 +694,18 @@
   - Build erneut ausgeführt, um Typkompatibilität sicherzustellen.
 - **Tests**
   - `npm run build` (admin_frontend/admin-ui)
+
+## Schritt 49 – Fehlerzentrum & Queue-UX (Customer)
+- **Datum/Uhrzeit**: 2026-01-06T12:21:24+00:00
+- **Ziel**: Offline-First Queue-Fehler sichtbarer und verständlicher machen, Toast-Spam vermeiden, gezielte Aktionen pro Fehlerklasse anbieten.
+- **Was wurde analysiert**
+  - Queue/Sync liegt in `customer_frontend/customer-ui/src/composables/useMovementQueue.ts` (IndexedDB `movement_queue`, Retries/Backoff/stop_retry).
+  - Fehlerdarstellung bisher über Toasts und `lastSyncError`-Strings mit rohen Axios-Meldungen.
+- **Was wurde geändert**
+  - Neue Fehlerklassifizierung (`src/utils/errorClassify.ts`) mit Kategorien/Aktionshinweisen; `stringifyError` nutzt diese Kurztexte.
+  - `useMovementQueue` refaktoriert: globale State/Watcher, Stop-Retry für 4xx/401, freundliche Messages, Einzel-Retry/Delete/Edit, Badge-Zähler.
+  - Neue View „Fehlgeschlagene Buchungen“ (`src/views/FehlgeschlageneBuchungenView.vue`) mit Liste, Status-Chips, Detail-Accordion und Aktionen (Login, Retry, Edit, Delete).
+  - Sidebar/Topbar zeigen Badge-Count, Lagerbewegungen-View verlinkt aufs Fehlerzentrum und vermeidet rohe Fehltexte.
+  - Dokumentation ergänzt (`docs/standards/ERROR_HANDLING.md`), TODO um Folgeaufgaben (Validierung/Telemetry/Messages) erweitert.
+- **Tests**
+  - `npm run build` (customer_frontend/customer-ui)

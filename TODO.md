@@ -1,15 +1,12 @@
 # TODO
 
-## MUSS (kritisch)
-- Customer: Finale Dark-Mode-Visitenkontrolle und letzte UI-Politur (Artikel-Detailkarten/Empty-States); Light-Mode als Follow-up dokumentieren.
-- Customer: Build-Qualität sicherstellen (`npm run build`) und Smoke-Tests im Dark-Mode; `rg "primevue"` muss 0 Treffer liefern.
-- Docs: WORKLOG und Roadmap (`docs/roadmap/CUSTOMER_UI_PARITY_WITH_ADMIN.md`) aktuell halten; offene Paritätslücken dokumentieren.
-- Backend (vorherige Lücken, weiterhin kritisch): Migration `0009_create_inventory_orders` ausrollen; Reporting-Query-Fix deployen; globale Stammdaten-/Industrie-Endpunkte und Admin-konforme Artikelrestriktionen ergänzen.
-- Backend (Admin): System-Actions Endpoints mit echter Funktionalität hinterlegen (Cache Reset, Reindex, Restart) – aktuell bewusst nicht unterstützt (keine neuen Abhängigkeiten).
-- Admin-Frontend Branchen ↔ Artikel: Backend-API für CSV/XLSX Mapping-Import/Export (Delta Add/Remove) bereitstellen; UI aktuell ohne Buttons, da OpenAPI keine Endpunkte kennt.
-- Admin-Frontend Branchen ↔ Artikel: Aggregierte Info für Überschneidungen (z. B. „in X Branchen“) per API liefern, damit Badge ohne N+1-Calls gerendert werden kann; aktuell nur Single-Branchen-Items vorhanden.
-- Admin-Frontend Branchen ↔ Artikel: Remote-OpenAPI (2026-01-06) bestätigt weiterhin nur GET/PUT für `/admin/inventory/industries/{industry_id}/items` ohne Import/Export oder Overlap; Backend-Implementierung bleibt Blocker.
-- Admin → Tenant Branche anwenden: Backend-Endpunkt nötig, um allen Tenants mit gleicher `industry_id` die Branchen-Artikel zuzuweisen (Items initial mit Bestand 0 anlegen) und bestehende Bestände nicht zu überschreiben/auf 0 zu setzen. OpenAPI bietet aktuell keinen solchen Bulk-/Clone-Endpunkt.
+## Now (Top 10)
+- [B-01] (EPIC_B_GLOBAL_CATALOG_AND_INDUSTRY) Datenmodell-Entwurf für globale Kataloge/Branchen finalisieren.
+- [B-02] (EPIC_B_GLOBAL_CATALOG_AND_INDUSTRY) Admin-API-Spezifikation für globale Kategorien/Typen/Branchen schreiben.
+- [C-03] (EPIC_C_CUSTOMER_REPORTING_UX) Live-Suche-Komponente (Prefix + Debounce) konzipieren.
+- [D-03] (EPIC_D_CUSTOMER_DASHBOARD_NAVIGATION) KPI-Karten klickbar machen (Button/Link mit Fokus-Ring).
+- [E-02] (EPIC_E_CUSTOMER_ORDERS_IMPROVEMENTS) UI-Spezifikation für neuen Bestell-Dialog (tabellarisch) erstellen.
+- [F-03] (EPIC_F_OFFLINE_QUEUE_ERROR_HANDLING) UX-Flow für Queue-Liste + Detail skizzieren.
 
 ## Next
 - [A-08] (EPIC_A_TENANT_RESOLUTION) Status-Caching/Retry-Strategie umsetzen.

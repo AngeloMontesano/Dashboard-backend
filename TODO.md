@@ -8,6 +8,7 @@
 - Backend (Admin): System-Actions Endpoints mit echter Funktionalität hinterlegen (Cache Reset, Reindex, Restart) – aktuell bewusst nicht unterstützt (keine neuen Abhängigkeiten).
 - Admin-Frontend Branchen ↔ Artikel: Backend-API für CSV/XLSX Mapping-Import/Export (Delta Add/Remove) bereitstellen; UI aktuell ohne Buttons, da OpenAPI keine Endpunkte kennt.
 - Admin-Frontend Branchen ↔ Artikel: Aggregierte Info für Überschneidungen (z. B. „in X Branchen“) per API liefern, damit Badge ohne N+1-Calls gerendert werden kann; aktuell nur Single-Branchen-Items vorhanden.
+- Admin-Frontend Branchen ↔ Artikel: Remote-OpenAPI (2026-01-06) bestätigt weiterhin nur GET/PUT für `/admin/inventory/industries/{industry_id}/items` ohne Import/Export oder Overlap; Backend-Implementierung bleibt Blocker.
 
 ## Next
 - [A-08] (EPIC_A_TENANT_RESOLUTION) Status-Caching/Retry-Strategie umsetzen.

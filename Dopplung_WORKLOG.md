@@ -34,6 +34,7 @@
 | admin_frontend/admin-ui/src/styles/layout.css:481-534 ↔ customer_frontend/customer-ui/src/styles/layout.css:442-495 | Toast Host/Card/Pill | beide | Toast-Layout & Pills nahezu identisch, Farb-/Shadow-Werte leicht abweichend |
 | customer_frontend/customer-ui/src/views/ArtikelverwaltungView.vue:1197-1243 ↔ admin_frontend/admin-ui/src/styles/utilities.css:448-506 | Modal Backdrop/Panel/Header | Customer | Modal/Backdrop/Panel duplizieren Utility-Modal, breiteres Layout + Legacy `--color-*` Tokens |
 | admin_frontend/admin-ui/src/styles/utilities.css:402-413 ↔ customer_frontend/customer-ui/src/styles/utilities.css:241-258 | Auth Shell/Card Utilities | beide | auth-shell/auth-card nahezu gleich, Admin nutzt Legacy `--bg`, Customer Tokens `--surface-0`; Breite/Spacing minimal abweichend |
+| admin_frontend/admin-ui/src/styles/layout.css:466-476 ↔ customer_frontend/customer-ui/src/styles/layout.css:430-437 | Link/Mono Utility | beide | `.link`/`.mono` doppelt mit nahezu identischen Tokens; nur danger-Farbe/Token-Namen abweichend |
 
 Notizen:
 - Alle Fundstellen stammen aus Schritt 1 (Inventarisierung). Noch keine Deklaration wurde verändert.

@@ -70,3 +70,7 @@
 - Roadmap-Index verlinkt GLOBAL_CATALOG-Spezifikation; EPIC_B ergänzt um Paging-/Fehlercode-Annahmen und Akzeptanzkriterium.
 - Ziel: B-02/B-03 Reviewer haben zentrale Referenzen; keine Task-IDs geändert.
 - Status-Codes und Paging-Limits in GLOBAL_CATALOG.md dokumentiert; offene Punkte: B-01/B-02 Review, Schemas in openapi.json nachziehen, danach B-03/B-04.
+
+## 2024-06-30
+- GLOBAL_CATALOG.md ergänzt um Headerpflicht (`X-Admin-Key`, optional `X-Admin-Actor`) und Response-Envelope-Hinweis (kein zusätzliches `data`, Listen mit `{total, limit, offset}`); EPIC_B/Index entsprechend angepasst.
+- Ziel: Header-/Envelope-Kontrakt für B-02/B-03 festziehen; Tasks unverändert, offene Punkte bleiben Schema-Sync in openapi.json und Start B-03/B-04.

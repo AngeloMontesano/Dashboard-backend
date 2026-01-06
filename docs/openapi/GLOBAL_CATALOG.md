@@ -93,6 +93,8 @@ Alle Pfade unter `/admin/global`, Header: `X-Admin-Key`, optional `X-Admin-Actor
 - Paging-Defaults: `limit=50`, `offset=0`; max `limit=200`.
 - Sortierung: Alphabetisch nach `name` (Industries/Categories/Types) bzw. `sku` dann `name` (Items).
 - Fehlerformat: `{error: {code, message}}` gemäß Fehler-Standard; 409 bei Referenz-Konflikten, 403 bei System-Schutz, 404 bei unbekannter ID/FK.
+- Required Headers: `X-Admin-Key` immer, `X-Admin-Actor` optional (Audit).
+- Response-Envelope: nackte Ressourcen-Objekte bzw. Listen + `{total, limit, offset}`; kein zusätzliches `data`-Wrapping.
 
 ## Beispiele (cURL)
 - Liste Branchen: `curl -H "X-Admin-Key: <key>" "http://localhost:8000/api/admin/global/industries?limit=20"`

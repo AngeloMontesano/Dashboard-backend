@@ -33,7 +33,7 @@ Globale Artikel/Kategorien/Typen/Branchen zentral im Admin pflegen und Tenants m
 - Neue Admin-Endpunkte `/admin/global/categories|types|industries|items` mit CRUD (siehe `docs/openapi/GLOBAL_CATALOG.md`).
 - Tenant-Entity erweitert um `industry_id` (optional Pflicht in UI).
 - Mapping-Tabelle Branche → globale Artikel.
-- Listen liefern Paging-Metadaten `{total, limit, offset}` (Default `limit=50`, max 200); Fehlercodes umfassen Referenz-Konflikte (`industry_in_use/category_in_use/item_in_use`) und System-Schutz (`forbidden_system_record`).
+- Listen liefern Paging-Metadaten `{total, limit, offset}` (Default `limit=50`, max 200), Headerpflicht `X-Admin-Key` (optional `X-Admin-Actor`); Fehlercodes umfassen Referenz-Konflikte (`industry_in_use/category_in_use/item_in_use`) und System-Schutz (`forbidden_system_record`).
 
 ## 8) Daten (konzeptionell)
 - Tabellen:

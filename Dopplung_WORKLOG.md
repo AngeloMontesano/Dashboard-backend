@@ -31,6 +31,7 @@
 | customer_frontend/customer-ui/src/views/ArtikelverwaltungView.vue:1050-1268 ↔ customer_frontend/customer-ui/src/styles/layout.css:539-556 ↔ customer_frontend/customer-ui/src/styles/utilities.css:8-160 | Page/Toolbar/Table/Form/Grid Layout | Customer | Umfangreicher scoped Block ersetzt page-head/toolbar/table-card/form-grid Utilities mit Legacy `--color-*` Tokens |
 | customer_frontend/customer-ui/src/views/BerichteAnalysenView.vue:548-586 ↔ admin_frontend/admin-ui/src/styles/utilities.css:427-438 ↔ customer_frontend/customer-ui/src/styles/utilities.css:1-60 | Spinner/Section-Stack | Customer | Spinner + Section-Stack duplizieren Utility-Spinner/Panels, nur Größe/Farben leicht anders |
 | customer_frontend/customer-ui/src/views/FehlgeschlageneBuchungenView.vue:415-548 ↔ customer_frontend/customer-ui/src/styles/layout.css:539-556 ↔ customer_frontend/customer-ui/src/styles/utilities.css:8-60 | Issues Grid/Card/Badge | Customer | Cards/Grids/Badges spiegeln section/stack/badge Utilities mit kleinen Spacing/Farbabweichungen |
+| admin_frontend/admin-ui/src/styles/layout.css:481-534 ↔ customer_frontend/customer-ui/src/styles/layout.css:442-495 | Toast Host/Card/Pill | beide | Toast-Layout & Pills nahezu identisch, Farb-/Shadow-Werte leicht abweichend |
 
 Notizen:
 - Alle Fundstellen stammen aus Schritt 1 (Inventarisierung). Noch keine Deklaration wurde verändert.

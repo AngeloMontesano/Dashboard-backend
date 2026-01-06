@@ -1,6 +1,6 @@
 <template>
   <UiPage>
-    <UiSection title="Globale Kategorien" subtitle="Stammdaten verwalten – aktuell UI-only, da Backend-Endpunkte fehlen">
+    <UiSection title="Globale Kategorien" subtitle="Stammdaten für globale Artikel (Admin-Key erforderlich)">
       <template #actions>
         <button class="btnGhost small" :disabled="busy.load" @click="loadCategories">
           {{ busy.load ? "lädt..." : "Neu laden" }}
@@ -11,11 +11,36 @@
       <div class="table-card">
         <div class="stack">
           <p class="section-subtitle">
-            Backend-Unterstützung fehlt: Keine admin-fähigen OpenAPI-Pfade für globale Kategorien ohne Tenant-Kontext.
-            Aktionen wirken nur im UI und werden nicht gespeichert. Kategorien sollten deckungsgleich zu den in Artikeln
-            verwendeten Kategorien sein; Backend-Endpunkte zur Synchronisation fehlen. Fehlende Endpunkte sind in
-            TODO/Roadmap vermerkt.
+            Kategorien ohne Tenant-Kontext. Semikolon-CSV und XLSX Import/Export verfügbar. System-Kategorien sind im Customer-Frontend schreibgeschützt.
           </p>
+        </div>
+      </div>
+
+      <div class="table-card">
+        <div class="table-card__header">
+          <div class="tableTitle">Import / Export</div>
+          <div class="text-muted text-small">Semikolon als CSV-Trenner. XLSX wird unterstützt.</div>
+        </div>
+        <div class="box stack">
+          <div class="row gap8 wrap">
+            <button class="btnGhost small" type="button" :disabled="busy.export" @click="exportCategories('csv')">
+              {{ busy.export ? "exportiert..." : "Export CSV" }}
+            </button>
+            <button class="btnGhost small" type="button" :disabled="busy.export" @click="exportCategories('xlsx')">
+              {{ busy.export ? "exportiert..." : "Export XLSX" }}
+            </button>
+            <label class="btnGhost small file-btn">
+              Datei wählen (csv/xlsx)
+              <input type="file" accept=".csv,.xlsx,.xls" @change="onFileSelected" />
+            </label>
+            <button class="btnPrimary small" type="button" :disabled="busy.import || !importFile" @click="importCategories">
+              {{ busy.import ? "importiert..." : "Import starten" }}
+            </button>
+          </div>
+          <ul class="bullets">
+            <li>CSV Header: <code>name;is_active;is_system</code></li>
+            <li>Bestehende Namen werden aktualisiert.</li>
+          </ul>
         </div>
       </div>
 
@@ -29,7 +54,7 @@
             placeholder="Name enthält..."
             aria-label="Globale Kategorien suchen"
           />
-          <div class="hint">Filtert lokal. Kein Backend-Request.</div>
+          <div class="hint">Serverseitige Stammdaten. System-Kategorien sind schreibgeschützt im Kunden-Frontend.</div>
         </div>
         <div class="stack">
           <span class="text-muted text-small">Treffer: {{ filteredCategories.length }}</span>
@@ -40,7 +65,7 @@
       <div class="table-card">
         <div class="table-card__header">
           <div class="tableTitle">Kategorien</div>
-          <div class="text-muted text-small">Lokale Liste. Änderungen werden nicht serverseitig gespeichert.</div>
+          <div class="text-muted text-small">Globale Liste aus dem Backend.</div>
         </div>
         <div class="tableWrap">
           <table class="table">
@@ -71,7 +96,7 @@
                 </td>
               </tr>
               <tr v-if="!filteredCategories.length">
-                <td colspan="4" class="mutedPad">Noch keine Kategorien im UI hinterlegt.</td>
+                <td colspan="4" class="mutedPad">Noch keine Kategorien vorhanden.</td>
               </tr>
             </tbody>
           </table>
@@ -101,9 +126,18 @@
                   <span>System-Kategorie</span>
                 </label>
               </div>
-              <div class="hint">Aktion ist UI-only; Backend-Endpunkte fehlen noch.</div>
+              <div class="hint">System-Kategorien sind auch im Customer-Frontend schreibgeschützt.</div>
             </div>
-            <div class="modal__footer">
+            <div class="modal__footer modal__footer--with-delete">
+              <button
+                v-if="modal.mode === 'edit'"
+                class="btnGhost small danger"
+                type="button"
+                :disabled="busy.save"
+                @click="removeConfirm"
+              >
+                Löschen
+              </button>
               <button class="btnGhost" type="button" @click="closeModal">Abbrechen</button>
               <button class="btnPrimary" type="button" :disabled="busy.save" @click="save">
                 {{ busy.save ? "speichert..." : "Speichern" }}
@@ -117,29 +151,39 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, ref } from "vue";
+import { computed, reactive, ref, onMounted } from "vue";
 import { useToast } from "../composables/useToast";
 import {
   useGlobalMasterdata,
   type GlobalCategory,
-  generateId,
 } from "../composables/useGlobalMasterdata";
+import {
+  fetchGlobalCategories,
+  createGlobalCategory,
+  updateGlobalCategory,
+  deleteGlobalCategory,
+  importGlobalCategories,
+  exportGlobalCategories,
+} from "../api/globals";
 import UiPage from "../components/ui/UiPage.vue";
 import UiSection from "../components/ui/UiSection.vue";
 
-defineProps<{
+const props = defineProps<{
   adminKey: string;
   actor: string;
 }>();
 
 const { toast } = useToast();
-const { categories, upsertCategory } = useGlobalMasterdata();
+const { categories, upsertCategory, replaceCategories } = useGlobalMasterdata();
 
 const search = ref("");
 const selectedId = ref("");
+const importFile = ref<File | null>(null);
 const busy = reactive({
   load: false,
   save: false,
+  import: false,
+  export: false,
 });
 
 const modal = reactive({
@@ -188,32 +232,134 @@ function closeModal() {
   modal.open = false;
 }
 
-function save() {
+async function loadCategories() {
+  if (!props.adminKey) {
+    toast("Admin Key erforderlich");
+    return;
+  }
+  busy.load = true;
+  try {
+    const res = await fetchGlobalCategories(props.adminKey, props.actor);
+    replaceCategories(res);
+    toast(`Kategorien geladen (${res.length})`);
+  } catch (e: any) {
+    toast(`Laden fehlgeschlagen: ${e?.message || e}`, "error");
+  } finally {
+    busy.load = false;
+  }
+}
+
+async function save() {
   const name = modal.name.trim();
   if (!name) {
     toast("Name ist Pflicht", "warning");
     return;
   }
   busy.save = true;
-  const payload: GlobalCategory = {
-    id: modal.id || generateId(),
-    name,
-    is_active: modal.is_active,
-    is_system: modal.is_system,
-  };
-  upsertCategory(payload);
-  selectedId.value = payload.id;
-  toast(
-    modal.mode === "edit" ? "Kategorie aktualisiert (UI-only, Backend fehlt)" : "Kategorie angelegt (UI-only, Backend fehlt)",
-    "success"
-  );
-  busy.save = false;
-  closeModal();
+  try {
+    let saved: GlobalCategory;
+    if (modal.mode === "edit" && modal.id) {
+      saved = await updateGlobalCategory(
+        props.adminKey,
+        modal.id,
+        { name, is_active: modal.is_active, is_system: modal.is_system },
+        props.actor
+      );
+    } else {
+      saved = await createGlobalCategory(
+        props.adminKey,
+        { name, is_active: modal.is_active, is_system: modal.is_system },
+        props.actor
+      );
+    }
+    upsertCategory(saved);
+    selectedId.value = saved.id;
+    toast(modal.mode === "edit" ? "Kategorie aktualisiert" : "Kategorie angelegt", "success");
+    closeModal();
+  } catch (e: any) {
+    toast(`Speichern fehlgeschlagen: ${e?.message || e}`, "error");
+  } finally {
+    busy.save = false;
+  }
 }
 
-function loadCategories() {
-  busy.load = true;
-  toast("Backend-Unterstützung fehlt – kein Ladevorgang möglich", "warning");
-  busy.load = false;
+async function removeConfirm() {
+  if (!modal.id) return;
+  const cat = categories.value.find((c) => c.id === modal.id);
+  if (!cat) return;
+  if (!window.confirm(`Kategorie ${cat.name} löschen?`)) return;
+  try {
+    await deleteGlobalCategory(props.adminKey, cat.id, props.actor);
+    replaceCategories(categories.value.filter((c) => c.id !== cat.id));
+    closeModal();
+    toast("Kategorie gelöscht", "success");
+  } catch (e: any) {
+    toast(`Löschen fehlgeschlagen: ${e?.response?.data?.detail?.error?.message || e?.message || e}`, "error");
+  }
 }
+
+function onFileSelected(event: Event) {
+  const files = (event.target as HTMLInputElement).files;
+  importFile.value = files && files.length ? files[0] : null;
+}
+
+async function importCategories() {
+  if (!importFile.value) {
+    toast("Bitte Datei wählen", "warning");
+    return;
+  }
+  busy.import = true;
+  try {
+    const res = await importGlobalCategories(props.adminKey, importFile.value, props.actor);
+    toast(`Importiert: ${res.imported}, aktualisiert: ${res.updated}`, res.errors?.length ? "warning" : "success");
+    await loadCategories();
+  } catch (e: any) {
+    toast(`Import fehlgeschlagen: ${e?.message || e}`, "error");
+  } finally {
+    busy.import = false;
+  }
+}
+
+async function exportCategories(format: "csv" | "xlsx") {
+  busy.export = true;
+  try {
+    const blob = await exportGlobalCategories(props.adminKey, format, props.actor);
+    const filename = `globale_kategorien.${format === "csv" ? "csv" : "xlsx"}`;
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    link.click();
+    URL.revokeObjectURL(url);
+    toast(`Export ${format.toUpperCase()} erstellt`);
+  } catch (e: any) {
+    toast(`Export fehlgeschlagen: ${e?.message || e}`, "error");
+  } finally {
+    busy.export = false;
+  }
+}
+
+onMounted(() => {
+  if (props.adminKey) {
+    loadCategories();
+  }
+});
 </script>
+
+<style scoped>
+.table-card .table {
+  margin-top: 4px;
+}
+
+.modal__footer--with-delete {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  padding-top: 12px;
+}
+
+.modal__footer--with-delete .btnGhost.danger {
+  margin-right: auto;
+}
+</style>

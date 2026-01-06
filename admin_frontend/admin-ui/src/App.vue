@@ -64,26 +64,19 @@
             <!-- System Status -->
             <div class="sysBlock">
               <div class="sysTitle">System</div>
-
-              <div class="sysRow">
+              <div class="sysRow compact">
                 <div class="statusInline">
-                  <span class="statusDot" :class="api.ok ? 'ok' : 'bad'"></span>
+                  <span class="statusDot statusDot--lg" :class="api.ok ? 'ok' : 'bad'"></span>
                   <span class="statusLabel">API erreichbar</span>
                 </div>
-                <button class="btnPrimary small" :disabled="api.busy" @click="checkApi">
-                  {{ api.busy ? "prüfe..." : "Prüfen" }}
-                </button>
               </div>
-
-            <div class="sysRow">
-              <div class="statusInline">
-                <span class="statusDot" :class="db.ok ? 'ok' : 'bad'"></span>
-                <span class="statusLabel">DB erreichbar</span>
+              <div class="sysRow compact">
+                <div class="statusInline">
+                  <span class="statusDot statusDot--lg" :class="db.ok ? 'ok' : 'bad'"></span>
+                  <span class="statusLabel">DB erreichbar</span>
+                </div>
               </div>
-                <button class="btnGhost small" :disabled="db.busy" @click="checkDb">
-                  {{ db.busy ? "prüfe..." : "Prüfen" }}
-                </button>
-              </div>
+              <div class="hint">Status wird beim Login automatisch geprüft.</div>
             </div>
 
             <div class="divider"></div>
@@ -91,7 +84,7 @@
             <!-- Theme Quick Toggle -->
             <div class="toggle">
               <span>Theme</span>
-              <select class="input full-width" :value="theme.value" @change="onThemeSelect">
+              <select class="input full-width theme-select" :value="theme.value" @change="onThemeSelect">
                 <option value="system">System</option>
                 <option value="light">Light</option>
                 <option value="dark">Dark</option>
@@ -587,5 +580,25 @@ onBeforeUnmount(() => {
 .topbar.topbar-flat {
   padding: 10px 12px 12px;
   min-height: unset;
+}
+
+.sysRow.compact {
+  justify-content: flex-start;
+  padding: 4px 0;
+}
+
+.statusDot--lg {
+  width: 12px;
+  height: 12px;
+  border: 2px solid rgba(255, 255, 255, 0.15);
+}
+
+.theme-select {
+  color: var(--text);
+}
+
+.theme-select option {
+  color: #111;
+  background: #f7f7f7;
 }
 </style>

@@ -30,3 +30,7 @@
 ## 2024-06-13
 - QA-Checkliste (A-10) als eigene Section in EPIC_A ergänzt und Szenarien konkretisiert (404-Fallback, Header-Kombinationen, Mobile/Darkmode).
 - Offene Punkte bleiben: Proxy-404-Verhalten praktisch testen, QA-Checkliste durcharbeiten.
+
+## 2024-06-14
+- EPIC_A um Task A-11 ergänzt (Proxy/404 Smoke-Test-Plan mit Header-Kombinationen und erwarteten UI-States).
+- TODO-Liste „Later“ um A-11 erweitert, Umsetzung steht noch aus.

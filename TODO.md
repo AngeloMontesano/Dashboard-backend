@@ -24,6 +24,7 @@
 
 ## Later
 - [A-08] Status-Caching/Retry-Strategie implementieren (Konzept) – Epic A
+- [A-11] Proxy/404 Smoke-Test-Plan erstellen – Epic A
 - [B-10] Konzept Verteilung globaler Kataloge an Tenants dokumentieren – Epic B
 - [C-09] Export-Konzept (Button/Format) festlegen – Epic C
 - [D-08] QA-Checkliste Navigation KPI-Karten – Epic D

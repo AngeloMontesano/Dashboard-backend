@@ -9,7 +9,7 @@
 
 ## SOLL (UX/Konsistenz/Performance/Accessibility)
 - Customer: Filter-/Form-Controls auf Admin-Input-Pattern (Pills, Focus-Ring) vereinheitlichen; Table-Leer-States harmonisieren.
-- Customer: Queue-/Bestell-Views mit klaren Busy/Confirm-Flows und konsistenter Button-Hierarchie ausstatten.
+- Customer: Queue-/Bestell-Views weiter verfeinern (A11y-Hints, Responsive-Check, ggf. globale Confirm-Komponente).
 - Customer: Fehlermeldungen weiter verfeinern (Backend-spezifische Codes/Messages abbilden), Queue-/Auth-Event-Logs in zentrale Telemetrie einspeisen.
 - Customer: DEV-Helfer nutzen, um `customer_auth_refresh_log` & `movement_queue_events` als JSON zu exportieren (Fehlerseite/Topbar Dev-Panel, import.meta.env.DEV).
 - Admin/Customer: Gemeinsame Toast/Overlay-Styles auf Token-Basis konsolidieren und A11y-Labels für Filter/Selects ergänzen.

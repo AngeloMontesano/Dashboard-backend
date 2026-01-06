@@ -278,6 +278,35 @@
   align-items: center;
 }
 
+.btn-label{
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  justify-content: center;
+}
+
+.btn-spinner{
+  width: 1rem;
+  height: 1rem;
+  border-radius: 999px;
+  border: 2px solid var(--border);
+  border-top-color: var(--text-strong);
+  animation: spin 1s linear infinite;
+}
+
+.btnGhost.danger{
+  color: var(--danger);
+  border-color: color-mix(in srgb, var(--danger) 40%, var(--border) 60%);
+  background: color-mix(in srgb, var(--surface-2) 70%, var(--danger) 7%);
+}
+
+.inline-confirm{
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  color: var(--text-muted);
+}
+
 .form-grid{
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -303,4 +332,9 @@
 
 @media (max-width: 900px){
   .section{ padding: var(--space-8); }
+}
+
+@keyframes spin{
+  from{ transform: rotate(0deg); }
+  to{ transform: rotate(360deg); }
 }

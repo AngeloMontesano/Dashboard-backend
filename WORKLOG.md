@@ -756,12 +756,14 @@
 - **Tests**
   - `npm run build` (customer_frontend/customer-ui)
 
-## Schritt 53 – Telemetrie-Export für Auth-Refresh & Queue
-- **Datum/Uhrzeit**: 2026-01-06T15:30:00+00:00
-- **Ziel**: Logs für Token-Refresh und Movement-Queue unkompliziert als JSON exportieren und zentrale Telemetrie-Schnittstelle bereitstellen.
+## Schritt 53 – Busy-/Confirm-States für Queue & Bestellungen
+- **Datum/Uhrzeit**: 2026-01-06T14:45:00+00:00
+- **Ziel**: Buttons gegen Doppelklicks absichern, Busy/aria-busy vereinheitlichen und destruktive Aktionen mit schlankem Confirm-Fluss versehen.
 - **Was wurde geändert**
-  - Neues Hilfsmodul `src/utils/telemetry.ts` mit Readern (`readAuthRefreshLog`, `readQueueEventLog`), Event-Subscription und optionalem JSON-Download der Snapshot-Daten.
-  - Auth-Refresh- und Queue-Logger nutzen die zentrale Telemetrie-API und senden weiterhin `customer-auth-refresh` bzw. `movement-queue-event`.
-  - Fehlerseite (`FehlgeschlageneBuchungenView`) bietet in DEV einen Export-Button, Topbar erhält ein kleines Dev-Panel (nur `import.meta.env.DEV`) mit Telemetry-Download.
+  - Customer-Styles um Button-Spinner/Label-Wrapper, Danger-Ghost-Variant und Inline-Confirm-Hinweis ergänzt.
+  - Lagerbewegungen: Sync/Clear/Submit nutzen Busy-States + Spinner und blocken Doppel-Submits; Clear-Sent hat eigenen Busy-Guard.
+  - Fehlerzentrum: Sync/Retry/Delete/Edit-Save mit Busy/Spinnern und aria-busy; Delete/Remove nutzt Inline-Confirm, blockt doppelte Klicks.
+  - Bestellungen: Toolbar/Orders/Actions erhalten Busy-States und Spinner; Zeilen-Entfernen nutzt Inline-Confirm; Cancel-Buttons als Danger-Ghost.
+  - TODO angepasst (SOLL: Folgefeinschliff statt Busy/Confirm); Worklog ergänzt.
 - **Tests**
   - `npm run build` (customer_frontend/customer-ui)

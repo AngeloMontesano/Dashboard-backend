@@ -33,6 +33,18 @@ const editForm = reactive<MovementInput>({
 });
 const formErrors = reactive<{ barcode: string; qty: string }>({ barcode: '', qty: '' });
 const hasEditErrors = computed(() => Boolean(formErrors.barcode || formErrors.qty));
+const confirmDelete = ref<string | null>(null);
+const busy = reactive<{
+  sync: boolean;
+  retrying: Record<string, boolean>;
+  deleting: Record<string, boolean>;
+  saving: boolean;
+}>({
+  sync: false,
+  retrying: {},
+  deleting: {},
+  saving: false
+});
 
 const statusTone = (entry: MovementRecord) => {
   switch (deriveIssueState(entry)) {
@@ -76,6 +88,7 @@ const startEdit = (entry: MovementRecord) => {
   editForm.note = entry.note || '';
   formErrors.barcode = '';
   formErrors.qty = '';
+  confirmDelete.value = null;
 };
 
 const resetEdit = () => {
@@ -86,6 +99,7 @@ const resetEdit = () => {
   editForm.note = '';
   formErrors.barcode = '';
   formErrors.qty = '';
+  confirmDelete.value = null;
 };
 
 watch(
@@ -106,14 +120,38 @@ watch(
   }
 );
 
+const handleSync = async () => {
+  if (busy.sync) return;
+  busy.sync = true;
+  try {
+    await syncNow();
+  } finally {
+    busy.sync = false;
+  }
+};
+
 const handleRetry = async (entry: MovementRecord) => {
-  await retryEntry(entry.id);
+  if (busy.retrying[entry.id]) return;
+  busy.retrying[entry.id] = true;
+  confirmDelete.value = null;
+  try {
+    await retryEntry(entry.id);
+  } finally {
+    busy.retrying[entry.id] = false;
+  }
 };
 
 const handleDelete = async (entry: MovementRecord) => {
-  await deleteEntry(entry.id);
-  if (editing.value?.id === entry.id) {
-    resetEdit();
+  if (busy.deleting[entry.id]) return;
+  busy.deleting[entry.id] = true;
+  try {
+    await deleteEntry(entry.id);
+    if (editing.value?.id === entry.id) {
+      resetEdit();
+    }
+  } finally {
+    busy.deleting[entry.id] = false;
+    confirmDelete.value = null;
   }
 };
 
@@ -126,14 +164,19 @@ const validateEditForm = () => {
 const handleEditSave = async () => {
   if (!editing.value) return;
   if (!validateEditForm()) return;
-  await replaceEntry(editing.value.id, {
-    type: editForm.type,
-    barcode: editForm.barcode.trim(),
-    qty: Math.max(1, Number(editForm.qty) || 1),
-    note: editForm.note?.trim() || undefined
-  });
-  resetEdit();
-  await syncNow();
+  busy.saving = true;
+  try {
+    await replaceEntry(editing.value.id, {
+      type: editForm.type,
+      barcode: editForm.barcode.trim(),
+      qty: Math.max(1, Number(editForm.qty) || 1),
+      note: editForm.note?.trim() || undefined
+    });
+    resetEdit();
+    await syncNow();
+  } finally {
+    busy.saving = false;
+  }
 };
 
 const goToLogin = () => {
@@ -149,6 +192,9 @@ const emptyStateText = computed(() =>
     ? 'Keine fehlgeschlagenen Buchungen. Alles synchron.'
     : 'Offline. Wartende Buchungen werden hier angezeigt.'
 );
+
+const isRetrying = (id: string) => Boolean(busy.retrying[id]);
+const isDeleting = (id: string) => Boolean(busy.deleting[id]);
 </script>
 
 <template>
@@ -164,8 +210,11 @@ const emptyStateText = computed(() =>
           <span class="badge" :class="isOnline ? 'success' : 'warning'">
             {{ isOnline ? 'Online' : 'Offline' }}
           </span>
-          <button class="btnGhost small" type="button" @click="syncNow" :disabled="!isOnline">
-            Sync jetzt
+          <button class="btnGhost small" type="button" @click="handleSync" :disabled="!isOnline || busy.sync" :aria-busy="busy.sync">
+            <span class="btn-label">
+              <span v-if="busy.sync" class="btn-spinner" aria-hidden="true"></span>
+              Sync jetzt
+            </span>
           </button>
           <button v-if="isDev" class="btnGhost small" type="button" @click="exportTelemetry">
             Telemetrie exportieren
@@ -199,10 +248,14 @@ const emptyStateText = computed(() =>
                 v-if="deriveIssueState(entry) === 'auth'"
                 type="button"
                 class="btnGhost small"
-                @click="syncNow"
-                :disabled="!isOnline"
+                @click="handleSync"
+                :disabled="!isOnline || busy.sync"
+                :aria-busy="busy.sync"
               >
-                Nach Login synchronisieren
+                <span class="btn-label">
+                  <span v-if="busy.sync" class="btn-spinner" aria-hidden="true"></span>
+                  Nach Login synchronisieren
+                </span>
               </button>
 
               <button
@@ -216,29 +269,45 @@ const emptyStateText = computed(() =>
               <button
                 v-if="deriveIssueState(entry) === 'blocked'"
                 type="button"
-                class="btnGhost small"
-                @click="handleDelete(entry)"
+                class="btnGhost small danger"
+                @click="confirmDelete === entry.id ? handleDelete(entry) : (confirmDelete = entry.id)"
+                :aria-busy="isDeleting(entry.id)"
+                :disabled="isDeleting(entry.id)"
               >
-                Löschen
+                <span class="btn-label">
+                  <span v-if="isDeleting(entry.id)" class="btn-spinner" aria-hidden="true"></span>
+                  {{ confirmDelete === entry.id ? 'Jetzt löschen' : 'Löschen' }}
+                </span>
               </button>
+              <span v-if="confirmDelete === entry.id" class="inline-confirm">Nochmal klicken zum Bestätigen.</span>
 
               <button
                 v-if="['retrying', 'waiting'].includes(deriveIssueState(entry))"
                 type="button"
                 class="btnPrimary small"
                 @click="handleRetry(entry)"
-                :disabled="entry.status === 'sending'"
+                :disabled="entry.status === 'sending' || isRetrying(entry.id)"
+                :aria-busy="isRetrying(entry.id)"
               >
-                Jetzt erneut versuchen
+                <span class="btn-label">
+                  <span v-if="isRetrying(entry.id)" class="btn-spinner" aria-hidden="true"></span>
+                  Jetzt erneut versuchen
+                </span>
               </button>
               <button
                 v-if="['retrying', 'waiting'].includes(deriveIssueState(entry))"
                 type="button"
-                class="btnGhost small"
-                @click="handleDelete(entry)"
+                class="btnGhost small danger"
+                @click="confirmDelete === entry.id ? handleDelete(entry) : (confirmDelete = entry.id)"
+                :aria-busy="isDeleting(entry.id)"
+                :disabled="isDeleting(entry.id)"
               >
-                Entfernen
+                <span class="btn-label">
+                  <span v-if="isDeleting(entry.id)" class="btn-spinner" aria-hidden="true"></span>
+                  {{ confirmDelete === entry.id ? 'Jetzt entfernen' : 'Entfernen' }}
+                </span>
               </button>
+              <span v-if="confirmDelete === entry.id" class="inline-confirm">Nochmal klicken zum Bestätigen.</span>
             </div>
 
             <details class="issue-details">
@@ -315,10 +384,19 @@ const emptyStateText = computed(() =>
             </label>
 
             <div class="action-row">
-              <button class="btnPrimary small" type="button" @click="handleEditSave" :disabled="hasEditErrors">
-                Speichern &amp; neu senden
+              <button
+                class="btnPrimary small"
+                type="button"
+                @click="handleEditSave"
+                :disabled="hasEditErrors || busy.saving"
+                :aria-busy="busy.saving"
+              >
+                <span class="btn-label">
+                  <span v-if="busy.saving" class="btn-spinner" aria-hidden="true"></span>
+                  Speichern &amp; neu senden
+                </span>
               </button>
-              <button class="btnGhost small" type="button" @click="resetEdit">Abbrechen</button>
+              <button class="btnGhost small" type="button" @click="resetEdit" :disabled="busy.saving">Abbrechen</button>
             </div>
           </div>
 

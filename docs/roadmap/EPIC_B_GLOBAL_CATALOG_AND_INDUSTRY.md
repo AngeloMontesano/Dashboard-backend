@@ -107,6 +107,7 @@ Globale Artikel/Kategorien/Typen/Branchen zentral im Admin pflegen und Tenants m
 - Admin kann Branchen, Kategorien, Typen, globale Artikel CRUD ausführen.
 - Branche ist in Tenant-Firmendaten Pflichtfeld (validiert) und wird gespeichert.
 - Filter nach Branche funktionieren in globalen Artikeln.
+- Admin-Global-Endpunkte erzwingen `X-Admin-Key` und liefern nackte Ressourcen/Listen mit `{total, limit, offset}` ohne zusätzliches `data`-Wrapping.
 - API-Listen enthalten Paging-Metadaten, eindeutige Fehlercodes spiegeln Referenz- und System-Schutzfälle wider.
 - Datenmodell für spätere Tenant-Sync dokumentiert.
 

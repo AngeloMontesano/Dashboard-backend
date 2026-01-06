@@ -109,3 +109,8 @@
 - GLOBAL_CATALOG-Spec ergänzt: Pflicht-Header `X-Admin-Key`, optional `X-Admin-Actor`; Response-Envelope ohne zusätzliches `data`-Wrapping, Listen mit `{total, limit, offset}`; Index/EPIC_B um Headerpflicht ergänzt.
 - Ziel: Konsistente Header-/Envelope-Annahme für B-02/B-03 Review festschreiben; keine Task-IDs geändert.
 - Offene Punkte: B-01/B-02 Review abschließen, Schemas in `docs/openapi/openapi.json` nachziehen, danach Alembic-Entwurf (B-03) starten.
+
+## 2024-07-01
+- EPIC_B Akzeptanzkriterium ergänzt: Admin-Global-Endpunkte erzwingen `X-Admin-Key` und liefern nackte Ressourcen/Listen ohne `data`-Wrapper; Index verweist jetzt explizit auf den Envelope-Hinweis.
+- Ziel: Reviewer sehen Header-/Envelope-Pflicht direkt im Epic; Tasks unverändert.
+- Offene Punkte: Schema-Sync in `docs/openapi/openapi.json`, danach B-03/B-04 starten.

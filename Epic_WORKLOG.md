@@ -74,3 +74,7 @@
 ## 2024-06-30
 - GLOBAL_CATALOG.md ergänzt um Headerpflicht (`X-Admin-Key`, optional `X-Admin-Actor`) und Response-Envelope-Hinweis (kein zusätzliches `data`, Listen mit `{total, limit, offset}`); EPIC_B/Index entsprechend angepasst.
 - Ziel: Header-/Envelope-Kontrakt für B-02/B-03 festziehen; Tasks unverändert, offene Punkte bleiben Schema-Sync in openapi.json und Start B-03/B-04.
+
+## 2024-07-01
+- EPIC_B Akzeptanzkriterium präzisiert (Headerpflicht, nackte Ressourcen ohne `data`-Wrapper); Roadmap-Index verweist auf den Envelope-Hinweis.
+- Ziel: Reviewer können Header-/Envelope-Pflicht direkt im Epic nachvollziehen; Tasks bleiben gleich, offene Punkte: Schema-Sync in openapi.json, danach B-03/B-04.

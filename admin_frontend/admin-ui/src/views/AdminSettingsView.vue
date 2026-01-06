@@ -130,6 +130,74 @@
 
         <section class="settingsSection">
           <div class="sectionHeader">
+            <div class="sectionTitle">Email / SMTP</div>
+            <button class="btnGhost small" @click="toggleSection('email')" :aria-expanded="!sectionCollapsed.email">
+              {{ sectionCollapsed.email ? "Aufklappen" : "Einklappen" }}
+            </button>
+          </div>
+          <div v-if="!sectionCollapsed.email" class="kvGrid">
+            <div class="kv">
+              <div class="k">Host</div>
+              <div class="v">
+                <input class="input" v-model="smtpSettings.host" :disabled="busy.smtpSave || busy.smtpLoad" placeholder="mail.myitnetwork.de" />
+              </div>
+            </div>
+            <div class="kv">
+              <div class="k">Port</div>
+              <div class="v">
+                <input class="input" type="number" v-model.number="smtpSettings.port" :disabled="busy.smtpSave || busy.smtpLoad" />
+              </div>
+            </div>
+            <div class="kv">
+              <div class="k">From</div>
+              <div class="v">
+                <input class="input" type="email" v-model="smtpSettings.from_email" :disabled="busy.smtpSave || busy.smtpLoad" placeholder="notification@example.com" />
+              </div>
+            </div>
+            <div class="kv">
+              <div class="k">User</div>
+              <div class="v">
+                <input class="input" v-model="smtpSettings.user" :disabled="busy.smtpSave || busy.smtpLoad" placeholder="smtp-user" />
+                <div class="muted">Optional, leer lassen falls nicht benötigt.</div>
+              </div>
+            </div>
+            <div class="kv">
+              <div class="k">Passwort</div>
+              <div class="v">
+                <input class="input" type="password" v-model="smtpSettings.password" :disabled="busy.smtpSave || busy.smtpLoad" :placeholder="smtpLoaded.has_password ? '••••••••' : 'Passwort eingeben'" />
+                <div class="muted">Leer lassen, um das bestehende Passwort beizubehalten.</div>
+              </div>
+            </div>
+            <div class="kv">
+              <div class="k">TLS</div>
+              <div class="v">
+                <label class="checkboxRow">
+                  <input type="checkbox" v-model="smtpSettings.use_tls" :disabled="busy.smtpSave || busy.smtpLoad" />
+                  <span>STARTTLS nutzen</span>
+                </label>
+              </div>
+            </div>
+            <div class="kv">
+              <div class="k">Aktionen</div>
+              <div class="v actionsRow">
+                <button class="btn" :disabled="busy.smtpSave || busy.smtpLoad" @click="saveEmailSettings">
+                  {{ busy.smtpSave ? "Speichert..." : "Speichern" }}
+                </button>
+                <div class="row gap8 wrap">
+                  <input class="input" type="email" v-model="emailTarget" :disabled="busy.smtpTest || busy.smtpLoad" placeholder="test@example.com" />
+                  <button class="btnGhost" :disabled="busy.smtpTest || busy.smtpLoad" @click="testEmailSettings">
+                    {{ busy.smtpTest ? "Sendet..." : "Test-E-Mail senden" }}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div class="divider"></div>
+
+        <section class="settingsSection">
+          <div class="sectionHeader">
             <div class="sectionTitle">Feature Flags (UI)</div>
             <button class="btnGhost small" @click="toggleSection('flags')" :aria-expanded="!sectionCollapsed.flags">
               {{ sectionCollapsed.flags ? "Aufklappen" : "Einklappen" }}
@@ -184,21 +252,39 @@
   AdminSettingsView
   - Systemweite Einstellungen, Security-Hinweise, Theme & Flags
 */
-import { ref, watch } from "vue";
-import { adminGetSystemInfo, adminGetEmailSettings, adminUpdateEmailSettings, adminTestEmail } from "../api/admin";
+import { computed, reactive, ref, watch, withDefaults } from "vue";
+import {
+  adminGetSystemInfo,
+  adminGetSmtpSettings,
+  adminUpdateSmtpSettings,
+  adminTestSmtp,
+  type SmtpSettings,
+  type SmtpSettingsInput,
+} from "../api/admin";
 import { useToast } from "../composables/useToast";
 import pkg from "../../package.json";
-import type { AdminSystemInfo, SystemEmailSettings, SystemEmailSettingsUpdate } from "../types";
+import type { AdminSystemInfo } from "../types";
 
-const props = defineProps<{
-  apiOk: boolean;
-  dbOk: boolean;
-  actor: string;
-  adminKey: string;
-  theme: string;
-  apiBase: string;
-  baseDomain: string;
-}>();
+type ThemeMode = "light" | "dark" | "system";
+
+const props = withDefaults(
+  defineProps<{
+    apiOk: boolean;
+    dbOk: boolean;
+    actor?: string;
+    adminKey?: string;
+    theme?: string;
+    apiBase?: string;
+    baseDomain?: string;
+  }>(),
+  {
+    actor: "",
+    adminKey: "",
+    theme: "system",
+    apiBase: "",
+    baseDomain: "",
+  }
+);
 
 const emit = defineEmits<{
   (e: "setTheme", theme: "light" | "dark" | "system"): void;
@@ -211,6 +297,7 @@ const sectionCollapsed = ref({
   security: true,
   theme: true,
   flags: true,
+  email: true,
   danger: true,
 });
 const themes = [
@@ -218,31 +305,24 @@ const themes = [
   { id: "light", label: "Light" },
   { id: "dark", label: "Dark" },
 ];
-const localTheme = ref((props.theme as "light" | "dark" | "system") || "system");
+const safeTheme = computed<ThemeMode>(() => (props.theme as ThemeMode) || "system");
+const localTheme = ref<ThemeMode>(safeTheme.value);
 const grafanaUrl = import.meta.env.VITE_GRAFANA_URL || "http://localhost:3000";
 const buildInfo = (import.meta.env.VITE_BUILD_INFO as string | undefined) || pkg.version;
 const systemInfo = ref<AdminSystemInfo | null>(null);
-const openSections = ref<Record<string, boolean>>({
-  system: true,
-  security: true,
-  theme: true,
-  flags: true,
-  email: true,
-  danger: false,
-});
-const emailForm = ref<SystemEmailSettings & { password: string }>({
+const smtpSettings = reactive<SmtpSettingsInput>({
   host: "",
-  port: null,
-  user: "",
+  port: 587,
   from_email: "",
-  has_password: false,
+  user: "",
   password: "",
+  use_tls: true,
 });
-const testEmail = ref("");
-const savingEmail = ref(false);
-const testingEmail = ref(false);
+const smtpLoaded = reactive<{ has_password: boolean }>({ has_password: false });
+const emailTarget = ref("");
+const busy = reactive({ smtpLoad: false, smtpSave: false, smtpTest: false });
 
-function onThemeChange(themeId: "light" | "dark" | "system") {
+function onThemeChange(themeId: ThemeMode) {
   localTheme.value = themeId;
   emit("setTheme", themeId);
 }
@@ -293,6 +373,81 @@ watch(
   },
   { immediate: true }
 );
+
+watch(
+  () => props.theme,
+  (value) => {
+    const normalized = (value as ThemeMode) || "system";
+    localTheme.value = normalized;
+  },
+  { immediate: true }
+);
+
+function loadEmailSettings() {
+  if (!props.adminKey) return;
+  busy.smtpLoad = true;
+  adminGetSmtpSettings(props.adminKey, props.actor)
+    .then((res: SmtpSettings) => {
+      smtpSettings.host = res.host;
+      smtpSettings.port = res.port;
+      smtpSettings.from_email = res.from_email;
+      smtpSettings.user = res.user || "";
+      smtpSettings.password = "";
+      smtpSettings.use_tls = res.use_tls;
+      smtpLoaded.has_password = res.has_password;
+    })
+    .catch((e) => {
+      // Falls keine Settings existieren (404), mit leeren Defaults weiterarbeiten.
+      if (e?.response?.status === 404) {
+        smtpSettings.host = "";
+        smtpSettings.port = 587;
+        smtpSettings.from_email = "";
+        smtpSettings.user = "";
+        smtpSettings.password = "";
+        smtpSettings.use_tls = true;
+        smtpLoaded.has_password = false;
+        return;
+      }
+      toast(`SMTP Settings laden fehlgeschlagen: ${asError(e)}`, "danger");
+    })
+    .finally(() => {
+      busy.smtpLoad = false;
+    });
+}
+
+function saveEmailSettings() {
+  if (!props.adminKey) return;
+  busy.smtpSave = true;
+  const payload: SmtpSettingsInput = {
+    host: smtpSettings.host.trim(),
+    port: Number(smtpSettings.port),
+    from_email: smtpSettings.from_email.trim(),
+    user: smtpSettings.user?.trim() || "",
+    password: smtpSettings.password?.trim() || undefined,
+    use_tls: smtpSettings.use_tls,
+  };
+  adminUpdateSmtpSettings(props.adminKey, props.actor, payload)
+    .then((res) => {
+      smtpLoaded.has_password = res.has_password;
+      smtpSettings.password = "";
+      toast("SMTP Einstellungen gespeichert", "success");
+    })
+    .catch((e) => toast(`Speichern fehlgeschlagen: ${asError(e)}`, "danger"))
+    .finally(() => {
+      busy.smtpSave = false;
+    });
+}
+
+function testEmailSettings() {
+  if (!props.adminKey || !emailTarget.value) return;
+  busy.smtpTest = true;
+  adminTestSmtp(props.adminKey, props.actor, emailTarget.value.trim())
+    .then(() => toast("Test-E-Mail versendet", "success"))
+    .catch((e) => toast(`Test-E-Mail fehlgeschlagen: ${asError(e)}`, "danger"))
+    .finally(() => {
+      busy.smtpTest = false;
+    });
+}
 </script>
 
 <style scoped>
@@ -353,5 +508,16 @@ watch(
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.checkboxRow{
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.actionsRow{
+  display: grid;
+  gap: 8px;
 }
 </style>

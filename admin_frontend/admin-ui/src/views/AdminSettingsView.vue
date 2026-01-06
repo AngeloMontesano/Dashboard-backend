@@ -137,6 +137,20 @@
             </div>
           </div>
         </div>
+
+        <div class="divider"></div>
+
+        <div class="sectionTitle">Danger Zone / System Actions</div>
+        <div class="kvGrid">
+          <div class="kv">
+            <div class="k">Cache / Reindex</div>
+            <div class="v muted">Endpoint fehlt – nur Anzeige, keine Aktion verfügbar (siehe TODO).</div>
+          </div>
+          <div class="kv">
+            <div class="k">System Restart</div>
+            <div class="v muted">Kein Admin-Endpoint vorhanden; Operation muss serverseitig bereitgestellt werden.</div>
+          </div>
+        </div>
       </div>
     </div>
   </div>

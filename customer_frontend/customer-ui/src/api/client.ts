@@ -1,5 +1,6 @@
 import axios from "axios";
 import { getBaseURL, getTenantHeaders } from "./base";
+import { appendAuthRefreshEvent, readAuthRefreshLog, type AuthRefreshEventInput } from "@/utils/telemetry";
 
 export const api = axios.create({
   baseURL: getBaseURL(),
@@ -23,6 +24,16 @@ type StoredAuth = {
 };
 
 let refreshPromise: Promise<string | null> | null = null;
+
+type RefreshEvent = {
+  status: "success" | "failed";
+  reason?: string;
+  at: string;
+};
+
+function recordRefreshEvent(event: AuthRefreshEventInput) {
+  appendAuthRefreshEvent(event);
+}
 
 function readStoredAuth(): StoredAuth | null {
   const raw = sessionStorage.getItem(STORAGE_KEY);
@@ -86,8 +97,10 @@ async function refreshAccessToken(): Promise<string | null> {
         userId: data.user_id || stored.userId
       });
       setAuthToken(accessToken);
+      recordRefreshEvent({ status: "success" });
       return accessToken;
-    } catch {
+    } catch (err: any) {
+      recordRefreshEvent({ status: "failed", reason: err?.message || "refresh_failed" });
       clearAuthAndRedirect();
       return null;
     } finally {
@@ -118,6 +131,7 @@ api.interceptors.response.use(
     }
 
     if (status === 401 && !originalConfig.skipAuthRefresh) {
+      recordRefreshEvent({ status: "failed", reason: "unauthorized_after_retry" });
       clearAuthAndRedirect();
       return Promise.reject(error);
     }
@@ -136,4 +150,8 @@ export function setAuthToken(token?: string) {
 
 export function authHeaders(token?: string) {
   return token ? { Authorization: `Bearer ${token}` } : undefined;
+}
+
+export function getAuthRefreshLog(): RefreshEvent[] {
+  return readAuthRefreshLog();
 }

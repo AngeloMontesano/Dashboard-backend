@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, reactive, ref } from 'vue';
+import { computed, reactive, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import StatusPill from '@/components/common/StatusPill.vue';
 import UiEmptyState from '@/components/ui/UiEmptyState.vue';
@@ -7,6 +7,7 @@ import UiPage from '@/components/ui/UiPage.vue';
 import UiSection from '@/components/ui/UiSection.vue';
 import { useMovementQueue, type MovementInput, type MovementRecord } from '@/composables/useMovementQueue';
 import { useOnlineStatus } from '@/composables/useOnlineStatus';
+import { downloadTelemetrySnapshot } from '@/utils/telemetry';
 
 const router = useRouter();
 const {
@@ -20,6 +21,7 @@ const {
   hasPending
 } = useMovementQueue();
 const { isOnline } = useOnlineStatus();
+const isDev = import.meta.env.DEV;
 
 const issueEntries = computed(() => movements.value.filter((m) => m.status === 'failed' || m.status === 'queued'));
 const editing = ref<MovementRecord | null>(null);
@@ -29,6 +31,8 @@ const editForm = reactive<MovementInput>({
   qty: 1,
   note: ''
 });
+const formErrors = reactive<{ barcode: string; qty: string }>({ barcode: '', qty: '' });
+const hasEditErrors = computed(() => Boolean(formErrors.barcode || formErrors.qty));
 
 const statusTone = (entry: MovementRecord) => {
   switch (deriveIssueState(entry)) {
@@ -70,6 +74,8 @@ const startEdit = (entry: MovementRecord) => {
   editForm.barcode = entry.barcode;
   editForm.qty = entry.qty;
   editForm.note = entry.note || '';
+  formErrors.barcode = '';
+  formErrors.qty = '';
 };
 
 const resetEdit = () => {
@@ -78,7 +84,27 @@ const resetEdit = () => {
   editForm.barcode = '';
   editForm.qty = 1;
   editForm.note = '';
+  formErrors.barcode = '';
+  formErrors.qty = '';
 };
+
+watch(
+  () => editForm.barcode,
+  (value) => {
+    if (formErrors.barcode && value.trim()) {
+      formErrors.barcode = '';
+    }
+  }
+);
+
+watch(
+  () => editForm.qty,
+  (value) => {
+    if (formErrors.qty && value && value >= 1) {
+      formErrors.qty = '';
+    }
+  }
+);
 
 const handleRetry = async (entry: MovementRecord) => {
   await retryEntry(entry.id);
@@ -91,8 +117,15 @@ const handleDelete = async (entry: MovementRecord) => {
   }
 };
 
+const validateEditForm = () => {
+  formErrors.barcode = editForm.barcode.trim() ? '' : 'Barcode darf nicht leer sein.';
+  formErrors.qty = editForm.qty && editForm.qty >= 1 ? '' : 'Menge muss mindestens 1 sein.';
+  return !formErrors.barcode && !formErrors.qty;
+};
+
 const handleEditSave = async () => {
   if (!editing.value) return;
+  if (!validateEditForm()) return;
   await replaceEntry(editing.value.id, {
     type: editForm.type,
     barcode: editForm.barcode.trim(),
@@ -105,6 +138,10 @@ const handleEditSave = async () => {
 
 const goToLogin = () => {
   router.push({ name: 'login', query: { redirect: '/sync-probleme' } });
+};
+
+const exportTelemetry = () => {
+  downloadTelemetrySnapshot('customer-telemetry-log.json');
 };
 
 const emptyStateText = computed(() =>
@@ -129,6 +166,9 @@ const emptyStateText = computed(() =>
           </span>
           <button class="btnGhost small" type="button" @click="syncNow" :disabled="!isOnline">
             Sync jetzt
+          </button>
+          <button v-if="isDev" class="btnGhost small" type="button" @click="exportTelemetry">
+            Telemetrie exportieren
           </button>
         </div>
       </template>
@@ -260,11 +300,13 @@ const emptyStateText = computed(() =>
             <label class="field">
               <span>Barcode</span>
               <input class="input" v-model="editForm.barcode" type="text" autocomplete="off" />
+              <p v-if="formErrors.barcode" class="field-error">{{ formErrors.barcode }}</p>
             </label>
 
             <label class="field">
               <span>Menge</span>
               <input class="input" v-model.number="editForm.qty" type="number" min="1" step="1" />
+              <p v-if="formErrors.qty" class="field-error">{{ formErrors.qty }}</p>
             </label>
 
             <label class="field">
@@ -273,7 +315,9 @@ const emptyStateText = computed(() =>
             </label>
 
             <div class="action-row">
-              <button class="btnPrimary small" type="button" @click="handleEditSave">Speichern &amp; neu senden</button>
+              <button class="btnPrimary small" type="button" @click="handleEditSave" :disabled="hasEditErrors">
+                Speichern &amp; neu senden
+              </button>
               <button class="btnGhost small" type="button" @click="resetEdit">Abbrechen</button>
             </div>
           </div>
@@ -379,6 +423,12 @@ const emptyStateText = computed(() =>
 .helper-text p {
   margin: 0;
   color: var(--text-muted);
+}
+
+.field-error {
+  margin: 0.25rem 0 0;
+  color: var(--danger, #b42318);
+  font-size: 0.85rem;
 }
 
 .badge {

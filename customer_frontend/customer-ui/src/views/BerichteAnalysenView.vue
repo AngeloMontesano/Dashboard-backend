@@ -9,11 +9,13 @@ import ReportCharts from '@/components/reports/ReportCharts.vue';
 import ReportExportButtons from '@/components/reports/ReportExportButtons.vue';
 import { useAuth } from '@/composables/useAuth';
 import { useToast } from '@/composables/useToast';
+import AuthReauthBanner from '@/components/auth/AuthReauthBanner.vue';
+import { useAuthIssueBanner } from '@/composables/useAuthIssueBanner';
 import type { CategoryOption, ItemOption, ReportFilterState, ReportParams, ReportResponse, ReportSeries } from '@/types/reports';
-import { stringifyError } from '@/utils/error';
 
 const { state: authState } = useAuth();
 const { push: pushToast } = useToast();
+const { authIssue, authMessage, handleAuthError } = useAuthIssueBanner();
 
 const defaultRange = getDefaultRange();
 const filters = reactive<ReportFilterState>({
@@ -96,10 +98,12 @@ async function loadCategories() {
       .filter((c: Category) => c.is_active)
       .map((c: Category) => ({ label: c.name, value: c.id } satisfies CategoryOption));
   } catch (err: any) {
+    const classified = handleAuthError(err);
+    if (classified.category === 'auth') return;
     pushToast({
       variant: 'danger',
       title: 'Kategorien fehlgeschlagen',
-      description: stringifyError(err)
+      description: classified.detailMessage || classified.userMessage
     });
   }
 }
@@ -130,10 +134,12 @@ async function selectCategoryItems() {
     filters.selectedItems = merged;
     triggerDebouncedLoad();
   } catch (err: any) {
+    const classified = handleAuthError(err);
+    if (classified.category === 'auth') return;
     pushToast({
       variant: 'danger',
       title: 'Kategorie-Übernahme fehlgeschlagen',
-      description: stringifyError(err)
+      description: classified.detailMessage || classified.userMessage
     });
   }
 }
@@ -218,9 +224,11 @@ async function loadReports() {
     reportData.value = { ...res, kpis: { ...res.kpis, months } };
     buildCharts(reportData.value);
   } catch (err: any) {
-    const detail = stringifyError(err);
-    error.value = 'Berichte konnten nicht geladen werden.';
-    pushToast({ variant: 'danger', title: 'Fehler beim Laden', description: detail });
+    const classified = handleAuthError(err);
+    error.value = classified.userMessage || 'Berichte konnten nicht geladen werden.';
+    if (classified.category !== 'auth') {
+      pushToast({ variant: 'danger', title: 'Fehler beim Laden', description: classified.detailMessage || classified.userMessage });
+    }
   } finally {
     loading.value = false;
   }
@@ -259,10 +267,12 @@ async function runItemSearch(query: string) {
     itemSuggestions.value = res.items.map(toItemOption);
   } catch (err: any) {
     if (controller.signal.aborted) return;
+    const classified = handleAuthError(err);
+    if (classified.category === 'auth') return;
     pushToast({
       variant: 'warning',
       title: 'Suche fehlgeschlagen',
-      description: stringifyError(err)
+      description: classified.detailMessage || classified.userMessage
     });
   } finally {
     searching.value = false;
@@ -290,10 +300,12 @@ async function loadCategorySuggestions() {
     itemSuggestions.value = res.items.map(toItemOption);
   } catch (err: any) {
     if (controller.signal.aborted) return;
+    const classified = handleAuthError(err);
+    if (classified.category === 'auth') return;
     pushToast({
       variant: 'warning',
       title: 'Suche fehlgeschlagen',
-      description: stringifyError(err)
+      description: classified.detailMessage || classified.userMessage
     });
   } finally {
     searching.value = false;
@@ -347,8 +359,10 @@ async function handleExport(format: 'csv' | 'excel' | 'pdf') {
       description: `${format.toUpperCase()} bereitgestellt.`
     });
   } catch (err: any) {
-    const detail = stringifyError(err);
-    pushToast({ variant: 'danger', title: 'Export fehlgeschlagen', description: detail });
+    const classified = handleAuthError(err);
+    if (classified.category !== 'auth') {
+      pushToast({ variant: 'danger', title: 'Export fehlgeschlagen', description: classified.detailMessage || classified.userMessage });
+    }
   } finally {
     exporting.value = null;
   }
@@ -468,6 +482,12 @@ onBeforeUnmount(() => {
     />
 
     <div class="section-stack">
+      <AuthReauthBanner
+        v-if="authIssue"
+        :message="authMessage"
+        retry-label="Erneut laden"
+        @retry="() => loadReports()"
+      />
       <ReportKpiCards :kpis="reportData?.kpis || null" :loading="loading" />
       <ReportCharts
         :consumptionData="consumptionChart"

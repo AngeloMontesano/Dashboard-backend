@@ -5,6 +5,7 @@ import { api } from '@/api/client';
 import { useAuth } from './useAuth';
 import { useToast } from './useToast';
 import { classifyError, type ErrorActionHint, type ErrorCategory } from '@/utils/errorClassify';
+import { appendQueueEvent, type MovementQueueEventInput } from '@/utils/telemetry';
 
 export type MovementStatus = 'queued' | 'sending' | 'sent' | 'failed';
 export type UiIssueState = 'waiting' | 'blocked' | 'auth' | 'retrying' | 'none';
@@ -124,6 +125,25 @@ const deriveIssueState = (entry: MovementRecord): UiIssueState => {
   return 'none';
 };
 
+type QueueEvent = MovementQueueEventInput;
+
+const recordQueueEvent = (event: QueueEvent) => {
+  appendQueueEvent(event);
+};
+
+const normalizeInput = (input: MovementInput) => {
+  const barcode = (input.barcode || '').trim();
+  const qty = Math.max(1, Number(input.qty) || 0);
+  const note = input.note?.trim();
+  if (!barcode || qty < 1) return null;
+  return {
+    ...input,
+    barcode,
+    qty,
+    note: note || undefined
+  };
+};
+
 const sendEntry = async (entry: MovementRecord) => {
   if (!authState.accessToken || !hasWriteAccess.value) {
     const retries = Math.min(MAX_RETRIES, entry.retries + 1);
@@ -138,6 +158,13 @@ const sendEntry = async (entry: MovementRecord) => {
     };
     await updateRecord(failed);
     lastSyncError.value = failed.last_error || null;
+    recordQueueEvent({
+      type: 'send_failed',
+      id: entry.id,
+      retries,
+      category: failed.error_category,
+      message: failed.last_error
+    });
     return false;
   }
 
@@ -167,6 +194,7 @@ const sendEntry = async (entry: MovementRecord) => {
       stop_retry: false
     };
     await updateRecord(sent);
+    recordQueueEvent({ type: 'send_success', id: entry.id, retries: entry.retries });
     return true;
   } catch (error: any) {
     const classified = classifyError(error);
@@ -184,6 +212,13 @@ const sendEntry = async (entry: MovementRecord) => {
     };
     await updateRecord(failed);
     lastSyncError.value = classified.userMessage;
+    recordQueueEvent({
+      type: 'send_failed',
+      id: entry.id,
+      retries,
+      category: classified.category,
+      message: classified.userMessage
+    });
     if (classified.category === 'auth') {
       logout();
       delete api.defaults.headers.common.Authorization;
@@ -219,20 +254,33 @@ const processQueue = async () => {
 
 const enqueueMovement = async (input: MovementInput, options?: { silent?: boolean }) => {
   await ensureInitialized();
+  const normalized = normalizeInput(input);
+  if (!normalized) {
+    if (!options?.silent) {
+      pushToast({
+        title: 'Eingabe unvollständig',
+        description: 'Bitte Barcode und Menge prüfen.',
+        variant: 'warning',
+        onceKey: 'movement-validation'
+      });
+    }
+    return;
+  }
   const now = new Date().toISOString();
   const record: MovementRecord = {
     id: generateId(),
     created_at: now,
-    type: input.type,
-    barcode: input.barcode.trim(),
-    qty: input.qty,
-    note: input.note?.trim() || undefined,
+    type: normalized.type,
+    barcode: normalized.barcode,
+    qty: normalized.qty,
+    note: normalized.note,
     status: 'queued',
     retries: 0
   };
 
   await persistRecord(record);
   await loadRecords();
+  recordQueueEvent({ type: 'enqueue', id: record.id });
 
   if (typeof navigator !== 'undefined' && navigator.onLine) {
     await processQueue();
@@ -257,6 +305,7 @@ const retryEntry = async (id: string) => {
   await ensureInitialized();
   const entry = records.value.find((r) => r.id === id);
   if (!entry) return;
+  recordQueueEvent({ type: 'retry', id });
   const retrying: MovementRecord = {
     ...entry,
     status: 'queued',
@@ -274,12 +323,16 @@ const deleteEntry = async (id: string) => {
   const db = await openDatabase();
   await db.delete(STORE_NAME, id);
   records.value = records.value.filter((r) => r.id !== id);
+  recordQueueEvent({ type: 'delete', id });
 };
 
 const replaceEntry = async (id: string, input: MovementInput) => {
   await ensureInitialized();
+  const normalized = normalizeInput(input);
+  if (!normalized) return;
   await deleteEntry(id);
-  await enqueueMovement(input, { silent: true });
+  await enqueueMovement(normalized, { silent: true });
+  recordQueueEvent({ type: 'replace', id });
 };
 
 const syncNow = async () => {

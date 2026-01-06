@@ -3,7 +3,7 @@ import axios from 'axios';
 export type ErrorCategory = 'auth' | 'client' | 'server' | 'network' | 'unknown';
 export type ErrorActionHint = 'login' | 'retry' | 'edit' | 'delete';
 
-type ClassifiedError = {
+export type ClassifiedError = {
   category: ErrorCategory;
   status?: number;
   userMessage: string;

@@ -745,3 +745,23 @@
   - TODO angepasst (Monitoring/CTA-Rollout), Session-Redirect bleibt nur bei gescheitertem Refresh aktiv.
 - **Tests**
   - `npm run build` (customer_frontend/customer-ui)
+
+## Schritt 52 – Auth-CTA-Rollout & Queue-Validierung
+- **Datum/Uhrzeit**: 2026-01-06T14:10:00+00:00
+- **Ziel**: Offene Punkte schließen: Auth-Fehler in allen Customer-Views mit klarer CTA anzeigen, Queue-Formular-Validierung/Hints ergänzen und einfache Monitoring-Hooks für Refresh/Queue bereitstellen.
+- **Was wurde geändert**
+  - Einheitliche Auth-Banner (`AuthReauthBanner`) und `useAuthIssueBanner` in Bestellungen-, Kategorien-, Inventur-, Artikel- und Bericht-Views integriert; Auth-Fehler setzen freundliche Meldungen statt HTTP-Slang und bieten „Neu anmelden“ + Retry.
+  - Fehlerklassifizierung in den genannten Views übernommen, sodass Fehlermeldungen die neuen Kurztexte nutzen und Auth-Fälle nicht als rohe Exceptions erscheinen.
+  - Queue: Bewegungs-Eingaben werden validiert (Barcode/QTY), Fehlerzentrum-Formular zeigt Feldhinweise; Queue-Aktions- und Refresh-Events landen in Session-Logs + Events für spätere Telemetrie.
+- **Tests**
+  - `npm run build` (customer_frontend/customer-ui)
+
+## Schritt 53 – Telemetrie-Export für Auth-Refresh & Queue
+- **Datum/Uhrzeit**: 2026-01-06T15:30:00+00:00
+- **Ziel**: Logs für Token-Refresh und Movement-Queue unkompliziert als JSON exportieren und zentrale Telemetrie-Schnittstelle bereitstellen.
+- **Was wurde geändert**
+  - Neues Hilfsmodul `src/utils/telemetry.ts` mit Readern (`readAuthRefreshLog`, `readQueueEventLog`), Event-Subscription und optionalem JSON-Download der Snapshot-Daten.
+  - Auth-Refresh- und Queue-Logger nutzen die zentrale Telemetrie-API und senden weiterhin `customer-auth-refresh` bzw. `movement-queue-event`.
+  - Fehlerseite (`FehlgeschlageneBuchungenView`) bietet in DEV einen Export-Button, Topbar erhält ein kleines Dev-Panel (nur `import.meta.env.DEV`) mit Telemetry-Download.
+- **Tests**
+  - `npm run build` (customer_frontend/customer-ui)

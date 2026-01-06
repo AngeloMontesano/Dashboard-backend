@@ -318,7 +318,7 @@
   AdminSettingsView
   - Systemweite Einstellungen, Security-Hinweise, Theme & Flags
 */
-import { ref, watch, reactive } from "vue";
+import { ref, watch, reactive, computed, withDefaults } from "vue";
 import {
   adminGetSystemInfo,
   adminGetSmtpSettings,
@@ -333,15 +333,24 @@ import type {
   SmtpSettingsOut,
 } from "../types";
 
-const props = defineProps<{
-  apiOk: boolean;
-  dbOk: boolean;
-  actor: string;
-  adminKey: string;
-  theme: string;
-  apiBase: string;
-  baseDomain: string;
-}>();
+const props = withDefaults(
+  defineProps<{
+    apiOk: boolean;
+    dbOk: boolean;
+    actor?: string;
+    adminKey?: string;
+    theme?: string;
+    apiBase?: string;
+    baseDomain?: string;
+  }>(),
+  {
+    actor: "admin",
+    adminKey: "",
+    theme: "system",
+    apiBase: "",
+    baseDomain: "",
+  }
+);
 
 const emit = defineEmits<{
   (e: "setTheme", theme: "light" | "dark" | "system"): void;

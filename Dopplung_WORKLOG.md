@@ -18,6 +18,9 @@
 | customer_frontend/customer-ui/src/components/ui/UiEmptyState.vue:18-44 ↔ customer_frontend/customer-ui/src/styles/utilities.css:8-52 | Component-Scoped Empty-State vs. Section/Stack | Customer | Wiederholt Panel/Stack/Actions-Pattern, andere Border-Art (dashed) |
 | customer_frontend/customer-ui/src/components/common/BaseField.vue:24-33 ↔ customer_frontend/customer-ui/src/styles/utilities.css:114-130 | Component-Scoped Hint/Error Colors vs. Text-Muted/Danger Utilities | Customer | Nutzt Legacy-Token `--color-*` statt der regulären Text-/Status-Tokens |
 | customer_frontend/customer-ui/src/components/layout/Topbar.vue:65-97 ↔ customer_frontend/customer-ui/src/components/layout/Sidebar.vue:67-86 ↔ customer_frontend/customer-ui/src/styles/layout.css:300-356 | Badge/Counter Styles | Customer | Drei Varianten für Badges (Buttons/Nav) mit ähnlicher Typografie/Radius/Farben |
+| admin_frontend/admin-ui/src/components/tenants/TenantDrawer.vue:69-115 ↔ admin_frontend/admin-ui/src/styles/layout.css:231-282 | Component-Scoped Drawer/Card/Input vs. globale Card/Input | Admin | Card/Row/Section-Stile doppelt, nur Gaps/Min-Height abweichend |
+| admin_frontend/admin-ui/src/views/AdminTenantsView.vue:663-686 ↔ admin_frontend/admin-ui/src/styles/utilities.css:180-230 | Component-Scoped Settings-Grid/Form-Felder | Admin | Grid/Gap/Field-Layout wie `form-grid`/`field` Utilities, nur Spalten/Gap-Werte minimal anders |
+| admin_frontend/admin-ui/src/views/AdminSettingsView.vue:520-602 ↔ admin_frontend/admin-ui/src/styles/utilities.css:8-120 | Component-Scoped Stack/Collapsible/Alert/FieldGrid | Admin | Nutzt eigene Stack/Panel/Alert/Grid Styles, überschneidet mit section/stack/panel/chip-list Utilities |
 
 Notizen:
 - Alle Fundstellen stammen aus Schritt 1 (Inventarisierung). Noch keine Deklaration wurde verändert.

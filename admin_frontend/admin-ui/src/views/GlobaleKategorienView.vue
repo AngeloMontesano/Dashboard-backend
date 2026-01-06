@@ -131,7 +131,16 @@
               </div>
               <div class="hint">System-Kategorien sind auch im Customer-Frontend schreibgeschützt.</div>
             </div>
-            <div class="modal__footer">
+            <div class="modal__footer modal__footer--with-delete">
+              <button
+                v-if="modal.mode === 'edit'"
+                class="btnGhost small danger"
+                type="button"
+                :disabled="busy.save"
+                @click="removeConfirm"
+              >
+                Löschen
+              </button>
               <button class="btnGhost" type="button" @click="closeModal">Abbrechen</button>
               <button class="btnPrimary" type="button" :disabled="busy.save" @click="save">
                 {{ busy.save ? "speichert..." : "Speichern" }}
@@ -277,11 +286,15 @@ async function save() {
   }
 }
 
-async function remove(cat: GlobalCategory) {
+async function removeConfirm() {
+  if (!modal.id) return;
+  const cat = categories.value.find((c) => c.id === modal.id);
+  if (!cat) return;
   if (!window.confirm(`Kategorie ${cat.name} löschen?`)) return;
   try {
     await deleteGlobalCategory(props.adminKey, cat.id, props.actor);
     replaceCategories(categories.value.filter((c) => c.id !== cat.id));
+    closeModal();
     toast("Kategorie gelöscht", "success");
   } catch (e: any) {
     toast(`Löschen fehlgeschlagen: ${e?.response?.data?.detail?.error?.message || e?.message || e}`, "error");
@@ -335,3 +348,20 @@ onMounted(() => {
   }
 });
 </script>
+
+<style scoped>
+.table-card .table {
+  margin-top: 4px;
+}
+
+.modal__footer--with-delete {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+}
+
+.modal__footer--with-delete .btnGhost.danger {
+  margin-right: auto;
+}
+</style>

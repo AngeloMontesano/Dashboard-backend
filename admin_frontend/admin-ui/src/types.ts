@@ -64,3 +64,19 @@ export type AdminSystemActionResponse = {
   detail: string;
   timestamp: string;
 };
+
+export type SystemEmailSettings = {
+  host: string | null;
+  port: number | null;
+  user: string | null;
+  from_email: string | null;
+  has_password: boolean;
+};
+
+export type SystemEmailSettingsUpdate = {
+  host: string | null;
+  port: number | null;
+  user: string | null;
+  password: string | null;
+  from_email: string | null;
+};

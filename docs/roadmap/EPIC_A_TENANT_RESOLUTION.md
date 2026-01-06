@@ -34,6 +34,7 @@ Frontend zeigt für unbekannte/inaktive Subdomains eine klare Seite statt JSON. 
 - Bestehende Tenant-Resolve-Logik bleibt; Status-Endpoint nutzt dieselbe Prüfung ohne Login.
 - Proxy leitet Subdomain-Host in `X-Forwarded-Host` weiter.
 - Spezifikation: `docs/openapi/TENANT_STATUS.md`, Schema `PublicTenantStatus` in `docs/openapi/openapi.json` (Typen via `npm run gen:types(:local)`).
+- Implementierungsstand: `backend/app/modules/public/routes.py::tenant_status` liefert bereits 200-only Responses mit `status/reason`; Slug-Priorität `X-Tenant-Slug` → Query → Host-Ableitung.
 
 ## 8) Daten (konzeptionell)
 - Response `tenant-status`: `status` Enum, `slug`, `host`, optional `reason`/`is_active`.

@@ -61,3 +61,8 @@
 ## 2024-06-27
 - Roadmap-Index-Referenz für A-01 erwähnt jetzt die Proxy-Header-Matrix (A-11 Vorbereitung) für konsistente QA.
 - Keine Task-Änderungen; nächste Schritte unverändert (A-01 Review, dann A-10/A-11).
+
+## 2024-06-28
+- TENANT_STATUS-Spec um Implementierungs-Mapping ergänzt (Backend-Router, Slug-Priorität, DB-Probe, 200-only Responses).
+- EPIC_A API/Backend-Annahmen mit aktuellem Backend-Stand verknüpft, um Coding-Startpunkte klarer zu machen.
+- Offene Punkte: A-01 Review; danach QA-Checkliste (A-10) und Proxy-Smoke-Plan (A-11) ausführen.

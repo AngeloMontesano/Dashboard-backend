@@ -212,9 +212,18 @@
   font-weight: 750;
   margin-top: var(--space-2);
 }
+.detail-box__value--wrap{
+  word-break: break-all;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
 
 .detail-box--wide{
   min-width: 320px;
+}
+
+.detail-box--host{
+  grid-column: span 2;
 }
 
 .detail-box--medium{

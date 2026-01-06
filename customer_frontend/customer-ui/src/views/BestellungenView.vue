@@ -28,6 +28,8 @@ const state = reactive<{
   emailing: Record<string, boolean>;
   recommended: ReorderItem[];
   downloading: Record<string, boolean>;
+  completing: Record<string, boolean>;
+  canceling: Record<string, boolean>;
   items: ItemOption[];
   creating: boolean;
   createForm: { itemId: string; quantity: number; note: string };
@@ -39,6 +41,8 @@ const state = reactive<{
   emailing: {},
   recommended: [],
   downloading: {},
+  completing: {},
+  canceling: {},
   items: [],
   creating: false,
   createForm: { itemId: '', quantity: 1, note: '' },
@@ -87,7 +91,34 @@ async function loadRecommendations() {
     const res = await fetchReorderRecommendations(authState.accessToken);
     state.recommended = res.items || [];
   } catch {
-    state.recommended = [];
+    // Fallback auf lokale Items, falls Endpoint (z.B. wegen Migration) fehlt
+    if (state.items.length) {
+      state.recommended = state.items
+        .filter(
+          (item) =>
+            item.is_active &&
+            item.order_mode !== 0 &&
+            item.target_stock > 0 &&
+            item.quantity < item.target_stock
+        )
+        .map((item) => ({
+          id: item.id,
+          name: item.name,
+          sku: item.sku,
+          barcode: item.barcode,
+          category_id: item.category_id || null,
+          quantity: item.quantity,
+          target_stock: item.target_stock,
+          min_stock: item.min_stock,
+          recommended_qty: Math.max(
+            item.target_stock - item.quantity,
+            item.min_stock - item.quantity,
+            1
+          )
+        }));
+    } else {
+      state.recommended = [];
+    }
   }
 }
 
@@ -96,6 +127,31 @@ async function loadItems() {
   try {
     const res = await fetchItems({ token: authState.accessToken, page: 1, page_size: 200, active: true });
     state.items = res.items;
+    if (!state.recommended.length) {
+      state.recommended = res.items
+        .filter(
+          (item) =>
+            item.is_active &&
+            item.order_mode !== 0 &&
+            item.target_stock > 0 &&
+            item.quantity < item.target_stock
+        )
+        .map((item) => ({
+          id: item.id,
+          name: item.name,
+          sku: item.sku,
+          barcode: item.barcode,
+          category_id: item.category_id || null,
+          quantity: item.quantity,
+          target_stock: item.target_stock,
+          min_stock: item.min_stock,
+          recommended_qty: Math.max(
+            item.target_stock - item.quantity,
+            item.min_stock - item.quantity,
+            1
+          )
+        }));
+    }
   } catch {
     state.items = [];
   }
@@ -103,27 +159,27 @@ async function loadItems() {
 
 async function markComplete(orderId: string) {
   if (!authState.accessToken) return;
-  state.loading = true;
+  state.completing[orderId] = true;
   try {
     const updated = await completeOrder(authState.accessToken, orderId);
     state.orders = state.orders.map((o) => (o.id === updated.id ? updated : o));
   } catch (err: any) {
     state.error = err?.message || 'Erledigen fehlgeschlagen';
   } finally {
-    state.loading = false;
+    state.completing[orderId] = false;
   }
 }
 
 async function markCanceled(orderId: string) {
   if (!authState.accessToken) return;
-  state.loading = true;
+  state.canceling[orderId] = true;
   try {
     const updated = await cancelOrder(authState.accessToken, orderId);
     state.orders = state.orders.map((o) => (o.id === updated.id ? updated : o));
   } catch (err: any) {
     state.error = err?.message || 'Stornieren fehlgeschlagen';
   } finally {
-    state.loading = false;
+    state.canceling[orderId] = false;
   }
 }
 
@@ -299,10 +355,20 @@ onMounted(async () => {
                   <button class="button button--ghost" type="button" @click="sendEmail(order.id)" :disabled="state.emailing[order.id]">
                     E-Mail
                   </button>
-                  <button class="button button--primary" type="button" @click="markComplete(order.id)" :disabled="state.loading">
+                  <button
+                    class="button button--primary"
+                    type="button"
+                    @click="markComplete(order.id)"
+                    :disabled="state.completing[order.id] || state.canceling[order.id]"
+                  >
                     Erledigt
                   </button>
-                  <button class="button button--ghost" type="button" @click="markCanceled(order.id)" :disabled="state.loading">
+                  <button
+                    class="button button--ghost"
+                    type="button"
+                    @click="markCanceled(order.id)"
+                    :disabled="state.canceling[order.id] || state.completing[order.id]"
+                  >
                     Stornieren
                   </button>
                 </td>

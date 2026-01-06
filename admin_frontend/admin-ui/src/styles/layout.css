@@ -20,7 +20,8 @@
 .sidebar{
   position: sticky;
   top: 16px;
-  height: calc(100vh - 32px);
+  height: auto;
+  max-height: calc(100vh - 32px);
   background: var(--panel);
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -93,6 +94,35 @@
 
 .navLabel{
   font-weight: 750;
+  font-size: 13px;
+}
+
+.sidebar-divider{
+  height: 1px;
+  background: var(--border);
+  margin: 10px 0 6px;
+}
+
+.navGroup{
+  display: grid;
+  gap: 6px;
+}
+
+.navGroupTitle{
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.navGroupList{
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+  color: var(--muted);
   font-size: 13px;
 }
 
@@ -274,6 +304,35 @@
 
 .statusPill.ok .dot{ background: var(--ok); }
 .statusPill.bad .dot{ background: var(--bad); }
+
+.statusInline{
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text);
+}
+
+.statusDot{
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  background: var(--neutral);
+  box-shadow: inset 0 0 0 2px rgba(255,255,255,0.06);
+}
+
+.statusDot.ok{
+  background: var(--success);
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.18);
+}
+.statusDot.bad{
+  background: var(--danger);
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
+}
+
+.statusLabel{
+  font-size: 12px;
+  font-weight: 750;
+}
 
 .btnPrimary,
 .btnGhost{

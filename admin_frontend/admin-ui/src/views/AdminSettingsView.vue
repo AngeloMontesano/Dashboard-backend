@@ -184,11 +184,13 @@
   AdminSettingsView
   - Systemweite Einstellungen, Security-Hinweise, Theme & Flags
 */
-import { ref, watch } from "vue";
-import { adminGetSystemInfo, adminGetEmailSettings, adminUpdateEmailSettings, adminTestEmail } from "../api/admin";
+import { computed, ref, watch } from "vue";
+import { adminGetSystemInfo } from "../api/admin";
 import { useToast } from "../composables/useToast";
 import pkg from "../../package.json";
 import type { AdminSystemInfo, SystemEmailSettings, SystemEmailSettingsUpdate } from "../types";
+
+type ThemeMode = "light" | "dark" | "system";
 
 const props = defineProps<{
   apiOk: boolean;
@@ -218,7 +220,8 @@ const themes = [
   { id: "light", label: "Light" },
   { id: "dark", label: "Dark" },
 ];
-const localTheme = ref((props.theme as "light" | "dark" | "system") || "system");
+const safeTheme = computed<ThemeMode>(() => (props.theme as ThemeMode) || "system");
+const localTheme = ref<ThemeMode>(safeTheme.value);
 const grafanaUrl = import.meta.env.VITE_GRAFANA_URL || "http://localhost:3000";
 const buildInfo = (import.meta.env.VITE_BUILD_INFO as string | undefined) || pkg.version;
 const systemInfo = ref<AdminSystemInfo | null>(null);
@@ -242,7 +245,7 @@ const testEmail = ref("");
 const savingEmail = ref(false);
 const testingEmail = ref(false);
 
-function onThemeChange(themeId: "light" | "dark" | "system") {
+function onThemeChange(themeId: ThemeMode) {
   localTheme.value = themeId;
   emit("setTheme", themeId);
 }
@@ -293,6 +296,21 @@ watch(
   },
   { immediate: true }
 );
+
+watch(
+  () => props.theme,
+  (value) => {
+    const normalized = (value as ThemeMode) || "system";
+    localTheme.value = normalized;
+  },
+  { immediate: true }
+);
+
+// Placeholder: the settings view no longer uses email settings directly, but keep the hook defined
+// to avoid runtime ReferenceErrors if legacy watchers/handlers fire.
+function loadEmailSettings() {
+  return;
+}
 </script>
 
 <style scoped>

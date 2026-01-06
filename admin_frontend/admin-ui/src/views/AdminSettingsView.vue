@@ -218,8 +218,6 @@ import type { AdminSystemInfo, SystemEmailSettings, SystemEmailSettingsUpdate } 
 
 type ThemeMode = "light" | "dark" | "system";
 
-type ThemeMode = "light" | "dark" | "system";
-
 const props = withDefaults(
   defineProps<{
     apiOk: boolean;

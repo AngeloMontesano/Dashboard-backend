@@ -601,6 +601,58 @@
 - **Tests**
   - `npm run build` (admin_frontend/admin-ui)
 
+## Schritt 49 – Bekannte Lücken sichtbar machen
+- **Datum/Uhrzeit**: 2026-01-06T11:38:00+00:00
+- **Ziel**: Fehlende Backend-Funktionalität (Build/Commit, System-Actions) in Settings explizit kennzeichnen und Roadmap-Ergänzung für Backend-Follow-ups.
+- **Was wurde geändert**
+  - Settings/System: Backend-Build/Commit als nicht verfügbar markiert (kein Endpoint).
+  - Settings/Danger Zone: Hinweis auf fehlende Cache/Reindex-Endpoints ergänzt.
+  - Roadmap: Neues Task T6 für Backend-Gaps dokumentiert.
+- **Ergebnis**
+  - UI zeigt klar, dass Build/Commit und System-Actions fehlen; Backend-Arbeitsbedarf ist dokumentiert.
+- **Tests**
+  - `npm run build` (admin_frontend/admin-ui)
+
+## Schritt 50 – Backend-Gaps vermerken (Build/Commit, System Actions)
+- **Datum/Uhrzeit**: 2026-01-06T11:50:00+00:00
+- **Ziel**: T6 abschließen, indem fehlende Backend-Endpunkte konkret im TODO verankert und in der Roadmap als erledigt dokumentiert werden.
+- **Was wurde geändert**
+  - TODO (MUSS) ergänzt: Backend-Build/Commit-Endpoint (z. B. `/admin/build-info`) liefern; System-Actions (Cache Reset, Reindex, Restart) als Admin-Endpoints bereitstellen.
+  - Roadmap `ADMIN_SETTINGS_REFACTOR` T6 auf Done gesetzt (Backend-Gaps dokumentiert).
+- **Ergebnis**
+  - Fehlende Server-Funktionen sind explizit als Backend-Follow-up festgehalten; Settings-Hinweise bleiben UI-only, bis Endpoints existieren.
+- **Tests**
+  - Keine neuen Tests notwendig (nur Doku).
+
+## Schritt 51 – Admin System-Endpunkte + Settings-Anzeige
+- **Datum/Uhrzeit**: 2026-01-06T12:05:00+00:00
+- **Ziel**: Backend-Platzhalter für System-Infos/Actions bereitstellen und UI mit Backend-Build/Commit verknüpfen.
+- **Was wurde geändert**
+  - Backend: Neuer Router `/admin/system` mit `/info` (Version/Env/Commit/DB-Status) und Platzhalter-Actions `/actions/cache-reset|reindex|restart` (supported=false).
+  - Admin-Router/OpenAPI-Tags erweitert (`admin-system`), Router eingebunden.
+  - Frontend Settings laden System-Info per `adminGetSystemInfo`; Backend-Build/Commit wird angezeigt, Danger-Zone-Texte verweisen auf nicht unterstützte Actions.
+  - TODO aktualisiert (Endpoints existieren als Platzhalter, echte Implementierung weiterhin offen).
+- **Ergebnis**
+  - Settings zeigen Backend-Build/Commit/Env/DB-Status aus der API; Danger-Zone verweist auf vorhandene, aber nicht unterstützte Actions.
+- **Tests**
+  - `npm run build` (admin_frontend/admin-ui)
+  - `python -m compileall app` (backend)
+
+## Schritt 52 – Build/Commit-Infos aus ENV, UI bereinigt
+- **Datum/Uhrzeit**: 2026-01-06T12:45:00+00:00
+- **Ziel**: Echte Build-/Commit-Metadaten per ENV ausliefern, nicht unterstützte System-Actions klar kennzeichnen, ohne neue Abhängigkeiten.
+- **Was wurde geändert**
+  - Backend Config: neue ENV-Felder `BUILD_TIMESTAMP`, `BUILD_BRANCH`, `IMAGE_TAG` (Defaults `unknown`), `GIT_COMMIT` jetzt mit Default; alle über `/admin/system/info` auslieferbar.
+  - Backend System-Routes: Response-Modelle (Pydantic) für `/info` und Actions; Actions liefern `supported=false` mit Hinweis „Nicht konfiguriert in diesem System“ bzw. Restart-Hinweis.
+  - Docker Compose (backend): ENV-Platzhalter für Build-Metadaten ergänzt (CI-/lokal überschreibbar).
+  - Frontend Settings: Backend-Build-Anzeige erweitert (Commit, Branch, Timestamp, Image, DB-Status), Danger-Zone-Texte auf „nicht unterstützt“/„Restart via Docker/Portainer“ reduziert.
+  - TODO: optionale zukünftige Features (Redis, Search, Restart-Hook) klar als nicht Teil dieser Aufgabe markiert; Deployment-ENV für Build/Commit als MUSS aufgenommen.
+- **Ergebnis**
+  - Keine Dummy-Texte mehr: Build-/Commit-Infos kommen aus ENV; System-Actions sind explizit als nicht unterstützt gekennzeichnet.
+- **Tests**
+  - `npm run build` (admin_frontend/admin-ui)
+  - `python -m compileall app` (backend)
+
 ## Schritt 48 – Settings mit Build-Info ergänzt
 - **Datum/Uhrzeit**: 2026-01-06T11:26:00+00:00
 - **Ziel**: System-Abschnitt der Settings um verfügbare Build-/Versionsinformation ergänzen.

@@ -40,6 +40,21 @@
               <div class="muted">App Version (UI)</div>
             </div>
           </div>
+          <div class="kv">
+            <div class="k">Backend Build</div>
+            <div class="v">
+              <div v-if="systemInfo">
+                <div class="mono">{{ systemInfo.git_commit || "unknown" }}</div>
+                <div class="muted">Branch: {{ systemInfo.build_branch || "unknown" }}</div>
+                <div class="muted">Build: {{ systemInfo.build_timestamp || "unknown" }}</div>
+                <div class="muted">App: {{ systemInfo.app_version }} · {{ systemInfo.environment }}</div>
+                <div class="muted" v-if="systemInfo.image_tag">Image: {{ systemInfo.image_tag }}</div>
+                <div class="muted">DB Status: {{ systemInfo.db }}</div>
+                <div v-if="systemInfo.db_error" class="errorText">DB Fehler: {{ systemInfo.db_error }}</div>
+              </div>
+              <div v-else class="muted">noch nicht geladen</div>
+            </div>
+          </div>
         </div>
 
         <div class="divider"></div>
@@ -111,11 +126,17 @@
         <div class="kvGrid">
           <div class="kv">
             <div class="k">Cache / Reindex</div>
-            <div class="v muted">Endpoint fehlt – nur Anzeige, keine Aktion verfügbar.</div>
+            <div class="v">
+              <div class="muted">Nicht unterstützt in diesem Deployment.</div>
+              <div class="muted">Kein Cache/Search konfiguriert.</div>
+            </div>
           </div>
           <div class="kv">
             <div class="k">System Restart</div>
-            <div class="v muted">Kein Admin-Endpoint vorhanden; Operation muss serverseitig bereitgestellt werden.</div>
+            <div class="v">
+              <div class="muted">Restart erfolgt außerhalb der Anwendung (Docker/Portainer).</div>
+              <div class="muted">Kein API-gestützter Restart konfiguriert.</div>
+            </div>
           </div>
         </div>
       </div>
@@ -128,8 +149,11 @@
   AdminSettingsView
   - Systemweite Einstellungen, Security-Hinweise, Theme & Flags
 */
-import { ref } from "vue";
+import { ref, watch } from "vue";
+import { adminGetSystemInfo } from "../api/admin";
+import { useToast } from "../composables/useToast";
 import pkg from "../../package.json";
+import type { AdminSystemInfo } from "../types";
 
 const props = defineProps<{
   apiOk: boolean;
@@ -146,6 +170,7 @@ const emit = defineEmits<{
   (e: "resetContext"): void;
 }>();
 
+const { toast } = useToast();
 const themes = [
   { id: "system", label: "System" },
   { id: "light", label: "Light" },
@@ -154,11 +179,50 @@ const themes = [
 const localTheme = ref((props.theme as "light" | "dark" | "system") || "system");
 const grafanaUrl = import.meta.env.VITE_GRAFANA_URL || "http://localhost:3000";
 const buildInfo = (import.meta.env.VITE_BUILD_INFO as string | undefined) || pkg.version;
+const systemInfo = ref<AdminSystemInfo | null>(null);
 
 function onThemeChange(themeId: "light" | "dark" | "system") {
   localTheme.value = themeId;
   emit("setTheme", themeId);
 }
+
+async function loadSystemInfo() {
+  if (!props.adminKey) {
+    systemInfo.value = null;
+    return;
+  }
+  try {
+    systemInfo.value = await adminGetSystemInfo(props.adminKey, props.actor);
+  } catch (e: any) {
+    toast(`System Info fehlgeschlagen: ${asError(e)}`, "danger");
+    systemInfo.value = null;
+  }
+}
+
+function asError(e: any): string {
+  if (!e) return "unknown";
+  if (typeof e === "string") return e;
+  if (e?.response?.data?.detail) return JSON.stringify(e.response.data.detail);
+  if (e?.message) return e.message;
+  try {
+    return JSON.stringify(e);
+  } catch {
+    return String(e);
+  }
+}
+
+watch(
+  () => props.adminKey,
+  (key, prev) => {
+    if (key && key !== prev) {
+      loadSystemInfo();
+    }
+    if (!key) {
+      systemInfo.value = null;
+    }
+  },
+  { immediate: true }
+);
 </script>
 
 <style scoped>

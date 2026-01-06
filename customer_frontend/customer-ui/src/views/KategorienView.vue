@@ -117,9 +117,9 @@ onMounted(async () => {
           required
           :disabled="!hasWriteAccess"
         />
-        <label class="inline-field">
-          <input type="checkbox" v-model="form.is_active" :disabled="!hasWriteAccess" />
-          <span>Aktiv</span>
+        <label class="checkbox-field">
+          <input type="checkbox" v-model="form.is_active" :disabled="!hasWriteAccess" aria-label="Kategorie aktiv" />
+          <span class="form-label">Aktiv</span>
         </label>
         <button class="btnPrimary small" type="submit" :disabled="!hasWriteAccess">Neue Kategorie</button>
       </form>

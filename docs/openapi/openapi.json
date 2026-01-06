@@ -5884,6 +5884,274 @@
         }
       }
     },
+    "/admin/system/info": {
+      "get": {
+        "tags": [
+          "admin",
+          "admin-system"
+        ],
+        "summary": "Admin System Info",
+        "description": "Systeminformationen (Version, Commit, DB-Status) für Admins.",
+        "operationId": "admin_system_info_admin_system_info_get",
+        "parameters": [
+          {
+            "name": "x-admin-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Key"
+            }
+          },
+          {
+            "name": "x-admin-actor",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Actor"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SystemInfoResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/system/actions/cache-reset": {
+      "post": {
+        "tags": [
+          "admin",
+          "admin-system"
+        ],
+        "summary": "Admin System Cache Reset",
+        "description": "Platzhalter für Cache-Invalidierung (noch kein Cache-Backend vorhanden).",
+        "operationId": "admin_system_cache_reset_admin_system_actions_cache_reset_post",
+        "parameters": [
+          {
+            "name": "x-admin-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Key"
+            }
+          },
+          {
+            "name": "x-admin-actor",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Actor"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SystemActionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/system/actions/reindex": {
+      "post": {
+        "tags": [
+          "admin",
+          "admin-system"
+        ],
+        "summary": "Admin System Reindex",
+        "description": "Platzhalter für Reindex (noch keine Index-Engine angebunden).",
+        "operationId": "admin_system_reindex_admin_system_actions_reindex_post",
+        "parameters": [
+          {
+            "name": "x-admin-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Key"
+            }
+          },
+          {
+            "name": "x-admin-actor",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Actor"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SystemActionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/system/actions/restart": {
+      "post": {
+        "tags": [
+          "admin",
+          "admin-system"
+        ],
+        "summary": "Admin System Restart",
+        "description": "Platzhalter für Restart (nicht unterstützt ohne Orchestrator Hook).",
+        "operationId": "admin_system_restart_admin_system_actions_restart_post",
+        "parameters": [
+          {
+            "name": "x-admin-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Key"
+            }
+          },
+          {
+            "name": "x-admin-actor",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Actor"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SystemActionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/admin/ping": {
       "get": {
         "tags": [
@@ -7812,6 +8080,104 @@
           "normalized_sku"
         ],
         "title": "SKUExistsResponse"
+      },
+      "SystemActionResponse": {
+        "properties": {
+          "action": {
+            "type": "string",
+            "title": "Action"
+          },
+          "supported": {
+            "type": "boolean",
+            "title": "Supported"
+          },
+          "performed": {
+            "type": "boolean",
+            "title": "Performed"
+          },
+          "detail": {
+            "type": "string",
+            "title": "Detail"
+          },
+          "timestamp": {
+            "type": "string",
+            "title": "Timestamp"
+          }
+        },
+        "type": "object",
+        "required": [
+          "action",
+          "supported",
+          "performed",
+          "detail",
+          "timestamp"
+        ],
+        "title": "SystemActionResponse"
+      },
+      "SystemInfoResponse": {
+        "properties": {
+          "app_version": {
+            "type": "string",
+            "title": "App Version"
+          },
+          "git_commit": {
+            "type": "string",
+            "title": "Git Commit"
+          },
+          "build_timestamp": {
+            "type": "string",
+            "title": "Build Timestamp"
+          },
+          "build_branch": {
+            "type": "string",
+            "title": "Build Branch"
+          },
+          "image_tag": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Image Tag"
+          },
+          "environment": {
+            "type": "string",
+            "title": "Environment"
+          },
+          "db": {
+            "type": "string",
+            "title": "Db"
+          },
+          "db_error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Db Error"
+          },
+          "timestamp": {
+            "type": "string",
+            "title": "Timestamp"
+          }
+        },
+        "type": "object",
+        "required": [
+          "app_version",
+          "git_commit",
+          "build_timestamp",
+          "build_branch",
+          "environment",
+          "db",
+          "timestamp"
+        ],
+        "title": "SystemInfoResponse"
       },
       "TenantCreate": {
         "properties": {

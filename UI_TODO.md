@@ -1,8 +1,7 @@
 ## Muss
-- Keine offenen Muss-Punkte (Checkbox-Pattern in Artikelverwaltung ausgerollt).
+- Keine offenen Muss-Punkte (Checkbox-Pattern ausgerollt).
 
 ## Soll
-- Filter-Layouts prüfen: Status- und Suchfelder in Bestellungen eventuell in einer kompakten Toolbar zusammenführen, damit Kennzahlen oben mehr Luft bekommen.
 - Tabellenaktionen sichten: verbleibende Views auf Nutzung von `.table-actions` prüfen, falls weitere Aktionsspalten hinzukommen.
 
 ## Kann

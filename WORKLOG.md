@@ -864,6 +864,11 @@
 - **Ziel**: UI-Bug beheben, bei dem in den Admin-Einstellungen nichts eingeblendet wurde (Sections waren dennoch vorhanden, aber versteckt).
 - **Änderung**: Collapse-State auf `reactive` `sectionOpen` umgestellt (statt `ref`-Objekt) und Buttons/UI nutzen jetzt `sectionOpen.*`. Alle Abschnitte sind initial sichtbar, Umschalter klappen nur noch per Klick zu.
 
+## Schritt 64 – Settings Props/Helpers vervollständigt
+- **Datum/Uhrzeit**: 2026-01-06T19:20:00+00:00
+- **Ziel**: Konsolenfehler im Admin Settings View beseitigen (`computed` not defined, undefined props in Prod-Build).
+- **Änderung**: `computed`/`withDefaults` importiert, Props mit Defaults versehen (theme/adminKey/actor/apiBase/baseDomain), damit der View auch bei fehlenden übergebenen Props stabil rendert und keine doppelten Initialisierungen stattfinden.
+
 ## Schritt 54 – Analyse Branchen-Artikel-Mapping (Schritt 1)
 - **Datum/Uhrzeit**: 2026-01-06T15:45:00+00:00
 - **Ziel**: Inventar für den Admin-Editor „Branche ↔ Artikel“ erstellen und Skalierungsprobleme für 1000+ Artikel bewerten.

@@ -10,6 +10,11 @@
 - [H-01] Optionen für leichtes Monitoring ohne Grafana evaluieren – Epic H
 - [I-01] Felddefinitionen für globale/tenant-spezifische Kontakte dokumentieren – Epic I
 
+### Parallelisierungs-Empfehlung (Now)
+- Stream 1 (Backend/Docs): A-01 (Status-API Spezifikation) + B-01 (Globales Datenmodell) + H-01 (Monitoring-Optionen) parallel abstimmen.
+- Stream 2 (Customer UX): A-04 (Bootstrap Preflight) + C-02 (Reporting UX-Flow) + D-01 (KPI-Routen) in einem UX-Review-Slot bündeln.
+- Stream 3 (Admin/Docs): G-01 (Doku-Struktur) + I-01 (Kontakt-Felder) gemeinsam erarbeiten; Wechselwirkungen in Admin-Settings klären.
+
 ## Next
 - [A-05] Tenant-Status-View Texte/CTAs finalisieren – Epic A
 - [A-10] QA-Checkliste Tenant-Status (404/Headers/Mobile/Darkmode) – Epic A
@@ -33,13 +38,3 @@
 - [G-06] Help/Debug-Bereich Admin planen – Epic G
 - [H-07] QA/Smoke-Plan Statusseite – Epic H
 - [I-08] QA-Checkliste Kontakte (Validierung/Fallback) – Epic I
-
-## CSS-Duplizierung (Klassifizierung A-D)
-- [CSS-A1] Tokens Light/Dark (admin_frontend/admin-ui/src/styles/tokens.css:10-85 ↔ customer_frontend/customer-ui/src/styles/tokens.css:10-85) – **A (identisch, redundant)**. Source of Truth: docs/standards/THEME_TOKENS.md + customer_frontend/customer-ui/src/styles/tokens.css. Admin-Kopie später als LEGACY markieren.
-- [CSS-B1] base.css body/app Hintergründe + Textfarbe (admin_frontend/admin-ui/src/styles/base.css:12-44 ↔ customer_frontend/customer-ui/src/styles/base.css:12-44) – **B (semantisch gleich, minimale Abweichung)**. Source of Truth: Token-Mapping auf `--surface-0`/`--text-strong` in base.css; Admin nutzt noch Legacy-Aliase (`--bg`, `--text`).
-- [CSS-B2] Layout Shell/Sidebar/Nav (admin_frontend/admin-ui/src/styles/layout.css:8-127 ↔ customer_frontend/customer-ui/src/styles/layout.css:8-127) – **B (semantisch gleich, minimale Abweichung)**. Source of Truth: Admin-Layout (visuelle Referenz); Customer-Varianten sollten auf dieselbe Radius/Shadow-Skala zurückgeführt werden.
-- [CSS-B3] Layout Cards/Inputs/Status/Buttons (admin_frontend/admin-ui/src/styles/layout.css:231-360 ↔ customer_frontend/customer-ui/src/styles/layout.css:231-360) – **B (semantisch gleich, minimale Abweichung)**. Source of Truth: Admin-Layout für Spacing/Radius, Customer-Input-Tokens für Farb-/Focus-States.
-- [CSS-B4] Utilities page/section/chip/filter (admin_frontend/admin-ui/src/styles/utilities.css:8-122 ↔ customer_frontend/customer-ui/src/styles/utilities.css:8-122) – **B (semantisch gleich, minimale Abweichung)**. Source of Truth: Admin-Utilities (Panel/Shadow/Radius), Customer-Werte anpassen.
-- [CSS-C1] App.vue scoped Layout-Overrides vs. globale Layout-Klassen (admin_frontend/admin-ui/src/App.vue:581-644) – **C (kontextabhängig)**. Scoped Override bleibt notwendig für kompakte Sidebar; in globalen Layout-Klassen nicht entfernen.
-- [CSS-C2] UserCreateCard scoped Form-Layout vs. Utilities (admin_frontend/admin-ui/src/components/users/UserCreateCard.vue:64-96) – **C (kontextabhängig)**. Spezifische Gaps/Label-Styles für dieses Formular, kann später auf Utilities gemappt werden.
-- [CSS-D1] Customer-Kompatibilitätsschicht in layout.css (customer_frontend/customer-ui/src/styles/layout.css:436-486) spiegelt Utilities – **D (Legacy)**. Quelle: Historische Klassen; vor Entfernung mit Nutzungsanalyse versehen und als LEGACY kommentieren.

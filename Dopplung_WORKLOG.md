@@ -10,6 +10,8 @@
 | admin_frontend/admin-ui/src/App.vue:581-644 ↔ admin_frontend/admin-ui/src/styles/layout.css:8-140 | Component-Scoped Overrides vs. globale Layout-Klassen | Admin | App.vue überschreibt Shell/Sidebar/Nav trotz gleicher Klassennamen |
 | admin_frontend/admin-ui/src/components/users/UserCreateCard.vue:64-96 ↔ admin_frontend/admin-ui/src/styles/utilities.css:70-122 | Component-Scoped Form-Layout vs. Utilities | Admin | FormGrid/Field/Label/Actions erneut definiert, nur minimale Abweichungen |
 | customer_frontend/customer-ui/src/styles/layout.css:436-486 ↔ customer_frontend/customer-ui/src/styles/utilities.css:8-156 | Compatibility-Layer Klassen vs. aktuelle Utilities | Customer | Legacy-Klassen duplizieren aktuelle Utility-/Layout-Patterns (Grid, Buttons, Badges) |
+| customer_frontend/customer-ui/src/components/reports/ReportFilters.vue:296-372 ↔ customer_frontend/customer-ui/src/styles/utilities.css:100-160 | Component-Scoped Form/Grid/Chip Styles vs. Utilities | Customer | Form/Grid/Chip/Hint erneut definiert, weichen nur in Gap-Werten minimal ab |
+| customer_frontend/customer-ui/src/components/reports/ReportKpiCards.vue:65-103 ↔ admin_frontend/admin-ui/src/styles/utilities.css:348-374 | Component-Scoped Spinner/Grid vs. vorhandene Utilities | Customer | Spinner/Auto-fit-Grid doppelt, Werte leicht abweichend (Größe/Border) |
 
 Notizen:
 - Alle Fundstellen stammen aus Schritt 1 (Inventarisierung). Noch keine Deklaration wurde verändert.

@@ -9,7 +9,8 @@
 - Admin-Frontend Branchen ↔ Artikel: Backend-API für CSV/XLSX Mapping-Import/Export (Delta Add/Remove) bereitstellen; UI aktuell ohne Buttons, da OpenAPI keine Endpunkte kennt.
 - Admin-Frontend Branchen ↔ Artikel: Aggregierte Info für Überschneidungen (z. B. „in X Branchen“) per API liefern, damit Badge ohne N+1-Calls gerendert werden kann; aktuell nur Single-Branchen-Items vorhanden.
 - Admin-Frontend Branchen ↔ Artikel: Remote-OpenAPI (2026-01-06) bestätigt weiterhin nur GET/PUT für `/admin/inventory/industries/{industry_id}/items` ohne Import/Export oder Overlap; Backend-Implementierung bleibt Blocker.
-- Admin → Tenant Branche anwenden: Backend-Endpunkt nötig, um allen Tenants mit gleicher `industry_id` die Branchen-Artikel zuzuweisen (Items initial mit Bestand 0 anlegen) und bestehende Bestände nicht zu überschreiben/auf 0 zu setzen. OpenAPI bietet aktuell keinen solchen Bulk-/Clone-Endpunkt.
+- SMTP/Mail (Admin/Tenant): Migration `0013_add_use_tls_to_system_email_settings` ausrollen, Staging-Tests für `/admin/smtp/settings[*]`, `/inventory/settings/test-email` und `/inventory/orders/{order_id}/email` fahren; Logs mit `request_id`/TLS-Status prüfen.
+- Admin UI SMTP: Manuelle E2E-Tests des neuen SMTP-Abschnitts (Speichern, Passwort-Update, Testmail) gegen Staging; Request-ID/Fehlerdetails im UI sichtbar halten.
 
 ## Next
 - [A-08] (EPIC_A_TENANT_RESOLUTION) Status-Caching/Retry-Strategie umsetzen.

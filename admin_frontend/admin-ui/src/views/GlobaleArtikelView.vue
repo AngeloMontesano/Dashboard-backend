@@ -1,8 +1,8 @@
 <template>
   <UiPage>
-    <UiSection title="Globale Artikel" subtitle="Artikel-Stammdaten (UI-only bis Backend-Endpunkte bereitstehen)">
+    <UiSection title="Globale Artikel" subtitle="Artikel-Stammdaten ohne Tenant-Kontext (Admin-Key erforderlich)">
       <template #actions>
-        <button class="btnGhost small" :disabled="busy.load" @click="loadItems">
+        <button class="btnGhost small" :disabled="busy.load" @click="loadAll">
           {{ busy.load ? "lädt..." : "Neu laden" }}
         </button>
         <button class="btnPrimary small" @click="openCreateModal">Neu anlegen</button>
@@ -11,9 +11,7 @@
       <div class="table-card">
         <div class="stack">
           <p class="section-subtitle">
-            Keine Admin/OpenAPI-Endpunkte für globale Artikel ohne Tenant-Kontext vorhanden. Aktionen wirken nur lokal
-            im UI, Speicherung im Backend ist noch nicht möglich. Admin-Artikel sollen später schreibgeschützt für
-            Kunden sein; dafür fehlt aktuell die Backend-Unterstützung (Feld/Policy).
+            Admin-Artikel sind im Customer-Frontend schreibgeschützt (Name/SKU/Barcode/Kategorie/Einheit). Import/Export unterstützt Semikolon-CSV und XLSX.
           </p>
         </div>
       </div>
@@ -21,28 +19,27 @@
       <div class="table-card">
         <div class="table-card__header">
           <div class="tableTitle">Import / Export</div>
-          <div class="text-muted text-small">
-            Inventar-Import/Export-Endpunkte existieren nur tenant-gebunden mit Bearer-Token. Für Admin fehlt ein
-            globaler Endpoint mit Admin-Key. Aktionen bleiben daher deaktiviert.
-          </div>
+          <div class="text-muted text-small">CSV-Trenner: Semikolon. Kategorien/Einheiten müssen existieren.</div>
         </div>
         <div class="box stack">
           <div class="row gap8 wrap">
-            <button class="btnGhost small" type="button" disabled title="Backend-Endpunkt fehlt" @click="exportItems">
-              Export starten
+            <button class="btnGhost small" type="button" :disabled="busy.export" @click="exportItems('csv')">
+              {{ busy.export ? "exportiert..." : "Export CSV" }}
             </button>
-            <label class="btnGhost small file-btn" aria-disabled="true">
-              Datei wählen (xlsx/csv)
-              <input type="file" accept=".xlsx,.xls,.csv" disabled @change="onFileSelected" />
+            <button class="btnGhost small" type="button" :disabled="busy.export" @click="exportItems('xlsx')">
+              {{ busy.export ? "exportiert..." : "Export XLSX" }}
+            </button>
+            <label class="btnGhost small file-btn">
+              Datei wählen (csv/xlsx)
+              <input type="file" accept=".xlsx,.xls,.csv" @change="onFileSelected" />
             </label>
-            <button class="btnPrimary small" type="button" disabled title="Backend-Endpunkt fehlt" @click="importItems">
-              Import starten
+            <button class="btnPrimary small" type="button" :disabled="busy.import || !importFile" @click="importItems">
+              {{ busy.import ? "importiert..." : "Import starten" }}
             </button>
           </div>
           <ul class="bullets">
-            <li>CSV/XLSX Strukturen wie im Customer-Frontend (alle Felder, inkl. Kategorie/Einheit).</li>
-            <li>Admin-Artikel müssen für Kunden gesperrt werden (Name/SKU/Barcode readonly) – Backend fehlt.</li>
-            <li>Kunden-Artikel sollen beim Anlegen einen <code>z_</code>-Prefix für SKU/Artikelnummer erhalten – Backend fehlt.</li>
+            <li>Pflichtfelder: <code>sku</code>, <code>barcode</code>, <code>name</code>. Kategorienamen müssen vorhanden sein.</li>
+            <li>CSV Header: {{ csvColumns.join(";") }}</li>
           </ul>
         </div>
       </div>
@@ -56,23 +53,24 @@
             v-model.trim="search"
             placeholder="Name, SKU oder Barcode"
             aria-label="Globale Artikel filtern"
+            @keyup.enter="loadItems"
           />
-          <div class="hint">Filtert nur den lokalen Zustand.</div>
+          <div class="hint">Filter wird serverseitig angewendet.</div>
         </div>
         <div class="stack">
           <label class="field-label" for="global-item-category">Kategorie</label>
-          <select id="global-item-category" class="input" v-model="categoryFilter">
+          <select id="global-item-category" class="input" v-model="categoryFilter" @change="loadItems">
             <option value="">Alle</option>
             <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
           </select>
-          <span class="text-muted text-small">Treffer: {{ filteredItems.length }}</span>
+          <span class="text-muted text-small">Treffer: {{ items.length }} / {{ totalItems }}</span>
         </div>
       </div>
 
       <div class="table-card">
         <div class="table-card__header">
           <div class="tableTitle">Artikel</div>
-          <div class="text-muted text-small">Lokale UI-Daten. Kein Backend-Speicher.</div>
+          <div class="text-muted text-small">Globale Liste aus dem Backend.</div>
         </div>
         <div class="tableWrap">
           <table class="table">
@@ -81,13 +79,14 @@
                 <th>SKU</th>
                 <th>Artikel</th>
                 <th>Kategorie</th>
+                <th>Einheit</th>
                 <th>Status</th>
                 <th class="narrowCol"></th>
               </tr>
             </thead>
             <tbody>
               <tr
-                v-for="item in filteredItems"
+                v-for="item in items"
                 :key="item.id"
                 :class="{ rowActive: selectedId === item.id }"
                 @click="select(item.id)"
@@ -99,18 +98,22 @@
                     <div class="text-muted text-small">{{ item.barcode }}</div>
                   </div>
                 </td>
-                <td>{{ getCategoryName(item.category_id) || "—" }}</td>
+                <td>{{ item.category_name || getCategoryName(item.category_id) || "—" }}</td>
+                <td class="mono">{{ item.unit }}</td>
                 <td>
                   <span class="tag" :class="item.is_active ? 'ok' : 'bad'">
                     {{ item.is_active ? "aktiv" : "deaktiviert" }}
                   </span>
                 </td>
                 <td class="text-right">
-                  <button class="btnGhost small" type="button" @click.stop="openEdit(item)">Bearbeiten</button>
+                  <div class="row gap8">
+                    <button class="btnGhost small" type="button" @click.stop="openEdit(item)">Bearbeiten</button>
+                    <button class="btnGhost small danger" type="button" @click.stop="remove(item)">Löschen</button>
+                  </div>
                 </td>
               </tr>
-              <tr v-if="!filteredItems.length">
-                <td colspan="5" class="mutedPad">Noch keine Artikel im UI hinterlegt.</td>
+              <tr v-if="!items.length">
+                <td colspan="6" class="mutedPad">Keine Artikel gefunden.</td>
               </tr>
             </tbody>
           </table>
@@ -142,7 +145,7 @@
                 <label class="field">
                   <span class="field-label">Einheit *</span>
                   <select class="input" v-model="modal.unit">
-                    <option v-for="u in units" :key="u.id" :value="u.id">{{ u.name }}</option>
+                    <option v-for="u in unitOptions" :key="u.code" :value="u.code">{{ u.label }}</option>
                   </select>
                 </label>
                 <label class="field">
@@ -168,14 +171,27 @@
                   <span class="field-label">Zielbestand</span>
                   <input class="input" type="number" min="0" v-model.number="modal.target_stock" />
                 </label>
+                <label class="field">
+                  <span class="field-label">Maximalbestand</span>
+                  <input class="input" type="number" min="0" v-model.number="modal.max_stock" />
+                </label>
                 <label class="field checkbox">
                   <input type="checkbox" v-model="modal.is_active" />
                   <span>Aktiv</span>
                 </label>
               </div>
-              <div class="hint">Aktion ist UI-only; Backend-Endpunkte fehlen noch.</div>
+              <div class="hint">Admin-Artikel sind im Customer-Frontend read-only.</div>
             </div>
-            <div class="modal__footer">
+            <div class="modal__footer modal__footer--with-delete">
+              <button
+                v-if="modal.mode === 'edit'"
+                class="btnGhost small danger"
+                type="button"
+                :disabled="busy.save"
+                @click="removeFromModal"
+              >
+                Löschen
+              </button>
               <button class="btnGhost" type="button" @click="closeModal">Abbrechen</button>
               <button class="btnPrimary" type="button" :disabled="busy.save" @click="save">
                 {{ busy.save ? "speichert..." : "Speichern" }}
@@ -189,38 +205,50 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, ref } from "vue";
+import { computed, reactive, ref, onMounted } from "vue";
 import { useToast } from "../composables/useToast";
 import {
   getCategoryName,
   useGlobalMasterdata,
   type GlobalItem,
-  generateId,
+  type GlobalCategory,
+  type GlobalUnit,
 } from "../composables/useGlobalMasterdata";
+import {
+  fetchGlobalItems,
+  createGlobalItem,
+  updateGlobalItem,
+  deleteGlobalItem,
+  importGlobalItems,
+  exportGlobalItems,
+  fetchGlobalCategories,
+  fetchGlobalUnits,
+} from "../api/globals";
 import UiPage from "../components/ui/UiPage.vue";
 import UiSection from "../components/ui/UiSection.vue";
 
-defineProps<{
+const props = defineProps<{
   adminKey: string;
   actor: string;
 }>();
 
 const { toast } = useToast();
-const { items, categories, units: globalUnits, upsertItem } = useGlobalMasterdata();
+const { items, categories, units: globalUnits, replaceItems, replaceCategories, replaceUnits, upsertItem } =
+  useGlobalMasterdata();
 
 const search = ref("");
 const categoryFilter = ref("");
 const selectedId = ref("");
+const totalItems = ref(0);
+const page = ref(1);
+const pageSize = 50;
+const importFile = ref<File | null>(null);
 const busy = reactive({
   load: false,
   save: false,
+  import: false,
+  export: false,
 });
-const defaultUnits = [
-  { id: "pcs", name: "Stück", is_active: true },
-  { id: "kg", name: "Kilogramm", is_active: true },
-  { id: "l", name: "Liter", is_active: true },
-];
-const units = computed(() => (globalUnits.value.length ? globalUnits.value : defaultUnits));
 
 const modal = reactive({
   open: false,
@@ -230,33 +258,79 @@ const modal = reactive({
   sku: "",
   barcode: "",
   description: "",
-  unit: units.value[0]?.id || "",
+  unit: "pcs",
   category_id: "",
   quantity: 0,
   min_stock: 0,
   target_stock: 0,
+  max_stock: 0,
   is_active: true,
 });
-const importFile = ref<File | null>(null);
 
-const filteredItems = computed(() => {
-  const term = search.value.trim().toLowerCase();
-  const list = items.value || [];
-  let filtered = list;
-  if (categoryFilter.value) {
-    filtered = filtered.filter((i) => i.category_id === categoryFilter.value);
-  }
-  if (!term) return filtered;
-  return filtered.filter(
-    (i) =>
-      i.name.toLowerCase().includes(term) ||
-      i.sku.toLowerCase().includes(term) ||
-      (i.barcode || "").toLowerCase().includes(term)
-  );
+const csvColumns = [
+  "sku",
+  "barcode",
+  "name",
+  "description",
+  "qty",
+  "unit",
+  "is_active",
+  "category",
+  "min_stock",
+  "max_stock",
+  "target_stock",
+  "recommended_stock",
+  "order_mode",
+];
+
+const unitOptions = computed<GlobalUnit[]>(() => {
+  if (globalUnits.value.length) return globalUnits.value;
+  return [
+    { code: "pcs", label: "Stück", is_active: true },
+    { code: "kg", label: "Kilogramm", is_active: true },
+    { code: "l", label: "Liter", is_active: true },
+  ];
 });
 
-function select(id: string) {
-  selectedId.value = id;
+async function loadCategoriesUnits() {
+  if (!props.adminKey) return;
+  try {
+    const [cats, units] = await Promise.all([
+      fetchGlobalCategories(props.adminKey, props.actor),
+      fetchGlobalUnits(props.adminKey, props.actor),
+    ]);
+    replaceCategories(cats);
+    replaceUnits(units);
+  } catch (e: any) {
+    toast(`Kategorien/Einheiten konnten nicht geladen werden: ${e?.message || e}`, "error");
+  }
+}
+
+async function loadItems() {
+  if (!props.adminKey) {
+    toast("Admin Key erforderlich");
+    return;
+  }
+  busy.load = true;
+  try {
+    const params: Record<string, any> = {
+      q: search.value || undefined,
+      category_id: categoryFilter.value || undefined,
+      page: page.value,
+      page_size: pageSize,
+    };
+    const res = await fetchGlobalItems(props.adminKey, props.actor, params);
+    replaceItems(res.items);
+    totalItems.value = res.total;
+  } catch (e: any) {
+    toast(`Laden fehlgeschlagen: ${e?.message || e}`, "error");
+  } finally {
+    busy.load = false;
+  }
+}
+
+async function loadAll() {
+  await Promise.all([loadCategoriesUnits(), loadItems()]);
 }
 
 function openCreateModal() {
@@ -267,11 +341,12 @@ function openCreateModal() {
   modal.sku = "";
   modal.barcode = "";
   modal.description = "";
-  modal.unit = units[0].id;
+  modal.unit = unitOptions.value[0]?.code || "pcs";
   modal.category_id = "";
   modal.quantity = 0;
   modal.min_stock = 0;
   modal.target_stock = 0;
+  modal.max_stock = 0;
   modal.is_active = true;
 }
 
@@ -283,11 +358,12 @@ function openEdit(item: GlobalItem) {
   modal.sku = item.sku;
   modal.barcode = item.barcode;
   modal.description = item.description || "";
-  modal.unit = item.unit;
+  modal.unit = item.unit || "pcs";
   modal.category_id = item.category_id || "";
   modal.quantity = item.quantity || 0;
   modal.min_stock = item.min_stock || 0;
   modal.target_stock = item.target_stock || 0;
+  modal.max_stock = item.max_stock || 0;
   modal.is_active = item.is_active;
 }
 
@@ -295,7 +371,11 @@ function closeModal() {
   modal.open = false;
 }
 
-function save() {
+function select(id: string) {
+  selectedId.value = id;
+}
+
+async function save() {
   const name = modal.name.trim();
   const sku = modal.sku.trim();
   if (!name || !sku) {
@@ -303,53 +383,115 @@ function save() {
     return;
   }
   busy.save = true;
-  const payload: GlobalItem = {
-    id: modal.id || generateId(),
-    name,
-    sku,
-    barcode: modal.barcode?.trim() || "",
-    description: modal.description?.trim() || "",
-    quantity: Number.isFinite(modal.quantity) ? Number(modal.quantity) : 0,
-    unit: modal.unit || "pcs",
-    is_active: modal.is_active,
-    category_id: modal.category_id || null,
-    min_stock: Number.isFinite(modal.min_stock) ? Number(modal.min_stock) : 0,
-    max_stock: Number.isFinite(modal.target_stock) ? Number(modal.target_stock) : 0,
-    target_stock: Number.isFinite(modal.target_stock) ? Number(modal.target_stock) : 0,
-    recommended_stock: Number.isFinite(modal.target_stock) ? Number(modal.target_stock) : 0,
-    order_mode: 0,
-    category_name: getCategoryName(modal.category_id) || null,
-  };
-  upsertItem(payload);
-  selectedId.value = payload.id;
-  toast(
-    modal.mode === "edit" ? "Artikel aktualisiert (UI-only, Backend fehlt)" : "Artikel angelegt (UI-only, Backend fehlt)",
-    "success"
-  );
-  busy.save = false;
-  closeModal();
-}
+  try {
+    const payload = {
+      name,
+      sku,
+      barcode: modal.barcode?.trim() || "",
+      description: modal.description?.trim() || "",
+      quantity: Number.isFinite(modal.quantity) ? Number(modal.quantity) : 0,
+      unit: modal.unit || "pcs",
+      is_active: modal.is_active,
+      category_id: modal.category_id || null,
+      min_stock: Number.isFinite(modal.min_stock) ? Number(modal.min_stock) : 0,
+      max_stock: Number.isFinite(modal.max_stock) ? Number(modal.max_stock) : 0,
+      target_stock: Number.isFinite(modal.target_stock) ? Number(modal.target_stock) : 0,
+      recommended_stock: Number.isFinite(modal.target_stock) ? Number(modal.target_stock) : 0,
+      order_mode: 0,
+    };
 
-function loadItems() {
-  busy.load = true;
-  toast("Backend-Unterstützung fehlt – kein Ladevorgang möglich", "warning");
-  busy.load = false;
-}
-
-function exportItems() {
-  toast("Export nicht möglich: Admin-Endpoint fehlt (nur tenant-basierter Export vorhanden)", "warning");
-}
-
-function importItems() {
-  if (!importFile.value) {
-    toast("Bitte Datei wählen (XLSX/CSV)", "warning");
-    return;
+    let saved: GlobalItem;
+    if (modal.mode === "edit" && modal.id) {
+      saved = await updateGlobalItem(props.adminKey, modal.id, payload, props.actor);
+    } else {
+      saved = await createGlobalItem(props.adminKey, payload, props.actor);
+    }
+    upsertItem(saved);
+    selectedId.value = saved.id;
+    toast(modal.mode === "edit" ? "Artikel aktualisiert" : "Artikel angelegt", "success");
+    closeModal();
+  } catch (e: any) {
+    toast(`Speichern fehlgeschlagen: ${e?.response?.data?.detail?.error?.message || e?.message || e}`, "error");
+  } finally {
+    busy.save = false;
   }
-  toast("Import nicht möglich: Admin-Endpoint fehlt (nur tenant-basierter Import vorhanden)", "warning");
+}
+
+async function remove(item: GlobalItem) {
+  if (!window.confirm(`Artikel ${item.name} löschen?`)) return;
+  try {
+    await deleteGlobalItem(props.adminKey, item.id, props.actor);
+    replaceItems(items.value.filter((i) => i.id !== item.id));
+    toast("Artikel gelöscht", "success");
+  } catch (e: any) {
+    toast(`Löschen fehlgeschlagen: ${e?.response?.data?.detail?.error?.message || e?.message || e}`, "error");
+  }
+}
+
+async function removeFromModal() {
+  const current = items.value.find((i) => i.id === modal.id);
+  if (!current) return;
+  await remove(current);
+  closeModal();
 }
 
 function onFileSelected(event: Event) {
   const files = (event.target as HTMLInputElement).files;
   importFile.value = files && files.length ? files[0] : null;
 }
+
+async function importItems() {
+  if (!importFile.value) {
+    toast("Bitte Datei wählen", "warning");
+    return;
+  }
+  busy.import = true;
+  try {
+    const res = await importGlobalItems(props.adminKey, importFile.value, props.actor);
+    toast(`Importiert: ${res.imported}, aktualisiert: ${res.updated}`, res.errors?.length ? "warning" : "success");
+    await loadItems();
+  } catch (e: any) {
+    toast(`Import fehlgeschlagen: ${e?.message || e}`, "error");
+  } finally {
+    busy.import = false;
+  }
+}
+
+async function exportItems(format: "csv" | "xlsx") {
+  busy.export = true;
+  try {
+    const blob = await exportGlobalItems(props.adminKey, format, props.actor);
+    const filename = `globale_artikel.${format === "csv" ? "csv" : "xlsx"}`;
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    link.click();
+    URL.revokeObjectURL(url);
+    toast(`Export ${format.toUpperCase()} erstellt`);
+  } catch (e: any) {
+    toast(`Export fehlgeschlagen: ${e?.message || e}`, "error");
+  } finally {
+    busy.export = false;
+  }
+}
+
+onMounted(() => {
+  if (props.adminKey) {
+    loadAll();
+  }
+});
 </script>
+
+<style scoped>
+.modal__footer--with-delete {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  padding-top: 12px;
+}
+
+.modal__footer--with-delete .btnGhost.danger {
+  margin-right: auto;
+}
+</style>

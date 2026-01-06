@@ -387,6 +387,8 @@ import UiPage from "../components/ui/UiPage.vue";
 import UiSection from "../components/ui/UiSection.vue";
 import type { components } from "../api/gen/openapi";
 
+type IndustryAssignResponse = components["schemas"]["IndustryAssignResponse"];
+
 const props = defineProps<{
   adminKey: string;
   actor: string;
@@ -432,6 +434,7 @@ const busy = reactive({
   loadAvailable: false,
   loadMapping: false,
   saveMapping: false,
+  assignTenants: false,
 });
 
 type IndustryAssignResponse = components["schemas"]["IndustryAssignResponse"];

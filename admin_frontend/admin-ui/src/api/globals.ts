@@ -11,6 +11,8 @@ export type ItemUpdatePayload = components["schemas"]["ItemUpdate"];
 
 export type GlobalUnit = components["schemas"]["ItemUnitOut"];
 export type GlobalIndustry = components["schemas"]["IndustryOut"];
+export type IndustryAssignRequest = components["schemas"]["IndustryAssignRequest"];
+export type IndustryAssignResponse = components["schemas"]["IndustryAssignResponse"];
 
 type ItemsPage = components["schemas"]["ItemsPage"];
 type ItemsQuery = NonNullable<paths["/admin/inventory/items"]["get"]["parameters"]["query"]>;

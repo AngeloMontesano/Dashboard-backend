@@ -198,7 +198,7 @@
   border: 1px dashed var(--color-border);
   border-radius: 12px;
   color: var(--color-text-muted);
-  background: #f9fbff;
+  background: var(--color-surface-muted);
 }
 
 .form-grid {
@@ -232,6 +232,20 @@ textarea {
 textarea:focus {
   outline: 2px solid rgba(47, 123, 255, 0.3);
   border-color: var(--color-primary);
+}
+
+.theme-dark .input,
+.theme-dark textarea,
+.theme-dark select {
+  background: color-mix(in srgb, var(--surface-1) 88%, #ffffff 12%);
+  border-color: color-mix(in srgb, var(--color-border) 80%, #94a3b8 20%);
+  color: var(--text-strong);
+}
+
+.theme-dark .input::placeholder,
+.theme-dark textarea::placeholder,
+.theme-dark select::placeholder {
+  color: var(--placeholder);
 }
 
 .table {

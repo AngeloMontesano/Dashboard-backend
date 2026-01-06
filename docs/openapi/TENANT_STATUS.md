@@ -59,6 +59,13 @@ Früher Tenant-Check vor App-Bootstrap, damit unbekannte/inaktive Tenants eine g
 - Beispiele decken Proxy-Header, Slug-Override und Localhost-Query ab.
 - Reason-Codes sind konsistent mit QA-Szenarien (A-10/A-11) und OpenAPI-Schema.
 
+## Implementierungs-Mapping (Backend Stand)
+- Pfad: `backend/app/modules/public/routes.py::tenant_status` (Router `prefix="/public"` wird in `main.py` eingebunden).
+- Slug-Auflösung: `X-Tenant-Slug` → Query `slug` → Host-Ableitung via `_get_effective_host` + `_extract_slug_from_hosts` (Base-Domain aus `settings.BASE_DOMAIN`, Fallback `localhost`).
+- DB-Verfügbarkeit: Health-Probe `SELECT 1`, `SQLAlchemyError` → `status=unavailable`, `reason` = Klassenname.
+- Status-Mapping: fehlender Slug → `not_found/missing_slug`; unbekannter Slug → `not_found/tenant_not_found`; inaktiv → `inactive/tenant_inactive`; ok → `ok` + `tenant_id` + `is_active`.
+- HTTP-Code bleibt 200 für alle Pfade; Rückgabeobjekte sind kompakt (keine Tracebacks).
+
 ## Proxy-Header-Matrix (A-11 Vorbereitung)
 | Szenario | X-Forwarded-Host | X-Tenant-Slug | Query `slug` | Erwarteter Status/Reason |
 | --- | --- | --- | --- | --- |

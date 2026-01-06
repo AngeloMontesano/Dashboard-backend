@@ -94,3 +94,8 @@
 ## 2024-06-27
 - Roadmap-Index ergänzt: Spezifikations-Link A-01 weist nun explizit auf die Proxy-Header-Matrix hin (Vorbereitung A-11).
 - Keine Task-Änderungen; offene Punkte bleiben A-01 Abnahme, danach QA/Proxy (A-10/A-11).
+
+## 2024-06-28
+- TENANT_STATUS-Spec um Implementierungs-Mapping ergänzt (Backend: `modules/public/routes.py::tenant_status`, Slug-Priorität, DB-Probe, 200-only).
+- EPIC_A API/Backend-Annahmen mit aktuellem Backend-Stand verknüpft, damit Coding-Startpunkte klar sind.
+- Offene Punkte: A-01 Review weiterhin ausstehend; QA-Checkliste (A-10) und Proxy-Testplan (A-11) noch offen, Coding-Tasks starten nach A-01 Freigabe.

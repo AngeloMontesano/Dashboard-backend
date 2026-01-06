@@ -601,6 +601,16 @@
 - **Tests**
   - `npm run build` (admin_frontend/admin-ui)
 
+## Schritt 48 – Settings mit Build-Info ergänzt
+- **Datum/Uhrzeit**: 2026-01-06T11:26:00+00:00
+- **Ziel**: System-Abschnitt der Settings um verfügbare Build-/Versionsinformation ergänzen.
+- **Was wurde geändert**
+  - `AdminSettingsView.vue`: Build Info zeigt jetzt die App-Version (aus `package.json` bzw. `VITE_BUILD_INFO`), statt eines leeren Platzhalters.
+- **Ergebnis**
+  - System-Sektion enthält eine konkrete Versionsanzeige; weiterhin keine Backend-Build-Daten vorhanden.
+- **Tests**
+  - `npm run build` (admin_frontend/admin-ui)
+
 ## Schritt 46 – Admin Settings Analyse & Planung
 - **Datum/Uhrzeit**: 2026-01-06T11:08:24+00:00
 - **Ziel**: Ist-Zustand der Admin-Settings-View erfassen, API-Aufrufe und Blöcke dokumentieren, Plan für Refactor anlegen.

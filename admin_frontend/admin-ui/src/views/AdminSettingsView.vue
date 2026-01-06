@@ -35,7 +35,10 @@
           </div>
           <div class="kv">
             <div class="k">Build Info</div>
-            <div class="v muted">nicht verfügbar (UI-only)</div>
+            <div class="v">
+              <div class="mono">{{ buildInfo }}</div>
+              <div class="muted">App Version (UI)</div>
+            </div>
           </div>
         </div>
 
@@ -126,6 +129,7 @@
   - Systemweite Einstellungen, Security-Hinweise, Theme & Flags
 */
 import { ref } from "vue";
+import pkg from "../../package.json";
 
 const props = defineProps<{
   apiOk: boolean;
@@ -149,6 +153,7 @@ const themes = [
 ];
 const localTheme = ref((props.theme as "light" | "dark" | "system") || "system");
 const grafanaUrl = import.meta.env.VITE_GRAFANA_URL || "http://localhost:3000";
+const buildInfo = (import.meta.env.VITE_BUILD_INFO as string | undefined) || pkg.version;
 
 function onThemeChange(themeId: "light" | "dark" | "system") {
   localTheme.value = themeId;

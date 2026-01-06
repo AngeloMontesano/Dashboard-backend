@@ -647,9 +647,10 @@ watch(
         <span class="toolbar__label sr-only">Suche</span>
         <input v-model="searchTerm" type="search" placeholder="Suche SKU, Barcode, Name" />
       </label>
-      <button class="button button--ghost toolbar__focus" type="button" @click="focusCreateBarcode">
+<!--      <button class="button button--ghost toolbar__focus" type="button" @click="focusCreateBarcode">
         Fokus auf Barcode
       </button>
+    -->    
       <label class="toolbar__field select-field">
         <span class="toolbar__label">Kategorie</span>
         <select v-model="filters.category_id">
@@ -814,10 +815,11 @@ watch(
             <span>Soll-Bestand</span>
             <input type="number" min="0" v-model.number="editForm.target_stock" :disabled="!hasWriteAccess" />
           </label>
-          <label>
+<!--          <label>
             <span>Empfohlen</span>
             <input type="number" min="0" v-model.number="editForm.recommended_stock" :disabled="!hasWriteAccess" />
           </label>
+        -->
           <label>
             <span>Bestell-Modus</span>
             <select v-model.number="editForm.order_mode" :disabled="!hasWriteAccess">

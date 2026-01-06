@@ -101,7 +101,7 @@ Frontend zeigt für unbekannte/inaktive Subdomains eine klare Seite statt JSON. 
 - Tenant not found: Subdomain/Slug unbekannt → UI-Text + Aktionen (Retry, Startseite/Support).
 - Tenant inactive: Inaktive Tenant-DB-Flag → UI-Text + Aktionen, keine JSON-Fehler sichtbar.
 - Service unavailable: DB down oder Timeout → UI-Text mit Grund, Retry-Button funktioniert.
-- Header-Szenarien: Mit/ohne `X-Forwarded-Host`, mit/ohne `X-Tenant-Slug`; Status-API liefert konsistenten Status.
+- Header-Szenarien: Mit/ohne `X-Forwarded-Host`, mit/ohne `X-Tenant-Slug`; Status-API liefert konsistenten Status (siehe Proxy-Header-Matrix in `docs/openapi/TENANT_STATUS.md`).
 - Mobile/Darkmode: TenantStatusView bleibt lesbar/bedienbar, Actions/Links erreichbar.
 - Proxy: Weitergeleitete Hosts ohne Subdomain zeigen „not_found“ und kein Stacktrace/JSON.
 

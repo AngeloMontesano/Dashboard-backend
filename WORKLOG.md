@@ -85,3 +85,8 @@
 - TENANT_STATUS-Spec um Proxy-Header-Matrix ergänzt (A-11 Vorbereitung) für Host/Slug/DB-down Szenarien.
 - Fokus: QA/Proxy-Reproduzierbarkeit erhöhen; keine neuen Tasks oder ID-Änderungen.
 - Offene Punkte unverändert: A-01 Abnahme, danach A-10/A-11 ausführen.
+
+## 2024-06-26
+- EPIC_A QA-Checkliste mit Verweis auf die Proxy-Header-Matrix (TENANT_STATUS.md) ergänzt, damit A-10/A-11 dieselben Szenarien nutzen.
+- Keine Task-Änderungen; Ziel bleibt A-01 Review abschließen, danach QA/Proxy-Checks.
+- Offene Punkte unverändert: A-01 Abnahme, QA-Checkliste (A-10), Proxy-Testplan (A-11).

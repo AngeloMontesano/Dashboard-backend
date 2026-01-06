@@ -835,3 +835,13 @@
   - EPIC_E aktualisiert; TODO/Epic_TODO bereinigt (E-02 erledigt).
 - Ergebnis: E-02 (Dialog-Konzept) abgeschlossen, Basis für Komponentenbau und Backend-Abgleich gelegt.
 - Nächste Schritte: E-06 Prefill-Implementierung planen, E-07 Storno-Konzept ausarbeiten.
+
+- Datum/Uhrzeit: 2026-01-06T20:00:41Z
+- Task-ID: EPIC-F-03
+- Was analysiert/geändert:
+  - UX-Flow für Offline-Queue skizziert: Tabs pro Kategorie, Tabelle mit Status-Badges, Detail-Drawer/Modal mit Fehlerdetails, Aktionen Retry/Löschen/Login.
+  - Status-Badges definiert (auth=Anmeldung nötig, client=Blockiert, server/network=Retry geplant, queued=Wartet), Filter/Textsuche beschrieben.
+  - Fehlerdarstellung ohne Toast-Spam, Technik-Block einklappbar, Busy/Retry-States spezifiziert; Empty-States pro Tab mit CTA.
+  - EPIC_F Abschnitt ergänzt; TODO/Epic_TODO aktualisiert (F-03 erledigt).
+- Ergebnis: F-03 (UX-Flow) abgeschlossen, Grundlage für Komponentenstruktur (F-04) und Actions-Wiring (F-05) gelegt.
+- Nächste Schritte: F-04 Komponentenstruktur planen, F-05 Retry/Delete an Queue-Service anbinden, F-06 Auth-spezifische Flows dokumentieren.

@@ -1,7 +1,6 @@
 # TODO
 
 ## Now (Top 10)
-- [F-03] (EPIC_F_OFFLINE_QUEUE_ERROR_HANDLING) UX-Flow für Queue-Liste + Detail skizzieren.
 
 ## Next
 - [A-08] (EPIC_A_TENANT_RESOLUTION) Status-Caching/Retry-Strategie umsetzen.

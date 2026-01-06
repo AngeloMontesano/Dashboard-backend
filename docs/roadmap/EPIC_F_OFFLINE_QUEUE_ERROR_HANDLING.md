@@ -34,6 +34,21 @@ Endnutzerfreundliche Fehleroberfläche für die Offline Queue (IndexedDB) mit kl
 - Queue Item: `{id, type, payload, status, lastError: {category, status, message, requestId?}, retries}`.
 - Filter State: Kategorie + Textsuche.
 
+### UX-Flow Liste + Detail (F-03)
+- Einstieg: View „Sync-Probleme“ zeigt Tabs pro Kategorie (`auth`, `client`, `server`, `network`, `all`).
+- Liste: Tabelle mit Spalten `Typ`, `Status-Badge`, `Letzter Fehler`, `Zeitpunkt`, `Aktionen (Retry/Löschen/Details)`.
+- Status-Badges:
+  - `auth`: „Anmeldung nötig“
+  - `client` (4xx): „Blockiert“
+  - `server` (5xx) / `network`: „Retry geplant“
+  - `queued`: „Wartet“
+- Filter: Textsuche über Request/Item-ID, Payload-Snippet; Tabs schalten Kategorie-Filter.
+- Detail: Rechts-Drawer oder Modal mit Feldern `ID`, `Typ`, `Payload-Snippet`, `LastError` (Status, Kategorie, Message, Request-ID), `Retries`, `Zuletzt aktualisiert`.
+- Aktionen im Detail: `Retry jetzt`, `Löschen`, bei `auth` zusätzlich „Neu anmelden“ (öffnet Login) und danach „Sync jetzt“.
+- Fehlerdarstellung: Keine Toast-Spam, stattdessen Inline-Hinweis im Detail oder in der Liste; Technik-Block einklappbar.
+- Busy/Retry: Buttons zeigen Spinner bei laufender Aktion; Auto-Retry-Status sichtbar („Retry läuft in Xs“ optional).
+- Empty States: Pro Tab ein freundlicher Text („Keine Fehlversuche in dieser Kategorie“), CTA „Alle anzeigen“ (Tab `all`) oder „Erneut synchronisieren“.
+
 ## 9) Tasks (umsetzbar, klein)
 - **F-01** – Datenmodell der Queue-Einträge dokumentieren (bestehende Felder).  
   - Bereich: docs/customer  

@@ -25,6 +25,7 @@
 | admin_frontend/admin-ui/src/views/GlobaleKategorienView.vue:352-367 ↔ admin_frontend/admin-ui/src/styles/utilities.css:501-505 | Component-Scoped Modal Footer (Delete) | Admin | Gleiche Footer-Anordnung wie Utilities plus Delete-Ausrichtung |
 | admin_frontend/admin-ui/src/views/GlobaleEinheitenView.vue:338-347 ↔ admin_frontend/admin-ui/src/styles/utilities.css:501-505 | Component-Scoped Modal Footer (Delete) | Admin | Footer-Layout erneut definiert, identisch bis auf Delete-Margin |
 | admin_frontend/admin-ui/src/views/GlobaleBranchenView.vue:892-901 ↔ admin_frontend/admin-ui/src/styles/utilities.css:501-505 | Component-Scoped Modal Footer (Delete) | Admin | Wiederholung des Modal-Footers; Delete-Button nach links geschoben |
+| admin_frontend/admin-ui/src/views/GlobaleBranchenView.vue:903-1019 ↔ admin_frontend/admin-ui/src/styles/utilities.css:140-220 | Component-Scoped Pane/List/Grid vs. Utilities | Admin | Pane-/List-/Grid-Layouts duplizieren panel/list-panel/table-card Patterns, nur Gaps/Widths leicht abweichend |
 
 Notizen:
 - Alle Fundstellen stammen aus Schritt 1 (Inventarisierung). Noch keine Deklaration wurde verändert.

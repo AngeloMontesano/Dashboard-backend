@@ -11,6 +11,8 @@ import BestellungenView from '@/views/BestellungenView.vue';
 import EinstellungenView from '@/views/EinstellungenView.vue';
 import LoginView from '@/views/LoginView.vue';
 import KategorienView from '@/views/KategorienView.vue';
+import TenantStatusView from '@/views/TenantStatusView.vue';
+import { useTenantStatus } from '@/composables/useTenantStatus';
 
 const routes: RouteRecordRaw[] = [
   { path: '/login', name: 'login', component: LoginView, meta: { public: true } },
@@ -22,7 +24,9 @@ const routes: RouteRecordRaw[] = [
   { path: '/inventur', name: 'inventur', component: InventurView },
   { path: '/berichte-analysen', name: 'berichte-analysen', component: BerichteAnalysenView },
   { path: '/bestellungen', name: 'bestellungen', component: BestellungenView },
-  { path: '/einstellungen', name: 'einstellungen', component: EinstellungenView }
+  { path: '/einstellungen', name: 'einstellungen', component: EinstellungenView },
+  { path: '/tenant-status', name: 'tenant-status', component: TenantStatusView, meta: { public: true } },
+  { path: '/:pathMatch(.*)*', name: 'not-found', component: TenantStatusView, meta: { public: true } }
 ];
 
 const router = createRouter({
@@ -31,6 +35,11 @@ const router = createRouter({
 });
 
 router.beforeEach((to) => {
+  const tenantStatus = useTenantStatus().value;
+  if (tenantStatus && tenantStatus.status !== 'ok' && to.name !== 'tenant-status') {
+    return { name: 'tenant-status' };
+  }
+
   const { isAuthenticated } = useAuth();
   if (to.meta.public && isAuthenticated()) {
     return { name: 'dashboard' };

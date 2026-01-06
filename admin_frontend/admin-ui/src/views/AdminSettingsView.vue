@@ -4,7 +4,7 @@
       <div class="cardHeader">
         <div>
           <div class="cardTitle">Einstellungen</div>
-          <div class="cardHint">System, Security, Theme, Feature Flags</div>
+          <div class="cardHint">System, Security, Theme, Feature Flags, Email</div>
         </div>
       </div>
 
@@ -368,6 +368,7 @@ watch(
     }
     if (!key) {
       systemInfo.value = null;
+      mapEmailSettings({ host: "", port: null, user: "", from_email: "", has_password: false });
     }
   },
   { immediate: true }
@@ -439,6 +440,36 @@ function testEmailSettings() {
 </script>
 
 <style scoped>
+.stack{
+  display: grid;
+  gap: 12px;
+}
+.collapsible{
+  border: 1px solid var(--border);
+  border-radius: var(--radius2);
+  background: var(--surface2);
+  padding: 12px;
+  box-shadow: var(--shadow);
+}
+.collapsibleHeader{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.sectionHint{
+  color: var(--muted);
+  font-size: 12px;
+}
+.fieldGrid{
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 10px;
+}
+.field .k{
+  margin-bottom: 4px;
+}
 .themeSelector{
   display: flex;
   gap: 12px;

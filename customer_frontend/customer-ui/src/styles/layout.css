@@ -237,9 +237,10 @@ textarea:focus {
 .theme-dark .input,
 .theme-dark textarea,
 .theme-dark select {
-  background: color-mix(in srgb, var(--surface-1) 88%, #ffffff 12%);
-  border-color: color-mix(in srgb, var(--color-border) 80%, #94a3b8 20%);
+  background: color-mix(in srgb, var(--surface-1) 70%, #ffffff 30%);
+  border-color: color-mix(in srgb, var(--color-border) 65%, #cbd5e1 35%);
   color: var(--text-strong);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
 .theme-dark .input::placeholder,

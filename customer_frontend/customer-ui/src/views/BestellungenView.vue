@@ -91,7 +91,34 @@ async function loadRecommendations() {
     const res = await fetchReorderRecommendations(authState.accessToken);
     state.recommended = res.items || [];
   } catch {
-    state.recommended = [];
+    // Fallback auf lokale Items, falls Endpoint (z.B. wegen Migration) fehlt
+    if (state.items.length) {
+      state.recommended = state.items
+        .filter(
+          (item) =>
+            item.is_active &&
+            item.order_mode !== 0 &&
+            item.target_stock > 0 &&
+            item.quantity < item.target_stock
+        )
+        .map((item) => ({
+          id: item.id,
+          name: item.name,
+          sku: item.sku,
+          barcode: item.barcode,
+          category_id: item.category_id || null,
+          quantity: item.quantity,
+          target_stock: item.target_stock,
+          min_stock: item.min_stock,
+          recommended_qty: Math.max(
+            item.target_stock - item.quantity,
+            item.min_stock - item.quantity,
+            1
+          )
+        }));
+    } else {
+      state.recommended = [];
+    }
   }
 }
 
@@ -100,6 +127,31 @@ async function loadItems() {
   try {
     const res = await fetchItems({ token: authState.accessToken, page: 1, page_size: 200, active: true });
     state.items = res.items;
+    if (!state.recommended.length) {
+      state.recommended = res.items
+        .filter(
+          (item) =>
+            item.is_active &&
+            item.order_mode !== 0 &&
+            item.target_stock > 0 &&
+            item.quantity < item.target_stock
+        )
+        .map((item) => ({
+          id: item.id,
+          name: item.name,
+          sku: item.sku,
+          barcode: item.barcode,
+          category_id: item.category_id || null,
+          quantity: item.quantity,
+          target_stock: item.target_stock,
+          min_stock: item.min_stock,
+          recommended_qty: Math.max(
+            item.target_stock - item.quantity,
+            item.min_stock - item.quantity,
+            1
+          )
+        }));
+    }
   } catch {
     state.items = [];
   }

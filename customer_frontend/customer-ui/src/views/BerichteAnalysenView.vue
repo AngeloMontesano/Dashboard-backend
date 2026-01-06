@@ -232,7 +232,10 @@ function buildTableData(series: ReportSeries[]) {
 async function loadReports() {
   if (!authState.accessToken) return;
   const params = buildParams();
-  if (!params) return;
+  if (!params) {
+    error.value = 'Bitte Zeitraum auswählen.';
+    return;
+  }
   loading.value = true;
   error.value = null;
   try {
@@ -278,6 +281,17 @@ watch(
   () => {
     triggerDebouncedLoad();
   }
+);
+
+watch(
+  () => filters.dateRange,
+  (range) => {
+    if (range[0] && range[1]) {
+      filters.appliedRange = [...range] as [Date, Date];
+      triggerDebouncedLoad();
+    }
+  },
+  { deep: true }
 );
 
 watch(

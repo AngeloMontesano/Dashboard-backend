@@ -9,6 +9,7 @@ import {
   fetchMovements,
   fetchReorderRecommendations,
   listOrders,
+  type Item,
   type MovementOut
 } from '@/api/inventory';
 
@@ -83,30 +84,68 @@ async function loadMovementsToday(): Promise<number> {
   return movements.length;
 }
 
+function deriveRecommendations(items: Item[]): number {
+  return items.filter(
+    (item) =>
+      item.is_active &&
+      item.order_mode !== 0 &&
+      item.target_stock > 0 &&
+      item.quantity < item.target_stock
+  ).length;
+}
+
 async function loadDashboard() {
   if (!authState.accessToken) return;
   state.loading = true;
-  state.error = null;
+  const errors: string[] = [];
   try {
-    const [openOrders, reorder, items, movementsToday] = await Promise.all([
-      listOrders(authState.accessToken, 'OPEN'),
-      fetchReorderRecommendations(authState.accessToken),
-      fetchAllItems(),
-      loadMovementsToday()
-    ]);
+    let openOrders = [];
+    let reorderCount = 0;
+    let items: Item[] = [];
+    let movementsToday = 0;
+
+    try {
+      openOrders = await listOrders(authState.accessToken, 'OPEN');
+    } catch (err: any) {
+      errors.push(`Bestellungen: ${err?.message || 'nicht erreichbar'}`);
+    }
+
+    try {
+      const res = await fetchReorderRecommendations(authState.accessToken);
+      reorderCount = res.items?.length ?? 0;
+    } catch (err: any) {
+      errors.push(`Bestellwürdig: ${err?.message || 'nicht erreichbar'}`);
+    }
+
+    try {
+      items = await fetchAllItems();
+    } catch (err: any) {
+      errors.push(`Artikel: ${err?.message || 'nicht ladbar'}`);
+    }
+
+    try {
+      movementsToday = await loadMovementsToday();
+    } catch (err: any) {
+      errors.push(`Bewegungen: ${err?.message || 'nicht ladbar'}`);
+    }
+
+    if (reorderCount === 0 && items.length) {
+      reorderCount = deriveRecommendations(items);
+    }
 
     const belowMin = countBelowMin(items);
     state.metrics = {
       openOrders: openOrders.length,
-      recommended: reorder.items?.length ?? 0,
+      recommended: reorderCount,
       stablePercent: calculateStablePercent(items.length, belowMin),
       movementsToday,
       totalItems: items.length,
       belowMin
     };
   } catch (err: any) {
-    state.error = err?.message || 'Dashboard-Daten konnten nicht geladen werden.';
+    errors.push(err?.message || 'Unbekannter Fehler');
   } finally {
+    state.error = errors.length ? errors.join(' | ') : null;
     state.loading = false;
   }
 }

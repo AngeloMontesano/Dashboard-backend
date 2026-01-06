@@ -1371,6 +1371,7 @@ async def get_reorder_recommendations(
         Item.tenant_id == ctx.tenant.id,
         Item.is_active.is_(True),
         Item.target_stock > 0,
+        Item.order_mode.in_([1, 2, 3]),
         Item.quantity < Item.target_stock,
     ).order_by(diff_expr.desc())
 
@@ -1386,7 +1387,11 @@ async def get_reorder_recommendations(
                 quantity=item.quantity,
                 target_stock=item.target_stock,
                 min_stock=item.min_stock,
-                recommended_qty=max(item.target_stock - item.quantity, item.min_stock),
+                recommended_qty=max(
+                    item.target_stock - item.quantity,
+                    item.min_stock - item.quantity,
+                    1,
+                ),
             )
             for item in items
         ]

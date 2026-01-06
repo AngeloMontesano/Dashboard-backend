@@ -5,4 +5,4 @@
 - Tabellenaktionen sichten: verbleibende Views auf Nutzung von `.table-actions` prüfen, falls weitere Aktionsspalten hinzukommen.
 
 ## Kann
-- Tabelle „Bestellungen“: Spaltenausrichtung (z. B. Nummer/Status linksbündig, Aktionen rechts) per Utility nachziehen für bessere Lesbarkeit.
+- Tabelle „Bestellungen“: Spaltenausrichtung für Aktionsspalten umgesetzt; weitere Feinanpassungen bei neuen Tabellen prüfen.

@@ -472,7 +472,7 @@ onMounted(async () => {
                 <th>Nummer</th>
                 <th>Positionen</th>
                 <th>Status</th>
-                <th>Aktionen</th>
+                <th class="text-right">Aktionen</th>
               </tr>
             </thead>
             <tbody>
@@ -480,7 +480,7 @@ onMounted(async () => {
                 <td>{{ order.number }}</td>
                 <td>{{ order.items.length }}</td>
                 <td>{{ order.status }}</td>
-                <td class="table-actions">
+                <td class="table-actions text-right">
                   <button class="btnGhost small" type="button" @click="downloadPdf(order.id)" :disabled="state.downloading[order.id]">
                     PDF
                   </button>
@@ -520,7 +520,7 @@ onMounted(async () => {
                 <th>Nummer</th>
                 <th>Positionen</th>
                 <th>Status</th>
-                <th>Aktionen</th>
+                <th class="text-right">Aktionen</th>
               </tr>
             </thead>
             <tbody>
@@ -528,7 +528,7 @@ onMounted(async () => {
                 <td>{{ order.number }}</td>
                 <td>{{ order.items.length }}</td>
                 <td>{{ order.status }}</td>
-                <td class="table-actions">
+                <td class="table-actions text-right">
                   <button class="btnGhost small" type="button" @click="downloadPdf(order.id)" :disabled="state.downloading[order.id]">
                     PDF
                   </button>
@@ -552,7 +552,7 @@ onMounted(async () => {
                 <th>Nummer</th>
                 <th>Positionen</th>
                 <th>Status</th>
-                <th>Aktionen</th>
+                <th class="text-right">Aktionen</th>
               </tr>
             </thead>
             <tbody>
@@ -560,7 +560,7 @@ onMounted(async () => {
                 <td>{{ order.number }}</td>
                 <td>{{ order.items.length }}</td>
                 <td>{{ order.status }}</td>
-                <td class="table-actions">
+                <td class="table-actions text-right">
                   <button class="btnGhost small" type="button" @click="downloadPdf(order.id)" :disabled="state.downloading[order.id]">
                     PDF
                   </button>

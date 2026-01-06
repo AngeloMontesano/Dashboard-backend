@@ -8,18 +8,15 @@
         </div>
       </div>
 
-      <div class="stack">
-        <div class="collapsible">
-          <div class="collapsibleHeader">
-            <div>
-              <div class="sectionTitle">System</div>
-              <div class="sectionHint">System, Security Themes, Feature Flags</div>
-            </div>
-            <button class="btnGhost small" type="button" @click="toggleSection('system')">
-              {{ openSections.system ? "Einklappen" : "Ausklappen" }}
+      <div class="box">
+        <section class="settingsSection">
+          <div class="sectionHeader">
+            <div class="sectionTitle">System</div>
+            <button class="btnGhost small" @click="toggleSection('system')" :aria-expanded="!sectionCollapsed.system">
+              {{ sectionCollapsed.system ? "Aufklappen" : "Einklappen" }}
             </button>
           </div>
-          <div v-if="openSections.system" class="kvGrid">
+          <div v-if="!sectionCollapsed.system" class="kvGrid">
             <div class="kv">
               <div class="k">API Base</div>
               <div class="v mono">{{ apiBase }}</div>
@@ -65,16 +62,18 @@
               </div>
             </div>
           </div>
-        </div>
+        </section>
 
-        <div class="collapsible">
-          <div class="collapsibleHeader">
+        <div class="divider"></div>
+
+        <section class="settingsSection">
+          <div class="sectionHeader">
             <div class="sectionTitle">Security &amp; Auth</div>
-            <button class="btnGhost small" type="button" @click="toggleSection('security')">
-              {{ openSections.security ? "Einklappen" : "Ausklappen" }}
+            <button class="btnGhost small" @click="toggleSection('security')" :aria-expanded="!sectionCollapsed.security">
+              {{ sectionCollapsed.security ? "Aufklappen" : "Einklappen" }}
             </button>
           </div>
-          <div v-if="openSections.security" class="kvGrid">
+          <div v-if="!sectionCollapsed.security" class="kvGrid">
             <div class="kv">
               <div class="k">Admin Key Länge</div>
               <div class="v">{{ adminKey ? adminKey.length : 0 }} Zeichen</div>
@@ -93,22 +92,25 @@
                 </ul>
               </div>
             </div>
-            <div class="row gap8 wrap">
-              <button class="btnGhost" :disabled="!adminKey && !actor" @click="$emit('resetContext')">
-                Admin Context zurücksetzen
-              </button>
-            </div>
           </div>
-        </div>
 
-        <div class="collapsible">
-          <div class="collapsibleHeader">
-            <div class="sectionTitle">Theme &amp; UI</div>
-            <button class="btnGhost small" type="button" @click="toggleSection('theme')">
-              {{ openSections.theme ? "Einklappen" : "Ausklappen" }}
+          <div class="row gap8 wrap" v-if="!sectionCollapsed.security">
+            <button class="btnGhost" :disabled="!adminKey && !actor" @click="$emit('resetContext')">
+              Admin Context zurücksetzen
             </button>
           </div>
-          <div v-if="openSections.theme" class="kvGrid">
+        </section>
+
+        <div class="divider"></div>
+
+        <section class="settingsSection">
+          <div class="sectionHeader">
+            <div class="sectionTitle">Theme &amp; UI</div>
+            <button class="btnGhost small" @click="toggleSection('theme')" :aria-expanded="!sectionCollapsed.theme">
+              {{ sectionCollapsed.theme ? "Aufklappen" : "Einklappen" }}
+            </button>
+          </div>
+          <div v-if="!sectionCollapsed.theme" class="kvGrid">
             <div class="kv">
               <div class="k">Theme</div>
               <div class="v">
@@ -122,16 +124,18 @@
               </div>
             </div>
           </div>
-        </div>
+        </section>
 
-        <div class="collapsible">
-          <div class="collapsibleHeader">
+        <div class="divider"></div>
+
+        <section class="settingsSection">
+          <div class="sectionHeader">
             <div class="sectionTitle">Feature Flags (UI)</div>
-            <button class="btnGhost small" type="button" @click="toggleSection('flags')">
-              {{ openSections.flags ? "Einklappen" : "Ausklappen" }}
+            <button class="btnGhost small" @click="toggleSection('flags')" :aria-expanded="!sectionCollapsed.flags">
+              {{ sectionCollapsed.flags ? "Aufklappen" : "Einklappen" }}
             </button>
           </div>
-          <div v-if="openSections.flags" class="kvGrid">
+          <div v-if="!sectionCollapsed.flags" class="kvGrid">
             <div class="kv">
               <div class="v">
                 <ul class="bullets">
@@ -142,76 +146,18 @@
               </div>
             </div>
           </div>
-        </div>
+        </section>
 
-        <div class="collapsible">
-          <div class="collapsibleHeader">
-            <div class="sectionTitle">Email</div>
-            <button class="btnGhost small" type="button" @click="toggleSection('email')">
-              {{ openSections.email ? "Einklappen" : "Ausklappen" }}
-            </button>
-          </div>
-          <div v-if="openSections.email" class="stack">
-            <div class="fieldGrid">
-              <label class="field">
-                <div class="k">SMTP Host</div>
-                <input class="input" v-model.trim="emailForm.host" placeholder="smtp.example.com" />
-              </label>
-              <label class="field">
-                <div class="k">Port</div>
-                <input class="input" v-model.number="emailForm.port" type="number" min="1" max="65535" placeholder="587" />
-              </label>
-              <label class="field">
-                <div class="k">From</div>
-                <input class="input" v-model.trim="emailForm.from_email" type="email" placeholder="notification@example.com" />
-              </label>
-              <label class="field">
-                <div class="k">User</div>
-                <input class="input" v-model.trim="emailForm.user" placeholder="smtp-user (optional)" />
-              </label>
-              <label class="field">
-                <div class="k">Passwort</div>
-                <input
-                  class="input"
-                  v-model="emailForm.password"
-                  type="password"
-                  placeholder="Neues Passwort (leer lassen um zu behalten)"
-                />
-                <div class="muted" v-if="emailForm.has_password">Gespeichertes Passwort bleibt erhalten wenn leer.</div>
-              </label>
-            </div>
-            <div class="row gap8 wrap">
-              <button class="btnPrimary" type="button" :disabled="!adminKey || savingEmail" @click="saveEmailSettings">
-                {{ savingEmail ? "Speichern..." : "Speichern" }}
-              </button>
-              <button class="btnGhost" type="button" :disabled="savingEmail" @click="loadEmailSettings">
-                Neu laden
-              </button>
-            </div>
-            <div class="divider"></div>
-            <div class="fieldGrid">
-              <label class="field">
-                <div class="k">Test-E-Mail Empfänger</div>
-                <input class="input" v-model.trim="testEmail" type="email" placeholder="you@example.com" />
-              </label>
-              <div class="field">
-                <div class="k">&nbsp;</div>
-                <button class="btnGhost" type="button" :disabled="!testEmail || testingEmail" @click="sendTestEmail">
-                  {{ testingEmail ? "Sende..." : "Test senden" }}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+        <div class="divider"></div>
 
-        <div class="collapsible">
-          <div class="collapsibleHeader">
+        <section class="settingsSection">
+          <div class="sectionHeader">
             <div class="sectionTitle">Danger Zone / System Actions</div>
-            <button class="btnGhost small" type="button" @click="toggleSection('danger')">
-              {{ openSections.danger ? "Einklappen" : "Ausklappen" }}
+            <button class="btnGhost small" @click="toggleSection('danger')" :aria-expanded="!sectionCollapsed.danger">
+              {{ sectionCollapsed.danger ? "Aufklappen" : "Einklappen" }}
             </button>
           </div>
-          <div v-if="openSections.danger" class="kvGrid">
+          <div v-if="!sectionCollapsed.danger" class="kvGrid">
             <div class="kv">
               <div class="k">Cache / Reindex</div>
               <div class="v">
@@ -227,7 +173,7 @@
               </div>
             </div>
           </div>
-        </div>
+        </section>
       </div>
     </div>
   </div>
@@ -260,6 +206,13 @@ const emit = defineEmits<{
 }>();
 
 const { toast } = useToast();
+const sectionCollapsed = ref({
+  system: true,
+  security: true,
+  theme: true,
+  flags: true,
+  danger: true,
+});
 const themes = [
   { id: "system", label: "System" },
   { id: "light", label: "Light" },
@@ -294,64 +247,11 @@ function onThemeChange(themeId: "light" | "dark" | "system") {
   emit("setTheme", themeId);
 }
 
-function toggleSection(section: keyof typeof openSections.value) {
-  openSections.value[section] = !openSections.value[section];
-}
-
-function mapEmailSettings(data: SystemEmailSettings) {
-  emailForm.value.host = data.host || "";
-  emailForm.value.port = data.port ?? null;
-  emailForm.value.user = data.user || "";
-  emailForm.value.from_email = data.from_email || "";
-  emailForm.value.has_password = data.has_password;
-  emailForm.value.password = "";
-}
-
-async function loadEmailSettings() {
-  if (!props.adminKey) {
-    mapEmailSettings({ host: "", port: null, user: "", from_email: "", has_password: false });
-    return;
-  }
-  try {
-    const res = await adminGetEmailSettings(props.adminKey, props.actor);
-    mapEmailSettings(res);
-  } catch (e: any) {
-    toast(`E-Mail Einstellungen laden fehlgeschlagen: ${asError(e)}`, "danger");
-  }
-}
-
-async function saveEmailSettings() {
-  if (!props.adminKey) return;
-  savingEmail.value = true;
-  try {
-    const payload: SystemEmailSettingsUpdate = {
-      host: emailForm.value.host || null,
-      port: emailForm.value.port ?? null,
-      user: emailForm.value.user || null,
-      from_email: emailForm.value.from_email || null,
-      password: emailForm.value.password ? emailForm.value.password : null,
-    };
-    const res = await adminUpdateEmailSettings(props.adminKey, props.actor, payload);
-    mapEmailSettings(res);
-    toast("E-Mail Einstellungen gespeichert", "success");
-  } catch (e: any) {
-    toast(`Speichern fehlgeschlagen: ${asError(e)}`, "danger");
-  } finally {
-    savingEmail.value = false;
-  }
-}
-
-async function sendTestEmail() {
-  if (!props.adminKey || !testEmail.value) return;
-  testingEmail.value = true;
-  try {
-    const res = await adminTestEmail(props.adminKey, props.actor, testEmail.value);
-    toast(res.detail || "Test-E-Mail gesendet", res.performed ? "success" : "danger");
-  } catch (e: any) {
-    toast(`Test-E-Mail fehlgeschlagen: ${asError(e)}`, "danger");
-  } finally {
-    testingEmail.value = false;
-  }
+function toggleSection(section: keyof typeof sectionCollapsed.value) {
+  sectionCollapsed.value = {
+    ...sectionCollapsed.value,
+    [section]: !sectionCollapsed.value[section],
+  };
 }
 
 async function loadSystemInfo() {
@@ -442,5 +342,16 @@ watch(
 }
 .themeOption input{
   margin: 0;
+}
+
+.settingsSection{
+  display: grid;
+  gap: 12px;
+}
+
+.sectionHeader{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 </style>

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import uuid
+import logging
 from datetime import date, datetime, timedelta, timezone
 from io import BytesIO, StringIO
 import socket
@@ -66,6 +67,7 @@ from app.modules.inventory.schemas import (
 )
 
 router = APIRouter(prefix="/inventory", tags=["inventory"])
+logger = logging.getLogger(__name__)
 
 
 @router.get("/ping", response_model=TenantPingResponse)
@@ -1028,24 +1030,32 @@ async def cancel_order(
 
 def _smtp_ping() -> tuple[bool, list[str], str | None]:
     if not settings.SMTP_HOST or not settings.SMTP_PORT or not settings.SMTP_FROM:
-        return False, [], "SMTP Konfiguration fehlt"
+        return False, [], "SMTP Konfiguration fehlt (Host/Port/From unvollständig)"
 
     resolved_ips: list[str] = []
     try:
         addr_info = socket.getaddrinfo(settings.SMTP_HOST, settings.SMTP_PORT, proto=socket.IPPROTO_TCP)
         resolved_ips = sorted({info[4][0] for info in addr_info})
     except socket.gaierror as e:
-        return False, resolved_ips, f"DNS Lookup fehlgeschlagen für {settings.SMTP_HOST}: {e}"
+        message = f"DNS Lookup fehlgeschlagen für {settings.SMTP_HOST} ({e})"
+        logger.warning(message, extra={"smtp_host": settings.SMTP_HOST, "smtp_port": settings.SMTP_PORT})
+        return False, resolved_ips, message
     except Exception as e:  # noqa: BLE001
-        return False, resolved_ips, f"Auflösung für {settings.SMTP_HOST} fehlgeschlagen: {e}"
+        message = f"Auflösung für {settings.SMTP_HOST} fehlgeschlagen: {e}"
+        logger.warning(message, extra={"smtp_host": settings.SMTP_HOST, "smtp_port": settings.SMTP_PORT})
+        return False, resolved_ips, message
 
     try:
         with socket.create_connection((settings.SMTP_HOST, settings.SMTP_PORT), timeout=5):
             pass
     except socket.timeout:
-        return False, resolved_ips, f"Timeout beim Verbindungsaufbau zu {settings.SMTP_HOST}:{settings.SMTP_PORT}"
+        message = f"Timeout beim Verbindungsaufbau zu {settings.SMTP_HOST}:{settings.SMTP_PORT}"
+        logger.warning(message, extra={"smtp_host": settings.SMTP_HOST, "smtp_port": settings.SMTP_PORT, "resolved_ips": resolved_ips})
+        return False, resolved_ips, message
     except OSError as e:
-        return False, resolved_ips, f"Verbindungsaufbau zu {settings.SMTP_HOST}:{settings.SMTP_PORT} fehlgeschlagen ({e})"
+        message = f"Verbindungsaufbau zu {settings.SMTP_HOST}:{settings.SMTP_PORT} fehlgeschlagen ({e})"
+        logger.warning(message, extra={"smtp_host": settings.SMTP_HOST, "smtp_port": settings.SMTP_PORT, "resolved_ips": resolved_ips})
+        return False, resolved_ips, message
 
     return True, resolved_ips, None
 
@@ -1072,11 +1082,18 @@ def _send_email_message(*, to_email: str, subject: str, body: str) -> EmailSendR
             smtp.send_message(message)
         return EmailSendResponse(ok=True, error=None)
     except smtplib.SMTPAuthenticationError as e:  # noqa: BLE001
+        logger.warning("SMTP Auth fehlgeschlagen", exc_info=e, extra={"smtp_host": settings.SMTP_HOST, "resolved_ips": resolved_ips})
         return EmailSendResponse(ok=False, error=f"SMTP Auth fehlgeschlagen: {e}")
     except smtplib.SMTPException as e:  # noqa: BLE001
+        logger.warning("SMTP Fehler beim Senden", exc_info=e, extra={"smtp_host": settings.SMTP_HOST, "resolved_ips": resolved_ips})
         return EmailSendResponse(ok=False, error=f"SMTP Fehler: {e}")
     except Exception as e:  # noqa: BLE001
-        return EmailSendResponse(ok=False, error=f"E-Mail Versand fehlgeschlagen: {e}")
+        logger.warning(
+            "E-Mail Versand fehlgeschlagen",
+            exc_info=e,
+            extra={"smtp_host": settings.SMTP_HOST, "smtp_port": settings.SMTP_PORT, "resolved_ips": resolved_ips},
+        )
+        return EmailSendResponse(ok=False, error=f"E-Mail Versand fehlgeschlagen: {e} (Host: {settings.SMTP_HOST}, Port: {settings.SMTP_PORT}, Resolved: {', '.join(resolved_ips) or 'n/a'})")
 
 
 def _format_order_email(
@@ -1469,11 +1486,21 @@ async def send_test_email(
             smtp.send_message(message)
         return TestEmailResponse(ok=True, error=None)
     except smtplib.SMTPAuthenticationError as e:  # noqa: BLE001
+        logger.warning("SMTP Auth fehlgeschlagen (Test)", exc_info=e, extra={"smtp_host": settings.SMTP_HOST, "resolved_ips": resolved_ips})
         return TestEmailResponse(ok=False, error=f"SMTP Auth fehlgeschlagen: {e}")
     except smtplib.SMTPException as e:  # noqa: BLE001
+        logger.warning("SMTP Fehler beim Testversand", exc_info=e, extra={"smtp_host": settings.SMTP_HOST, "resolved_ips": resolved_ips})
         return TestEmailResponse(ok=False, error=f"SMTP Fehler: {e}")
     except Exception as e:  # noqa: BLE001
-        return TestEmailResponse(ok=False, error=f"E-Mail Versand fehlgeschlagen: {e}")
+        logger.warning(
+            "E-Mail Testversand fehlgeschlagen",
+            exc_info=e,
+            extra={"smtp_host": settings.SMTP_HOST, "smtp_port": settings.SMTP_PORT, "resolved_ips": resolved_ips},
+        )
+        return TestEmailResponse(
+            ok=False,
+            error=f"E-Mail Versand fehlgeschlagen: {e} (Host: {settings.SMTP_HOST}, Port: {settings.SMTP_PORT}, Resolved: {', '.join(resolved_ips) or 'n/a'})",
+        )
 
 
 @router.get("/settings/smtp-ping", response_model=SmtpPingResponse, dependencies=[Depends(require_owner_or_admin)])

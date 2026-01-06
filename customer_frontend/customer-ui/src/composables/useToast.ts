@@ -8,6 +8,7 @@ export type ToastMessage = {
   description?: string;
   variant: ToastVariant;
   duration?: number;
+  onceKey?: string;
 };
 
 type ToastState = {
@@ -23,11 +24,17 @@ const generateId = () =>
     ? crypto.randomUUID()
     : Math.random().toString(36).slice(2);
 
+const seenOnce = new Set<string>();
+
 export function useToast() {
   const push = (toast: Omit<ToastMessage, 'id'>) => {
+    if (toast.onceKey && seenOnce.has(toast.onceKey)) return toast.onceKey;
     const id = generateId();
     const entry: ToastMessage = { id, duration: 4000, ...toast };
     state.toasts.push(entry);
+    if (entry.onceKey) {
+      seenOnce.add(entry.onceKey);
+    }
 
     if (entry.duration && entry.duration > 0) {
       setTimeout(() => dismiss(id), entry.duration);

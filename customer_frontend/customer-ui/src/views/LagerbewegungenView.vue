@@ -8,6 +8,7 @@ import { useAuth } from '@/composables/useAuth';
 import UiPage from '@/components/ui/UiPage.vue';
 import UiSection from '@/components/ui/UiSection.vue';
 import UiToolbar from '@/components/ui/UiToolbar.vue';
+import { RouterLink } from 'vue-router';
 
 const barcode = ref('');
 const qty = ref<number>(1);
@@ -24,37 +25,46 @@ const {
   clearSent,
   hasPending,
   syncing,
-  lastSyncError
+  lastSyncError,
+  deriveIssueState,
+  attentionCount
 } = useMovementQueue();
 const { push: pushToast } = useToast();
 
 const recentMovements = computed(() => movements.value.slice(0, 30));
+const issueCount = computed(() => attentionCount.value);
 
-const statusTone = (status: MovementRecord['status']) => {
-  switch (status) {
-    case 'sent':
-      return 'success';
-    case 'sending':
-      return 'info';
-    case 'failed':
-      return 'danger';
-    case 'queued':
-    default:
+const statusTone = (item: MovementRecord) => {
+  const state = deriveIssueState(item);
+  switch (state) {
+    case 'auth':
       return 'warning';
+    case 'blocked':
+      return 'danger';
+    case 'retrying':
+      return 'info';
+    case 'waiting':
+      return 'warning';
+    default:
+      return item.status === 'sent' ? 'success' : 'neutral';
   }
 };
 
-const statusLabel = (status: MovementRecord['status']) => {
-  switch (status) {
-    case 'sent':
-      return 'Gesendet';
-    case 'sending':
-      return 'Senden...';
-    case 'failed':
-      return 'Fehlgeschlagen';
-    case 'queued':
+const statusLabel = (item: MovementRecord) => {
+  const state = deriveIssueState(item);
+  switch (state) {
+    case 'auth':
+      return 'Anmeldung nötig';
+    case 'blocked':
+      return 'Blockiert';
+    case 'retrying':
+      return 'Retry geplant';
+    case 'waiting':
+      return 'Wartet';
     default:
-      return 'Wartend';
+      if (item.status === 'sent') return 'Gesendet';
+      if (item.status === 'sending') return 'Senden...';
+      return 'Wartet';
   }
 };
 
@@ -113,6 +123,10 @@ const submitMovement = async (type: 'IN' | 'OUT') => {
             <button class="btnGhost small" type="button" @click="clearSent">
               Queue leeren
             </button>
+            <RouterLink class="btnGhost small badge-button" :to="{ name: 'sync-probleme' }">
+              Fehler ansehen
+              <span class="badge-counter" v-if="issueCount">{{ issueCount }}</span>
+            </RouterLink>
           </div>
         </template>
       </UiToolbar>
@@ -167,12 +181,13 @@ const submitMovement = async (type: 'IN' | 'OUT') => {
         </button>
       </div>
 
-      <p v-if="hasPending" class="section-subtitle text-small">
-        Wartende Einträge: {{ hasPending ? 'Ja' : 'Nein' }} | Status: {{ syncing ? 'Sync läuft' : 'Bereit' }}
-      </p>
-      <p v-if="lastSyncError" class="section-subtitle text-small text-danger">
-        Letzter Fehler: {{ lastSyncError }}
-      </p>
+      <div class="callout">
+        <span>
+          Wartende Einträge: {{ hasPending ? 'Ja' : 'Nein' }} • Probleme: {{ issueCount }}
+          <span v-if="lastSyncError">• Letzte Meldung: {{ lastSyncError }}</span>
+        </span>
+        <RouterLink class="link" :to="{ name: 'sync-probleme' }">Fehlerzentrum öffnen</RouterLink>
+      </div>
 
       <div class="tableWrap">
         <table class="table">
@@ -195,7 +210,7 @@ const submitMovement = async (type: 'IN' | 'OUT') => {
               <td>{{ item.qty }}</td>
               <td>{{ item.note || '—' }}</td>
               <td>
-                <StatusPill :label="statusLabel(item.status)" :tone="statusTone(item.status)" />
+                <StatusPill :label="statusLabel(item)" :tone="statusTone(item)" />
               </td>
               <td>
                 <span v-if="item.status === 'failed' && item.last_error" class="text-danger">
@@ -210,3 +225,41 @@ const submitMovement = async (type: 'IN' | 'OUT') => {
     </UiSection>
   </UiPage>
 </template>
+
+<style scoped>
+.badge-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.badge-counter {
+  min-width: 1.5rem;
+  height: 1.5rem;
+  padding: 0 0.35rem;
+  border-radius: 999px;
+  background: var(--danger-soft, #ffe5e5);
+  color: var(--danger, #b42318);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.75rem;
+}
+
+.callout {
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.75rem;
+  margin: 0.5rem 0 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.callout .link {
+  font-weight: 600;
+}
+</style>

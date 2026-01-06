@@ -37,3 +37,7 @@
 ## 2024-06-21
 - Roadmap-Index ergänzt um Spezifikations-Links (TENANT_STATUS.md, openapi.json) zur zentralen Referenz der A-01-Quelle.
 - Keine Änderungen an Epic-Tasks; A-01 bleibt im Review, QA/Proxy-Arbeiten (A-10/A-11) folgen danach.
+
+## 2024-06-22
+- TENANT_STATUS-Spec präzisiert (cURL-Beispiele, QA-Hinweise für Header/Slug/DB-Down). Keine neuen Tasks, nur Klarstellung für A-01 Review.
+- Nächste Schritte: A-01 abnehmen, dann QA-Checkliste (A-10) und Proxy-Testplan (A-11) durchführen.

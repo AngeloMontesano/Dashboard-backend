@@ -65,3 +65,8 @@
 - Roadmap-Index um Spezifikations-Links ergänzt (TENANT_STATUS.md + openapi.json), damit A-01-Referenz zentral auffindbar ist.
 - Keine Änderungen an Tasks; Fokus bleibt auf Review der A-01-Spec und nachgelagerter QA (A-10/A-11).
 - Offene Punkte unverändert: A-01 Review, Proxy-404-Szenarien testen.
+
+## 2024-06-22
+- TENANT_STATUS-Spec erweitert um cURL-Beispiele, QA-Hinweise (A-10/A-11) und Fehlersimulation (DB down → unavailable).
+- Ziel: schnelleres Review von A-01 und klare Prüfschritte für Header-/Slug-Varianten; keine Task-IDs geändert.
+- Offene Punkte: Review/Abnahme A-01; danach QA-Checkliste (A-10) und Proxy-Szenarien (A-11) ausführen.

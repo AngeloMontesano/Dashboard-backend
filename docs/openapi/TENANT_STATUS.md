@@ -23,6 +23,20 @@ Früher Tenant-Check vor App-Bootstrap, damit unbekannte/inaktive Tenants eine g
 { "status": "not_found", "slug": null, "host": "example.com", "reason": "missing_slug" }
 ```
 
+## Beispiele
+- Host-Ableitung:  
+  ```bash
+  curl -H "Host: foo.example.com" -H "X-Forwarded-Host: foo.example.com" https://app.example.com/api/public/tenant-status
+  ```
+- Slug-Override per Header:  
+  ```bash
+  curl -H "X-Tenant-Slug: bar" https://app.example.com/api/public/tenant-status
+  ```
+- Expliziter Slug per Query (ohne Host):  
+  ```bash
+  curl "http://localhost:8000/api/public/tenant-status?slug=demo"
+  ```
+
 ## Fehler-/Reason-Codes
 - `tenant_not_found`, `tenant_inactive`, `missing_slug`
 - DB-/Infra-Fehler werden als Klassenname in `reason` gespiegelt (z. B. `OperationalError`) und mit `status=unavailable` zurückgegeben.
@@ -32,6 +46,11 @@ Früher Tenant-Check vor App-Bootstrap, damit unbekannte/inaktive Tenants eine g
 - Host-Ableitung nutzt `X-Forwarded-Host` und Basis-Domain (`settings.BASE_DOMAIN`); Fallback: `localhost`.
 - Rückgaben bleiben schlank (keine Stacktraces, keine Validation Errors).
 - OpenAPI-Schema: `PublicTenantStatus` in `docs/openapi/openapi.json`; Typen werden über `npm run gen:types(:local)` generiert (`src/api/gen/openapi.ts`).
+
+## QA-Hinweise (A-10/A-11)
+- Mit/ohne `X-Forwarded-Host`, mit/ohne `X-Tenant-Slug`, falscher Slug, fehlender Slug: Response bleibt in Schema (kein 500/Traceback).
+- Datenbank down simulieren (`SQLAlchemyError`) → `status=unavailable`, `reason` enthält Klassennamen.
+- 404-Routen im Frontend leiten auf TenantStatusView; Backend liefert hier immer 200 mit Status-Payload.
 
 ## Akzeptanznotizen
 - Kein JSON-Fehler im Browser sichtbar; Frontend routet bei `status != ok` auf `TenantStatusView`.

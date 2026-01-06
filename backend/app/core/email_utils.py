@@ -115,18 +115,23 @@ def send_email(
     message["To"] = recipient
     message.set_content(body)
 
+    use_ssl = bool(email_settings.use_tls and email_settings.port == 465)
+    use_starttls = bool(email_settings.use_tls and not use_ssl)
+
     log_extra = {
         "smtp_host": email_settings.host,
         "smtp_port": email_settings.port,
         "resolved_ips": resolved_ips,
-        "use_tls": email_settings.use_tls,
+        "use_tls": use_starttls,
+        "use_ssl": use_ssl,
     }
     if actor:
         log_extra["actor"] = actor
 
     try:
         connect_start = time.perf_counter()
-        with smtplib.SMTP(email_settings.host, email_settings.port, timeout=10) as smtp:
+        smtp_cls = smtplib.SMTP_SSL if use_ssl else smtplib.SMTP
+        with smtp_cls(email_settings.host, email_settings.port, timeout=10) as smtp:
             connect_duration = (time.perf_counter() - connect_start) * 1000
             if logger:
                 _log(
@@ -136,7 +141,7 @@ def send_email(
                     request_id=request_id,
                     extra=log_extra,
                 )
-            if email_settings.use_tls:
+            if use_starttls:
                 tls_start = time.perf_counter()
                 smtp.starttls()
                 tls_duration = (time.perf_counter() - tls_start) * 1000

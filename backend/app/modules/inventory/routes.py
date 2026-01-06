@@ -1194,8 +1194,9 @@ async def send_order_email(
     if not recipient:
         return EmailSendResponse(ok=False, error="Kein Empfänger konfiguriert")
 
+    email_settings = await _get_email_settings(db)
     subject, body = _format_order_email(order, item_map, recipient, payload.note)
-    return _send_email_message(to_email=recipient, subject=subject, body=body)
+    return _send_email_message(to_email=recipient, subject=subject, body=body, email_settings=email_settings)
 
 
 @router.get("/orders/{order_id}/pdf")

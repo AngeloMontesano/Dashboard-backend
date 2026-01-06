@@ -7,6 +7,7 @@ import ReportFilters from '@/components/reports/ReportFilters.vue';
 import ReportKpiCards from '@/components/reports/ReportKpiCards.vue';
 import ReportCharts from '@/components/reports/ReportCharts.vue';
 import ReportExportButtons from '@/components/reports/ReportExportButtons.vue';
+import UiEmptyState from '@/components/ui/UiEmptyState.vue';
 import { useAuth } from '@/composables/useAuth';
 import { useToast } from '@/composables/useToast';
 import AuthReauthBanner from '@/components/auth/AuthReauthBanner.vue';
@@ -526,7 +527,18 @@ onBeforeUnmount(() => {
               </tbody>
             </table>
           </div>
-          <div v-else class="table-loading">Keine Artikel im Zeitraum</div>
+          <div v-else class="table-loading">
+            <UiEmptyState
+              title="Keine Artikel im Zeitraum"
+              description="Passe Zeitraum oder Filter an, um Verbrauchsdaten zu sehen."
+            >
+              <template #actions>
+                <button class="btnGhost small" type="button" :disabled="loading" @click="loadReports()">
+                  Neu laden
+                </button>
+              </template>
+            </UiEmptyState>
+          </div>
         </div>
       </article>
     </div>

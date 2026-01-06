@@ -3,6 +3,7 @@ import { onMounted, reactive, computed } from 'vue';
 import UiPage from '@/components/ui/UiPage.vue';
 import UiSection from '@/components/ui/UiSection.vue';
 import UiToolbar from '@/components/ui/UiToolbar.vue';
+import UiEmptyState from '@/components/ui/UiEmptyState.vue';
 import { useAuth } from '@/composables/useAuth';
 import { fetchItems, exportInventory, bulkUpdateInventory } from '@/api/inventory';
 import AuthReauthBanner from '@/components/auth/AuthReauthBanner.vue';
@@ -177,7 +178,18 @@ onMounted(loadItems);
             </tbody>
           </table>
         </div>
-        <p v-else class="placeholder mt-sm">Keine Artikel gefunden.</p>
+        <UiEmptyState
+          v-else
+          class="mt-sm"
+          title="Keine Artikel gefunden"
+          description="Neu laden oder Filter anpassen, um Bestände zu erfassen."
+        >
+          <template #actions>
+            <button class="btnGhost small" type="button" @click="loadItems" :disabled="state.loading">
+              Neu laden
+            </button>
+          </template>
+        </UiEmptyState>
       </div>
     </UiSection>
   </UiPage>

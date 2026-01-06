@@ -756,14 +756,14 @@
 - **Tests**
   - `npm run build` (customer_frontend/customer-ui)
 
-## Schritt 53 – Busy-/Confirm-States für Queue & Bestellungen
-- **Datum/Uhrzeit**: 2026-01-06T14:45:00+00:00
-- **Ziel**: Buttons gegen Doppelklicks absichern, Busy/aria-busy vereinheitlichen und destruktive Aktionen mit schlankem Confirm-Fluss versehen.
+## Schritt 53 – Customer Inputs & Leer-States harmonisiert
+- **Datum/Uhrzeit**: 2026-01-06T14:40:00+00:00
+- **Ziel**: Admin-Input-/Focus-Pattern und einheitliche Tabellen-Leer-States in den Customer-Views Bestellungen, Kategorien, Inventur sowie Berichte nachziehen.
 - **Was wurde geändert**
-  - Customer-Styles um Button-Spinner/Label-Wrapper, Danger-Ghost-Variant und Inline-Confirm-Hinweis ergänzt.
-  - Lagerbewegungen: Sync/Clear/Submit nutzen Busy-States + Spinner und blocken Doppel-Submits; Clear-Sent hat eigenen Busy-Guard.
-  - Fehlerzentrum: Sync/Retry/Delete/Edit-Save mit Busy/Spinnern und aria-busy; Delete/Remove nutzt Inline-Confirm, blockt doppelte Klicks.
-  - Bestellungen: Toolbar/Orders/Actions erhalten Busy-States und Spinner; Zeilen-Entfernen nutzt Inline-Confirm; Cancel-Buttons als Danger-Ghost.
-  - TODO angepasst (SOLL: Folgefeinschliff statt Busy/Confirm); Worklog ergänzt.
+  - Input/Select-Styles auf Token-Basis vereinheitlicht (Pill-Radius, Platzhalter-Ton, Focus-Ring); Bestellungen- und Kategorien-Filter/Formulare nutzen `BaseField`/`BaseInput`/`BaseSelect`.
+  - `UiEmptyState` neu gestylt und in Tabellen-Leerläufen der Bestellungen-, Kategorien-, Inventur- und Berichte-Ansichten eingesetzt inkl. Reload-/CTA-Buttons.
+  - Status-Pills in Bestellungen ergänzt und Tabellenstatus/Filter lesbarer gemacht; TODO um Folge-Regressionstests nach der UI-Harmonisierung bereinigt.
+- **Ergebnis**
+  - Customer-Views folgen dem Admin-Look (Pill-Focus-Ring) und zeigen konsistente, wiederverwendbare Empty-States ohne gemischte Platzhalter-Texte.
 - **Tests**
-  - `npm run build` (customer_frontend/customer-ui)
+  - Nicht ausgeführt (UI-Styling)

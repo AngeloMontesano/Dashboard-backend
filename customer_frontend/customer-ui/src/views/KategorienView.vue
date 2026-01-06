@@ -5,6 +5,9 @@ import { useAuth } from '@/composables/useAuth';
 import UiPage from '@/components/ui/UiPage.vue';
 import UiSection from '@/components/ui/UiSection.vue';
 import UiToolbar from '@/components/ui/UiToolbar.vue';
+import UiEmptyState from '@/components/ui/UiEmptyState.vue';
+import BaseField from '@/components/common/BaseField.vue';
+import BaseInput from '@/components/common/BaseInput.vue';
 import AuthReauthBanner from '@/components/auth/AuthReauthBanner.vue';
 import { useAuthIssueBanner } from '@/composables/useAuthIssueBanner';
 
@@ -109,19 +112,31 @@ onMounted(async () => {
       <div v-if="feedback.message" class="alert alert--success">{{ feedback.message }}</div>
       <div v-if="feedback.error" class="alert alert--error">{{ feedback.error }}</div>
 
-      <form class="action-row" @submit.prevent="handleCreate">
-        <input
-          class="input"
-          v-model="form.name"
-          placeholder="Kategoriename"
-          required
-          :disabled="!hasWriteAccess"
-        />
-        <label class="checkbox-field">
-          <input type="checkbox" v-model="form.is_active" :disabled="!hasWriteAccess" aria-label="Kategorie aktiv" />
-          <span class="form-label">Aktiv</span>
-        </label>
-        <button class="btnPrimary small" type="submit" :disabled="!hasWriteAccess">Neue Kategorie</button>
+      <form class="form-grid align-start" @submit.prevent="handleCreate">
+        <BaseField label="Kategoriename" :required="true">
+          <BaseInput
+            v-model="form.name"
+            placeholder="Kategoriename"
+            required
+            :disabled="!hasWriteAccess"
+            autocomplete="off"
+          />
+        </BaseField>
+        <div class="field">
+          <label class="inline-field">
+            <input
+              type="checkbox"
+              v-model="form.is_active"
+              :disabled="!hasWriteAccess"
+              aria-label="Kategorie aktiv"
+            />
+            <span class="field-label">Aktiv</span>
+          </label>
+        </div>
+        <div class="field">
+          <span class="sr-only">Aktion</span>
+          <button class="btnPrimary small" type="submit" :disabled="!hasWriteAccess">Neue Kategorie</button>
+        </div>
       </form>
 
       <div v-if="categories.length" class="tableWrap mt-md">
@@ -164,9 +179,25 @@ onMounted(async () => {
           </tbody>
         </table>
       </div>
-      <div v-else class="placeholder">
-        <p v-if="isLoading">Lade Kategorien...</p>
-        <p v-else>Keine Kategorien vorhanden.</p>
+      <div v-else class="mt-md">
+        <UiEmptyState
+          :title="isLoading ? 'Lade Kategorien...' : 'Keine Kategorien vorhanden'"
+          :description="isLoading ? 'Bitte warten, Kategorien werden geladen.' : 'Lege eine neue Kategorie an oder lade die Liste neu.'"
+        >
+          <template v-if="!isLoading" #actions>
+            <button class="btnGhost small" type="button" @click="loadCategories" :disabled="isLoading">
+              Neu laden
+            </button>
+            <button
+              class="btnPrimary small"
+              type="button"
+              @click="handleCreate"
+              :disabled="!hasWriteAccess || !form.name.trim()"
+            >
+              Kategorie anlegen
+            </button>
+          </template>
+        </UiEmptyState>
       </div>
     </UiSection>
   </UiPage>

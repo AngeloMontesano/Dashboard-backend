@@ -30,13 +30,20 @@ Globale Artikel/Kategorien/Typen/Branchen zentral im Admin pflegen und Tenants m
 - Warnungen bei Löschungen, wenn Mapping besteht.
 
 ## 7) API/Backend Annahmen
-- Neue Admin-Endpunkte `/admin/global/categories|types|industries|items` mit CRUD.
+- Neue Admin-Endpunkte `/admin/global/categories|types|industries|items` mit CRUD (siehe `docs/openapi/GLOBAL_CATALOG.md`).
 - Tenant-Entity erweitert um `industry_id` (optional Pflicht in UI).
 - Mapping-Tabelle Branche → globale Artikel.
 
 ## 8) Daten (konzeptionell)
-- Tabellen: `industries` (id, name, is_active), `global_items` (id, name, type_id, category_id, industry_id, is_active), `global_categories`, `global_types`, Mapping `industry_global_items`.
-- Tenant-Felder: `industry_id` in Firma + Adresse.
+- Tabellen:
+  - `industries` (id UUID PK, name uniq, is_active bool, timestamps).
+  - `global_categories` (id UUID PK, name uniq, is_active, is_system bool).
+  - `global_types` (id UUID PK, name uniq, is_active).
+  - `global_items` (id UUID PK, sku uniq, name, description, type_id FK, category_id FK, industry_id FK nullable, is_active).
+  - Mapping `industry_global_items` (industry_id FK, item_id FK, PK (industry_id, item_id)).
+- Tenant-Felder: `industry_id` in Firma + Adresse (FK auf `industries`).
+- Index-Regeln: unique auf Namen (lowercase) für Kategorien/Typen/Branchen, unique SKU auf globalen Artikeln, FK-Constraints `ON DELETE RESTRICT`.
+- Details in `docs/openapi/GLOBAL_CATALOG.md`.
 
 ## 9) Tasks (umsetzbar, klein)
 - **B-01** – Datenmodell-Entwurf dokumentieren (Tabellen, Relationen, Constraints).  

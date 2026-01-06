@@ -796,3 +796,12 @@
   - TODO/Epic_TODO aktualisiert (A-04/A-05/A-06 erledigt).
 - Ergebnis: Unbekannte/inaktive Subdomains oder fehlende Pfade zeigen eine gestaltete Seite; App startet nur bei `status=ok`.
 - Nächste Schritte: Caching/Retry-Strategie (A-08) planen, UI-Texte finalisieren falls Support-Links ergänzt werden.
+
+- Datum/Uhrzeit: 2026-01-06T16:47:01Z
+- Task-ID: EPIC-B-01-02
+- Was analysiert/geändert:
+  - Datenmodell-Entwurf für globale Kataloge/Branchen dokumentiert (`docs/openapi/GLOBAL_CATALOG.md`): Tabellen, FKs, Indizes, Tenant-Feld `industry_id`.
+  - Admin-API-Spezifikation als Vorschlag festgehalten (CRUD für industries/categories/types/items, Mapping industry→items, Header-Anforderungen, Fehlercodes).
+  - EPIC_B Daten-/API-Abschnitte verlinken auf den Entwurf; TODO/Epic_TODO „B-01/B-02“ aus Now entfernt.
+- Ergebnis: Architektur- und API-Grundlage für globale Kataloge liegt vor, Konsum für Alembic/Backend-Implementierung vorbereitet.
+- Nächste Schritte: Alembic-Draft (B-03) und UI-Navigation/Views (B-04/B-05) planen, OpenAPI JSON nach Freigabe erweitern.

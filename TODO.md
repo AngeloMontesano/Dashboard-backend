@@ -1,8 +1,6 @@
 # TODO
 
 ## Now (Top 10)
-- [B-01] (EPIC_B_GLOBAL_CATALOG_AND_INDUSTRY) Datenmodell-Entwurf für globale Kataloge/Branchen finalisieren.
-- [B-02] (EPIC_B_GLOBAL_CATALOG_AND_INDUSTRY) Admin-API-Spezifikation für globale Kategorien/Typen/Branchen schreiben.
 - [C-03] (EPIC_C_CUSTOMER_REPORTING_UX) Live-Suche-Komponente (Prefix + Debounce) konzipieren.
 - [D-03] (EPIC_D_CUSTOMER_DASHBOARD_NAVIGATION) KPI-Karten klickbar machen (Button/Link mit Fokus-Ring).
 - [E-02] (EPIC_E_CUSTOMER_ORDERS_IMPROVEMENTS) UI-Spezifikation für neuen Bestell-Dialog (tabellarisch) erstellen.

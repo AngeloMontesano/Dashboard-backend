@@ -5458,6 +5458,91 @@
         }
       }
     },
+    "/admin/inventory/industries/overlap-counts": {
+      "get": {
+        "tags": [
+          "admin",
+          "admin-inventory"
+        ],
+        "summary": "Admin Get Industry Overlap Counts",
+        "operationId": "admin_get_industry_overlap_counts_admin_inventory_industries_overlap_counts_get",
+        "parameters": [
+          {
+            "name": "item_ids",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Item Ids"
+            }
+          },
+          {
+            "name": "x-admin-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Key"
+            }
+          },
+          {
+            "name": "x-admin-actor",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Actor"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IndustryOverlapCounts"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/admin/inventory/industries": {
       "get": {
         "tags": [
@@ -5916,14 +6001,183 @@
         }
       }
     },
-    "/admin/inventory/industries/{industry_id}/assign/tenants": {
+    "/admin/inventory/industries/{industry_id}/items/export": {
+      "get": {
+        "tags": [
+          "admin",
+          "admin-inventory"
+        ],
+        "summary": "Admin Export Industry Items",
+        "operationId": "admin_export_industry_items_admin_inventory_industries__industry_id__items_export_get",
+        "parameters": [
+          {
+            "name": "industry_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Industry Id"
+            }
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^(csv|xlsx)$",
+              "default": "csv",
+              "title": "Format"
+            }
+          },
+          {
+            "name": "x-admin-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Key"
+            }
+          },
+          {
+            "name": "x-admin-actor",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Actor"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/inventory/industries/{industry_id}/items/import": {
       "post": {
         "tags": [
           "admin",
           "admin-inventory"
         ],
-        "summary": "Admin Assign Industry Items To Tenants",
-        "operationId": "admin_assign_industry_items_to_tenants_admin_inventory_industries__industry_id__assign_tenants_post",
+        "summary": "Admin Import Industry Items",
+        "operationId": "admin_import_industry_items_admin_inventory_industries__industry_id__items_import_post",
+        "parameters": [
+          {
+            "name": "industry_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Industry Id"
+            }
+          },
+          {
+            "name": "x-admin-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Key"
+            }
+          },
+          {
+            "name": "x-admin-actor",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Actor"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_admin_import_industry_items_admin_inventory_industries__industry_id__items_import_post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IndustryMappingImportResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/inventory/industries/{industry_id}/assign-to-tenants": {
+      "post": {
+        "tags": [
+          "admin",
+          "admin-inventory"
+        ],
+        "summary": "Admin Assign Industry Items",
+        "operationId": "admin_assign_industry_items_admin_inventory_industries__industry_id__assign_to_tenants_post",
         "parameters": [
           {
             "name": "industry_id",
@@ -5972,7 +6226,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/IndustryAssignTenantsRequest"
+                "$ref": "#/components/schemas/IndustryAssignRequest"
               }
             }
           }
@@ -6662,6 +6916,20 @@
         ],
         "title": "Body_admin_import_categories_admin_inventory_categories_import_post"
       },
+      "Body_admin_import_industry_items_admin_inventory_industries__industry_id__items_import_post": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "format": "binary",
+            "title": "File"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_admin_import_industry_items_admin_inventory_industries__industry_id__items_import_post"
+      },
       "Body_admin_import_items_admin_inventory_items_import_post": {
         "properties": {
           "file": {
@@ -6848,6 +7116,146 @@
         ],
         "title": "IndustryArticlesUpdate"
       },
+      "IndustryAssignRequest": {
+        "properties": {
+          "tenant_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tenant Ids"
+          },
+          "initial_quantity": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Initial Quantity",
+            "default": 0
+          },
+          "preserve_existing_quantity": {
+            "type": "boolean",
+            "title": "Preserve Existing Quantity",
+            "default": true
+          }
+        },
+        "type": "object",
+        "title": "IndustryAssignRequest"
+      },
+      "IndustryAssignResponse": {
+        "properties": {
+          "industry_id": {
+            "type": "string",
+            "title": "Industry Id"
+          },
+          "industry_name": {
+            "type": "string",
+            "title": "Industry Name"
+          },
+          "total_items": {
+            "type": "integer",
+            "title": "Total Items"
+          },
+          "target_tenants": {
+            "type": "integer",
+            "title": "Target Tenants"
+          },
+          "created": {
+            "type": "integer",
+            "title": "Created"
+          },
+          "skipped_existing": {
+            "type": "integer",
+            "title": "Skipped Existing"
+          },
+          "synced_admin_items": {
+            "type": "integer",
+            "title": "Synced Admin Items"
+          },
+          "missing_tenants": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Missing Tenants"
+          },
+          "mismatched_tenants": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Mismatched Tenants"
+          },
+          "inactive_tenants": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Inactive Tenants"
+          },
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/IndustryAssignTenantResult"
+            },
+            "type": "array",
+            "title": "Results"
+          }
+        },
+        "type": "object",
+        "required": [
+          "industry_id",
+          "industry_name",
+          "total_items",
+          "target_tenants",
+          "created",
+          "skipped_existing",
+          "synced_admin_items",
+          "missing_tenants",
+          "mismatched_tenants",
+          "inactive_tenants",
+          "results"
+        ],
+        "title": "IndustryAssignResponse"
+      },
+      "IndustryAssignTenantResult": {
+        "properties": {
+          "tenant_id": {
+            "type": "string",
+            "title": "Tenant Id"
+          },
+          "tenant_slug": {
+            "type": "string",
+            "title": "Tenant Slug"
+          },
+          "created": {
+            "type": "integer",
+            "title": "Created"
+          },
+          "skipped_existing": {
+            "type": "integer",
+            "title": "Skipped Existing"
+          },
+          "synced_admin_items": {
+            "type": "integer",
+            "title": "Synced Admin Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "tenant_id",
+          "tenant_slug",
+          "created",
+          "skipped_existing",
+          "synced_admin_items"
+        ],
+        "title": "IndustryAssignTenantResult"
+      },
       "IndustryAssignTenantsRequest": {
         "properties": {
           "tenant_ids": {
@@ -6872,7 +7280,43 @@
         "type": "object",
         "title": "IndustryAssignTenantsRequest"
       },
-      "IndustryAssignTenantResult": {
+      "IndustryMappingImportResult": {
+        "properties": {
+          "added": {
+            "type": "integer",
+            "title": "Added"
+          },
+          "removed": {
+            "type": "integer",
+            "title": "Removed"
+          },
+          "skipped_missing": {
+            "type": "integer",
+            "title": "Skipped Missing"
+          },
+          "final_count": {
+            "type": "integer",
+            "title": "Final Count"
+          },
+          "errors": {
+            "items": {
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Errors"
+          }
+        },
+        "type": "object",
+        "required": [
+          "added",
+          "removed",
+          "skipped_missing",
+          "final_count",
+          "errors"
+        ],
+        "title": "IndustryMappingImportResult"
+      },
+      "IndustryOut": {
         "properties": {
           "tenant_id": {
             "type": "string",
@@ -7145,6 +7589,22 @@
           "id"
         ],
         "title": "IndustryOut"
+      },
+      "IndustryOverlapCounts": {
+        "properties": {
+          "counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Counts"
+          }
+        },
+        "type": "object",
+        "required": [
+          "counts"
+        ],
+        "title": "IndustryOverlapCounts"
       },
       "IndustryUpdate": {
         "properties": {

@@ -55,16 +55,20 @@ from app.modules.inventory.schemas import (
     MovementItemOut,
     MovementOut,
     MovementPayload,
+    OrderEmailRequest,
     RecommendedOrderItem,
     RecommendedOrdersResponse,
     SKUExistsResponse,
-    EmailSendResponse,
+    TenantSettingsOut,
+    TenantSettingsUpdate,
+    TenantPingResponse,
+    TenantOutPing,
     TestEmailRequest,
     TestEmailResponse,
     MassImportResult,
-    TenantPingResponse,
-    TenantOutPing,
+    EmailSendResponse,
 )
+from app.modules.admin.smtp_settings_service import get_active_smtp_settings, SmtpConfig
 
 router = APIRouter(prefix="/inventory", tags=["inventory"])
 logger = logging.getLogger(__name__)

@@ -6,3 +6,7 @@
 ## 2024-06-09
 - Qualitätscheck-Sektion im Roadmap-Index ergänzt, um Template-Konformität der Epics abzusichern.
 - Konsistenzprüfung der Task-IDs zwischen Epics, TODO.md und Epic_TODO.md durchgeführt (keine Abweichungen gefunden).
+
+## 2024-06-10
+- Roadmap-Index um Backlog-/Log-Quellen ergänzt (TODO, Epic_TODO, WORKLOGs) zur schnelleren Referenz je Epic.
+- Keine weiteren Anpassungen an Epic-Inhalten nötig; Epics bleiben template-konform.

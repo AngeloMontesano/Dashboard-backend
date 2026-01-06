@@ -32,6 +32,12 @@
 - [EPIC_H_MONITORING_LIGHTWEIGHT](EPIC_H_MONITORING_LIGHTWEIGHT.md)
 - [EPIC_I_CONTACT_DATA_AND_SUPPORT](EPIC_I_CONTACT_DATA_AND_SUPPORT.md)
 
+## Backlog & Logs
+- [TODO.md](../../TODO.md): Priorisierter Now/Next/Later-Backlog mit Epic/Task-IDs.
+- [Epic_TODO.md](../../Epic_TODO.md): Aufgaben je Epic (A–I) als Referenzliste.
+- [WORKLOG.md](../../WORKLOG.md): Chronologische Arbeitsnotizen und Scans.
+- [Epic_WORKLOG.md](../../Epic_WORKLOG.md): Änderungen/Prüfungen auf Epic-Ebene.
+
 ## Qualitätscheck
 - Alle Epic-Dateien existieren und sind hier verlinkt.
 - Jede Epic folgt dem Template (Ziel → Risiken) und enthält 8–20 Tasks mit ID, Bereich, Abhängigkeiten und Done-Kriterium.

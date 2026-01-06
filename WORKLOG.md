@@ -11,3 +11,8 @@
 - Epics gegen Template geprüft, Qualitätscheck-Liste in `docs/roadmap/INDEX.md` ergänzt.
 - Konsistenzprüfung TODO/Epic_TODO ↔ Epics/Task-IDs durchgeführt, keine Lücken gefunden.
 - Offene Punkte: QA-Checkliste Tenant-Status-UX weiterhin offen; Proxy-404-Verhalten bleibt zu testen.
+
+## 2024-06-10
+- Roadmap-Index um Backlog-/Log-Links ergänzt (TODO, Epic_TODO, WORKLOGs) für schnellere Navigation.
+- Keine weiteren Befunde zu 404-/JSON-Verhalten; offene Punkte bleiben unverändert.
+- Offene Punkte: QA-Checkliste Tenant-Status-UX offen; Proxy-404-Verhalten weiterhin ungetestet.

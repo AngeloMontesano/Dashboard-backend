@@ -112,6 +112,42 @@ class SKUExistsResponse(BaseModel):
     normalized_sku: str
 
 
+class RecommendedOrderItem(BaseModel):
+    item_id: str
+    sku: str
+    barcode: str
+    name: str
+    quantity: int
+    min_stock: int
+    target_stock: int
+    recommended_stock: int
+    order_mode: int
+    recommended_qty: int
+    shortage: int
+    category_id: Optional[str] = None
+    category_name: Optional[str] = None
+    unit: str
+
+
+class RecommendedOrdersResponse(BaseModel):
+    items: list[RecommendedOrderItem]
+    total: int
+
+
+class MovementItemOut(ItemOut):
+    """
+    Backwards-compatible alias for movement responses that include full item data.
+    """
+    pass
+
+
+class MovementOut(MovementItemOut):
+    """
+    Backwards-compatible alias kept for admin inventory imports.
+    """
+    pass
+
+
 class MovementPayload(BaseModel):
     client_tx_id: str = Field(..., max_length=128)
     type: str = Field(..., pattern="^(IN|OUT)$")

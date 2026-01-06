@@ -23,6 +23,16 @@
         </template>
       </UiToolbar>
 
+      <UserQuickActions
+        class="mt-6"
+        :adminKey="adminKey"
+        :actor="actor"
+        :users="users"
+        :selectedUserId="selectedUser?.id || ''"
+        @usersUpdated="applyUsers"
+        @selectUser="selectById"
+      />
+
       <div class="filter-card">
         <div class="stack">
           <label class="field-label" for="user-search">Suche E-Mail</label>
@@ -144,6 +154,7 @@ import { useToast } from "../composables/useToast";
 
 import UserCreateCard from "../components/users/UserCreateCard.vue";
 import PasswordModal from "../components/users/UserPasswordModal.vue";
+import UserQuickActions from "../components/users/UserQuickActions.vue";
 import UiPage from "../components/ui/UiPage.vue";
 import UiSection from "../components/ui/UiSection.vue";
 import UiToolbar from "../components/ui/UiToolbar.vue";
@@ -199,10 +210,7 @@ async function loadUsers() {
   busy.error = "";
   try {
     const res = await adminListUsers(props.adminKey, props.actor);
-    users.value = res;
-    if (selectedUser.value) {
-      selectedUser.value = res.find((u) => u.id === selectedUser.value?.id) ?? null;
-    }
+    applyUsers(res);
     toast(`Benutzer geladen: ${res.length}`, "success");
   } catch (e: any) {
     busy.error = stringifyError(e);
@@ -229,8 +237,8 @@ async function createUser() {
   busy.create = true;
   try {
     const created = await adminCreateUser(props.adminKey, props.actor, { email, password });
-    users.value = [created, ...users.value];
-    selectedUser.value = created;
+    applyUsers([created, ...users.value]);
+    select(created);
     toast("Benutzer angelegt", "success");
     closeCreateCard();
   } catch (e: any) {
@@ -249,8 +257,7 @@ async function toggleActive(u: UserOut) {
   busy.toggleId = u.id;
   try {
     const updated = await adminUpdateUser(props.adminKey, props.actor, u.id, { is_active: !u.is_active });
-    users.value = users.value.map((x) => (x.id === updated.id ? updated : x));
-    if (selectedUser.value?.id === updated.id) selectedUser.value = updated;
+    applyUsers(users.value.map((x) => (x.id === updated.id ? updated : x)));
     toast(updated.is_active ? "Benutzer aktiviert" : "Benutzer deaktiviert", "success");
   } catch (e: any) {
     toast(`Fehler beim Update: ${stringifyError(e)}`, "danger");
@@ -281,8 +288,7 @@ async function savePassword() {
   busy.password = true;
   try {
     const updated = await adminUpdateUser(props.adminKey, props.actor, selectedUser.value.id, { password: pw });
-    users.value = users.value.map((x) => (x.id === updated.id ? updated : x));
-    selectedUser.value = updated;
+    applyUsers(users.value.map((x) => (x.id === updated.id ? updated : x)));
     toast("Passwort gesetzt", "success");
     closePasswordModal();
   } catch (e: any) {
@@ -294,6 +300,15 @@ async function savePassword() {
 
 function select(u: UserOut) {
   selectedUser.value = u;
+}
+
+function selectById(userId: string) {
+  const found = users.value.find((u) => u.id === userId) || null;
+  if (found) {
+    select(found);
+  } else {
+    selectedUser.value = null;
+  }
 }
 
 function resetFilters() {
@@ -312,6 +327,14 @@ function closeCreateCard() {
   createForm.open = false;
   createForm.email = "";
   createForm.password = "";
+}
+
+function applyUsers(next: UserOut[]) {
+  users.value = next;
+  if (selectedUser.value) {
+    const refreshed = next.find((u) => u.id === selectedUser.value?.id) || null;
+    selectedUser.value = refreshed;
+  }
 }
 
 function stringifyError(e: any): string {

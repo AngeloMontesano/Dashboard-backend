@@ -11,6 +11,7 @@
 - Customer: Queue-/Bestell-Views mit klaren Busy/Confirm-Flows und konsistenter Button-Hierarchie ausstatten.
 - Admin/Customer: Gemeinsame Toast/Overlay-Styles auf Token-Basis konsolidieren und A11y-Labels für Filter/Selects ergänzen.
 - Admin: Tenants/Memberships mit Server-Paging und Validierungen inkl. Confirm-Dialogen ausstatten; Theme-Toggle in Topbar ergänzen.
+- Admin: System-Actions (Cache Reset/Reindex) fehlen als Endpunkte und UI; bei Settings-Refactor nur Hinweise/Platzhalter möglich, Backend-Bereitstellung klären.
 
 ## KANN (Nice-to-have)
 - Customer/Admin: Serverseitige Aggregationen für KPIs/Reporting zur Reduktion von Requests/Caching-Bedarf.

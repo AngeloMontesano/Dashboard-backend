@@ -41,8 +41,8 @@ export function classifyError(error: unknown): ClassifiedError {
       400: 'Eingabe unvollständig oder ungültig.',
       404: 'Eintrag nicht gefunden.',
       405: 'Aktion aktuell nicht erlaubt.',
-      409: 'Konflikt: Die Buchung kollidiert mit einem anderen Vorgang.',
-      422: 'Daten fehlen oder sind nicht zulässig.'
+      409: 'Konflikt: Vorgang kollidiert mit anderem Schritt.',
+      422: 'Pflichtfeld fehlt oder nicht zulässig.'
     };
     return {
       category: 'client',

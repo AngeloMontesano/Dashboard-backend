@@ -20,6 +20,7 @@ const state = reactive<{
   saving: boolean;
   exporting: boolean;
   error: string | null;
+  errorDetail: string | null;
   success: string | null;
   draft: Record<string, number>;
 }>({
@@ -28,6 +29,7 @@ const state = reactive<{
   saving: false,
   exporting: false,
   error: null,
+  errorDetail: null,
   success: null,
   draft: {}
 });
@@ -38,14 +40,19 @@ const atTarget = computed(() => state.items.filter((i) => i.quantity >= i.target
 
 function showError(err: unknown, fallback: string) {
   const classified = handleAuthError(err);
-  const detail = classified.detailMessage || classified.userMessage || fallback;
-  state.error = classified.category === 'auth' ? classified.userMessage : `${fallback}: ${detail}`;
+  state.errorDetail = classified.detailMessage ?? null;
+  if (classified.category === 'auth') {
+    state.error = classified.userMessage;
+    return;
+  }
+  state.error = classified.userMessage || fallback;
 }
 
 async function loadItems() {
   if (!authState.accessToken) return;
   state.loading = true;
   state.error = null;
+  state.errorDetail = null;
   try {
     const res = await fetchItems({ token: authState.accessToken, page: 1, page_size: 500, active: true });
     state.items = res.items;
@@ -64,6 +71,7 @@ async function handleExport() {
   if (!authState.accessToken) return;
   state.exporting = true;
   state.error = null;
+  state.errorDetail = null;
   try {
     const blob = await exportInventory(authState.accessToken);
     const url = window.URL.createObjectURL(blob);
@@ -87,6 +95,7 @@ async function handleSave() {
   }));
   state.saving = true;
   state.error = null;
+  state.errorDetail = null;
   state.success = null;
   try {
     await bulkUpdateInventory(authState.accessToken, { updates });
@@ -127,7 +136,11 @@ onMounted(loadItems);
       />
 
       <div v-if="state.error" class="banner banner--error mt-sm">
-        {{ state.error }}
+        <p class="banner__text">{{ state.error }}</p>
+        <details v-if="state.errorDetail" class="banner__debug">
+          <summary>Details</summary>
+          <pre>{{ state.errorDetail }}</pre>
+        </details>
       </div>
       <div v-if="state.success" class="banner banner--success mt-sm">
         {{ state.success }}

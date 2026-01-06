@@ -142,11 +142,8 @@ class MovementItemOut(ItemOut):
     pass
 
 
-class MovementOut(MovementItemOut):
-    """
-    Backwards-compatible alias kept for admin inventory imports.
-    """
-    pass
+# Backwards compatibility: older admin inventory imports expect MovementOut.
+MovementOut = MovementItemOut
 
 
 class MovementPayload(BaseModel):
@@ -322,6 +319,14 @@ class OrderEmailRequest(BaseModel):
 class EmailSendResponse(BaseModel):
     ok: bool
     error: Optional[str] = None
+
+
+class SmtpPingResponse(BaseModel):
+    ok: bool
+    error: Optional[str] = None
+    host: Optional[str] = None
+    port: Optional[int] = None
+    resolved_ips: list[str] = Field(default_factory=list)
 
 
 class ReorderItem(BaseModel):

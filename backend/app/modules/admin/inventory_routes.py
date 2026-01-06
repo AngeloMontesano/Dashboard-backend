@@ -13,7 +13,7 @@ from app.models.category import Category
 from app.models.item import Item
 from app.models.item_unit import ItemUnit
 from app.models.industry import Industry, IndustryArticle
-from app.modules.inventory.routes import _normalize_sku, CSV_COLUMNS
+from app.modules.inventory.routes import _normalize_sku, CSV_COLUMNS, _validate_order_mode, _parse_bool
 from app.modules.inventory.schemas import (
     CategoryCreate,
     CategoryOut,
@@ -556,7 +556,7 @@ async def admin_import_items(
                 raise ValueError("sku, barcode und name sind Pflicht")
 
             normalized_sku = _normalize_sku(sku_raw, prefix_customer=False)
-            category_name = str(row.get("category") or "")
+            category_name = str(row.get("category") or "").strip()
             category = None
             if category_name:
                 category = await db.scalar(
@@ -568,14 +568,18 @@ async def admin_import_items(
                 if category is None:
                     raise ValueError(f"Kategorie '{category_name}' nicht gefunden")
 
-            quantity = int(row.get("qty") or 0)
-            unit = row.get("unit") or "pcs"
-            is_active = str(row.get("is_active", "true")).strip().lower() in {"1", "true", "yes", "y"}
-            min_stock = int(row.get("min_stock") or 0)
-            max_stock = int(row.get("max_stock") or 0)
-            target_stock = int(row.get("target_stock") or 0)
-            recommended_stock = int(row.get("recommended_stock") or 0)
-            order_mode = int(row.get("order_mode") or 0)
+            def _to_int(val: object) -> int:
+                raw = str(val or "").strip()
+                return int(raw or 0)
+
+            quantity = _to_int(row.get("qty"))
+            unit = (row.get("unit") or "pcs") if str(row.get("unit") or "").strip() else "pcs"
+            is_active = _parse_bool(row.get("is_active", "true"))
+            min_stock = _to_int(row.get("min_stock"))
+            max_stock = _to_int(row.get("max_stock"))
+            target_stock = _to_int(row.get("target_stock"))
+            recommended_stock = _to_int(row.get("recommended_stock"))
+            order_mode = _validate_order_mode(str(row.get("order_mode") or "0").strip() or "0")
 
             item = await db.scalar(
                 select(Item).where(Item.tenant_id.is_(None), Item.sku == normalized_sku)

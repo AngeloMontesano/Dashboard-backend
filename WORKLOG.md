@@ -734,3 +734,14 @@
   - TODO ergänzt für roll-out des Auth-Handlings in weiteren Views.
 - **Tests**
   - `npm run build` (customer_frontend/customer-ui)
+
+## Schritt 51 – Silent Refresh für Access Tokens
+- **Datum/Uhrzeit**: 2026-01-06T13:10:00+00:00
+- **Ziel**: 401/403 im Customer-Frontend automatisch per Refresh-Token abfangen, bevor Nutzer umgeleitet werden.
+- **Was wurde geändert**
+  - Axios-Interceptor in `src/api/client.ts`: versucht bei 401/403 einmalig einen Refresh (`/auth/refresh`), setzt neue Tokens, aktualisiert SessionStorage und Authorization-Header und wiederholt die Original-Request.
+  - Refresh-Token-Aufruf mit Tenant-Headern und eigenem Client (Skip-Flag, kein Interceptor-Loop).
+  - `useAuth` synchronisiert sich über `customer-auth-updated`-Event mit SessionStorage, setzt Header bei Restore/Login/Logout und bleibt konsistent, wenn der Interceptor Tokens erneuert.
+  - TODO angepasst (Monitoring/CTA-Rollout), Session-Redirect bleibt nur bei gescheitertem Refresh aktiv.
+- **Tests**
+  - `npm run build` (customer_frontend/customer-ui)

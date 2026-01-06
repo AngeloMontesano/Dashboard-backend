@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue';
+import { computed, onMounted, reactive, ref, watch } from 'vue';
 import Toast from 'primevue/toast';
 import { useToast } from 'primevue/usetoast';
 import Card from 'primevue/card';
@@ -8,7 +8,7 @@ import Column from 'primevue/column';
 import Tag from 'primevue/tag';
 import ProgressSpinner from 'primevue/progressspinner';
 import type { ChartData } from 'chart.js';
-import { getReportData, exportCsv, exportExcel } from '@/api/reporting';
+import { getReportData, exportCsv, exportExcel, exportPdf } from '@/api/reporting';
 import { fetchCategories, fetchItems, type Item, type Category } from '@/api/inventory';
 import ReportFilters from '@/components/reports/ReportFilters.vue';
 import ReportKpiCards from '@/components/reports/ReportKpiCards.vue';
@@ -255,19 +255,15 @@ async function handleExport(format: 'csv' | 'excel' | 'pdf') {
   if (!params) return;
   exporting.value = format;
   try {
-    if (format === 'pdf') {
-      await exportVisiblePdf();
-    } else {
-      const action = format === 'csv' ? exportCsv : exportExcel;
-      const blob = await action(authState.accessToken, params);
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      const extension = format === 'excel' ? 'xlsx' : format;
-      link.href = url;
-      link.download = `berichte-${params.from}-${params.to}.${extension}`;
-      link.click();
-      window.URL.revokeObjectURL(url);
-    }
+    const action = format === 'csv' ? exportCsv : format === 'excel' ? exportExcel : exportPdf;
+    const blob = await action(authState.accessToken, params);
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    const extension = format === 'excel' ? 'xlsx' : format;
+    link.href = url;
+    link.download = `berichte-${params.from}-${params.to}.${extension}`;
+    link.click();
+    window.URL.revokeObjectURL(url);
     toast.add({ severity: 'success', summary: 'Export gestartet', detail: `${format.toUpperCase()} bereitgestellt.` });
   } catch (err: any) {
     const detail = stringifyError(err);
@@ -275,32 +271,6 @@ async function handleExport(format: 'csv' | 'excel' | 'pdf') {
   } finally {
     exporting.value = null;
   }
-}
-
-async function exportVisiblePdf() {
-  await nextTick();
-  const section = document.querySelector('.page-section');
-  if (!section) throw new Error('Bereich nicht gefunden');
-  const printWindow = window.open('', '_blank', 'width=1200,height=800');
-  if (!printWindow) throw new Error('Popup blockiert');
-  printWindow.document.write(`
-    <html>
-      <head>
-        <title>Berichte & Analysen</title>
-        <style>
-          body { font-family: Arial, sans-serif; padding: 16px; color: #111827; }
-          h2, h3 { margin: 0 0 8px; }
-          .section-stack { display: flex; flex-direction: column; gap: 12px; }
-          .card, .p-card { border: 1px solid #e5e7eb; border-radius: 12px; padding: 12px; }
-        </style>
-      </head>
-      <body>${section.innerHTML}</body>
-    </html>
-  `);
-  printWindow.document.close();
-  printWindow.focus();
-  printWindow.print();
-  printWindow.close();
 }
 
 watch(

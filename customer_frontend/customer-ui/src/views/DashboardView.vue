@@ -31,6 +31,7 @@ const state = reactive<{
   metrics: DashboardMetrics;
   loading: boolean;
   error: string | null;
+  reorderNote: string | null;
 }>({
   metrics: {
     openOrders: 0,
@@ -41,7 +42,8 @@ const state = reactive<{
     belowMin: 0
   },
   loading: false,
-  error: null
+  error: null,
+  reorderNote: null
 });
 const forcedLogout = ref(false);
 
@@ -116,6 +118,7 @@ async function loadDashboard() {
   if (!authState.accessToken) return;
   state.loading = true;
   const errors: string[] = [];
+  state.reorderNote = null;
   try {
     let openOrders = [];
     let reorderCount = 0;
@@ -136,10 +139,16 @@ async function loadDashboard() {
       const res = await fetchReorderRecommendations(authState.accessToken);
       reorderCount = res.items?.length ?? 0;
     } catch (err: any) {
-      const message = toFriendlyError(err);
-      errors.push(`Bestellwürdig: ${message}`);
-      if (err?.response?.status === 401 || err?.response?.status === 403) {
-        handleAuthIssue();
+      const classified = classifyError(err);
+      if (classified.category === 'client' && [404, 422].includes(classified.status ?? 0)) {
+        reorderCount = 0;
+        state.reorderNote = 'Keine Daten für Bestellwürdigkeit verfügbar';
+      } else {
+        const message = toFriendlyError(err);
+        errors.push(`Bestellwürdig: ${message}`);
+        if (err?.response?.status === 401 || err?.response?.status === 403) {
+          handleAuthIssue();
+        }
       }
     }
 
@@ -163,7 +172,7 @@ async function loadDashboard() {
       }
     }
 
-    if (reorderCount === 0 && items.length) {
+    if (reorderCount === 0 && items.length && !state.reorderNote) {
       reorderCount = deriveRecommendations(items);
     }
 
@@ -221,7 +230,7 @@ onMounted(loadDashboard);
         <UiStatCard
           label="Bestellwürdig"
           :value="state.metrics.recommended.toLocaleString('de-DE')"
-          hint="Artikel unter Sollbestand"
+          :hint="state.loading ? 'Lade...' : state.reorderNote ?? 'Artikel unter Sollbestand'"
           :to="{ path: '/bestellungen', query: { tab: 'bestellwuerdig' } }"
         />
       </div>

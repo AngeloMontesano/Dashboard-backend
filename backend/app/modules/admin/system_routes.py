@@ -1,18 +1,22 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+import logging
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
+from app.core.email_settings import EmailSettings, load_email_settings, upsert_email_settings
+from app.core.email_utils import send_email
 from app.core.db import get_db
 
 
 router = APIRouter(prefix="/system", tags=["admin-system"])
+logger = logging.getLogger(__name__)
 
 
 def _now_iso() -> str:
@@ -37,6 +41,26 @@ class SystemActionResponse(BaseModel):
     performed: bool
     detail: str
     timestamp: str
+
+
+class SystemEmailSettings(BaseModel):
+    host: str | None = None
+    port: int | None = None
+    user: str | None = None
+    from_email: str | None = None
+    has_password: bool = False
+
+
+class SystemEmailSettingsUpdate(BaseModel):
+    host: str | None = None
+    port: int | None = None
+    user: str | None = None
+    password: str | None = None
+    from_email: str | None = None
+
+
+class SystemEmailTestRequest(BaseModel):
+    email: str
 
 
 def _safe(value: str | None) -> str:
@@ -70,6 +94,61 @@ async def admin_system_info(db: AsyncSession = Depends(get_db)) -> SystemInfoRes
     )
 
 
+@router.get("/email", response_model=SystemEmailSettings)
+async def admin_system_email_settings(db: AsyncSession = Depends(get_db)) -> SystemEmailSettings:
+    email_settings = await load_email_settings(db)
+    return _email_settings_to_response(email_settings)
+
+
+@router.put("/email", response_model=SystemEmailSettings)
+async def admin_update_system_email_settings(
+    payload: SystemEmailSettingsUpdate,
+    db: AsyncSession = Depends(get_db),
+) -> SystemEmailSettings:
+    email_settings = await upsert_email_settings(
+        db,
+        host=payload.host,
+        port=payload.port,
+        user=payload.user,
+        password=payload.password,
+        from_email=payload.from_email,
+    )
+    return _email_settings_to_response(email_settings)
+
+
+@router.post("/email/test", response_model=SystemActionResponse)
+async def admin_system_email_test(
+    payload: SystemEmailTestRequest,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+) -> SystemActionResponse:
+    email_settings = await load_email_settings(db)
+    ok, error, _resolved = send_email(
+        email_settings=email_settings,
+        recipient=payload.email,
+        subject="SMTP Test",
+        body="Test-E-Mail aus den Admin Systemeinstellungen.",
+        request_id=getattr(request.state, "request_id", None),
+        actor=request.headers.get("x-admin-actor"),
+        logger=logger,
+    )
+    if ok:
+        return SystemActionResponse(
+            action="email_test",
+            supported=True,
+            performed=True,
+            detail="Test-E-Mail gesendet",
+            timestamp=_now_iso(),
+        )
+    return SystemActionResponse(
+        action="email_test",
+        supported=True,
+        performed=False,
+        detail=error or "Unbekannter Fehler",
+        timestamp=_now_iso(),
+    )
+
+
 def _unsupported(action: str, detail: str) -> SystemActionResponse:
     return SystemActionResponse(
         action=action,
@@ -77,6 +156,16 @@ def _unsupported(action: str, detail: str) -> SystemActionResponse:
         performed=False,
         detail=detail,
         timestamp=_now_iso(),
+    )
+
+
+def _email_settings_to_response(email_settings: EmailSettings) -> SystemEmailSettings:
+    return SystemEmailSettings(
+        host=email_settings.host,
+        port=email_settings.port,
+        user=email_settings.user,
+        from_email=email_settings.from_email,
+        has_password=bool(email_settings.password),
     )
 
 

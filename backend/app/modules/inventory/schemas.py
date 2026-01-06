@@ -98,6 +98,7 @@ class ItemUpdate(BaseModel):
 class ItemOut(ItemBase):
     id: str
     category_name: Optional[str] = None
+    is_admin_created: bool = False
 
 
 class ItemsPage(BaseModel):
@@ -248,6 +249,7 @@ class TenantSettingsBase(BaseModel):
     contact_name: str = Field("", max_length=255)
     branch_number: str = Field("", max_length=64)
     tax_number: str = Field("", max_length=64)
+    industry_id: Optional[str] = None
 
 
 class TenantSettingsUpdate(TenantSettingsBase):
@@ -256,6 +258,30 @@ class TenantSettingsUpdate(TenantSettingsBase):
 
 class TenantSettingsOut(TenantSettingsBase):
     id: str
+
+
+class IndustryBase(BaseModel):
+    name: str = Field(..., max_length=255)
+    description: str = Field("", max_length=512)
+    is_active: bool = True
+
+
+class IndustryCreate(IndustryBase):
+    pass
+
+
+class IndustryUpdate(BaseModel):
+    name: Optional[str] = Field(default=None, max_length=255)
+    description: Optional[str] = Field(default=None, max_length=512)
+    is_active: Optional[bool] = None
+
+
+class IndustryOut(IndustryBase):
+    id: str
+
+
+class IndustryArticlesUpdate(BaseModel):
+    item_ids: List[str]
 
 
 class MassImportResult(BaseModel):

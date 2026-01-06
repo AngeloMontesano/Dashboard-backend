@@ -11,6 +11,7 @@ from app.modules.admin.tenant_users_routes import router as tenant_users_router
 from app.modules.admin.tenants_routes import router as tenants_router
 from app.modules.admin.tenant_settings_routes import router as tenant_settings_router
 from app.modules.admin.users_routes import router as users_router
+from app.modules.admin.inventory_routes import router as admin_inventory_router
 
 router = APIRouter(
     prefix="/admin",
@@ -29,6 +30,7 @@ router.include_router(audit_router)
 router.include_router(diagnostics_router)
 router.include_router(tenant_users_router)
 router.include_router(tenant_settings_router)
+router.include_router(admin_inventory_router)
 
 
 @router.get("/ping")

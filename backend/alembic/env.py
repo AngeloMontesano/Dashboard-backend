@@ -18,6 +18,8 @@ from app.models.audit_log import AdminAuditLog  # noqa: F401
 from app.models.item import Item  # noqa: F401
 from app.models.category import Category  # noqa: F401
 from app.models.movement import InventoryMovement  # noqa: F401
+from app.models.item_unit import ItemUnit  # noqa: F401
+from app.models.industry import Industry, IndustryArticle  # noqa: F401
 
 config = context.config
 

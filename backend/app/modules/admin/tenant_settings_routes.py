@@ -45,6 +45,7 @@ async def _get_or_create_settings(db: AsyncSession, tenant_id: uuid.UUID) -> Ten
         contact_name="",
         branch_number="",
         tax_number="",
+        industry_id=None,
     )
     db.add(settings)
     await db.commit()
@@ -68,6 +69,7 @@ def _settings_to_out(settings: TenantSetting) -> TenantSettingsOut:
         contact_name=settings.contact_name,
         branch_number=settings.branch_number,
         tax_number=settings.tax_number,
+        industry_id=str(settings.industry_id) if settings.industry_id else None,
     )
 
 
@@ -105,6 +107,7 @@ async def admin_update_tenant_settings(
     settings.contact_name = payload.contact_name.strip()
     settings.branch_number = payload.branch_number.strip()
     settings.tax_number = payload.tax_number.strip()
+    settings.industry_id = payload.industry_id
 
     await db.commit()
     await db.refresh(settings)

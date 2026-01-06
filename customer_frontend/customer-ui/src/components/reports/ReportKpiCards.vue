@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import Card from 'primevue/card';
-import ProgressSpinner from 'primevue/progressspinner';
 import type { ReportKpis } from '@/types/reports';
 
 const props = withDefaults(
@@ -27,40 +25,40 @@ function formatAverage(value: number) {
 
 <template>
   <div class="kpi-grid">
-    <Card class="kpi-card">
-      <template #title>Gesamtverbrauch</template>
-      <template #content>
-        <div class="kpi-value">
-          <ProgressSpinner v-if="loading" style="width: 24px; height: 24px" strokeWidth="6" />
-          <span v-else>{{ formatValue(kpis?.totalConsumption || 0) }}</span>
-        </div>
-        <p class="kpi-subtitle">Summe aller OUT Bewegungen</p>
-      </template>
-    </Card>
+    <article class="card kpi-card">
+      <header class="cardHeader">
+        <div class="cardTitle">Gesamtverbrauch</div>
+      </header>
+      <div class="kpi-value">
+        <span v-if="loading" class="spinner" aria-label="Laden"></span>
+        <span v-else>{{ formatValue(kpis?.totalConsumption || 0) }}</span>
+      </div>
+      <p class="kpi-subtitle">Summe aller OUT Bewegungen</p>
+    </article>
 
-    <Card class="kpi-card">
-      <template #title>Ø Verbrauch pro Monat</template>
-      <template #content>
-        <div class="kpi-value">
-          <ProgressSpinner v-if="loading" style="width: 24px; height: 24px" strokeWidth="6" />
-          <span v-else>{{ formatAverage(kpis?.averagePerMonth || 0) }}</span>
-        </div>
-        <p class="kpi-subtitle">Über {{ kpis?.months.length || 0 }} Monate</p>
-      </template>
-    </Card>
+    <article class="card kpi-card">
+      <header class="cardHeader">
+        <div class="cardTitle">Ø Verbrauch pro Monat</div>
+      </header>
+      <div class="kpi-value">
+        <span v-if="loading" class="spinner" aria-label="Laden"></span>
+        <span v-else>{{ formatAverage(kpis?.averagePerMonth || 0) }}</span>
+      </div>
+      <p class="kpi-subtitle">Über {{ kpis?.months.length || 0 }} Monate</p>
+    </article>
 
-    <Card class="kpi-card">
-      <template #title>Top Artikel</template>
-      <template #content>
-        <div class="kpi-value">
-          <ProgressSpinner v-if="loading" style="width: 24px; height: 24px" strokeWidth="6" />
-          <span v-else>{{ kpis?.topItem?.name || '—' }}</span>
-        </div>
-        <p class="kpi-subtitle">
-          {{ kpis?.topItem ? `${formatValue(kpis.topItem.quantity)} Einheiten` : 'Noch keine Daten' }}
-        </p>
-      </template>
-    </Card>
+    <article class="card kpi-card">
+      <header class="cardHeader">
+        <div class="cardTitle">Top Artikel</div>
+      </header>
+      <div class="kpi-value">
+        <span v-if="loading" class="spinner" aria-label="Laden"></span>
+        <span v-else>{{ kpis?.topItem?.name || '—' }}</span>
+      </div>
+      <p class="kpi-subtitle">
+        {{ kpis?.topItem ? `${formatValue(kpis.topItem.quantity)} Einheiten` : 'Noch keine Daten' }}
+      </p>
+    </article>
   </div>
 </template>
 
@@ -81,10 +79,26 @@ function formatAverage(value: number) {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  min-height: 48px;
 }
 
 .kpi-subtitle {
   margin: 0.25rem 0 0;
-  color: var(--text-secondary-color, #6b7280);
+  color: var(--text-muted);
+}
+
+.spinner {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 3px solid var(--border);
+  border-top-color: var(--primary);
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 </style>

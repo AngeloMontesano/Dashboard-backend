@@ -104,7 +104,7 @@ onMounted(async () => {
           <input type="checkbox" v-model="form.is_active" :disabled="!hasWriteAccess" />
           <span>Aktiv</span>
         </label>
-        <button class="button button--primary" type="submit" :disabled="!hasWriteAccess">Neue Kategorie</button>
+        <button class="btnPrimary small" type="submit" :disabled="!hasWriteAccess">Neue Kategorie</button>
       </form>
 
       <div v-if="categories.length" class="tableWrap mt-md">
@@ -135,7 +135,7 @@ onMounted(async () => {
               <td>{{ cat.is_system ? 'Ja' : 'Nein' }}</td>
               <td class="table-actions">
                 <button
-                  class="button button--ghost"
+                  class="btnGhost small"
                   type="button"
                   :disabled="cat.is_system || !hasWriteAccess"
                   @click="toggleCategory(cat, !cat.is_active)"

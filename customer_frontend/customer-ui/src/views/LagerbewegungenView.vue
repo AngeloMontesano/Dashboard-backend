@@ -107,10 +107,10 @@ const submitMovement = async (type: 'IN' | 'OUT') => {
         </template>
         <template #end>
           <div class="action-row">
-            <button class="button button--ghost" type="button" @click="syncNow" :disabled="syncing">
+            <button class="btnGhost small" type="button" @click="syncNow" :disabled="syncing">
               Sync jetzt
             </button>
-            <button class="button button--ghost" type="button" @click="clearSent">
+            <button class="btnGhost small" type="button" @click="clearSent">
               Queue leeren
             </button>
           </div>
@@ -159,10 +159,10 @@ const submitMovement = async (type: 'IN' | 'OUT') => {
       </div>
 
       <div class="action-row">
-        <button class="button button--ghost" type="button" @click="submitMovement('OUT')" :disabled="!hasWriteAccess">
+        <button class="btnGhost small" type="button" @click="submitMovement('OUT')" :disabled="!hasWriteAccess">
           Bestand reduzieren
         </button>
-        <button class="button button--primary" type="button" @click="submitMovement('IN')" :disabled="!hasWriteAccess">
+        <button class="btnPrimary small" type="button" @click="submitMovement('IN')" :disabled="!hasWriteAccess">
           Bestand erhöhen
         </button>
       </div>
@@ -174,37 +174,39 @@ const submitMovement = async (type: 'IN' | 'OUT') => {
         Letzter Fehler: {{ lastSyncError }}
       </p>
 
-      <table class="table">
-        <thead>
-          <tr>
-            <th>Zeitpunkt</th>
-            <th>Typ</th>
-            <th>Barcode</th>
-            <th>Menge</th>
-            <th>Notiz</th>
-            <th>Status</th>
-            <th>Versuche</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="item in recentMovements" :key="item.id">
-            <td>{{ new Date(item.created_at).toLocaleString() }}</td>
-            <td>{{ item.type === 'IN' ? 'Bestand erhöhen' : 'Bestand reduzieren' }}</td>
-            <td>{{ item.barcode }}</td>
-            <td>{{ item.qty }}</td>
-            <td>{{ item.note || '—' }}</td>
-            <td>
-              <StatusPill :label="statusLabel(item.status)" :tone="statusTone(item.status)" />
-            </td>
-            <td>
-              <span v-if="item.status === 'failed' && item.last_error" class="text-danger">
-                {{ item.retries }} ({{ item.last_error }})
-              </span>
-              <span v-else>{{ item.retries }}</span>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <div class="tableWrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Zeitpunkt</th>
+              <th>Typ</th>
+              <th>Barcode</th>
+              <th>Menge</th>
+              <th>Notiz</th>
+              <th>Status</th>
+              <th>Versuche</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="item in recentMovements" :key="item.id">
+              <td>{{ new Date(item.created_at).toLocaleString() }}</td>
+              <td>{{ item.type === 'IN' ? 'Bestand erhöhen' : 'Bestand reduzieren' }}</td>
+              <td>{{ item.barcode }}</td>
+              <td>{{ item.qty }}</td>
+              <td>{{ item.note || '—' }}</td>
+              <td>
+                <StatusPill :label="statusLabel(item.status)" :tone="statusTone(item.status)" />
+              </td>
+              <td>
+                <span v-if="item.status === 'failed' && item.last_error" class="text-danger">
+                  {{ item.retries }} ({{ item.last_error }})
+                </span>
+                <span v-else>{{ item.retries }}</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </UiSection>
   </UiPage>
 </template>

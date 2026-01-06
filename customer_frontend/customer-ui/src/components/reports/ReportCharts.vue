@@ -1,10 +1,8 @@
 <script setup lang="ts">
-import { computed } from 'vue';
-import Card from 'primevue/card';
-import Chart from 'primevue/chart';
-import ProgressSpinner from 'primevue/progressspinner';
-import 'chart.js/auto';
-import type { ChartData, ChartOptions } from 'chart.js';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { Chart, registerables, type ChartData, type ChartOptions } from 'chart.js';
+
+Chart.register(...registerables);
 
 const props = withDefaults(
   defineProps<{
@@ -19,77 +17,131 @@ const props = withDefaults(
   }
 );
 
+const barCanvas = ref<HTMLCanvasElement | null>(null);
+const lineCanvas = ref<HTMLCanvasElement | null>(null);
+const barChart = ref<Chart<'bar'> | null>(null);
+const lineChart = ref<Chart<'line'> | null>(null);
+
 const barOptions = computed<ChartOptions<'bar'>>(() => ({
   responsive: true,
   plugins: {
-    legend: {
-      position: 'top'
-    },
-    tooltip: {
-      mode: 'index',
-      intersect: false
-    }
+    legend: { position: 'top' },
+    tooltip: { mode: 'index', intersect: false }
   },
   scales: {
-    x: {
-      stacked: (props.consumptionData?.datasets?.length || 0) > 1
-    },
-    y: {
-      beginAtZero: true
-    }
+    x: { stacked: (props.consumptionData?.datasets?.length || 0) > 1 },
+    y: { beginAtZero: true }
   }
 }));
 
 const lineOptions = computed<ChartOptions<'line'>>(() => ({
   responsive: true,
   plugins: {
-    legend: {
-      position: 'top'
-    },
-    tooltip: {
-      mode: 'index',
-      intersect: false
-    }
+    legend: { position: 'top' },
+    tooltip: { mode: 'index', intersect: false }
   },
-  scales: {
-    y: {
-      beginAtZero: true
-    }
-  }
+  scales: { y: { beginAtZero: true } }
 }));
+
+function destroyBar() {
+  if (barChart.value) {
+    barChart.value.destroy();
+    barChart.value = null;
+  }
+}
+
+function destroyLine() {
+  if (lineChart.value) {
+    lineChart.value.destroy();
+    lineChart.value = null;
+  }
+}
+
+function renderCharts() {
+  if (barCanvas.value && props.consumptionData && props.consumptionData.labels?.length) {
+    destroyBar();
+    barChart.value = new Chart(barCanvas.value, {
+      type: 'bar',
+      data: props.consumptionData,
+      options: barOptions.value
+    });
+  } else {
+    destroyBar();
+  }
+
+  if (lineCanvas.value && props.trendData && props.trendData.labels?.length) {
+    destroyLine();
+    lineChart.value = new Chart(lineCanvas.value, {
+      type: 'line',
+      data: props.trendData,
+      options: lineOptions.value
+    });
+  } else {
+    destroyLine();
+  }
+}
+
+watch(
+  () => [props.consumptionData, props.trendData, barOptions.value, lineOptions.value, props.loading, props.error],
+  () => {
+    if (props.loading || props.error) {
+      destroyBar();
+      destroyLine();
+      return;
+    }
+    void nextTick(renderCharts);
+  }
+);
+
+onMounted(() => {
+  renderCharts();
+});
+
+onBeforeUnmount(() => {
+  destroyBar();
+  destroyLine();
+});
 </script>
 
 <template>
   <div class="charts-grid">
-    <Card class="chart-card">
-      <template #title>Verbrauchsanalyse</template>
-      <template #subtitle>Balken pro Monat je nach Modus aggregiert oder pro Artikel.</template>
-      <template #content>
+    <article class="card chart-card">
+      <header class="cardHeader">
+        <div>
+          <div class="cardTitle">Verbrauchsanalyse</div>
+          <div class="cardHint">Balken pro Monat je nach Modus aggregiert oder pro Artikel.</div>
+        </div>
+      </header>
+      <div class="chart-body">
         <div v-if="loading" class="chart-placeholder">
-          <ProgressSpinner />
+          <span class="spinner" aria-label="Laden"></span>
         </div>
         <div v-else-if="error" class="chart-placeholder error">{{ error }}</div>
         <div v-else-if="consumptionData && consumptionData.labels?.length" class="chart-wrapper">
-          <Chart type="bar" :data="consumptionData" :options="barOptions" />
+          <canvas ref="barCanvas" />
         </div>
         <div v-else class="chart-placeholder">Keine Daten für den Zeitraum.</div>
-      </template>
-    </Card>
+      </div>
+    </article>
 
-    <Card class="chart-card">
-      <template #title>Trendanalyse</template>
-      <template #subtitle>Linienchart nach Auswahlmodus (Top5, Alle oder Selektiert).</template>
-      <template #content>
+    <article class="card chart-card">
+      <header class="cardHeader">
+        <div>
+          <div class="cardTitle">Trendanalyse</div>
+          <div class="cardHint">Linienchart nach Auswahlmodus (Top5, Alle oder Selektiert).</div>
+        </div>
+      </header>
+      <div class="chart-body">
         <div v-if="loading" class="chart-placeholder">
-          <ProgressSpinner />
+          <span class="spinner" aria-label="Laden"></span>
         </div>
         <div v-else-if="error" class="chart-placeholder error">{{ error }}</div>
         <div v-else-if="trendData && trendData.labels?.length" class="chart-wrapper">
-          <Chart type="line" :data="trendData" :options="lineOptions" />
+          <canvas ref="lineCanvas" />
         </div>
         <div v-else class="chart-placeholder">Keine Zeitreihen verfügbar.</div>
-      </template>
-    </Card>
+      </div>
+    </article>
   </div>
 </template>
 
@@ -104,6 +156,10 @@ const lineOptions = computed<ChartOptions<'line'>>(() => ({
   height: 100%;
 }
 
+.chart-body {
+  min-height: 260px;
+}
+
 .chart-wrapper {
   width: 100%;
 }
@@ -113,10 +169,25 @@ const lineOptions = computed<ChartOptions<'line'>>(() => ({
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--text-secondary-color, #6b7280);
+  color: var(--text-muted);
 }
 
 .chart-placeholder.error {
-  color: var(--color-danger, #dc2626);
+  color: var(--danger);
+}
+
+.spinner {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 3px solid var(--border);
+  border-top-color: var(--primary);
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 </style>

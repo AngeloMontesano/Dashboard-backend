@@ -148,13 +148,13 @@ onMounted(loadSettings);
         </template>
         <template #end>
           <div class="action-row">
-            <button class="button button--ghost" type="button" @click="loadSettings" :disabled="state.loading">Neu laden</button>
-            <button class="button button--ghost" type="button" @click="handleExport">Export</button>
-            <label class="button button--ghost">
+            <button class="btnGhost small" type="button" @click="loadSettings" :disabled="state.loading">Neu laden</button>
+            <button class="btnGhost small" type="button" @click="handleExport">Export</button>
+            <label class="btnGhost small">
               Import
               <input type="file" class="sr-only" accept=".xlsx" @change="handleImport" :disabled="state.importing" />
             </label>
-            <button class="button button--primary" type="button" @click="saveSettings" :disabled="state.loading">
+            <button class="btnPrimary small" type="button" @click="saveSettings" :disabled="state.loading">
               Speichern
             </button>
           </div>
@@ -234,8 +234,8 @@ onMounted(loadSettings);
             <span class="form-label">Empfänger</span>
             <input v-model="state.testEmail" type="email" class="input" placeholder="adresse@example.com" :disabled="state.testing" />
           </label>
-          <button class="button button--ghost align-self-end" type="button" @click="handleTestEmail" :disabled="state.testing">
-            Test-E-Mail senden
+          <button class="btnGhost small align-self-end" type="button" @click="handleTestEmail" :disabled="state.testing">
+            {{ state.testing ? 'Senden...' : 'Test-E-Mail senden' }}
           </button>
         </div>
       </div>

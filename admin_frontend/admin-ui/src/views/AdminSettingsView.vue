@@ -134,6 +134,74 @@
 
         <section class="settingsSection">
           <div class="sectionHeader">
+            <div class="sectionTitle">Email / SMTP</div>
+            <button class="btnGhost small" @click="toggleSection('email')" :aria-expanded="!sectionCollapsed.email">
+              {{ sectionCollapsed.email ? "Aufklappen" : "Einklappen" }}
+            </button>
+          </div>
+          <div v-if="!sectionCollapsed.email" class="kvGrid">
+            <div class="kv">
+              <div class="k">Host</div>
+              <div class="v">
+                <input class="input" v-model="smtpSettings.host" :disabled="busy.smtpSave || busy.smtpLoad" placeholder="mail.myitnetwork.de" />
+              </div>
+            </div>
+            <div class="kv">
+              <div class="k">Port</div>
+              <div class="v">
+                <input class="input" type="number" v-model.number="smtpSettings.port" :disabled="busy.smtpSave || busy.smtpLoad" />
+              </div>
+            </div>
+            <div class="kv">
+              <div class="k">From</div>
+              <div class="v">
+                <input class="input" type="email" v-model="smtpSettings.from_email" :disabled="busy.smtpSave || busy.smtpLoad" placeholder="notification@example.com" />
+              </div>
+            </div>
+            <div class="kv">
+              <div class="k">User</div>
+              <div class="v">
+                <input class="input" v-model="smtpSettings.user" :disabled="busy.smtpSave || busy.smtpLoad" placeholder="smtp-user" />
+                <div class="muted">Optional, leer lassen falls nicht benötigt.</div>
+              </div>
+            </div>
+            <div class="kv">
+              <div class="k">Passwort</div>
+              <div class="v">
+                <input class="input" type="password" v-model="smtpSettings.password" :disabled="busy.smtpSave || busy.smtpLoad" :placeholder="smtpLoaded.has_password ? '••••••••' : 'Passwort eingeben'" />
+                <div class="muted">Leer lassen, um das bestehende Passwort beizubehalten.</div>
+              </div>
+            </div>
+            <div class="kv">
+              <div class="k">TLS</div>
+              <div class="v">
+                <label class="checkboxRow">
+                  <input type="checkbox" v-model="smtpSettings.use_tls" :disabled="busy.smtpSave || busy.smtpLoad" />
+                  <span>STARTTLS nutzen</span>
+                </label>
+              </div>
+            </div>
+            <div class="kv">
+              <div class="k">Aktionen</div>
+              <div class="v actionsRow">
+                <button class="btn" :disabled="busy.smtpSave || busy.smtpLoad" @click="saveEmailSettings">
+                  {{ busy.smtpSave ? "Speichert..." : "Speichern" }}
+                </button>
+                <div class="row gap8 wrap">
+                  <input class="input" type="email" v-model="emailTarget" :disabled="busy.smtpTest || busy.smtpLoad" placeholder="test@example.com" />
+                  <button class="btnGhost" :disabled="busy.smtpTest || busy.smtpLoad" @click="testEmailSettings">
+                    {{ busy.smtpTest ? "Sendet..." : "Test-E-Mail senden" }}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div class="divider"></div>
+
+        <section class="settingsSection">
+          <div class="sectionHeader">
             <div class="sectionTitle">Feature Flags (UI)</div>
             <button class="btnGhost small" @click="toggleSection('flags')" :aria-expanded="sectionOpen.flags">
               {{ sectionOpen.flags ? "Einklappen" : "Aufklappen" }}
@@ -294,7 +362,8 @@ const themes = [
   { id: "light", label: "Light" },
   { id: "dark", label: "Dark" },
 ];
-const localTheme = ref((props.theme as "light" | "dark" | "system") || "system");
+const safeTheme = computed<ThemeMode>(() => (props.theme as ThemeMode) || "system");
+const localTheme = ref<ThemeMode>(safeTheme.value);
 const grafanaUrl = import.meta.env.VITE_GRAFANA_URL || "http://localhost:3000";
 const buildInfo = (import.meta.env.VITE_BUILD_INFO as string | undefined) || pkg.version;
 const systemInfo = ref<AdminSystemInfo | null>(null);
@@ -309,19 +378,19 @@ type SmtpFormState = {
 };
 const emailForm = ref<SmtpFormState>({
   host: "",
-  port: null,
-  user: "",
+  port: 587,
   from_email: "",
   has_password: false,
   use_tls: true,
   password: "",
+  use_tls: true,
 });
 const testEmail = ref("");
 const savingEmail = ref(false);
 const testingEmail = ref(false);
 const loadingEmail = ref(false);
 
-function onThemeChange(themeId: "light" | "dark" | "system") {
+function onThemeChange(themeId: ThemeMode) {
   localTheme.value = themeId;
   emit("setTheme", themeId);
 }

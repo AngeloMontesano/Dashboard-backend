@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { onMounted, reactive } from 'vue';
+import { onMounted, reactive, ref } from 'vue';
+import { useRouter } from 'vue-router';
 import UiPage from '@/components/ui/UiPage.vue';
 import UiSection from '@/components/ui/UiSection.vue';
 import UiStatCard from '@/components/ui/UiStatCard.vue';
@@ -12,8 +13,10 @@ import {
   type Item,
   type MovementOut
 } from '@/api/inventory';
+import { classifyError } from '@/utils/errorClassify';
 
 const { state: authState } = useAuth();
+const router = useRouter();
 
 type DashboardMetrics = {
   openOrders: number;
@@ -40,6 +43,21 @@ const state = reactive<{
   loading: false,
   error: null
 });
+const forcedLogout = ref(false);
+
+function toFriendlyError(err: unknown) {
+  const classified = classifyError(err);
+  if (classified.category === 'auth' || classified.status === 401 || classified.status === 403) {
+    return 'Sitzung abgelaufen oder keine Berechtigung. Bitte neu anmelden.';
+  }
+  return classified.userMessage;
+}
+
+function handleAuthIssue() {
+  if (forcedLogout.value) return;
+  forcedLogout.value = true;
+  router.push({ name: 'login', query: { redirect: '/' } });
+}
 
 async function fetchAllItems() {
   if (!authState.accessToken) return [];
@@ -107,26 +125,42 @@ async function loadDashboard() {
     try {
       openOrders = await listOrders(authState.accessToken, 'OPEN');
     } catch (err: any) {
-      errors.push(`Bestellungen: ${err?.message || 'nicht erreichbar'}`);
+      const message = toFriendlyError(err);
+      errors.push(`Bestellungen: ${message}`);
+      if (err?.response?.status === 401 || err?.response?.status === 403) {
+        handleAuthIssue();
+      }
     }
 
     try {
       const res = await fetchReorderRecommendations(authState.accessToken);
       reorderCount = res.items?.length ?? 0;
     } catch (err: any) {
-      errors.push(`Bestellwürdig: ${err?.message || 'nicht erreichbar'}`);
+      const message = toFriendlyError(err);
+      errors.push(`Bestellwürdig: ${message}`);
+      if (err?.response?.status === 401 || err?.response?.status === 403) {
+        handleAuthIssue();
+      }
     }
 
     try {
       items = await fetchAllItems();
     } catch (err: any) {
-      errors.push(`Artikel: ${err?.message || 'nicht ladbar'}`);
+      const message = toFriendlyError(err);
+      errors.push(`Artikel: ${message}`);
+      if (err?.response?.status === 401 || err?.response?.status === 403) {
+        handleAuthIssue();
+      }
     }
 
     try {
       movementsToday = await loadMovementsToday();
     } catch (err: any) {
-      errors.push(`Bewegungen: ${err?.message || 'nicht ladbar'}`);
+      const message = toFriendlyError(err);
+      errors.push(`Bewegungen: ${message}`);
+      if (err?.response?.status === 401 || err?.response?.status === 403) {
+        handleAuthIssue();
+      }
     }
 
     if (reorderCount === 0 && items.length) {
@@ -143,7 +177,7 @@ async function loadDashboard() {
       belowMin
     };
   } catch (err: any) {
-    errors.push(err?.message || 'Unbekannter Fehler');
+    errors.push(toFriendlyError(err));
   } finally {
     state.error = errors.length ? errors.join(' | ') : null;
     state.loading = false;

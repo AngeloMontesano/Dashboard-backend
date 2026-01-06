@@ -16,6 +16,7 @@ export type MovementRecord = {
   status: MovementStatus;
   retries: number;
   last_error?: string;
+  stop_retry?: boolean;
 };
 
 export type MovementInput = {
@@ -91,7 +92,7 @@ export function useMovementQueue() {
   };
 
   const pendingEntries = computed(() =>
-    records.value.filter((r) => r.status === 'queued' || r.status === 'failed')
+    records.value.filter((r) => (r.status === 'queued' || r.status === 'failed') && !r.stop_retry && r.retries < MAX_RETRIES)
   );
 
   const hasPending = computed(() => pendingEntries.value.length > 0);
@@ -137,16 +138,25 @@ export function useMovementQueue() {
       };
       await updateRecord(sent);
       return true;
-    } catch (error) {
+    } catch (error: any) {
+      const status = error?.response?.status;
+      const clientError = status && status >= 400 && status < 500;
       const retries = Math.min(MAX_RETRIES, entry.retries + 1);
       const failed: MovementRecord = {
         ...entry,
         status: 'failed',
         retries,
-        last_error: error instanceof Error ? error.message : 'Unbekannter Fehler'
+        last_error: error instanceof Error ? error.message : 'Unbekannter Fehler',
+        stop_retry: clientError
       };
       await updateRecord(failed);
-      return false;
+      if (status === 401) {
+        sessionStorage.removeItem('customer_auth');
+        delete api.defaults.headers.common.Authorization;
+        const redirect = encodeURIComponent(window.location.pathname + window.location.search);
+        window.location.href = `/login?redirect=${redirect}`;
+      }
+      return !clientError;
     }
   };
 

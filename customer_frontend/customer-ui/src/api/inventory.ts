@@ -8,6 +8,7 @@ type ItemsQuery = NonNullable<paths["/inventory/items"]["get"]["parameters"]["qu
 type ItemCreatePayload = components["schemas"]["ItemCreate"];
 type ItemUpdatePayload = components["schemas"]["ItemUpdate"];
 export type MovementPayload = components["schemas"]["MovementPayload"];
+export type ItemUnit = components["schemas"]["ItemUnitOut"];
 type SkuExistsResponse = components["schemas"]["SKUExistsResponse"];
 type ImportItemsResponse =
   paths["/inventory/items/import"]["post"]["responses"]["200"]["content"]["application/json"];
@@ -31,6 +32,11 @@ export type ImportItemsResult = {
 
 export async function fetchCategories(token: string) {
   const res = await api.get<Category[]>("/inventory/categories", { headers: authHeaders(token) });
+  return res.data;
+}
+
+export async function fetchUnits(token: string) {
+  const res = await api.get<ItemUnit[]>("/inventory/units", { headers: authHeaders(token) });
   return res.data;
 }
 

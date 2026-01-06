@@ -88,7 +88,7 @@ const form = reactive({
 });
 
 const busy = ref(false);
-const mode = ref<"key" | "user">("key");
+const mode = ref<"key" | "user">("user");
 const { toast } = useToast();
 const status = reactive({
   message: "",
@@ -134,7 +134,6 @@ async function login() {
       console.info("[admin-login] Erfolg (user)", { actor });
       emit("loggedIn", { adminKey: res.admin_key, actor });
     }
-    toast("Login erfolgreich");
     status.message = "Login erfolgreich. Admin Portal wird geladen...";
     status.type = "ok";
   } catch (e: any) {

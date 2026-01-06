@@ -1,4 +1,4 @@
-import { api } from "./client";
+import { api, adminHeaders } from "./client";
 import type { components, paths } from "./gen/openapi";
 
 export type GlobalCategory = components["schemas"]["CategoryOut"];
@@ -9,69 +9,171 @@ export type GlobalItem = components["schemas"]["ItemOut"];
 export type ItemCreatePayload = components["schemas"]["ItemCreate"];
 export type ItemUpdatePayload = components["schemas"]["ItemUpdate"];
 
+export type GlobalUnit = components["schemas"]["ItemUnitOut"];
+export type GlobalIndustry = components["schemas"]["IndustryOut"];
+
 type ItemsPage = components["schemas"]["ItemsPage"];
-type ItemsQuery = NonNullable<paths["/inventory/items"]["get"]["parameters"]["query"]>;
+type ItemsQuery = NonNullable<paths["/admin/inventory/items"]["get"]["parameters"]["query"]>;
 type ImportItemsResponse =
-  paths["/inventory/items/import"]["post"]["responses"]["200"]["content"]["application/json"];
-type ExportItemsResponse =
-  paths["/inventory/items/export"]["get"]["responses"]["200"]["content"]["application/json"];
+  paths["/admin/inventory/items/import"]["post"]["responses"]["200"]["content"]["application/json"];
 
-function bearer(token?: string) {
-  if (!token) {
-    throw new Error("Authorization Token erforderlich");
-  }
-  return { Authorization: `Bearer ${token}` };
+function withAdmin(adminKey: string, actor?: string) {
+  return { headers: adminHeaders(adminKey, actor) };
 }
 
-export async function fetchGlobalCategories(token: string) {
-  const res = await api.get<GlobalCategory[]>("/inventory/categories", { headers: bearer(token) });
+/* Kategorien */
+export async function fetchGlobalCategories(adminKey: string, actor?: string) {
+  const res = await api.get<GlobalCategory[]>("/admin/inventory/categories", withAdmin(adminKey, actor));
   return res.data;
 }
 
-export async function createGlobalCategory(token: string, payload: CategoryCreatePayload) {
-  const res = await api.post<GlobalCategory>("/inventory/categories", payload, { headers: bearer(token) });
+export async function createGlobalCategory(adminKey: string, payload: CategoryCreatePayload, actor?: string) {
+  const res = await api.post<GlobalCategory>("/admin/inventory/categories", payload, withAdmin(adminKey, actor));
   return res.data;
 }
 
-export async function updateGlobalCategory(token: string, id: string, payload: CategoryUpdatePayload) {
-  const res = await api.patch<GlobalCategory>(`/inventory/categories/${id}`, payload, { headers: bearer(token) });
+export async function updateGlobalCategory(adminKey: string, id: string, payload: CategoryUpdatePayload, actor?: string) {
+  const res = await api.patch<GlobalCategory>(`/admin/inventory/categories/${id}`, payload, withAdmin(adminKey, actor));
   return res.data;
 }
 
-export async function fetchGlobalItems(token: string, params?: ItemsQuery) {
-  const res = await api.get<ItemsPage>("/inventory/items", { headers: bearer(token), params });
-  return res.data;
+export async function deleteGlobalCategory(adminKey: string, id: string, actor?: string) {
+  await api.delete(`/admin/inventory/categories/${id}`, withAdmin(adminKey, actor));
 }
 
-export async function createGlobalItem(token: string, payload: ItemCreatePayload) {
-  const res = await api.post<GlobalItem>("/inventory/items", payload, { headers: bearer(token) });
-  return res.data;
-}
-
-export async function updateGlobalItem(token: string, id: string, payload: ItemUpdatePayload) {
-  const res = await api.patch<GlobalItem>(`/inventory/items/${id}`, payload, { headers: bearer(token) });
-  return res.data;
-}
-
-export async function importGlobalItems(token: string, file: File, mapping?: Record<string, string>) {
+export async function importGlobalCategories(adminKey: string, file: File, actor?: string) {
   const form = new FormData();
   form.append("file", file);
-  if (mapping) {
-    form.append("mapping", JSON.stringify(mapping));
-  }
+  const res = await api.post("/admin/inventory/categories/import", form, {
+    headers: { ...withAdmin(adminKey, actor).headers, "Content-Type": "multipart/form-data" },
+  });
+  return res.data as ImportItemsResponse;
+}
 
-  const res = await api.post<ImportItemsResponse>("/inventory/items/import", form, {
+export async function exportGlobalCategories(adminKey: string, format: "csv" | "xlsx" = "csv", actor?: string) {
+  const res = await api.get(`/admin/inventory/categories/export`, {
+    ...withAdmin(adminKey, actor),
+    params: { format },
+    responseType: "blob",
+  });
+  return res.data as Blob;
+}
+
+/* Einheiten */
+export async function fetchGlobalUnits(adminKey: string, actor?: string) {
+  const res = await api.get<GlobalUnit[]>("/admin/inventory/units", withAdmin(adminKey, actor));
+  return res.data;
+}
+
+export async function upsertGlobalUnit(adminKey: string, payload: GlobalUnit, actor?: string) {
+  const res = await api.post<GlobalUnit>("/admin/inventory/units", payload, withAdmin(adminKey, actor));
+  return res.data;
+}
+
+export async function deleteGlobalUnit(adminKey: string, code: string, actor?: string) {
+  await api.delete(`/admin/inventory/units/${code}`, withAdmin(adminKey, actor));
+}
+
+export async function importGlobalUnits(adminKey: string, file: File, actor?: string) {
+  const form = new FormData();
+  form.append("file", file);
+  const res = await api.post("/admin/inventory/units/import", form, {
+    headers: { ...withAdmin(adminKey, actor).headers, "Content-Type": "multipart/form-data" },
+  });
+  return res.data as ImportItemsResponse;
+}
+
+export async function exportGlobalUnits(adminKey: string, format: "csv" | "xlsx" = "csv", actor?: string) {
+  const res = await api.get(`/admin/inventory/units/export`, {
+    ...withAdmin(adminKey, actor),
+    params: { format },
+    responseType: "blob",
+  });
+  return res.data as Blob;
+}
+
+/* Artikel */
+export async function fetchGlobalItems(adminKey: string, actor: string | undefined, params?: ItemsQuery) {
+  const res = await api.get<ItemsPage>("/admin/inventory/items", { ...withAdmin(adminKey, actor), params });
+  return res.data;
+}
+
+export async function createGlobalItem(adminKey: string, payload: ItemCreatePayload, actor?: string) {
+  const res = await api.post<GlobalItem>("/admin/inventory/items", payload, withAdmin(adminKey, actor));
+  return res.data;
+}
+
+export async function updateGlobalItem(adminKey: string, id: string, payload: ItemUpdatePayload, actor?: string) {
+  const res = await api.patch<GlobalItem>(`/admin/inventory/items/${id}`, payload, withAdmin(adminKey, actor));
+  return res.data;
+}
+
+export async function deleteGlobalItem(adminKey: string, id: string, actor?: string) {
+  await api.delete(`/admin/inventory/items/${id}`, withAdmin(adminKey, actor));
+}
+
+export async function importGlobalItems(adminKey: string, file: File, actor?: string) {
+  const form = new FormData();
+  form.append("file", file);
+
+  const res = await api.post<ImportItemsResponse>("/admin/inventory/items/import", form, {
     headers: {
-      ...bearer(token),
+      ...withAdmin(adminKey, actor).headers,
       "Content-Type": "multipart/form-data",
     },
   });
   return res.data;
 }
 
-export async function exportGlobalItems(token: string) {
-  const res = await api.get<ExportItemsResponse>("/inventory/items/export", {
-    headers: bearer(token),
+export async function exportGlobalItems(adminKey: string, format: "csv" | "xlsx" = "csv", actor?: string) {
+  const res = await api.get(`/admin/inventory/items/export`, {
+    ...withAdmin(adminKey, actor),
+    params: { format },
+    responseType: "blob",
   });
+  return res.data as Blob;
+}
+
+/* Branchen */
+export async function fetchGlobalIndustries(adminKey: string, actor?: string) {
+  const res = await api.get<GlobalIndustry[]>("/admin/inventory/industries", withAdmin(adminKey, actor));
+  return res.data;
+}
+
+export async function createGlobalIndustry(adminKey: string, payload: components["schemas"]["IndustryCreate"], actor?: string) {
+  const res = await api.post<GlobalIndustry>("/admin/inventory/industries", payload, withAdmin(adminKey, actor));
+  return res.data;
+}
+
+export async function updateGlobalIndustry(
+  adminKey: string,
+  id: string,
+  payload: components["schemas"]["IndustryUpdate"],
+  actor?: string
+) {
+  const res = await api.patch<GlobalIndustry>(`/admin/inventory/industries/${id}`, payload, withAdmin(adminKey, actor));
+  return res.data;
+}
+
+export async function deleteGlobalIndustry(adminKey: string, id: string, actor?: string) {
+  await api.delete(`/admin/inventory/industries/${id}`, withAdmin(adminKey, actor));
+}
+
+export async function fetchIndustryItems(adminKey: string, industryId: string, actor?: string) {
+  const res = await api.get<GlobalItem[]>(`/admin/inventory/industries/${industryId}/items`, withAdmin(adminKey, actor));
+  return res.data;
+}
+
+export async function setIndustryItems(
+  adminKey: string,
+  industryId: string,
+  payload: components["schemas"]["IndustryArticlesUpdate"],
+  actor?: string
+) {
+  const res = await api.put<{ ok: boolean; count: number }>(
+    `/admin/inventory/industries/${industryId}/items`,
+    payload,
+    withAdmin(adminKey, actor)
+  );
   return res.data;
 }

@@ -859,6 +859,11 @@
 - **Ziel**: Uvicorn-Startfehler fixen (`NameError: SmtpPingResponse not defined` beim Laden von `inventory/routes.py`).
 - **Änderung**: Explizites Modul-Alias `inv_schemas` eingeführt und Decorator/Return-Type für `/inventory/settings/smtp-ping` darauf umgestellt, sodass die Klasse auch bei zirkulären Imports garantiert im Namespace liegt.
 
+## Schritt 63 – Settings-Abschnitte garantiert anzeigen
+- **Datum/Uhrzeit**: 2026-01-06T19:05:00+00:00
+- **Ziel**: UI-Bug beheben, bei dem in den Admin-Einstellungen nichts eingeblendet wurde (Sections waren dennoch vorhanden, aber versteckt).
+- **Änderung**: Collapse-State auf `reactive` `sectionOpen` umgestellt (statt `ref`-Objekt) und Buttons/UI nutzen jetzt `sectionOpen.*`. Alle Abschnitte sind initial sichtbar, Umschalter klappen nur noch per Klick zu.
+
 ## Schritt 54 – Analyse Branchen-Artikel-Mapping (Schritt 1)
 - **Datum/Uhrzeit**: 2026-01-06T15:45:00+00:00
 - **Ziel**: Inventar für den Admin-Editor „Branche ↔ Artikel“ erstellen und Skalierungsprobleme für 1000+ Artikel bewerten.

@@ -42,6 +42,17 @@
             </button>
           </nav>
 
+          <div class="sidebar-divider"></div>
+          <div class="navGroup">
+            <div class="navGroupTitle">Globale Einstellungen</div>
+            <ul class="navGroupList">
+              <li>Globale Artikel</li>
+              <li>Globale Kategorien</li>
+              <li>Globale Typen</li>
+              <li>Globale Branchen</li>
+            </ul>
+          </div>
+
           <!-- Bottom Area -->
           <div class="sideBottom">
             <!-- System Status -->

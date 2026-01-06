@@ -14,6 +14,8 @@ const barcode = ref('');
 const qty = ref<number>(1);
 const note = ref('');
 const barcodeInput = ref<HTMLInputElement | null>(null);
+const clearing = ref(false);
+const submitting = ref<{ IN: boolean; OUT: boolean }>({ IN: false, OUT: false });
 
 const { isOnline } = useOnlineStatus();
 const { state: authState } = useAuth();
@@ -96,15 +98,29 @@ const submitMovement = async (type: 'IN' | 'OUT') => {
   }
 
   const normalizedQty = Math.max(1, Number(qty.value) || 1);
+  submitting.value[type] = true;
 
-  await enqueueMovement({
-    type,
-    barcode: barcode.value,
-    qty: normalizedQty,
-    note: note.value
-  });
+  try {
+    await enqueueMovement({
+      type,
+      barcode: barcode.value,
+      qty: normalizedQty,
+      note: note.value
+    });
+    await resetForm();
+  } finally {
+    submitting.value[type] = false;
+  }
+};
 
-  await resetForm();
+const handleClearSent = async () => {
+  if (clearing.value) return;
+  clearing.value = true;
+  try {
+    await clearSent();
+  } finally {
+    clearing.value = false;
+  }
 };
 </script>
 
@@ -117,11 +133,23 @@ const submitMovement = async (type: 'IN' | 'OUT') => {
         </template>
         <template #end>
           <div class="action-row">
-            <button class="btnGhost small" type="button" @click="syncNow" :disabled="syncing">
-              Sync jetzt
+            <button class="btnGhost small" type="button" @click="syncNow" :disabled="syncing" :aria-busy="syncing">
+              <span class="btn-label">
+                <span v-if="syncing" class="btn-spinner" aria-hidden="true"></span>
+                Sync jetzt
+              </span>
             </button>
-            <button class="btnGhost small" type="button" @click="clearSent">
-              Queue leeren
+            <button
+              class="btnGhost small"
+              type="button"
+              @click="handleClearSent"
+              :disabled="clearing"
+              :aria-busy="clearing"
+            >
+              <span class="btn-label">
+                <span v-if="clearing" class="btn-spinner" aria-hidden="true"></span>
+                Queue leeren
+              </span>
             </button>
             <RouterLink class="btnGhost small badge-button" :to="{ name: 'sync-probleme' }">
               Fehler ansehen
@@ -173,11 +201,29 @@ const submitMovement = async (type: 'IN' | 'OUT') => {
       </div>
 
       <div class="action-row">
-        <button class="btnGhost small" type="button" @click="submitMovement('OUT')" :disabled="!hasWriteAccess">
-          Bestand reduzieren
+        <button
+          class="btnGhost small"
+          type="button"
+          @click="submitMovement('OUT')"
+          :disabled="!hasWriteAccess || submitting.OUT"
+          :aria-busy="submitting.OUT"
+        >
+          <span class="btn-label">
+            <span v-if="submitting.OUT" class="btn-spinner" aria-hidden="true"></span>
+            Bestand reduzieren
+          </span>
         </button>
-        <button class="btnPrimary small" type="button" @click="submitMovement('IN')" :disabled="!hasWriteAccess">
-          Bestand erhöhen
+        <button
+          class="btnPrimary small"
+          type="button"
+          @click="submitMovement('IN')"
+          :disabled="!hasWriteAccess || submitting.IN"
+          :aria-busy="submitting.IN"
+        >
+          <span class="btn-label">
+            <span v-if="submitting.IN" class="btn-spinner" aria-hidden="true"></span>
+            Bestand erhöhen
+          </span>
         </button>
       </div>
 

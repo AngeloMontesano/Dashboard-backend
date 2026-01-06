@@ -60,9 +60,9 @@
               <div class="sysTitle">System</div>
 
               <div class="sysRow">
-                <div class="statusPill" :class="api.ok ? 'ok' : 'bad'">
-                  <span class="dot"></span>
-                  <span>API {{ api.ok ? "erreichbar" : "nicht erreichbar" }}</span>
+                <div class="statusInline">
+                  <span class="statusDot" :class="api.ok ? 'ok' : 'bad'"></span>
+                  <span class="statusLabel">API erreichbar</span>
                 </div>
                 <button class="btnPrimary small" :disabled="api.busy" @click="checkApi">
                   {{ api.busy ? "prüfe..." : "Prüfen" }}
@@ -70,9 +70,9 @@
               </div>
 
             <div class="sysRow">
-              <div class="statusPill" :class="db.ok ? 'ok' : 'bad'">
-                <span class="dot"></span>
-                <span>DB {{ db.ok ? "erreichbar" : "nicht erreichbar" }}</span>
+              <div class="statusInline">
+                <span class="statusDot" :class="db.ok ? 'ok' : 'bad'"></span>
+                <span class="statusLabel">DB erreichbar</span>
               </div>
                 <button class="btnGhost small" :disabled="db.busy" @click="checkDb">
                   {{ db.busy ? "prüfe..." : "Prüfen" }}

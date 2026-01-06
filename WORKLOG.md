@@ -768,40 +768,92 @@
 - **Tests**
   - Nicht ausgeführt (UI-Styling)
 
-- Datum/Uhrzeit: 2026-01-06T15:36:33Z
-- Task-ID: EPIC-ROADMAP-SETUP
-- Was analysiert/geändert:
-  - Standards unter `docs/standards` geprüft (API/Frontend/Error/Design/Darkmode/Theme Tokens).
-  - Bestandsaufnahme 404/Not-Found: Customer-Router ohne Catch-All (unbekannte Pfade resultieren in Router-Navigation-Fehler/leerem View, Server liefert bei fehlender Route JSON `{error:{code:"http_error",message:"Not Found"}}`), Admin-Frontend ohne Router (Navigation rein per UI, 404 nur serverseitig bei fehlenden Assets), Backend `/` oder unbekannte Pfade liefern standardisierte JSON-Fehler via `register_exception_handlers`, Tenant-Resolver (`core/tenant.py`) gibt 404 `tenant_not_found` JSON bei fehlendem/inaktivem Tenant oder fehlendem Host/Slug; Reverse-Proxy-Annahme: Host aus `X-Forwarded-Host` + `BASE_DOMAIN`, Fallback `localhost`.
-  - Public/Health-Endpunkte identifiziert: `/health`, `/health/db`, `/meta`, `/metrics` (Prometheus), alle ohne Auth.
-  - Doku-Struktur erstellt: `docs/roadmap/INDEX.md` mit Epic-Template/Standards, neue Epics A–I mit Tasks/Akzeptanzkriterien, TODO/Epic_TODO priorisiert, Epic_WORKLOG angelegt.
-- Ergebnis: Roadmap-Epics vollständig angelegt, Template verbindlich dokumentiert, priorisierte Next Steps in TODO/Epic_TODO.
-- Nächste Schritte: Umsetzung der Now-Tasks (Tenant-Status-Endpoint + Frontend-Status-Flow, globale Katalog-Spezifikation, Reporting-Filter-Konzept etc.).
+## Schritt 55 – Zwei-Paneele-Editor für Branchen ↔ Artikel
+- **Datum/Uhrzeit**: 2026-01-06T15:58:00+00:00
+- **Ziel**: Skalierbare Bearbeitung der Branchen-Artikel-Zuordnung (1000+ Artikel) mit serverseitiger Suche/Pagination, Pending-Deltas und sicherem Replace-Call gemäß OpenAPI.
+- **Was wurde geändert**
+  - `GlobaleBranchenView`: Alte Checkbox-Liste durch Zwei-Paneele-Editor ersetzt (Verfügbare Artikel links mit Debounce-Suche, Kategorie-/Status-Filter und serverseitiger Pagination über `/admin/inventory/items`; Zugeordnete Artikel rechts mit clientseitiger Pagination, Pending-Status-Tags).
+  - Delta-Handling: Auswahlen erzeugen `pendingAdditions`/`pendingRemovals`; Speichern berechnet finale `item_ids` (Replace per PUT `/admin/inventory/industries/{industry_id}/items`). Buttons für Hinzufügen/Entfernen, Pending-Zusammenfassung, Undo via „Änderungen verwerfen“.
+  - Datenladen: Branchen + Kategorien + initiale Artikelseite werden beim Laden geholt; Zuordnungs-Load cached Items für Anzeige; Status/Fehlertexte nutzerfreundlich gehalten. Hinweis im UI, dass CSV/XLSX-Mapping-Import/Export in der API fehlt.
+- **Offene Punkte**
+  - Kein Badge für Überschneidungen (z. B. „in X Branchen“), da keine aggregierte API vorhanden; würde sonst N+1 erfordern.
+  - Mapping-Import/Export (CSV/XLSX) fehlt im Backend; TODO verweist auf benötigte Endpunkte für Delta-Add/Remove.
+- **Tests**
+  - `npm run build` (admin_frontend/admin-ui)
 
-- Datum/Uhrzeit: 2026-01-06T16:21:50Z
-- Task-ID: EPIC-A-02
-- Was analysiert/geändert:
-  - Öffentlichen Endpoint `/public/tenant-status` implementiert (Backend), nutzt Host/Header-Slug-Auflösung und meldet Status `ok/not_found/inactive/unavailable`.
-  - Public-Router in die FastAPI-App eingebunden; OpenAPI-Schema um neuen Pfad und `PublicTenantStatus`-Schema erweitert.
-  - TODO/Epic_TODO angepasst: A-02 aus „Now“ entfernt.
-- Ergebnis: Tenant-Status ist per GET erreichbar, prüft DB-Verfügbarkeit, liefert klare Statusobjekte ohne Exceptions.
-- Nächste Schritte: Frontend-Preflight und Tenant-Status-View (A-04/A-05), Router-Fallback (A-06).
+## Schritt 56 – Zwei-Paneele-Feinschliff (Assigned-Schutz)
+- **Datum/Uhrzeit**: 2026-01-06T16:15:00+00:00
+- **Ziel**: Missverständliche Mehrfachauswahl verhindern und den Status bereits zugeordneter Artikel im linken Paneel sichtbar machen.
+- **Was wurde geändert**
+  - Linkes Paneel deaktiviert Checkboxen für Artikel, die in der finalen Liste (initial + pending Add - pending Remove) bereits enthalten sind; zeigt Tag „Bereits zugeordnet“ neben dem Status-Tag.
+  - `finalItemIdSet` als Set-Cache eingeführt, um Disabled-Status und Badge effizient zu berechnen ohne doppelte Array-Suchen.
+- **Tests**
+  - `npm run build` (admin_frontend/admin-ui) – nicht erneut ausgeführt, UI-only Feinschliff
 
-- Datum/Uhrzeit: 2026-01-06T16:45:00Z
-- Task-ID: EPIC-A-04-06
-- Was analysiert/geändert:
-  - Customer-Bootstrap ruft vor App-Mount `/public/tenant-status` auf (`initTenantStatus`), nutzt bestehende Axios-Instanz und Tenant-Header.
-  - Neuer View `TenantStatusView` für States not_found/inactive/unavailable und Router-404; Catch-All Route führt auf die Statusseite.
-  - Router-Guard leitet bei nicht-OK Tenant-Status auf die Statusseite, Catch-All zeigt 404 statt JSON.
-  - TODO/Epic_TODO aktualisiert (A-04/A-05/A-06 erledigt).
-- Ergebnis: Unbekannte/inaktive Subdomains oder fehlende Pfade zeigen eine gestaltete Seite; App startet nur bei `status=ok`.
-- Nächste Schritte: Caching/Retry-Strategie (A-08) planen, UI-Texte finalisieren falls Support-Links ergänzt werden.
+## Schritt 57 – OpenAPI-Validierung der offenen Punkte
+- **Datum/Uhrzeit**: 2026-01-06T16:30:00+00:00
+- **Ziel**: Offene Aufgaben (Mapping-Import/Export, Überschneidungs-Badges) gegen die aktuelle Remote-OpenAPI prüfen.
+- **Was wurde geprüft**
+  - `https://api.test.myitnetwork.de/openapi.json` liefert unverändert nur `/admin/inventory/industries` (GET/POST/PATCH/DELETE) und `/admin/inventory/industries/{industry_id}/items` (GET/PUT). Keine CSV/XLSX Import-/Export-Endpunkte für Branchen-Mappings vorhanden.
+  - `page_size` für `/admin/inventory/items` ist max. 200 (default 50); Kategorie/Status/q-Filter bestätigt.
+  - Keine Aggregations-/Overlap-API (z. B. „in X Branchen“) vorhanden.
+- **Ergebnis**
+  - UI bleibt ohne Import/Export-Buttons; TODO-Einträge für Backend-Endpunkte bleiben bestehen.
+  - Überschneidungs-Badges weiterhin nicht umsetzbar ohne neue API; Dokumentation belassen.
+- **Tests**
+  - Nicht ausgeführt (Doku-/API-Check)
 
-- Datum/Uhrzeit: 2026-01-06T16:47:01Z
-- Task-ID: EPIC-B-01-02
-- Was analysiert/geändert:
-  - Datenmodell-Entwurf für globale Kataloge/Branchen dokumentiert (`docs/openapi/GLOBAL_CATALOG.md`): Tabellen, FKs, Indizes, Tenant-Feld `industry_id`.
-  - Admin-API-Spezifikation als Vorschlag festgehalten (CRUD für industries/categories/types/items, Mapping industry→items, Header-Anforderungen, Fehlercodes).
-  - EPIC_B Daten-/API-Abschnitte verlinken auf den Entwurf; TODO/Epic_TODO „B-01/B-02“ aus Now entfernt.
-- Ergebnis: Architektur- und API-Grundlage für globale Kataloge liegt vor, Konsum für Alembic/Backend-Implementierung vorbereitet.
-- Nächste Schritte: Alembic-Draft (B-03) und UI-Navigation/Views (B-04/B-05) planen, OpenAPI JSON nach Freigabe erweitern.
+## Schritt 58 – SMTP/Mail Analyse (Schritt 1 Vorgabe)
+- **Datum/Uhrzeit**: 2026-01-06T16:41:35+00:00
+- **Ziel**: Schritt 1 des Auftrags – OpenAPI prüfen, Repo nach SMTP-/Mail-Pfaden scannen, Soll/Ist dokumentieren.
+- **Gefundene OpenAPI-Endpunkte (Mail/SMTP)**
+  - Admin SMTP: `/admin/smtp/settings` (GET/PUT) mit `SmtpSettingsIn|Out` (host, port, from_email, user?, password?, use_tls, has_password), `/admin/smtp/settings/test` (POST `SmtpTestRequest { email }`, Response generisch `object`).
+  - Admin System E-Mail: `/admin/system/email` (GET/PUT `SystemEmailSettings|Update`), `/admin/system/email/test` (POST `SystemEmailTestRequest { email }` → `SystemActionResponse`).
+  - Inventory/Tenant: `/inventory/settings/smtp-ping` (GET `SmtpPingResponse { ok, error?, host?, port?, resolved_ips[], use_tls }`), `/inventory/settings/test-email` (POST `TestEmailRequest { email }` → `TestEmailResponse { ok, error? }`), `/inventory/orders/{order_id}/email` (POST `OrderEmailRequest { email?, note? }` → `EmailSendResponse { ok, error? }`).
+- **Repo-Scan Backend**
+  - `app/modules/admin/system_routes.py`: Implementiert `/admin/system/email` + `/admin/system/email/test`, lädt/speichert `SystemEmailSetting` (DB Tabelle via Alembic 0012). Versand synchron via `smtplib.SMTP`, StartTLS nur wenn user/password gesetzt, kein `use_tls`-Flag, Logging minimal, keine Request-ID-Weitergabe in Logs.
+  - `app/core/email_settings.py`: Quelle DB `system_email_settings`, Fallback ENV (`SMTP_HOST/PORT/USER/PASSWORD/FROM`). Kein Feld `use_tls` vorhanden.
+  - `app/modules/inventory/routes.py`: Enthält `_smtp_ping()` (DNS/TCP-Check) und Versand/Test-Mail für Tenants, aber nutzt ausschließlich `settings.SMTP_*` statt DB und referenziert mehrfach eine nicht definierte Variable/Helper `email_settings`/`_get_email_settings` → aktueller Code wirft NameError vor Versand. Logging nur `warning`, kein Request- oder Actor-Bezug.
+  - Admin-SMTP-Router gemäß OpenAPI (`/admin/smtp/settings[/**]`) existiert nicht im Code; auch kein Modell/Feld `use_tls`.
+- **Repo-Scan Frontend (Admin)**
+  - `src/api/admin.ts`: Wrapper für `/admin/system/email` (GET/PUT) und `/admin/system/email/test`; keine Wrapper für `/admin/smtp/*`.
+  - `src/views/AdminSettingsView.vue`: Script-State für `emailForm`/`testEmail`, aber Template rendert keinen SMTP/E-Mail-Abschnitt → UI zeigt/ändert keine SMTP-Daten, kein Test-Mail-Button. Aktuelle Sections nur System/Security/Theme/Flags/Danger.
+  - Generierte Typen (`src/api/gen/openapi.ts`) enthalten die Admin-SMTP-Pfade, werden aber nicht genutzt.
+- **Broken/Abweichungen (belegt durch Code)**
+  - `/inventory/settings/test-email` und `/inventory/orders/{order_id}/email` crashen, weil `email_settings`/`_get_email_settings` nicht definiert sind; auch `_send_email_message` referenziert diese Variable.
+  - SMTP-Ping/Test auf Tenant-Seite greifen immer auf ENV (`settings.SMTP_*`) zu, ignorieren gespeicherte System-Settings aus DB.
+  - OpenAPI-Pfade `/admin/smtp/settings` + `/admin/smtp/settings/test` fehlen vollständig im Backend und Frontend-UI.
+  - Keine Maskierung/`has_password`-Logik für Admin-E-Mail in UI, kein Request-ID-/Step-Logging rund um SMTP.
+- **Nächste Schritte**
+  - Gap-Analyse und Task-Liste in `TODO.md` ergänzen (max. 8 Tasks laut Auftrag).
+  - Backend SMTP-Test/Senden reparieren (DB-Quelle, request_id in Logs), Admin-SMTP-Endpunkte nach OpenAPI implementieren und UI anbinden.
+
+## Schritt 59 – SMTP Fix + UI/Backend Umsetzung
+- **Datum/Uhrzeit**: 2026-01-06T17:20:00+00:00
+- **Ziel**: Fehlende Admin-SMTP-Endpunkte laut OpenAPI implementieren, Tenant-Mailversand reparieren, TLS/Passwort-Handling sichern und Admin-UI mit Testmail-Funktion ausstatten.
+- **Backend**
+  - Neues Alembic-Update `0013_add_use_tls_to_system_email_settings` (Bool `use_tls`), `SystemEmailSetting` Model aktualisiert.
+  - `EmailSettings` erweitert um `use_tls`, Config `SMTP_USE_TLS` ergänzt, DB-Layer lädt/speichert TLS-Flag.
+  - Gemeinsamer Helper `app/core/email_utils.py` für Ping+Send mit strukturierten Logs (request_id/host/port/use_tls, StartTLS/Auth/Send-Dauer) ohne Passwort-Leaks.
+  - Admin-Router `/admin/smtp/settings` (GET/PUT) + `/admin/smtp/settings/test` implementiert inkl. `has_password`/TLS und Test-Response mit request_id; Router im Admin-Namespace registriert.
+  - Inventory-Routen nutzen DB-basierte SMTP-Settings, Ping/Send via Helper; NameError entfernt, Testmail/Order-Mail liefern Fehlertexte statt Crash, Ping liefert `use_tls`.
+  - Admin-System-Testmail nutzt neuen Helper und loggt request_id.
+- **Frontend (Admin)**
+  - Neue Typen/Wrappers für SMTP (Get/Put/Test).
+  - Settings-View um SMTP-Sektion erweitert (Host/Port/From/User/Passwort-Status/StartTLS, Speichern + Testmail-Button mit request_id-Hinweis), nutzt zentrale API-Instanz und Toasts.
+- **Offene Punkte**
+  - Weitere UX/Fehlerdetails (z. B. Detail-Klappbox mit request_id) optional nachrüsten; Monitoring der neuen Logs empfohlen.
+
+## Schritt 54 – Analyse Branchen-Artikel-Mapping (Schritt 1)
+- **Datum/Uhrzeit**: 2026-01-06T15:45:00+00:00
+- **Ziel**: Inventar für den Admin-Editor „Branche ↔ Artikel“ erstellen und Skalierungsprobleme für 1000+ Artikel bewerten.
+- **Was wurde analysiert**
+  - UI: `admin_frontend/admin-ui/src/views/GlobaleBranchenView.vue` nutzt eine Checkbox-Liste pro Artikel ohne Suche/Server-Paging; Artikel werden per `fetchGlobalItems` seitenweise (page_size 200) geladen und vollständig in den lokalen Zustand (`useGlobalMasterdata`) kopiert. Branchen-Auswahl steuert `selectedArticleIds`, Änderungen werden sofort via `setIndustryItems` gespeichert.
+  - API-Wrapper: `admin_frontend/admin-ui/src/api/globals.ts` (und parallele Funktionen in `api/admin.ts`) greifen auf `/admin/inventory/industries` (GET/POST/PATCH/DELETE) und `/admin/inventory/industries/{industry_id}/items` (GET/PUT) zu; Items kommen aus `/admin/inventory/items` mit optionalen Query-Parametern laut OpenAPI (q, category_id, active, page, page_size≤200) und Response `ItemsPage { items, total, page, page_size }`.
+  - OpenAPI: `IndustryArticlesUpdate` verlangt nur `item_ids: string[]` und wird als vollständiger Replace per PUT umgesetzt; kein Delta-/Bulk-Add/Remove-Endpunkt vorhanden. Kein Import/Export-Endpunkt für Branchen-Mapping, nur Artikel-Import/Export auf `/admin/inventory/items/(import|export)`.
+- **Ergebnis (Ist-Stand & Probleme)**
+  - Der Editor lädt aktuell alle Artikel (aktive) in den Speicher und rendert Checkboxen; bei 1000+ Artikeln unbenutzbar (Ladezeit, Scroll-Länge, fehlende Suche/Filter/Pagination).
+  - Speichern erzwingt einen kompletten Replace (`item_ids`), Deltas werden nicht gesammelt; Überschneidungen zwischen Branchen sind nicht erkennbar, keine Hinweise auf Mehrfachzuordnung.
+  - Import/Export für Branchen-Mappings fehlt in der API; nur Items lassen sich importieren/exportieren (keine Mapping-Dateien). Delta-Import für Zuordnungen erfordert Backend-Erweiterung.
+- **Nächste Schritte**
+  - Schritt 3 planen: Zwei-Paneele-Layout mit Server-Suche/Paging über `/admin/inventory/items`, Pending-Add/Remove-Deltas und Replace-Speichern (berechnete finale Liste). Filter nur gemäß OpenAPI (q, category_id, active). Import/Export-Konzept dokumentieren und als TODO für Backend ergänzen.

@@ -1,17 +1,16 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException
+import logging
+from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel, EmailStr, Field
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.modules.admin.smtp_settings_service import (
-    SmtpConfig,
-    get_active_smtp_settings,
-    save_smtp_settings,
-    load_smtp_settings,
-)
-from app.modules.inventory.routes import _send_email_message  # reuse existing send logic
+from app.core.db import get_db
+from app.core.email_settings import EmailSettings, load_email_settings, upsert_email_settings
+from app.core.email_utils import send_email
 
-router = APIRouter(prefix="/smtp", tags=["admin-smtp"])
+router = APIRouter(prefix="/smtp", tags=["admin", "admin-smtp"])
+logger = logging.getLogger(__name__)
 
 
 class SmtpSettingsIn(BaseModel):
@@ -31,50 +30,77 @@ class SmtpSettingsOut(BaseModel):
     use_tls: bool = True
     has_password: bool = False
 
-    @classmethod
-    def from_config(cls, config: SmtpConfig) -> "SmtpSettingsOut":
-        return cls(
-            host=config.host,
-            port=config.port,
-            from_email=config.from_email,
-            user=config.user,
-            use_tls=config.use_tls,
-            has_password=bool(config.password),
-        )
-
 
 class SmtpTestRequest(BaseModel):
     email: EmailStr
 
 
+class SmtpTestResponse(BaseModel):
+    ok: bool
+    detail: str | None = None
+    request_id: str | None = None
+
+
 @router.get("/settings", response_model=SmtpSettingsOut)
-async def get_smtp_settings() -> SmtpSettingsOut:
-    config = load_smtp_settings() or get_active_smtp_settings()
-    if not config:
-        # Leere Defaults zurückgeben, damit das UI ausgefüllt werden kann.
-        return SmtpSettingsOut(host="", port=587, from_email="", user=None, use_tls=True, has_password=False)
-    return SmtpSettingsOut.from_config(config)
+async def get_smtp_settings(db: AsyncSession = Depends(get_db)) -> SmtpSettingsOut:
+    settings = await load_email_settings(db)
+    return _to_out(settings)
 
 
 @router.put("/settings", response_model=SmtpSettingsOut)
-async def update_smtp_settings(payload: SmtpSettingsIn) -> SmtpSettingsOut:
-    config = save_smtp_settings(payload.model_dump(exclude_none=True))
-    return SmtpSettingsOut.from_config(config)
-
-
-@router.post("/settings/test", response_model=dict)
-async def test_smtp_settings(payload: SmtpTestRequest) -> dict:
-    """
-    Sendet eine Test-Mail mit der aktuell hinterlegten SMTP-Konfiguration.
-    """
-    if not get_active_smtp_settings():
-        raise HTTPException(status_code=400, detail="SMTP Konfiguration fehlt")
-    # Verwende die gespeicherten Settings; _send_email_message nutzt die aktiven (inkl. Fallback ENV).
-    result = _send_email_message(
-        to_email=payload.email,
-        subject="Test E-Mail Lagerverwaltung (Admin SMTP)",
-        body="Dies ist eine Test-E-Mail aus den Admin-Einstellungen.",
+async def update_smtp_settings(payload: SmtpSettingsIn, db: AsyncSession = Depends(get_db)) -> SmtpSettingsOut:
+    password = payload.password
+    if password == "":
+        password = None
+    settings = await upsert_email_settings(
+        db,
+        host=payload.host,
+        port=payload.port,
+        user=payload.user,
+        password=password,
+        from_email=payload.from_email,
+        use_tls=payload.use_tls,
     )
-    if not result.ok:
-        raise HTTPException(status_code=400, detail=result.error or "Unbekannter Fehler beim SMTP Test")
-    return {"ok": True}
+    return _to_out(settings)
+
+
+@router.post("/settings/test", response_model=SmtpTestResponse)
+async def test_smtp_settings(payload: SmtpTestRequest, request: Request, db: AsyncSession = Depends(get_db)) -> SmtpTestResponse:
+    email_settings = await load_email_settings(db)
+    request_id = getattr(request.state, "request_id", None)
+
+    ok, error, resolved_ips = send_email(
+        email_settings=email_settings,
+        recipient=payload.email,
+        subject="SMTP Test",
+        body="Test-E-Mail aus den SMTP Einstellungen.",
+        request_id=request_id,
+        actor=request.headers.get("x-admin-actor"),
+        logger=logger,
+    )
+    detail = error or "Test-E-Mail gesendet"
+    if logger:
+        logger.info(
+            "smtp test %s",
+            "ok" if ok else "failed",
+            extra={
+                "request_id": request_id,
+                "smtp_host": email_settings.host,
+                "smtp_port": email_settings.port,
+                "use_tls": email_settings.use_tls,
+                "resolved_ips": resolved_ips,
+                "actor": request.headers.get("x-admin-actor"),
+            },
+        )
+    return SmtpTestResponse(ok=ok, detail=detail, request_id=request_id)
+
+
+def _to_out(settings: EmailSettings) -> SmtpSettingsOut:
+    return SmtpSettingsOut(
+        host=settings.host or "",
+        port=settings.port or 0,
+        from_email=settings.from_email or "",
+        user=settings.user,
+        use_tls=settings.use_tls,
+        has_password=bool(settings.password),
+    )

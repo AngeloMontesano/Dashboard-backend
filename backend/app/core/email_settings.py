@@ -17,6 +17,7 @@ class EmailSettings:
     user: Optional[str]
     password: Optional[str]
     from_email: Optional[str]
+    use_tls: bool = True
 
     def is_configured(self) -> bool:
         return bool(self.host and self.port and self.from_email)
@@ -34,6 +35,7 @@ async def load_email_settings(db: AsyncSession) -> EmailSettings:
             user=row.user,
             password=row.password,
             from_email=row.from_email,
+            use_tls=row.use_tls if row.use_tls is not None else settings.SMTP_USE_TLS,
         )
     return EmailSettings(
         host=settings.SMTP_HOST,
@@ -41,6 +43,7 @@ async def load_email_settings(db: AsyncSession) -> EmailSettings:
         user=settings.SMTP_USER,
         password=settings.SMTP_PASSWORD,
         from_email=settings.SMTP_FROM,
+        use_tls=settings.SMTP_USE_TLS,
     )
 
 
@@ -52,6 +55,7 @@ async def upsert_email_settings(
     user: str | None,
     password: str | None,
     from_email: str | None,
+    use_tls: bool | None = None,
 ) -> EmailSettings:
     """
     Persist email settings (single row). Password can be kept unchanged by passing None.
@@ -61,12 +65,15 @@ async def upsert_email_settings(
         row = SystemEmailSetting()
         db.add(row)
 
+    # Keep existing values when None is provided (e.g., password not changed)
     row.host = host
     row.port = port
     row.user = user
     if password is not None:
         row.password = password
     row.from_email = from_email
+    if use_tls is not None:
+        row.use_tls = use_tls
 
     await db.commit()
     await db.refresh(row)
@@ -77,4 +84,5 @@ async def upsert_email_settings(
         user=row.user,
         password=row.password,
         from_email=row.from_email,
+        use_tls=row.use_tls if row.use_tls is not None else settings.SMTP_USE_TLS,
     )

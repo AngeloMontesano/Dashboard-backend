@@ -47,6 +47,38 @@
         }
       }
     },
+    "/public/tenant-status": {
+      "get": {
+        "tags": [
+          "public"
+        ],
+        "summary": "Public Tenant Status",
+        "operationId": "public_tenant_status_public_tenant_status_get",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "required": false,
+            "description": "Optional Tenant Slug, sonst Auflösung aus Host/Header"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Tenant Status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicTenantStatus"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/inventory/ping": {
       "get": {
         "tags": [
@@ -6769,6 +6801,44 @@
   },
   "components": {
     "schemas": {
+      "PublicTenantStatus": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "not_found",
+              "inactive",
+              "unavailable"
+            ]
+          },
+          "slug": {
+            "type": "string",
+            "nullable": true
+          },
+          "host": {
+            "type": "string",
+            "nullable": true
+          },
+          "tenant_id": {
+            "type": "string",
+            "nullable": true
+          },
+          "is_active": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "reason": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "title": "PublicTenantStatus"
+      },
       "AdminCredentialLogin": {
         "properties": {
           "email": {
@@ -7186,30 +7256,29 @@
         ],
         "title": "IndustryAssignTenantResult"
       },
-      "IndustryCreate": {
+      "IndustryAssignTenantsRequest": {
         "properties": {
-          "name": {
-            "type": "string",
-            "maxLength": 255,
-            "title": "Name"
+          "tenant_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Tenant Ids",
+            "default": null
           },
-          "description": {
-            "type": "string",
-            "maxLength": 512,
-            "title": "Description",
-            "default": ""
+          "initial_quantity": {
+            "type": "integer",
+            "title": "Initial Quantity",
+            "default": 0
           },
-          "is_active": {
+          "preserve_existing_quantity": {
             "type": "boolean",
-            "title": "Is Active",
+            "title": "Preserve Existing Quantity",
             "default": true
           }
         },
         "type": "object",
-        "required": [
-          "name"
-        ],
-        "title": "IndustryCreate"
+        "title": "IndustryAssignTenantsRequest"
       },
       "IndustryMappingImportResult": {
         "properties": {
@@ -7246,6 +7315,250 @@
           "errors"
         ],
         "title": "IndustryMappingImportResult"
+      },
+      "IndustryOut": {
+        "properties": {
+          "tenant_id": {
+            "type": "string",
+            "title": "Tenant Id"
+          },
+          "tenant_slug": {
+            "type": "string",
+            "title": "Tenant Slug"
+          },
+          "tenant_name": {
+            "type": "string",
+            "title": "Tenant Name"
+          },
+          "created": {
+            "type": "integer",
+            "title": "Created"
+          },
+          "skipped_existing": {
+            "type": "integer",
+            "title": "Skipped Existing"
+          }
+        },
+        "type": "object",
+        "required": [
+          "tenant_id",
+          "tenant_slug",
+          "tenant_name",
+          "created",
+          "skipped_existing"
+        ],
+        "title": "IndustryAssignTenantResult"
+      },
+      "IndustryAssignResponse": {
+        "properties": {
+          "industry_id": {
+            "type": "string",
+            "title": "Industry Id"
+          },
+          "template_items": {
+            "type": "integer",
+            "title": "Template Items"
+          },
+          "affected_tenants": {
+            "type": "integer",
+            "title": "Affected Tenants"
+          },
+          "created_total": {
+            "type": "integer",
+            "title": "Created Total"
+          },
+          "skipped_total": {
+            "type": "integer",
+            "title": "Skipped Total"
+          },
+          "initial_quantity": {
+            "type": "integer",
+            "title": "Initial Quantity"
+          },
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/IndustryAssignTenantResult"
+            },
+            "type": "array",
+            "title": "Results"
+          }
+        },
+        "type": "object",
+        "required": [
+          "industry_id",
+          "template_items",
+          "affected_tenants",
+          "created_total",
+          "skipped_total",
+          "initial_quantity",
+          "results"
+        ],
+        "title": "IndustryAssignResponse"
+      },
+      "IndustryCreate": {
+        "properties": {
+          "tenant_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tenant Ids"
+          },
+          "initial_quantity": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Initial Quantity",
+            "default": 0
+          },
+          "preserve_existing_quantity": {
+            "type": "boolean",
+            "title": "Preserve Existing Quantity",
+            "default": true
+          }
+        },
+        "type": "object",
+        "title": "IndustryAssignRequest"
+      },
+      "IndustryAssignResponse": {
+        "properties": {
+          "industry_id": {
+            "type": "string",
+            "title": "Industry Id"
+          },
+          "industry_name": {
+            "type": "string",
+            "title": "Industry Name"
+          },
+          "total_items": {
+            "type": "integer",
+            "title": "Total Items"
+          },
+          "target_tenants": {
+            "type": "integer",
+            "title": "Target Tenants"
+          },
+          "created": {
+            "type": "integer",
+            "title": "Created"
+          },
+          "skipped_existing": {
+            "type": "integer",
+            "title": "Skipped Existing"
+          },
+          "synced_admin_items": {
+            "type": "integer",
+            "title": "Synced Admin Items"
+          },
+          "missing_tenants": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Missing Tenants"
+          },
+          "mismatched_tenants": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Mismatched Tenants"
+          },
+          "inactive_tenants": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Inactive Tenants"
+          },
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/IndustryAssignTenantResult"
+            },
+            "type": "array",
+            "title": "Results"
+          }
+        },
+        "type": "object",
+        "required": [
+          "industry_id",
+          "industry_name",
+          "total_items",
+          "target_tenants",
+          "created",
+          "skipped_existing",
+          "synced_admin_items",
+          "missing_tenants",
+          "mismatched_tenants",
+          "inactive_tenants",
+          "results"
+        ],
+        "title": "IndustryAssignResponse"
+      },
+      "IndustryAssignTenantResult": {
+        "properties": {
+          "tenant_id": {
+            "type": "string",
+            "title": "Tenant Id"
+          },
+          "tenant_slug": {
+            "type": "string",
+            "title": "Tenant Slug"
+          },
+          "created": {
+            "type": "integer",
+            "title": "Created"
+          },
+          "skipped_existing": {
+            "type": "integer",
+            "title": "Skipped Existing"
+          },
+          "synced_admin_items": {
+            "type": "integer",
+            "title": "Synced Admin Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "tenant_id",
+          "tenant_slug",
+          "created",
+          "skipped_existing",
+          "synced_admin_items"
+        ],
+        "title": "IndustryAssignTenantResult"
+      },
+      "IndustryCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "Name"
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 512,
+            "title": "Description",
+            "default": ""
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "IndustryCreate"
       },
       "IndustryOut": {
         "properties": {

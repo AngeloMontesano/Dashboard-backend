@@ -447,6 +447,9 @@ import type { components } from "../api/gen/openapi";
 import { debounce } from "../utils/debounce";
 import UiPage from "../components/ui/UiPage.vue";
 import UiSection from "../components/ui/UiSection.vue";
+import type { components } from "../api/gen/openapi";
+
+type IndustryAssignResponse = components["schemas"]["IndustryAssignResponse"];
 
 type IndustryAssignResponse = components["schemas"]["IndustryAssignResponse"];
 type IndustryMappingImportResult = components["schemas"]["IndustryMappingImportResult"];

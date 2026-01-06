@@ -64,3 +64,43 @@ export type AdminSystemActionResponse = {
   detail: string;
   timestamp: string;
 };
+
+export type SmtpSettingsOut = {
+  host: string;
+  port: number;
+  from_email: string;
+  user?: string | null;
+  use_tls: boolean;
+  has_password: boolean;
+};
+
+export type SmtpSettingsIn = {
+  host: string;
+  port: number;
+  from_email: string;
+  user?: string | null;
+  password?: string | null;
+  use_tls: boolean;
+};
+
+export type SmtpTestResponse = {
+  ok: boolean;
+  detail?: string | null;
+  request_id?: string | null;
+};
+
+export type SystemEmailSettings = {
+  host: string | null;
+  port: number | null;
+  user: string | null;
+  from_email: string | null;
+  has_password: boolean;
+};
+
+export type SystemEmailSettingsUpdate = {
+  host: string | null;
+  port: number | null;
+  user: string | null;
+  password: string | null;
+  from_email: string | null;
+};

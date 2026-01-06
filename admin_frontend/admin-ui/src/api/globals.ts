@@ -20,6 +20,9 @@ type ItemsPage = components["schemas"]["ItemsPage"];
 type ItemsQuery = NonNullable<paths["/admin/inventory/items"]["get"]["parameters"]["query"]>;
 type ImportItemsResponse =
   paths["/admin/inventory/items/import"]["post"]["responses"]["200"]["content"]["application/json"];
+type IndustryAssignRequest = components["schemas"]["IndustryAssignTenantsRequest"];
+type IndustryAssignResponse =
+  paths["/admin/inventory/industries/{industry_id}/assign/tenants"]["post"]["responses"]["200"]["content"]["application/json"];
 
 function withAdmin(adminKey: string, actor?: string) {
   return { headers: adminHeaders(adminKey, actor) };

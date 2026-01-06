@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 import uuid
+import logging
 from datetime import date, datetime, timedelta, timezone
 from io import BytesIO, StringIO
 from typing import Any, Literal
 
-from fastapi import APIRouter, Depends, File, HTTPException, Path, Query, UploadFile
+from fastapi import APIRouter, Depends, File, HTTPException, Path, Query, UploadFile, Request
 from fastapi.responses import StreamingResponse
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import selectinload
@@ -15,7 +16,8 @@ from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 
 from app.core.db import get_db
-from app.core.config import settings
+from app.core.email_settings import EmailSettings, load_email_settings
+from app.core.email_utils import smtp_ping, send_email
 from app.core.deps_auth import CurrentUserContext, get_current_user, require_owner_or_admin
 from app.core.deps_tenant import get_tenant_context
 from app.core.tenant import TenantContext
@@ -25,6 +27,7 @@ from app.models.item_unit import ItemUnit
 from app.models.movement import InventoryMovement
 from app.models.order import InventoryOrder, InventoryOrderItem
 from app.models.tenant_setting import TenantSetting
+import app.modules.inventory.schemas as inv_schemas
 from app.modules.inventory.schemas import (
     CategoryCreate,
     CategoryOut,
@@ -37,6 +40,9 @@ from app.modules.inventory.schemas import (
     OrderCreate,
     OrderItemOut,
     OrderOut,
+    OrderEmailRequest,
+    TenantSettingsOut,
+    TenantSettingsUpdate,
     ReportResponse,
     ReportSeries,
     ReportDataPoint,
@@ -62,8 +68,10 @@ from app.modules.inventory.schemas import (
     MassImportResult,
     EmailSendResponse,
 )
+from app.modules.admin.smtp_settings_service import get_active_smtp_settings, SmtpConfig
 
 router = APIRouter(prefix="/inventory", tags=["inventory"])
+logger = logging.getLogger(__name__)
 
 
 @router.get("/ping", response_model=TenantPingResponse)
@@ -1024,28 +1032,27 @@ async def cancel_order(
     return _order_to_out(order, item_map)
 
 
-def _send_email_message(*, to_email: str, subject: str, body: str) -> EmailSendResponse:
-    if not settings.SMTP_HOST or not settings.SMTP_PORT or not settings.SMTP_FROM:
-        return EmailSendResponse(ok=False, error="SMTP Konfiguration fehlt")
+async def _get_email_settings(db: AsyncSession) -> EmailSettings:
+    return await load_email_settings(db)
 
-    import smtplib
-    from email.message import EmailMessage
 
-    message = EmailMessage()
-    message["Subject"] = subject
-    message["From"] = settings.SMTP_FROM
-    message["To"] = to_email
-    message.set_content(body)
+def _smtp_ping(email_settings: EmailSettings, request_id: str | None = None) -> tuple[bool, list[str], str | None]:
+    return smtp_ping(email_settings, logger=logger, request_id=request_id)
 
-    try:
-        with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT, timeout=10) as smtp:
-            if settings.SMTP_USER and settings.SMTP_PASSWORD:
-                smtp.starttls()
-                smtp.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
-            smtp.send_message(message)
-        return EmailSendResponse(ok=True, error=None)
-    except Exception as e:  # noqa: BLE001
-        return EmailSendResponse(ok=False, error=str(e))
+
+def _send_email_message(*, to_email: str, subject: str, body: str, email_settings: EmailSettings, request_id: str | None, actor: str | None) -> EmailSendResponse:
+    ok, error, resolved_ips = send_email(
+        email_settings=email_settings,
+        recipient=to_email,
+        subject=subject,
+        body=body,
+        request_id=request_id,
+        actor=actor,
+        logger=logger,
+    )
+    if not ok:
+        return EmailSendResponse(ok=False, error=error)
+    return EmailSendResponse(ok=True, error=None)
 
 
 def _format_order_email(
@@ -1132,6 +1139,7 @@ def _build_order_pdf(order: InventoryOrder, item_map: dict[str, Item]) -> bytes:
 async def send_order_email(
     order_id: str,
     payload: OrderEmailRequest,
+    request: Request,
     ctx: TenantContext = Depends(get_tenant_context),
     db: AsyncSession = Depends(get_db),
 ) -> EmailSendResponse:
@@ -1144,8 +1152,17 @@ async def send_order_email(
     if not recipient:
         return EmailSendResponse(ok=False, error="Kein Empfänger konfiguriert")
 
+    email_settings = await _get_email_settings(db)
+    request_id = getattr(request.state, "request_id", None)
     subject, body = _format_order_email(order, item_map, recipient, payload.note)
-    return _send_email_message(to_email=recipient, subject=subject, body=body)
+    return _send_email_message(
+        to_email=recipient,
+        subject=subject,
+        body=body,
+        email_settings=email_settings,
+        request_id=request_id,
+        actor=request.headers.get("x-admin-actor"),
+    )
 
 
 @router.get("/orders/{order_id}/pdf")
@@ -1410,33 +1427,51 @@ async def import_settings_inventory(
 @router.post("/settings/test-email", response_model=TestEmailResponse, dependencies=[Depends(require_owner_or_admin)])
 async def send_test_email(
     payload: TestEmailRequest,
+    request: Request,
     ctx: TenantContext = Depends(get_tenant_context),
     db: AsyncSession = Depends(get_db),
 ) -> TestEmailResponse:
     """
     Sendet eine Test-E-Mail an die angegebene Adresse, nutzt SMTP-Konfiguration aus Settings.
     """
-    if not settings.SMTP_HOST or not settings.SMTP_PORT or not settings.SMTP_FROM:
-        return TestEmailResponse(ok=False, error="SMTP Konfiguration fehlt")
+    email_settings = await _get_email_settings(db)
+    request_id = getattr(request.state, "request_id", None)
+    ok, resolved_ips, ping_error = _smtp_ping(email_settings, request_id)
+    if not ok:
+        return TestEmailResponse(ok=False, error=ping_error)
 
-    import smtplib
-    from email.message import EmailMessage
+    ok, error, _resolved = send_email(
+        email_settings=email_settings,
+        recipient=payload.email,
+        subject="Test E-Mail Lagerverwaltung",
+        body=f"Test E-Mail für Tenant {ctx.tenant.name} ({ctx.tenant.slug})",
+        request_id=request_id,
+        actor=request.headers.get("x-admin-actor"),
+        logger=logger,
+    )
+    return TestEmailResponse(ok=ok, error=error)
 
-    message = EmailMessage()
-    message["Subject"] = "Test E-Mail Lagerverwaltung"
-    message["From"] = settings.SMTP_FROM
-    message["To"] = payload.email
-    message.set_content(f"Test E-Mail für Tenant {ctx.tenant.name} ({ctx.tenant.slug})")
 
-    try:
-        with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT, timeout=10) as smtp:
-            if settings.SMTP_USER and settings.SMTP_PASSWORD:
-                smtp.starttls()
-                smtp.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
-            smtp.send_message(message)
-        return TestEmailResponse(ok=True, error=None)
-    except Exception as e:  # noqa: BLE001
-        return TestEmailResponse(ok=False, error=str(e))
+@router.get(
+    "/settings/smtp-ping",
+    response_model=inv_schemas.SmtpPingResponse,
+    dependencies=[Depends(require_owner_or_admin)],
+)
+async def smtp_ping_endpoint(request: Request, db: AsyncSession = Depends(get_db)) -> inv_schemas.SmtpPingResponse:
+    """
+    Prüft DNS-Auflösung und TCP-Port-Erreichbarkeit der SMTP-Konfiguration.
+    """
+    email_settings = await _get_email_settings(db)
+    request_id = getattr(request.state, "request_id", None)
+    ok, resolved_ips, error = _smtp_ping(email_settings, request_id)
+    return inv_schemas.SmtpPingResponse(
+        ok=ok,
+        error=error,
+        host=email_settings.host,
+        port=email_settings.port,
+        resolved_ips=resolved_ips,
+        use_tls=email_settings.use_tls,
+    )
 
 
 # ----------------------

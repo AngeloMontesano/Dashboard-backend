@@ -947,6 +947,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/inventory/industries/overlap-counts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Admin Get Industry Overlap Counts */
+        get: operations["admin_get_industry_overlap_counts_admin_inventory_industries_overlap_counts_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/inventory/industries": {
         parameters: {
             query?: never;
@@ -1001,7 +1018,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/admin/inventory/industries/{industry_id}/assign/tenants": {
+    "/admin/inventory/industries/{industry_id}/items/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Admin Export Industry Items */
+        get: operations["admin_export_industry_items_admin_inventory_industries__industry_id__items_export_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/inventory/industries/{industry_id}/items/import": {
         parameters: {
             query?: never;
             header?: never;
@@ -1010,8 +1044,25 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Admin Assign Industry Items To Tenants */
-        post: operations["admin_assign_industry_items_to_tenants_admin_inventory_industries__industry_id__assign_tenants_post"];
+        /** Admin Import Industry Items */
+        post: operations["admin_import_industry_items_admin_inventory_industries__industry_id__items_import_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/inventory/industries/{industry_id}/assign-to-tenants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Admin Assign Industry Items */
+        post: operations["admin_assign_industry_items_admin_inventory_industries__industry_id__assign_to_tenants_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1286,6 +1337,14 @@ export interface components {
              */
             file: string;
         };
+        /** Body_admin_import_industry_items_admin_inventory_industries__industry_id__items_import_post */
+        Body_admin_import_industry_items_admin_inventory_industries__industry_id__items_import_post: {
+            /**
+             * File
+             * Format: binary
+             */
+            file: string;
+        };
         /** Body_admin_import_items_admin_inventory_items_import_post */
         Body_admin_import_items_admin_inventory_items_import_post: {
             /**
@@ -1366,13 +1425,10 @@ export interface components {
             /** Item Ids */
             item_ids: string[];
         };
-        /** IndustryAssignTenantsRequest */
-        IndustryAssignTenantsRequest: {
-            /**
-             * Tenant Ids
-             * @default null
-             */
-            tenant_ids: string[];
+        /** IndustryAssignRequest */
+        IndustryAssignRequest: {
+            /** Tenant Ids */
+            tenant_ids?: string[] | null;
             /**
              * Initial Quantity
              * @default 0
@@ -1384,35 +1440,43 @@ export interface components {
              */
             preserve_existing_quantity: boolean;
         };
+        /** IndustryAssignResponse */
+        IndustryAssignResponse: {
+            /** Industry Id */
+            industry_id: string;
+            /** Industry Name */
+            industry_name: string;
+            /** Total Items */
+            total_items: number;
+            /** Target Tenants */
+            target_tenants: number;
+            /** Created */
+            created: number;
+            /** Skipped Existing */
+            skipped_existing: number;
+            /** Synced Admin Items */
+            synced_admin_items: number;
+            /** Missing Tenants */
+            missing_tenants: string[];
+            /** Mismatched Tenants */
+            mismatched_tenants: string[];
+            /** Inactive Tenants */
+            inactive_tenants: string[];
+            /** Results */
+            results: components["schemas"]["IndustryAssignTenantResult"][];
+        };
         /** IndustryAssignTenantResult */
         IndustryAssignTenantResult: {
             /** Tenant Id */
             tenant_id: string;
             /** Tenant Slug */
             tenant_slug: string;
-            /** Tenant Name */
-            tenant_name: string;
             /** Created */
             created: number;
             /** Skipped Existing */
             skipped_existing: number;
-        };
-        /** IndustryAssignResponse */
-        IndustryAssignResponse: {
-            /** Industry Id */
-            industry_id: string;
-            /** Template Items */
-            template_items: number;
-            /** Affected Tenants */
-            affected_tenants: number;
-            /** Created Total */
-            created_total: number;
-            /** Skipped Total */
-            skipped_total: number;
-            /** Initial Quantity */
-            initial_quantity: number;
-            /** Results */
-            results: components["schemas"]["IndustryAssignTenantResult"][];
+            /** Synced Admin Items */
+            synced_admin_items: number;
         };
         /** IndustryCreate */
         IndustryCreate: {
@@ -1428,6 +1492,19 @@ export interface components {
              * @default true
              */
             is_active: boolean;
+        };
+        /** IndustryMappingImportResult */
+        IndustryMappingImportResult: {
+            /** Added */
+            added: number;
+            /** Removed */
+            removed: number;
+            /** Skipped Missing */
+            skipped_missing: number;
+            /** Final Count */
+            final_count: number;
+            /** Errors */
+            errors: Record<string, never>[];
         };
         /** IndustryOut */
         IndustryOut: {
@@ -1445,6 +1522,13 @@ export interface components {
             is_active: boolean;
             /** Id */
             id: string;
+        };
+        /** IndustryOverlapCounts */
+        IndustryOverlapCounts: {
+            /** Counts */
+            counts: {
+                [key: string]: number;
+            };
         };
         /** IndustryUpdate */
         IndustryUpdate: {
@@ -4778,6 +4862,40 @@ export interface operations {
             };
         };
     };
+    admin_get_industry_overlap_counts_admin_inventory_industries_overlap_counts_get: {
+        parameters: {
+            query?: {
+                item_ids?: string[] | null;
+            };
+            header?: {
+                "x-admin-key"?: string | null;
+                "x-admin-actor"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IndustryOverlapCounts"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     admin_list_industries_admin_inventory_industries_get: {
         parameters: {
             query?: never;
@@ -4988,7 +5106,43 @@ export interface operations {
             };
         };
     };
-    admin_assign_industry_items_to_tenants_admin_inventory_industries__industry_id__assign_tenants_post: {
+    admin_export_industry_items_admin_inventory_industries__industry_id__items_export_get: {
+        parameters: {
+            query?: {
+                format?: string;
+            };
+            header?: {
+                "x-admin-key"?: string | null;
+                "x-admin-actor"?: string | null;
+            };
+            path: {
+                industry_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_import_industry_items_admin_inventory_industries__industry_id__items_import_post: {
         parameters: {
             query?: never;
             header?: {
@@ -5002,7 +5156,45 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["IndustryAssignTenantsRequest"];
+                "multipart/form-data": components["schemas"]["Body_admin_import_industry_items_admin_inventory_industries__industry_id__items_import_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IndustryMappingImportResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_assign_industry_items_admin_inventory_industries__industry_id__assign_to_tenants_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-admin-key"?: string | null;
+                "x-admin-actor"?: string | null;
+            };
+            path: {
+                industry_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IndustryAssignRequest"];
             };
         };
         responses: {

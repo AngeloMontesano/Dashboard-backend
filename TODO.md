@@ -1,16 +1,14 @@
 # TODO
 
-## Now (Top 10)
-- [A-02] (EPIC_A_TENANT_RESOLUTION) Public-Router mit `tenant-status` Endpoint aufsetzen und in main inkludieren.
-- [A-04] (EPIC_A_TENANT_RESOLUTION) Customer-Bootstrap um Tenant-Status-Preflight vor Router-Init erweitern.
-- [A-05] (EPIC_A_TENANT_RESOLUTION) Tenant-Status-View mit klaren States (not found/inactive/unavailable) bauen.
-- [A-06] (EPIC_A_TENANT_RESOLUTION) Router-Fallback `/:pathMatch(.*)*` auf Status/404 führen.
-- [B-01] (EPIC_B_GLOBAL_CATALOG_AND_INDUSTRY) Datenmodell-Entwurf für globale Kataloge/Branchen finalisieren.
-- [B-02] (EPIC_B_GLOBAL_CATALOG_AND_INDUSTRY) Admin-API-Spezifikation für globale Kategorien/Typen/Branchen schreiben.
-- [C-03] (EPIC_C_CUSTOMER_REPORTING_UX) Live-Suche-Komponente (Prefix + Debounce) konzipieren.
-- [D-03] (EPIC_D_CUSTOMER_DASHBOARD_NAVIGATION) KPI-Karten klickbar machen (Button/Link mit Fokus-Ring).
-- [E-02] (EPIC_E_CUSTOMER_ORDERS_IMPROVEMENTS) UI-Spezifikation für neuen Bestell-Dialog (tabellarisch) erstellen.
-- [F-03] (EPIC_F_OFFLINE_QUEUE_ERROR_HANDLING) UX-Flow für Queue-Liste + Detail skizzieren.
+## MUSS (kritisch)
+- Customer: Finale Dark-Mode-Visitenkontrolle und letzte UI-Politur (Artikel-Detailkarten/Empty-States); Light-Mode als Follow-up dokumentieren.
+- Customer: Build-Qualität sicherstellen (`npm run build`) und Smoke-Tests im Dark-Mode; `rg "primevue"` muss 0 Treffer liefern.
+- Docs: WORKLOG und Roadmap (`docs/roadmap/CUSTOMER_UI_PARITY_WITH_ADMIN.md`) aktuell halten; offene Paritätslücken dokumentieren.
+- Backend (vorherige Lücken, weiterhin kritisch): Migration `0009_create_inventory_orders` ausrollen; Reporting-Query-Fix deployen; globale Stammdaten-/Industrie-Endpunkte und Admin-konforme Artikelrestriktionen ergänzen.
+- Backend (Admin): System-Actions Endpoints mit echter Funktionalität hinterlegen (Cache Reset, Reindex, Restart) – aktuell bewusst nicht unterstützt (keine neuen Abhängigkeiten).
+- Admin-Frontend Branchen ↔ Artikel: Zwei-Paneele-Editor mit serverseitiger Suche/Pagination und Pending-Add/Remove-Deltas implementieren; Speichern muss finalen Replace-Call (`IndustryArticlesUpdate.item_ids`) senden, da kein Delta-Endpunkt existiert.
+- Admin-Frontend Branchen ↔ Artikel: Skalierungsfähiges Laden von Artikeln über `/admin/inventory/items` (Query q, category_id, active, page, page_size≤200) nutzen; Checkbox-Liste ersetzen und Ladezeiten/Scroll-Limitierungen eliminieren.
+- Admin-Frontend Branchen ↔ Artikel: CSV/XLSX Import/Export fürs Mapping nur mit Backend-Unterstützung ermöglichen; solange Endpunkt fehlt, UI-Konzept dokumentieren und Backend-TODO für Delta-Import/Export anlegen.
 
 ## Next
 - [A-08] (EPIC_A_TENANT_RESOLUTION) Status-Caching/Retry-Strategie umsetzen.

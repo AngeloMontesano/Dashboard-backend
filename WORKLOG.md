@@ -768,12 +768,16 @@
 - **Tests**
   - Nicht ausgeführt (UI-Styling)
 
-- Datum/Uhrzeit: 2026-01-06T15:36:33Z
-- Task-ID: EPIC-ROADMAP-SETUP
-- Was analysiert/geändert:
-  - Standards unter `docs/standards` geprüft (API/Frontend/Error/Design/Darkmode/Theme Tokens).
-  - Bestandsaufnahme 404/Not-Found: Customer-Router ohne Catch-All (unbekannte Pfade resultieren in Router-Navigation-Fehler/leerem View, Server liefert bei fehlender Route JSON `{error:{code:"http_error",message:"Not Found"}}`), Admin-Frontend ohne Router (Navigation rein per UI, 404 nur serverseitig bei fehlenden Assets), Backend `/` oder unbekannte Pfade liefern standardisierte JSON-Fehler via `register_exception_handlers`, Tenant-Resolver (`core/tenant.py`) gibt 404 `tenant_not_found` JSON bei fehlendem/inaktivem Tenant oder fehlendem Host/Slug; Reverse-Proxy-Annahme: Host aus `X-Forwarded-Host` + `BASE_DOMAIN`, Fallback `localhost`.
-  - Public/Health-Endpunkte identifiziert: `/health`, `/health/db`, `/meta`, `/metrics` (Prometheus), alle ohne Auth.
-  - Doku-Struktur erstellt: `docs/roadmap/INDEX.md` mit Epic-Template/Standards, neue Epics A–I mit Tasks/Akzeptanzkriterien, TODO/Epic_TODO priorisiert, Epic_WORKLOG angelegt.
-- Ergebnis: Roadmap-Epics vollständig angelegt, Template verbindlich dokumentiert, priorisierte Next Steps in TODO/Epic_TODO.
-- Nächste Schritte: Umsetzung der Now-Tasks (Tenant-Status-Endpoint + Frontend-Status-Flow, globale Katalog-Spezifikation, Reporting-Filter-Konzept etc.).
+## Schritt 54 – Analyse Branchen-Artikel-Mapping (Schritt 1)
+- **Datum/Uhrzeit**: 2026-01-06T15:45:00+00:00
+- **Ziel**: Inventar für den Admin-Editor „Branche ↔ Artikel“ erstellen und Skalierungsprobleme für 1000+ Artikel bewerten.
+- **Was wurde analysiert**
+  - UI: `admin_frontend/admin-ui/src/views/GlobaleBranchenView.vue` nutzt eine Checkbox-Liste pro Artikel ohne Suche/Server-Paging; Artikel werden per `fetchGlobalItems` seitenweise (page_size 200) geladen und vollständig in den lokalen Zustand (`useGlobalMasterdata`) kopiert. Branchen-Auswahl steuert `selectedArticleIds`, Änderungen werden sofort via `setIndustryItems` gespeichert.
+  - API-Wrapper: `admin_frontend/admin-ui/src/api/globals.ts` (und parallele Funktionen in `api/admin.ts`) greifen auf `/admin/inventory/industries` (GET/POST/PATCH/DELETE) und `/admin/inventory/industries/{industry_id}/items` (GET/PUT) zu; Items kommen aus `/admin/inventory/items` mit optionalen Query-Parametern laut OpenAPI (q, category_id, active, page, page_size≤200) und Response `ItemsPage { items, total, page, page_size }`.
+  - OpenAPI: `IndustryArticlesUpdate` verlangt nur `item_ids: string[]` und wird als vollständiger Replace per PUT umgesetzt; kein Delta-/Bulk-Add/Remove-Endpunkt vorhanden. Kein Import/Export-Endpunkt für Branchen-Mapping, nur Artikel-Import/Export auf `/admin/inventory/items/(import|export)`.
+- **Ergebnis (Ist-Stand & Probleme)**
+  - Der Editor lädt aktuell alle Artikel (aktive) in den Speicher und rendert Checkboxen; bei 1000+ Artikeln unbenutzbar (Ladezeit, Scroll-Länge, fehlende Suche/Filter/Pagination).
+  - Speichern erzwingt einen kompletten Replace (`item_ids`), Deltas werden nicht gesammelt; Überschneidungen zwischen Branchen sind nicht erkennbar, keine Hinweise auf Mehrfachzuordnung.
+  - Import/Export für Branchen-Mappings fehlt in der API; nur Items lassen sich importieren/exportieren (keine Mapping-Dateien). Delta-Import für Zuordnungen erfordert Backend-Erweiterung.
+- **Nächste Schritte**
+  - Schritt 3 planen: Zwei-Paneele-Layout mit Server-Suche/Paging über `/admin/inventory/items`, Pending-Add/Remove-Deltas und Replace-Speichern (berechnete finale Liste). Filter nur gemäß OpenAPI (q, category_id, active). Import/Export-Konzept dokumentieren und als TODO für Backend ergänzen.

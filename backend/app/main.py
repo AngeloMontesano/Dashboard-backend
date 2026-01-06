@@ -22,6 +22,8 @@ from app.modules.admin.routes import router as admin_router
 from app.modules.admin.login_routes import router as admin_login_router
 from app.modules.inventory.routes import router as inventory_router
 from app.modules.auth.routes import router as auth_router
+from app.modules.public.routes import router as public_router
+from app.modules.public.routes import router as public_router
 
 
 OPENAPI_TAGS = [
@@ -84,6 +86,8 @@ def create_app() -> FastAPI:
     app.include_router(inventory_router)
     app.include_router(admin_router)
     app.include_router(auth_router)
+    app.include_router(public_router)
+    app.include_router(public_router)
     
     register_exception_handlers(app)
 

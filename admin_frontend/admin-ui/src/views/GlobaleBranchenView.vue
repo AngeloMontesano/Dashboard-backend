@@ -261,6 +261,62 @@
         </div>
       </div>
 
+      <div class="table-card">
+        <div class="table-card__header">
+          <div class="tableTitle">Branchen-Artikel auf Tenants anwenden</div>
+          <div class="text-muted text-small">
+            Weist allen Tenants mit dieser Branche fehlende Artikel hinzu. Neue Artikel starten mit Bestand 0; bestehende Bestände werden nicht verändert.
+          </div>
+        </div>
+        <div class="box stack">
+          <div class="row gap12 wrap align-center">
+            <label class="field">
+              <span class="field-label">Initialer Bestand</span>
+              <input
+                class="input"
+                type="number"
+                min="0"
+                v-model.number="assign.initialQuantity"
+                aria-label="Initialer Bestand für neue Artikel"
+              />
+            </label>
+            <label class="field checkbox">
+              <input type="checkbox" v-model="assign.preserveExisting" disabled />
+              <span>Bestehende Bestände unverändert lassen</span>
+            </label>
+            <button
+              class="btnPrimary small"
+              type="button"
+              :disabled="!selectedIndustryId || assign.busy"
+              @click="assignToTenants"
+            >
+              {{ assign.busy ? "weist zu..." : "Fehlende Artikel jetzt anwenden" }}
+            </button>
+          </div>
+          <div class="hint">
+            Ziel-Tenants: alle mit derselben Branche (`industry_id`). Nur fehlende Artikel werden angelegt; vorhandene Bestände bleiben bestehen.
+          </div>
+          <div v-if="assign.result" class="result-card">
+            <div class="row gap8 wrap text-small">
+              <span>Tenants: {{ assign.result.affected_tenants }}</span>
+              <span>Vorlagen: {{ assign.result.template_items }}</span>
+              <span>Neu angelegt: {{ assign.result.created_total }}</span>
+              <span>Übersprungen: {{ assign.result.skipped_total }}</span>
+              <span>Initialer Bestand: {{ assign.result.initial_quantity }}</span>
+            </div>
+            <div class="item-list compact">
+              <div v-for="row in assign.result.results" :key="row.tenant_id" class="item-row">
+                <div class="item-meta">
+                  <div class="item-title">{{ row.tenant_name }}</div>
+                  <div class="text-muted text-small mono">{{ row.tenant_slug }} · {{ row.tenant_id }}</div>
+                </div>
+                <span class="tag">{{ row.created }} neu / {{ row.skipped_existing }} übersprungen</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div v-if="modal.open">
         <div class="modal-backdrop" @click="closeModal"></div>
         <div class="modal-panel" @click.stop>
@@ -324,10 +380,14 @@ import {
   setIndustryItems,
   fetchGlobalItems,
   fetchGlobalCategories,
+  assignIndustryItemsToTenants,
 } from "../api/globals";
 import { debounce } from "../utils/debounce";
 import UiPage from "../components/ui/UiPage.vue";
 import UiSection from "../components/ui/UiSection.vue";
+import type { components } from "../api/gen/openapi";
+
+type IndustryAssignResponse = components["schemas"]["IndustryAssignResponse"];
 
 const props = defineProps<{
   adminKey: string;
@@ -374,6 +434,21 @@ const busy = reactive({
   loadAvailable: false,
   loadMapping: false,
   saveMapping: false,
+  assignTenants: false,
+});
+
+type IndustryAssignResponse = components["schemas"]["IndustryAssignResponse"];
+
+const assign = reactive<{
+  initialQuantity: number;
+  preserveExisting: boolean;
+  result: IndustryAssignResponse | null;
+  busy: boolean;
+}>({
+  initialQuantity: 0,
+  preserveExisting: true,
+  result: null,
+  busy: false,
 });
 
 const modal = reactive({
@@ -743,6 +818,35 @@ async function saveMapping() {
   }
 }
 
+async function assignToTenants() {
+  if (!selectedIndustryId.value) {
+    toast("Bitte Branche wählen", "warning");
+    return;
+  }
+  assign.busy = true;
+  assign.result = null;
+  try {
+    const res = await assignIndustryItemsToTenants(
+      props.adminKey,
+      selectedIndustryId.value,
+      {
+        initial_quantity: assign.initialQuantity,
+        preserve_existing_quantity: assign.preserveExisting,
+      },
+      props.actor
+    );
+    assign.result = res;
+    toast(
+      `Tenants aktualisiert: ${res.created_total} neue Artikel, ${res.skipped_total} bereits vorhanden`,
+      "success"
+    );
+  } catch (e: any) {
+    toast(`Zuweisung fehlgeschlagen: ${e?.message || e}`, "error");
+  } finally {
+    assign.busy = false;
+  }
+}
+
 const canAddSelection = computed(
   () => !!selectedIndustryId.value && selectedAvailableIds.value.length > 0
 );
@@ -857,6 +961,14 @@ onMounted(() => {
   gap: 8px;
 }
 
+.item-list.compact {
+  grid-template-columns: 1fr;
+}
+
+.item-list.compact .item-row {
+  padding: 8px 10px;
+}
+
 .item-row {
   display: grid;
   grid-template-columns: auto 1fr auto;
@@ -877,6 +989,14 @@ onMounted(() => {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.result-card {
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
 }
 
 .pane-body.loading {

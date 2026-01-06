@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import uuid
 from datetime import datetime
 from typing import List, Literal, Optional
 
@@ -294,6 +295,30 @@ class IndustryOut(IndustryBase):
 
 class IndustryArticlesUpdate(BaseModel):
     item_ids: List[str]
+
+
+class IndustryAssignTenantsRequest(BaseModel):
+    tenant_ids: Optional[List[str]] = None
+    initial_quantity: int = Field(0, ge=0)
+    preserve_existing_quantity: bool = True
+
+
+class IndustryAssignTenantResult(BaseModel):
+    tenant_id: str
+    tenant_slug: str
+    tenant_name: str
+    created: int
+    skipped_existing: int
+
+
+class IndustryAssignResponse(BaseModel):
+    industry_id: str
+    template_items: int
+    affected_tenants: int
+    created_total: int
+    skipped_total: int
+    initial_quantity: int
+    results: List[IndustryAssignTenantResult]
 
 
 class MassImportResult(BaseModel):

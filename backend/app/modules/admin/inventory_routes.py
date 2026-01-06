@@ -13,7 +13,9 @@ from app.models.category import Category
 from app.models.item import Item
 from app.models.item_unit import ItemUnit
 from app.models.industry import Industry, IndustryArticle
-from app.modules.inventory.routes import _normalize_sku, CSV_COLUMNS, _validate_order_mode, _parse_bool
+from app.models.tenant import Tenant
+from app.models.tenant_setting import TenantSetting
+from app.modules.inventory.routes import _normalize_sku, CSV_COLUMNS
 from app.modules.inventory.schemas import (
     CategoryCreate,
     CategoryOut,
@@ -27,6 +29,9 @@ from app.modules.inventory.schemas import (
     IndustryOut,
     IndustryUpdate,
     IndustryArticlesUpdate,
+    IndustryAssignTenantsRequest,
+    IndustryAssignResponse,
+    IndustryAssignTenantResult,
 )
 
 CSV_DELIMITER = ";"
@@ -35,6 +40,10 @@ UNIT_COLUMNS: tuple[str, ...] = ("code", "label", "is_active")
 
 
 router = APIRouter(prefix="/inventory", tags=["admin-inventory"], dependencies=[Depends(require_admin_key), Depends(get_admin_actor)])
+
+
+def _error(code: str, message: str) -> dict:
+    return {"error": {"code": code, "message": message}}
 
 
 def _category_out(cat: Category) -> CategoryOut:
@@ -784,7 +793,7 @@ async def admin_list_industry_items(
 ) -> list[ItemOut]:
     industry = await db.get(Industry, industry_id)
     if industry is None:
-        raise HTTPException(status_code=404, detail={"error": {"code": "industry_not_found", "message": "Branche nicht gefunden"}})
+        raise HTTPException(status_code=404, detail=_error("industry_not_found", "Branche nicht gefunden"))
 
     mappings = (
         await db.scalars(
@@ -827,3 +836,115 @@ async def admin_set_industry_items(
         db.add(IndustryArticle(industry_id=industry.id, item_id=item_id))
     await db.commit()
     return {"ok": True, "count": len(payload.item_ids)}
+
+
+@router.post("/industries/{industry_id}/assign/tenants", response_model=IndustryAssignResponse)
+async def admin_assign_industry_items_to_tenants(
+    industry_id: str,
+    payload: IndustryAssignTenantsRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    industry = await db.get(Industry, industry_id)
+    if industry is None:
+        raise HTTPException(status_code=404, detail={"error": {"code": "industry_not_found", "message": "Branche nicht gefunden"}})
+
+    template_rows = (
+        await db.scalars(
+            select(Item)
+            .join(IndustryArticle, IndustryArticle.item_id == Item.id)
+            .where(IndustryArticle.industry_id == industry.id, Item.tenant_id.is_(None))
+        )
+    ).all()
+
+    if not template_rows:
+        return IndustryAssignResponse(
+            industry_id=str(industry.id),
+            template_items=0,
+            affected_tenants=0,
+            created_total=0,
+            skipped_total=0,
+            initial_quantity=payload.initial_quantity,
+            results=[],
+        )
+
+    tenant_stmt = (
+        select(Tenant, TenantSetting)
+        .join(TenantSetting, TenantSetting.tenant_id == Tenant.id)
+        .where(TenantSetting.industry_id == industry.id)
+    )
+    if payload.tenant_ids:
+        tenant_stmt = tenant_stmt.where(Tenant.id.in_(payload.tenant_ids))
+
+    tenant_rows = (await db.execute(tenant_stmt)).all()
+    results: list[IndustryAssignTenantResult] = []
+    created_total = 0
+    skipped_total = 0
+
+    template_skus = [_normalize_sku(item.sku, prefix_customer=True) for item in template_rows]
+    template_by_sku = {sku: item for sku, item in zip(template_skus, template_rows)}
+
+    for tenant, _settings in tenant_rows:
+        existing_items = (
+            await db.scalars(
+                select(Item).where(
+                    Item.tenant_id == tenant.id,
+                    Item.sku.in_(template_skus),
+                )
+            )
+        ).all()
+        existing_by_sku = {row.sku: row for row in existing_items}
+
+        created = 0
+        skipped = 0
+
+        for sku, template in template_by_sku.items():
+            existing = existing_by_sku.get(sku)
+            if existing:
+                if not payload.preserve_existing_quantity:
+                    existing.quantity = max(existing.quantity, payload.initial_quantity)
+                skipped += 1
+                continue
+
+            new_item = Item(
+                tenant_id=tenant.id,
+                sku=sku,
+                barcode=template.barcode,
+                name=template.name,
+                description=template.description,
+                category_id=template.category_id,
+                quantity=payload.initial_quantity,
+                unit=template.unit,
+                is_active=template.is_active,
+                min_stock=template.min_stock,
+                max_stock=template.max_stock,
+                target_stock=template.target_stock,
+                recommended_stock=template.recommended_stock,
+                order_mode=template.order_mode,
+                is_admin_created=False,
+            )
+            db.add(new_item)
+            created += 1
+
+        created_total += created
+        skipped_total += skipped
+        results.append(
+            IndustryAssignTenantResult(
+                tenant_id=str(tenant.id),
+                tenant_slug=tenant.slug,
+                tenant_name=tenant.name,
+                created=created,
+                skipped_existing=skipped,
+            )
+        )
+
+    await db.commit()
+
+    return IndustryAssignResponse(
+        industry_id=str(industry.id),
+        template_items=len(template_rows),
+        affected_tenants=len(tenant_rows),
+        created_total=created_total,
+        skipped_total=skipped_total,
+        initial_quantity=payload.initial_quantity,
+        results=results,
+    )

@@ -236,6 +236,30 @@ export async function adminSystemRestart(adminKey: string, actor?: string) {
   return res.data;
 }
 
+/* SMTP Settings */
+export interface SmtpSettings {
+  host: string;
+  port: number;
+  from_email: string;
+  user?: string | null;
+  use_tls: boolean;
+  has_password: boolean;
+}
+
+export interface SmtpSettingsInput {
+  host: string;
+  port: number;
+  from_email: string;
+  user?: string | null;
+  password?: string | null;
+  use_tls: boolean;
+}
+
+export async function adminTestSmtp(adminKey: string, actor: string | undefined, email: string) {
+  const res = await api.post<{ ok: boolean }>("/admin/smtp/settings/test", { email }, withAdmin(adminKey, actor));
+  return res.data;
+}
+
 /* Tenant Users (combined user + membership for a tenant) */
 export async function adminListTenantUsers(
   adminKey: string,

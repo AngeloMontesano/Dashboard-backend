@@ -88,13 +88,14 @@ Frontend zeigt für unbekannte/inaktive Subdomains eine klare Seite statt JSON. 
   - Bereich: docs  
   - Dateien/Bereiche: Epic QA-Abschnitt, README QA  
   - Abhängigkeiten: A-05  
-  - Done: Checkliste in Doku.
+  - Done: Checkliste in Doku, deckt 404-Fallback, Tenant not found/inaktiv/unavailable, Header-Szenarien, Mobile/Darkmode, Proxy-Forwarding.
 
 ## 10) Akzeptanzkriterien
 - Unbekannte/Inactive Tenant-Subdomain zeigt eine gestaltete Seite, kein JSON.
 - Router-Fallback zeigt 404-Seite, nicht leere Shell.
 - Tenant-Status-API antwortet ohne Auth mit Status ok/not_found/inactive/unavailable.
 - Retry/Support-Links funktionieren; Host/Tenant-Slug im UI sichtbar.
+- QA-Checkliste A-10 ist vorhanden und getestet (404-Fallback, Tenant not found/inaktiv/unavailable, Proxy-Header, Mobile, Darkmode).
 
 ## 11) Risiken/Offene Punkte
 - Proxy muss `X-Forwarded-Host` korrekt setzen; sonst falscher Tenant.

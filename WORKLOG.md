@@ -21,3 +21,8 @@
 ## 2024-06-11
 - Roadmap-Index mit Typgenerierungsbefehlen ergänzt (`npm run gen:types`, `npm run gen:types:local`) und Zielpfad `src/api/gen/openapi.ts` festgehalten.
 - Offene Punkte unverändert: QA-Checkliste Tenant-Status-UX, Proxy-404-Verhalten noch zu testen.
+
+## 2024-06-12
+- EPIC_A QA-Checkliste konkretisiert (404-Fallback, Tenant not found/inaktiv/unavailable, Proxy-Header, Mobile, Darkmode).
+- TODO-Backlog um A-10 (QA-Checkliste Tenant-Status) in „Next“ ergänzt.
+- Offene Punkte: Proxy-404-Verhalten weiterhin ungetestet; QA-Checkliste noch umzusetzen.

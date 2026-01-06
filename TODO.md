@@ -12,6 +12,7 @@
 
 ## Next
 - [A-05] Tenant-Status-View Texte/CTAs finalisieren – Epic A
+- [A-10] QA-Checkliste Tenant-Status (404/Headers/Mobile/Darkmode) – Epic A
 - [B-02] Admin-API Spezifikation globale Kategorien/Typen/Branchen – Epic B
 - [C-03] Live-Suche-Komponente Reporting entwerfen (Prefix/Debounce) – Epic C
 - [D-02] Router-Interface für Prefill dokumentieren – Epic D

@@ -15,3 +15,7 @@
 ## 2024-06-11
 - Typgenerierungsbefehle (remote/local) und Zielpfad `src/api/gen/openapi.ts` im Roadmap-Index ergänzt, damit API-bezogene Epics denselben Workflow nutzen.
 - Keine Anpassungen an Epic-Inhalten selbst; nur Navigations-/Referenzupdate.
+
+## 2024-06-12
+- EPIC_A um präzisierte QA-Checkliste (A-10) erweitert; Akzeptanzkriterien referenzieren die Checkliste.
+- TODO-Backlog spiegelt A-10 jetzt in „Next“ wider.

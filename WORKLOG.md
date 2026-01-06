@@ -768,6 +768,19 @@
 - **Tests**
   - Nicht ausgeführt (UI-Styling)
 
+## Schritt 55 – Zwei-Paneele-Editor für Branchen ↔ Artikel
+- **Datum/Uhrzeit**: 2026-01-06T15:58:00+00:00
+- **Ziel**: Skalierbare Bearbeitung der Branchen-Artikel-Zuordnung (1000+ Artikel) mit serverseitiger Suche/Pagination, Pending-Deltas und sicherem Replace-Call gemäß OpenAPI.
+- **Was wurde geändert**
+  - `GlobaleBranchenView`: Alte Checkbox-Liste durch Zwei-Paneele-Editor ersetzt (Verfügbare Artikel links mit Debounce-Suche, Kategorie-/Status-Filter und serverseitiger Pagination über `/admin/inventory/items`; Zugeordnete Artikel rechts mit clientseitiger Pagination, Pending-Status-Tags).
+  - Delta-Handling: Auswahlen erzeugen `pendingAdditions`/`pendingRemovals`; Speichern berechnet finale `item_ids` (Replace per PUT `/admin/inventory/industries/{industry_id}/items`). Buttons für Hinzufügen/Entfernen, Pending-Zusammenfassung, Undo via „Änderungen verwerfen“.
+  - Datenladen: Branchen + Kategorien + initiale Artikelseite werden beim Laden geholt; Zuordnungs-Load cached Items für Anzeige; Status/Fehlertexte nutzerfreundlich gehalten. Hinweis im UI, dass CSV/XLSX-Mapping-Import/Export in der API fehlt.
+- **Offene Punkte**
+  - Kein Badge für Überschneidungen (z. B. „in X Branchen“), da keine aggregierte API vorhanden; würde sonst N+1 erfordern.
+  - Mapping-Import/Export (CSV/XLSX) fehlt im Backend; TODO verweist auf benötigte Endpunkte für Delta-Add/Remove.
+- **Tests**
+  - `npm run build` (admin_frontend/admin-ui)
+
 ## Schritt 54 – Analyse Branchen-Artikel-Mapping (Schritt 1)
 - **Datum/Uhrzeit**: 2026-01-06T15:45:00+00:00
 - **Ziel**: Inventar für den Admin-Editor „Branche ↔ Artikel“ erstellen und Skalierungsprobleme für 1000+ Artikel bewerten.

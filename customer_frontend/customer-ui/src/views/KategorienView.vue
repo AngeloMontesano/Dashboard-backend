@@ -5,8 +5,11 @@ import { useAuth } from '@/composables/useAuth';
 import UiPage from '@/components/ui/UiPage.vue';
 import UiSection from '@/components/ui/UiSection.vue';
 import UiToolbar from '@/components/ui/UiToolbar.vue';
+import AuthReauthBanner from '@/components/auth/AuthReauthBanner.vue';
+import { useAuthIssueBanner } from '@/composables/useAuthIssueBanner';
 
 const { state: authState, isAuthenticated } = useAuth();
+const { authIssue, authMessage, handleAuthError } = useAuthIssueBanner();
 const hasWriteAccess = computed(() => ['owner', 'admin'].includes(authState.role));
 
 const categories = ref<Category[]>([]);
@@ -18,6 +21,12 @@ const form = reactive({
   is_active: true
 });
 
+function showError(err: unknown, fallback: string) {
+  const classified = handleAuthError(err);
+  const detail = classified.detailMessage || classified.userMessage || fallback;
+  feedback.error = classified.category === 'auth' ? classified.userMessage : `${fallback}: ${detail}`;
+}
+
 async function loadCategories() {
   if (!authState.accessToken) return;
   isLoading.value = true;
@@ -25,7 +34,7 @@ async function loadCategories() {
   try {
     categories.value = await fetchCategories(authState.accessToken);
   } catch (err: any) {
-    feedback.error = err?.message || 'Konnte Kategorien nicht laden.';
+    showError(err, 'Konnte Kategorien nicht laden.');
   } finally {
     isLoading.value = false;
   }
@@ -44,7 +53,7 @@ async function handleCreate() {
     form.is_active = true;
     await loadCategories();
   } catch (err: any) {
-    feedback.error = err?.response?.data?.error?.message || err?.message || 'Kategorie konnte nicht angelegt werden.';
+    showError(err, 'Kategorie konnte nicht angelegt werden.');
   }
 }
 
@@ -57,7 +66,7 @@ async function toggleCategory(cat: Category, active: boolean) {
     feedback.message = active ? 'Kategorie aktiviert.' : 'Kategorie deaktiviert.';
     await loadCategories();
   } catch (err: any) {
-    feedback.error = err?.response?.data?.error?.message || err?.message || 'Status konnte nicht geändert werden.';
+    showError(err, 'Status konnte nicht geändert werden.');
   }
 }
 
@@ -70,7 +79,7 @@ async function renameCategory(cat: Category, name: string) {
     feedback.message = 'Kategorie aktualisiert.';
     await loadCategories();
   } catch (err: any) {
-    feedback.error = err?.response?.data?.error?.message || err?.message || 'Kategorie konnte nicht aktualisiert werden.';
+    showError(err, 'Kategorie konnte nicht aktualisiert werden.');
   }
 }
 
@@ -88,6 +97,14 @@ onMounted(async () => {
           <div class="eyebrow">Stammdaten</div>
         </template>
       </UiToolbar>
+
+      <AuthReauthBanner
+        v-if="authIssue"
+        class="mt-sm"
+        :message="authMessage"
+        retry-label="Neu laden"
+        @retry="() => loadCategories()"
+      />
 
       <div v-if="feedback.message" class="alert alert--success">{{ feedback.message }}</div>
       <div v-if="feedback.error" class="alert alert--error">{{ feedback.error }}</div>

@@ -14,12 +14,17 @@ import {
   type ItemUnit
 } from '@/api/inventory';
 import { useAuth } from '@/composables/useAuth';
+import AuthReauthBanner from '@/components/auth/AuthReauthBanner.vue';
+import { useAuthIssueBanner } from '@/composables/useAuthIssueBanner';
 import BaseInput from '@/components/common/BaseInput.vue';
 import BaseSelect from '@/components/common/BaseSelect.vue';
 import BaseField from '@/components/common/BaseField.vue';
 
 const router = useRouter();
-const { state: authState, isAuthenticated, logout } = useAuth();
+const { state: authState, isAuthenticated } = useAuth();
+const { authIssue, authMessage, handleAuthError: handleAuthIssue } = useAuthIssueBanner(
+  'Sitzung abgelaufen. Bitte neu anmelden.'
+);
 
 const hasWriteAccess = computed(() => Boolean(authState.accessToken) && authState.role !== 'readonly');
 const canOpenModals = computed(() => Boolean(authState.accessToken));
@@ -171,15 +176,11 @@ function hydrateFormFromItem(item: Item, target: typeof editForm | typeof create
   target.is_active = item.is_active;
 }
 
-function handleAuthError(err: any) {
-  const status = err?.response?.status;
-  if (status === 401) {
-    banner.error = 'Sitzung abgelaufen. Bitte erneut anmelden.';
-    logout();
-    router.push({ name: 'login', query: { redirect: '/artikelverwaltung' } });
-    return true;
-  }
-  return false;
+function assignError(err: unknown, fallback: string) {
+  const classified = handleAuthIssue(err);
+  const detail = classified.detailMessage || classified.userMessage || fallback;
+  banner.error = classified.category === 'auth' ? classified.userMessage : `${fallback}: ${detail}`;
+  return classified.category === 'auth';
 }
 
 async function loadCategories() {
@@ -226,8 +227,7 @@ async function loadItems() {
       hydrateFormFromItem(selectedArticle.value, editForm);
     }
   } catch (err: any) {
-    if (handleAuthError(err)) return;
-    banner.error = err?.message || 'Konnte Artikel nicht laden.';
+    if (assignError(err, 'Konnte Artikel nicht laden.')) return;
   } finally {
     isLoading.value = false;
   }
@@ -262,7 +262,7 @@ async function handleQuickScan() {
       banner.scan = `${result.total} Treffer zum Barcode – Filter gesetzt.`;
     }
   } catch (err: any) {
-    if (handleAuthError(err)) return;
+    if (assignError(err, 'Schnellscan fehlgeschlagen.')) return;
     banner.scan = 'Schnellscan fehlgeschlagen.';
   }
 }
@@ -284,8 +284,7 @@ async function handleSaveSelected() {
     banner.message = 'Artikel gespeichert.';
     await loadItems();
   } catch (err: any) {
-    if (handleAuthError(err)) return;
-    banner.error = err?.response?.data?.error?.message || err?.message || 'Speichern fehlgeschlagen.';
+    if (assignError(err, 'Speichern fehlgeschlagen.')) return;
   } finally {
     isSaving.value = false;
   }
@@ -312,7 +311,7 @@ async function handleCreate() {
     selectedArticleId.value = created.id;
     hydrateFormFromItem(created, editForm);
   } catch (err: any) {
-    if (handleAuthError(err)) return;
+    if (assignError(err, 'Anlage fehlgeschlagen.')) return;
     createFeedback.error = err?.response?.data?.error?.message || err?.message || 'Anlage fehlgeschlagen.';
   } finally {
     isSaving.value = false;
@@ -416,8 +415,7 @@ async function handleExportAll() {
     window.URL.revokeObjectURL(url);
     banner.message = '';
   } catch (err: any) {
-    if (handleAuthError(err)) return;
-    banner.error = err?.message || 'Export fehlgeschlagen.';
+    if (assignError(err, 'Export fehlgeschlagen.')) return;
   } finally {
     isExporting.value = false;
   }
@@ -502,7 +500,7 @@ async function startImport() {
     importResult.errors = res.errors;
     await loadItems();
   } catch (err: any) {
-    if (handleAuthError(err)) return;
+    if (assignError(err, 'Import fehlgeschlagen.')) return;
     importError.value = err?.response?.data?.error?.message || err?.message || 'Import fehlgeschlagen.';
   } finally {
     importLoading.value = false;
@@ -627,6 +625,14 @@ watch(
         </button>
       </div>
     </header>
+
+    <AuthReauthBanner
+      v-if="authIssue"
+      class="mt-sm"
+      :message="authMessage"
+      retry-label="Neu laden"
+      @retry="() => loadItems()"
+    />
 
     <div v-if="banner.message" class="alert alert--success">{{ banner.message }}</div>
     <div v-if="banner.error" class="alert alert--error">{{ banner.error }}</div>

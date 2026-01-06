@@ -6,6 +6,9 @@
 - Docs: WORKLOG und Roadmap (`docs/roadmap/CUSTOMER_UI_PARITY_WITH_ADMIN.md`) aktuell halten; offene Paritätslücken dokumentieren.
 - Backend (vorherige Lücken, weiterhin kritisch): Migration `0009_create_inventory_orders` ausrollen; Reporting-Query-Fix deployen; globale Stammdaten-/Industrie-Endpunkte und Admin-konforme Artikelrestriktionen ergänzen.
 - Backend (Admin): System-Actions Endpoints mit echter Funktionalität hinterlegen (Cache Reset, Reindex, Restart) – aktuell bewusst nicht unterstützt (keine neuen Abhängigkeiten).
+- Admin-Frontend Branchen ↔ Artikel: Zwei-Paneele-Editor mit serverseitiger Suche/Pagination und Pending-Add/Remove-Deltas implementieren; Speichern muss finalen Replace-Call (`IndustryArticlesUpdate.item_ids`) senden, da kein Delta-Endpunkt existiert.
+- Admin-Frontend Branchen ↔ Artikel: Skalierungsfähiges Laden von Artikeln über `/admin/inventory/items` (Query q, category_id, active, page, page_size≤200) nutzen; Checkbox-Liste ersetzen und Ladezeiten/Scroll-Limitierungen eliminieren.
+- Admin-Frontend Branchen ↔ Artikel: CSV/XLSX Import/Export fürs Mapping nur mit Backend-Unterstützung ermöglichen; solange Endpunkt fehlt, UI-Konzept dokumentieren und Backend-TODO für Delta-Import/Export anlegen.
 
 ## SOLL (UX/Konsistenz/Performance/Accessibility)
 - Customer: Nach Input-/Empty-State-Harmonisierung Light/Dark-Regressionstests (Screenshots) und Responsiveness prüfen.

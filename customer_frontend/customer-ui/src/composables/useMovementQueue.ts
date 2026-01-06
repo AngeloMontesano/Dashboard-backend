@@ -1,6 +1,7 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { openDB, type IDBPDatabase } from 'idb';
 import { postInventoryMovement, type MovementPayload } from '@/api/inventory';
+import { api } from '@/api/client';
 import { useAuth } from './useAuth';
 import { useToast } from './useToast';
 

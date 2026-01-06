@@ -20,6 +20,7 @@ const { state: authState } = useAuth();
 type Order = Awaited<ReturnType<typeof listOrders>>[number];
 type ReorderItem = Awaited<ReturnType<typeof fetchReorderRecommendations>>['items'][number];
 type ItemOption = Awaited<ReturnType<typeof fetchItems>>['items'][number];
+type OrderRow = { id: string; itemId: string; quantity: number; note: string };
 
 const state = reactive<{
   orders: Order[];
@@ -32,7 +33,8 @@ const state = reactive<{
   canceling: Record<string, boolean>;
   items: ItemOption[];
   creating: boolean;
-  createForm: { itemId: string; quantity: number; note: string };
+  createRows: OrderRow[];
+  orderNote: string;
   filters: { status: 'ALL' | 'OPEN' | 'COMPLETED' | 'CANCELED'; search: string };
 }>({
   orders: [],
@@ -45,8 +47,26 @@ const state = reactive<{
   canceling: {},
   items: [],
   creating: false,
-  createForm: { itemId: '', quantity: 1, note: '' },
+  createRows: [],
+  orderNote: '',
   filters: { status: 'ALL', search: '' }
+});
+
+let rowId = 0;
+const nextRowId = () => `row-${Date.now()}-${rowId++}`;
+
+const selectableItems = computed(() => {
+  const map = new Map<string, { value: string; label: string }>();
+  const pushItem = (item: { id: string; name: string; quantity?: number | null; sku?: string | null }) => {
+    if (!item?.id || map.has(item.id)) return;
+    const parts = [item.name];
+    if (typeof item.quantity === 'number') parts.push(`Bestand ${item.quantity}`);
+    if (item.sku) parts.push(`SKU ${item.sku}`);
+    map.set(item.id, { value: item.id, label: parts.join(' • ') });
+  };
+  state.items.forEach(pushItem);
+  state.recommended.forEach(pushItem);
+  return Array.from(map.values());
 });
 
 const openOrders = computed(() => state.orders.filter((o) => o.status === 'OPEN'));
@@ -90,6 +110,7 @@ async function loadRecommendations() {
   try {
     const res = await fetchReorderRecommendations(authState.accessToken);
     state.recommended = res.items || [];
+    prefillRowsFromRecommended();
   } catch {
     // Fallback auf lokale Items, falls Endpoint (z.B. wegen Migration) fehlt
     if (state.items.length) {
@@ -119,6 +140,10 @@ async function loadRecommendations() {
     } else {
       state.recommended = [];
     }
+  }
+
+  if (!state.createRows.length) {
+    prefillRowsFromRecommended();
   }
 }
 
@@ -155,6 +180,35 @@ async function loadItems() {
   } catch {
     state.items = [];
   }
+
+  if (!state.createRows.length) {
+    prefillRowsFromRecommended();
+  }
+}
+
+function prefillRowsFromRecommended(force = false) {
+  if (!state.recommended.length) return;
+  if (state.createRows.length && !force) return;
+  const existingIds = new Set(state.createRows.map((row) => row.itemId));
+  const additions = state.recommended
+    .filter((item) => !existingIds.has(item.id))
+    .map((item) => ({
+      id: nextRowId(),
+      itemId: item.id,
+      quantity: Math.max(item.recommended_qty || item.quantity || 1, 1),
+      note: ''
+    }));
+  if (additions.length) {
+    state.createRows = [...state.createRows, ...additions];
+  }
+}
+
+function addEmptyRow() {
+  state.createRows = [...state.createRows, { id: nextRowId(), itemId: '', quantity: 1, note: '' }];
+}
+
+function removeRow(rowId: string) {
+  state.createRows = state.createRows.filter((row) => row.id !== rowId);
 }
 
 async function markComplete(orderId: string) {
@@ -218,20 +272,31 @@ async function downloadPdf(orderId: string) {
 }
 
 async function createNewOrder() {
-  if (!authState.accessToken || !state.createForm.itemId || state.createForm.quantity <= 0) {
-    state.error = 'Bitte Artikel und Menge wählen';
+  if (!authState.accessToken) return;
+  if (!state.createRows.length && state.recommended.length) {
+    prefillRowsFromRecommended(true);
+  }
+  const validRows = state.createRows.filter((row) => row.itemId && row.quantity > 0);
+  if (!validRows.length) {
+    state.error = 'Bitte mindestens einen Artikel und eine Menge hinterlegen';
     return;
   }
   state.creating = true;
   state.error = null;
   try {
     const payload = {
-      note: state.createForm.note,
-      items: [{ item_id: state.createForm.itemId, quantity: state.createForm.quantity }]
+      note: state.orderNote || undefined,
+      items: validRows.map((row) => ({
+        item_id: row.itemId,
+        quantity: row.quantity,
+        note: row.note || undefined
+      }))
     };
     const created = await createOrder(authState.accessToken, payload);
     state.orders = [created, ...state.orders];
-    state.createForm = { itemId: '', quantity: 1, note: '' };
+    state.createRows = [];
+    state.orderNote = '';
+    await loadRecommendations();
   } catch (err: any) {
     state.error = err?.message || 'Bestellung konnte nicht angelegt werden';
   } finally {
@@ -310,23 +375,63 @@ onMounted(async () => {
 
       <div class="mt-lg">
         <h3 class="eyebrow">Neue Bestellung</h3>
-        <div class="form-grid">
-          <label class="form-field">
-            <span class="form-label">Artikel</span>
-            <select v-model="state.createForm.itemId" class="input">
-              <option value="">Bitte wählen</option>
-              <option v-for="item in state.items" :key="item.id" :value="item.id">
-                {{ item.name }} (Bestand {{ item.quantity }})
-              </option>
-            </select>
-          </label>
-          <label class="form-field">
-            <span class="form-label">Menge</span>
-            <input v-model.number="state.createForm.quantity" type="number" min="1" class="input" />
-          </label>
+        <p class="section-subtitle">Bestellwürdige Artikel werden automatisch vorausgewählt.</p>
+
+        <div class="table-wrapper" v-if="state.createRows.length">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Artikel</th>
+                <th>Menge</th>
+                <th>Notiz</th>
+                <th>Aktion</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="row in state.createRows" :key="row.id">
+                <td>
+                  <select v-model="row.itemId" class="input">
+                    <option value="">Bitte wählen</option>
+                    <option v-for="option in selectableItems" :key="option.value" :value="option.value">
+                      {{ option.label }}
+                    </option>
+                  </select>
+                </td>
+                <td>
+                  <input v-model.number="row.quantity" type="number" min="1" class="input" />
+                </td>
+                <td>
+                  <input v-model="row.note" type="text" class="input" placeholder="optional" />
+                </td>
+                <td>
+                  <button class="button button--ghost" type="button" @click="removeRow(row.id)">
+                    Entfernen
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p v-else class="placeholder mt-sm">Keine Zeilen vorhanden. Bestellwürdige Artikel werden beim Anlegen übernommen.</p>
+
+        <div class="action-row mt-sm">
+          <button
+            class="button button--ghost"
+            type="button"
+            @click="prefillRowsFromRecommended(true)"
+            :disabled="!state.recommended.length"
+          >
+            Bestellwürdig übernehmen
+          </button>
+          <button class="button button--ghost" type="button" @click="addEmptyRow">
+            + Zeile
+          </button>
+        </div>
+
+        <div class="form-grid mt-sm">
           <label class="form-field span-2">
-            <span class="form-label">Notiz</span>
-            <input v-model="state.createForm.note" type="text" class="input" />
+            <span class="form-label">Notiz zur Bestellung</span>
+            <input v-model="state.orderNote" type="text" class="input" placeholder="optional" />
           </label>
         </div>
       </div>

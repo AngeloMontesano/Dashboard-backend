@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
 import Toast from 'primevue/toast';
 import { useToast } from 'primevue/usetoast';
 import Card from 'primevue/card';
@@ -42,7 +42,11 @@ const exporting = ref<'csv' | 'excel' | 'pdf' | null>(null);
 const consumptionChart = ref<ChartData<'bar'> | null>(null);
 const trendChart = ref<ChartData<'line'> | null>(null);
 const tableItems = ref<{ name: string; total: number; itemId?: string }[]>([]);
-let debounceTimer: number | undefined;
+let loadDebounceTimer: number | undefined;
+let searchDebounceTimer: number | undefined;
+let searchAbortController: AbortController | null = null;
+let lastSearchQuery = '';
+const searching = ref(false);
 
 const allItemOptions = computed<ItemOption[]>(() => {
   const map = new Map<string, ItemOption>();
@@ -84,8 +88,8 @@ function buildParams(): ReportParams | null {
 }
 
 function triggerDebouncedLoad() {
-  window.clearTimeout(debounceTimer);
-  debounceTimer = window.setTimeout(() => {
+  window.clearTimeout(loadDebounceTimer);
+  loadDebounceTimer = window.setTimeout(() => {
     void loadReports();
   }, 300);
 }
@@ -103,28 +107,6 @@ async function loadCategories() {
       summary: 'Kategorien fehlgeschlagen',
       detail: stringifyError(err),
       life: 5000
-    });
-  }
-}
-
-async function searchItems(query: string) {
-  if (!authState.accessToken) return;
-  try {
-    const res = await fetchItems({
-      token: authState.accessToken,
-      q: query,
-      category_id: filters.categoryId || undefined,
-      active: true,
-      page: 1,
-      page_size: 20
-    });
-    itemSuggestions.value = res.items.map(toItemOption);
-  } catch (err: any) {
-    toast.add({
-      severity: 'warn',
-      summary: 'Suche fehlgeschlagen',
-      detail: stringifyError(err),
-      life: 4000
     });
   }
 }
@@ -245,11 +227,113 @@ async function loadReports() {
     buildCharts(reportData.value);
   } catch (err: any) {
     const detail = stringifyError(err);
-    error.value = detail;
+    error.value = 'Berichte konnten nicht geladen werden.';
     toast.add({ severity: 'error', summary: 'Fehler beim Laden', detail, life: 6000 });
   } finally {
     loading.value = false;
   }
+}
+
+function clearSearchDebounce() {
+  window.clearTimeout(searchDebounceTimer);
+  searchDebounceTimer = undefined;
+}
+
+function clearSearchController() {
+  if (searchAbortController) {
+    searchAbortController.abort();
+    searchAbortController = null;
+  }
+}
+
+async function runItemSearch(query: string) {
+  if (!authState.accessToken) return;
+  searching.value = true;
+  clearSearchController();
+  const controller = new AbortController();
+  searchAbortController = controller;
+  lastSearchQuery = query;
+
+  try {
+    const res = await fetchItems({
+      token: authState.accessToken,
+      q: query,
+      category_id: filters.categoryId || undefined,
+      active: true,
+      page: 1,
+      page_size: 20,
+      signal: controller.signal
+    });
+    itemSuggestions.value = res.items.map(toItemOption);
+  } catch (err: any) {
+    if (controller.signal.aborted) return;
+    toast.add({
+      severity: 'warn',
+      summary: 'Suche fehlgeschlagen',
+      detail: stringifyError(err),
+      life: 4000
+    });
+  } finally {
+    searching.value = false;
+    if (searchAbortController === controller) {
+      searchAbortController = null;
+    }
+  }
+}
+
+async function loadCategorySuggestions() {
+  if (!authState.accessToken || !filters.categoryId) return;
+  searching.value = true;
+  clearSearchController();
+  const controller = new AbortController();
+  searchAbortController = controller;
+  try {
+    const res = await fetchItems({
+      token: authState.accessToken,
+      category_id: filters.categoryId,
+      active: true,
+      page: 1,
+      page_size: 20,
+      signal: controller.signal
+    });
+    itemSuggestions.value = res.items.map(toItemOption);
+  } catch (err: any) {
+    if (controller.signal.aborted) return;
+    toast.add({
+      severity: 'warn',
+      summary: 'Suche fehlgeschlagen',
+      detail: stringifyError(err),
+      life: 4000
+    });
+  } finally {
+    searching.value = false;
+    if (searchAbortController === controller) {
+      searchAbortController = null;
+    }
+  }
+}
+
+function searchItems(query: string) {
+  const trimmed = (query || '').trim();
+  clearSearchDebounce();
+
+  if (!trimmed) {
+    clearSearchController();
+    lastSearchQuery = '';
+    if (filters.categoryId) {
+      searchDebounceTimer = window.setTimeout(() => {
+        void loadCategorySuggestions();
+      }, 280);
+    } else {
+      itemSuggestions.value = filters.selectedItems.slice();
+      searching.value = false;
+    }
+    return;
+  }
+
+  searchDebounceTimer = window.setTimeout(() => {
+    void runItemSearch(trimmed);
+  }, 320);
 }
 
 async function handleExport(format: 'csv' | 'excel' | 'pdf') {
@@ -280,6 +364,15 @@ watch(
   () => filters.categoryId,
   () => {
     triggerDebouncedLoad();
+    if (lastSearchQuery) {
+      searchItems(lastSearchQuery);
+    } else {
+      if (filters.categoryId) {
+        void loadCategorySuggestions();
+      } else {
+        itemSuggestions.value = filters.selectedItems.slice();
+      }
+    }
   }
 );
 
@@ -306,6 +399,9 @@ watch(
   (mode) => {
     if (mode !== 'selected') filters.selectedItems = [];
     if (mode === 'all') filters.aggregateAll = true;
+    if (mode === 'selected' && !lastSearchQuery && filters.categoryId) {
+      void loadCategorySuggestions();
+    }
     triggerDebouncedLoad();
   }
 );
@@ -327,6 +423,12 @@ watch(
 onMounted(async () => {
   await loadCategories();
   await loadReports();
+});
+
+onBeforeUnmount(() => {
+  window.clearTimeout(loadDebounceTimer);
+  clearSearchDebounce();
+  clearSearchController();
 });
 </script>
 
@@ -359,6 +461,7 @@ onMounted(async () => {
       :topLimit="filters.topLimit"
       :loading="loading"
       :applying="applying"
+      :searching="searching"
       @update:dateRange="(value) => (filters.dateRange = value)"
       @update:mode="(value) => (filters.mode = value)"
       @update:category="(value) => (filters.categoryId = value)"

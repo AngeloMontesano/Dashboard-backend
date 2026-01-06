@@ -23,10 +23,12 @@ const props = withDefaults(
     topLimit: number;
     loading?: boolean;
     applying?: boolean;
+    searching?: boolean;
   }>(),
   {
     loading: false,
-    applying: false
+    applying: false,
+    searching: false
   }
 );
 
@@ -159,6 +161,7 @@ const handleItemSelect = (event: { value: ItemOption }) => {
           filter
           placeholder="Artikel wählen"
           class="w-full"
+          @filter="(event) => emit('search-items', event.value)"
         />
         <div class="chips" v-if="selectedItems.length">
           <Tag
@@ -181,10 +184,13 @@ const handleItemSelect = (event: { value: ItemOption }) => {
           placeholder="SKU, Barcode oder Name"
           forceSelection
           class="w-full"
+          :delay="0"
+          :loading="searching"
           @complete="(e) => emit('search-items', e.query)"
           @item-select="handleItemSelect"
         />
         <small class="hint">Tippen zum Suchen, Enter zum Übernehmen</small>
+        <small v-if="searching" class="hint">Suche läuft...</small>
       </div>
 
       <div class="field" v-if="mode === 'top5'">

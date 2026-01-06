@@ -48,6 +48,15 @@
 
   /* Focus */
   --focus-ring: rgba(47, 123, 255, 0.26);
+  --input-surface: var(--surface-1);
+  --input-border: var(--border);
+  --input-placeholder: var(--placeholder);
+  --input-focus: var(--focus-ring);
+  --input-text: var(--text-strong);
+  --p-inputtext-background: var(--input-surface);
+  --p-inputtext-color: var(--input-text);
+  --p-inputtext-placeholder-color: var(--input-placeholder);
+  --p-focus-ring-color: var(--input-focus);
 
   /* Layout */
   --sidebar-width: 260px;
@@ -99,6 +108,15 @@
   --border: #1e293b;
   --shadow-sm: 0 12px 28px rgba(0, 0, 0, 0.36);
   --shadow-lg: 0 16px 44px rgba(0, 0, 0, 0.40);
+  --input-surface: color-mix(in srgb, var(--surface-1) 55%, #ffffff 45%);
+  --input-border: color-mix(in srgb, var(--border) 60%, #cbd5e1 40%);
+  --input-placeholder: color-mix(in srgb, var(--placeholder) 75%, #e2e8f0 25%);
+  --input-focus: color-mix(in srgb, var(--focus-ring) 70%, rgba(59, 130, 246, 0.35) 30%);
+  --input-text: var(--text-strong);
+  --p-inputtext-background: var(--input-surface);
+  --p-inputtext-color: var(--input-text);
+  --p-inputtext-placeholder-color: var(--input-placeholder);
+  --p-focus-ring-color: var(--input-focus);
 }
 
 .theme-ocean {

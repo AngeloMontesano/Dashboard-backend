@@ -508,3 +508,30 @@
   - Admin kann Kunden-Firmendaten/Adresse einsehen und ändern; Customer-Settings-View wirkt geordneter.
 - **Nächster Schritt**
   - Migration ausrollen; Backend-APIs in Zielumgebung prüfen (500/404 laut Screenshot) und Datenbasis/mappings validieren.
+
+## Schritt 40 – Customer UI Feinschliff (Inputs, Dashboard-KPIs, Berichte, Bestellungen)
+- **Datum/Uhrzeit**: 2026-01-06T01:38:22Z
+- **Ziel**: Dark-Mode-Eingaben aufhellen, Dashboard-KPIs klickbar machen, Reporting-Filter verbessern und Bestell-Workflow tabellarisch mit Bestellwürdig-Autofill abbilden.
+- **Was wurde geändert**
+  - Tokens um Input-spezifische Variablen ergänzt und globale Styles/PrimeVue-Overrides angepasst, damit Dark-Mode-Inputs heller, mit klarerer Border/Placeholder/Focus erscheinen.
+  - Dashboard-KPI-Karten als klickbare Router-Links umgesetzt (`/bestellungen`, `/lagerbewegungen`, `bestellwuerdig`-Tab).
+  - Berichte-Filter mit debounce+Abort für Artikelsuche, freundlicher Fehlerbehandlung und Kategorie-abhängigen Vorschlägen ausgestattet; API-Wrapper `fetchItems` akzeptiert `signal`.
+  - Bestellungen-View: Neue-Bestellung-Bereich als Tabelle mit Zeilen für Artikel/Menge/Notiz, Bestellwürdig-Preselect, Zeilen hinzufügen/entfernen und per-Item-Notizen; Order-Payload nutzt tabellarischen Zustand.
+- **Ergebnis**
+  - Dark-Mode-Formulare und PrimeVue-Inputs sind besser lesbar, KPIs navigierbar, Report-Filter performanter nutzbar, Bestellprozess unterstützt Mehrfachauswahl und automatische Übernahme bestellwürdiger Artikel.
+- **Nächster Schritt**
+  - Im UI verifizieren, dass Dark-Mode-Token-Anpassungen zu gewünschter Helligkeit führen und KPI-Navigation den gewünschten Kontext öffnet; optional weitere Chunk-Splitting-Optionen prüfen (Build-Warnung).
+- **Tests**
+  - `npm run build` (customer_frontend/customer-ui) – erfolgreich, mit Hinweis auf Chunk-Größe.
+
+## Schritt 41 – Reporting-Filter UX nachschärfen (Debounce + Kategorie-Suggest)
+- **Datum/Uhrzeit**: 2026-01-06T02:05:00Z
+- **Ziel**: Filter im View „Berichte & Analysen“ responsiver machen: Suche mit Debounce/Abort, Kategorieabhängige Vorschläge und sichtbarer Suchstatus.
+- **Was wurde geändert**
+  - Debounced Artikelsuche verfeinert: Abbruch bestehender Requests, Suchstatus-Flag, und Default-Suggestions je gewählter Kategorie.
+  - Kategorie-Wechsel lädt Vorschlagsliste erneut (wenn kein Suchbegriff), Modus „Selektiert“ triggert automatische Kategorie-Suggestions.
+  - ReportFilters zeigt Ladezustand beim AutoComplete an.
+- **Ergebnis**
+  - Live-Suche reagiert schnell, vermeidet Doppel-Requests, nutzt Kategorie-Filter und hält UI ohne rohe Fehlermeldungen.
+- **Tests**
+  - `npm run build` (customer_frontend/customer-ui) – erfolgreich, Warnung bzgl. Chunk-Größe unverändert.

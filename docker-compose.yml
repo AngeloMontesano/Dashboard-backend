@@ -21,6 +21,10 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
+    
 
   admin_ui:
     build: ./admin_frontend/admin-ui

@@ -448,7 +448,16 @@ async function importItems() {
   busy.import = true;
   try {
     const res = await importGlobalItems(props.adminKey, importFile.value, props.actor);
-    toast(`Importiert: ${res.imported}, aktualisiert: ${res.updated}`, res.errors?.length ? "warning" : "success");
+    if (res.errors?.length) {
+      console.warn("Import-Fehler (erste 5):", res.errors.slice(0, 5));
+      const firstError = res.errors[0];
+      toast(
+        `Importiert: ${res.imported}, aktualisiert: ${res.updated}, Fehler z.B. Zeile ${firstError.row}: ${firstError.error}`,
+        "warning"
+      );
+    } else {
+      toast(`Importiert: ${res.imported}, aktualisiert: ${res.updated}`, "success");
+    }
     await loadItems();
   } catch (e: any) {
     toast(`Import fehlgeschlagen: ${e?.message || e}`, "error");

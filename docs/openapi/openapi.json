@@ -47,6 +47,38 @@
         }
       }
     },
+    "/public/tenant-status": {
+      "get": {
+        "tags": [
+          "public"
+        ],
+        "summary": "Public Tenant Status",
+        "operationId": "public_tenant_status_public_tenant_status_get",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "required": false,
+            "description": "Optional Tenant Slug, sonst Auflösung aus Host/Header"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Tenant Status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicTenantStatus"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/inventory/ping": {
       "get": {
         "tags": [
@@ -6430,6 +6462,44 @@
   },
   "components": {
     "schemas": {
+      "PublicTenantStatus": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "not_found",
+              "inactive",
+              "unavailable"
+            ]
+          },
+          "slug": {
+            "type": "string",
+            "nullable": true
+          },
+          "host": {
+            "type": "string",
+            "nullable": true
+          },
+          "tenant_id": {
+            "type": "string",
+            "nullable": true
+          },
+          "is_active": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "reason": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "title": "PublicTenantStatus"
+      },
       "AdminCredentialLogin": {
         "properties": {
           "email": {

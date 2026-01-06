@@ -5,6 +5,7 @@ import { api } from '@/api/client';
 import { useAuth } from './useAuth';
 import { useToast } from './useToast';
 import { classifyError, type ErrorActionHint, type ErrorCategory } from '@/utils/errorClassify';
+import { appendQueueEvent, type MovementQueueEventInput } from '@/utils/telemetry';
 
 export type MovementStatus = 'queued' | 'sending' | 'sent' | 'failed';
 export type UiIssueState = 'waiting' | 'blocked' | 'auth' | 'retrying' | 'none';
@@ -36,7 +37,6 @@ export type MovementInput = {
 const DB_NAME = 'customer_app';
 const STORE_NAME = 'movement_queue';
 const MAX_RETRIES = 10;
-const QUEUE_EVENT_KEY = 'movement_queue_events';
 
 let dbPromise: Promise<IDBPDatabase> | null = null;
 let initPromise: Promise<void> | null = null;
@@ -125,25 +125,10 @@ const deriveIssueState = (entry: MovementRecord): UiIssueState => {
   return 'none';
 };
 
-type QueueEvent =
-  | { type: 'enqueue' | 'retry' | 'delete' | 'replace'; id: string; at?: string }
-  | { type: 'send_success'; id: string; retries: number; at?: string }
-  | { type: 'send_failed'; id: string; retries: number; category?: ErrorCategory; message?: string; at?: string };
+type QueueEvent = MovementQueueEventInput;
 
 const recordQueueEvent = (event: QueueEvent) => {
-  if (typeof sessionStorage === 'undefined') return;
-  const enriched = { ...event, at: event.at || new Date().toISOString() };
-  try {
-    const raw = sessionStorage.getItem(QUEUE_EVENT_KEY);
-    const existing = raw ? (JSON.parse(raw) as QueueEvent[]) : [];
-    const next = [...existing, enriched].slice(-25);
-    sessionStorage.setItem(QUEUE_EVENT_KEY, JSON.stringify(next));
-  } catch {
-    // ignore logging failures
-  }
-  if (typeof window !== 'undefined') {
-    window.dispatchEvent(new CustomEvent('movement-queue-event', { detail: enriched }));
-  }
+  appendQueueEvent(event);
 };
 
 const normalizeInput = (input: MovementInput) => {

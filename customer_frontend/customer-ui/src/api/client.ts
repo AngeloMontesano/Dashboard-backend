@@ -1,5 +1,6 @@
 import axios from "axios";
 import { getBaseURL, getTenantHeaders } from "./base";
+import { appendAuthRefreshEvent, readAuthRefreshLog, type AuthRefreshEventInput } from "@/utils/telemetry";
 
 export const api = axios.create({
   baseURL: getBaseURL(),
@@ -23,35 +24,15 @@ type StoredAuth = {
 };
 
 let refreshPromise: Promise<string | null> | null = null;
+
 type RefreshEvent = {
   status: "success" | "failed";
   reason?: string;
   at: string;
 };
 
-function readRefreshLog(): RefreshEvent[] {
-  if (typeof sessionStorage === "undefined") return [];
-  try {
-    const raw = sessionStorage.getItem("customer_auth_refresh_log");
-    if (!raw) return [];
-    return JSON.parse(raw) as RefreshEvent[];
-  } catch {
-    return [];
-  }
-}
-
-function recordRefreshEvent(event: Omit<RefreshEvent, "at">) {
-  if (typeof sessionStorage === "undefined") return;
-  const next: RefreshEvent = { ...event, at: new Date().toISOString() };
-  const log = [...readRefreshLog(), next].slice(-10);
-  try {
-    sessionStorage.setItem("customer_auth_refresh_log", JSON.stringify(log));
-  } catch {
-    // ignore storage issues
-  }
-  if (typeof window !== "undefined") {
-    window.dispatchEvent(new CustomEvent("customer-auth-refresh", { detail: next }));
-  }
+function recordRefreshEvent(event: AuthRefreshEventInput) {
+  appendAuthRefreshEvent(event);
 }
 
 function readStoredAuth(): StoredAuth | null {
@@ -172,5 +153,5 @@ export function authHeaders(token?: string) {
 }
 
 export function getAuthRefreshLog(): RefreshEvent[] {
-  return readRefreshLog();
+  return readAuthRefreshLog();
 }

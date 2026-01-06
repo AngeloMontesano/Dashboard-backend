@@ -7,6 +7,7 @@ import UiPage from '@/components/ui/UiPage.vue';
 import UiSection from '@/components/ui/UiSection.vue';
 import { useMovementQueue, type MovementInput, type MovementRecord } from '@/composables/useMovementQueue';
 import { useOnlineStatus } from '@/composables/useOnlineStatus';
+import { downloadTelemetrySnapshot } from '@/utils/telemetry';
 
 const router = useRouter();
 const {
@@ -20,6 +21,7 @@ const {
   hasPending
 } = useMovementQueue();
 const { isOnline } = useOnlineStatus();
+const isDev = import.meta.env.DEV;
 
 const issueEntries = computed(() => movements.value.filter((m) => m.status === 'failed' || m.status === 'queued'));
 const editing = ref<MovementRecord | null>(null);
@@ -138,6 +140,10 @@ const goToLogin = () => {
   router.push({ name: 'login', query: { redirect: '/sync-probleme' } });
 };
 
+const exportTelemetry = () => {
+  downloadTelemetrySnapshot('customer-telemetry-log.json');
+};
+
 const emptyStateText = computed(() =>
   isOnline.value
     ? 'Keine fehlgeschlagenen Buchungen. Alles synchron.'
@@ -160,6 +166,9 @@ const emptyStateText = computed(() =>
           </span>
           <button class="btnGhost small" type="button" @click="syncNow" :disabled="!isOnline">
             Sync jetzt
+          </button>
+          <button v-if="isDev" class="btnGhost small" type="button" @click="exportTelemetry">
+            Telemetrie exportieren
           </button>
         </div>
       </template>

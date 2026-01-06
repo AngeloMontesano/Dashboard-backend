@@ -65,6 +65,7 @@ from app.modules.inventory.schemas import (
     TenantPingResponse,
     TenantOutPing,
 )
+from app.modules.admin.smtp_settings_service import get_active_smtp_settings, SmtpConfig
 
 router = APIRouter(prefix="/inventory", tags=["inventory"])
 logger = logging.getLogger(__name__)

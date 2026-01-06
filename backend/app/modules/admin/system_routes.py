@@ -1,10 +1,9 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from email.message import EmailMessage
-import smtplib
+import logging
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
@@ -12,10 +11,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.email_settings import EmailSettings, load_email_settings, upsert_email_settings
+from app.core.email_utils import send_email
 from app.core.db import get_db
 
 
 router = APIRouter(prefix="/system", tags=["admin-system"])
+logger = logging.getLogger(__name__)
 
 
 def _now_iso() -> str:
@@ -118,16 +119,20 @@ async def admin_update_system_email_settings(
 @router.post("/email/test", response_model=SystemActionResponse)
 async def admin_system_email_test(
     payload: SystemEmailTestRequest,
+    request: Request,
     db: AsyncSession = Depends(get_db),
 ) -> SystemActionResponse:
     email_settings = await load_email_settings(db)
-    try:
-        _send_with_settings(
-            recipient=payload.email,
-            subject="SMTP Test",
-            body="Test-E-Mail aus den Admin Systemeinstellungen.",
-            email_settings=email_settings,
-        )
+    ok, error, _resolved = send_email(
+        email_settings=email_settings,
+        recipient=payload.email,
+        subject="SMTP Test",
+        body="Test-E-Mail aus den Admin Systemeinstellungen.",
+        request_id=getattr(request.state, "request_id", None),
+        actor=request.headers.get("x-admin-actor"),
+        logger=logger,
+    )
+    if ok:
         return SystemActionResponse(
             action="email_test",
             supported=True,
@@ -135,14 +140,13 @@ async def admin_system_email_test(
             detail="Test-E-Mail gesendet",
             timestamp=_now_iso(),
         )
-    except Exception as exc:  # noqa: BLE001
-        return SystemActionResponse(
-            action="email_test",
-            supported=True,
-            performed=False,
-            detail=str(exc),
-            timestamp=_now_iso(),
-        )
+    return SystemActionResponse(
+        action="email_test",
+        supported=True,
+        performed=False,
+        detail=error or "Unbekannter Fehler",
+        timestamp=_now_iso(),
+    )
 
 
 def _unsupported(action: str, detail: str) -> SystemActionResponse:
@@ -163,24 +167,6 @@ def _email_settings_to_response(email_settings: EmailSettings) -> SystemEmailSet
         from_email=email_settings.from_email,
         has_password=bool(email_settings.password),
     )
-
-
-def _send_with_settings(recipient: str, subject: str, body: str, email_settings: EmailSettings) -> bool:
-    if not email_settings.host or not email_settings.port or not email_settings.from_email:
-        raise ValueError("SMTP Konfiguration fehlt")
-
-    message = EmailMessage()
-    message["Subject"] = subject
-    message["From"] = email_settings.from_email
-    message["To"] = recipient
-    message.set_content(body)
-
-    with smtplib.SMTP(email_settings.host, email_settings.port, timeout=10) as smtp:
-        if email_settings.user and email_settings.password:
-            smtp.starttls()
-            smtp.login(email_settings.user, email_settings.password)
-        smtp.send_message(message)
-    return True
 
 
 @router.post("/actions/cache-reset", response_model=SystemActionResponse)

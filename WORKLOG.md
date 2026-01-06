@@ -803,6 +803,67 @@
 - **Tests**
   - Nicht ausgeführt (Doku-/API-Check)
 
+## Schritt 58 – SMTP/Mail Analyse (Schritt 1 Vorgabe)
+- **Datum/Uhrzeit**: 2026-01-06T16:41:35+00:00
+- **Ziel**: Schritt 1 des Auftrags – OpenAPI prüfen, Repo nach SMTP-/Mail-Pfaden scannen, Soll/Ist dokumentieren.
+- **Gefundene OpenAPI-Endpunkte (Mail/SMTP)**
+  - Admin SMTP: `/admin/smtp/settings` (GET/PUT) mit `SmtpSettingsIn|Out` (host, port, from_email, user?, password?, use_tls, has_password), `/admin/smtp/settings/test` (POST `SmtpTestRequest { email }`, Response generisch `object`).
+  - Admin System E-Mail: `/admin/system/email` (GET/PUT `SystemEmailSettings|Update`), `/admin/system/email/test` (POST `SystemEmailTestRequest { email }` → `SystemActionResponse`).
+  - Inventory/Tenant: `/inventory/settings/smtp-ping` (GET `SmtpPingResponse { ok, error?, host?, port?, resolved_ips[], use_tls }`), `/inventory/settings/test-email` (POST `TestEmailRequest { email }` → `TestEmailResponse { ok, error? }`), `/inventory/orders/{order_id}/email` (POST `OrderEmailRequest { email?, note? }` → `EmailSendResponse { ok, error? }`).
+- **Repo-Scan Backend**
+  - `app/modules/admin/system_routes.py`: Implementiert `/admin/system/email` + `/admin/system/email/test`, lädt/speichert `SystemEmailSetting` (DB Tabelle via Alembic 0012). Versand synchron via `smtplib.SMTP`, StartTLS nur wenn user/password gesetzt, kein `use_tls`-Flag, Logging minimal, keine Request-ID-Weitergabe in Logs.
+  - `app/core/email_settings.py`: Quelle DB `system_email_settings`, Fallback ENV (`SMTP_HOST/PORT/USER/PASSWORD/FROM`). Kein Feld `use_tls` vorhanden.
+  - `app/modules/inventory/routes.py`: Enthält `_smtp_ping()` (DNS/TCP-Check) und Versand/Test-Mail für Tenants, aber nutzt ausschließlich `settings.SMTP_*` statt DB und referenziert mehrfach eine nicht definierte Variable/Helper `email_settings`/`_get_email_settings` → aktueller Code wirft NameError vor Versand. Logging nur `warning`, kein Request- oder Actor-Bezug.
+  - Admin-SMTP-Router gemäß OpenAPI (`/admin/smtp/settings[/**]`) existiert nicht im Code; auch kein Modell/Feld `use_tls`.
+- **Repo-Scan Frontend (Admin)**
+  - `src/api/admin.ts`: Wrapper für `/admin/system/email` (GET/PUT) und `/admin/system/email/test`; keine Wrapper für `/admin/smtp/*`.
+  - `src/views/AdminSettingsView.vue`: Script-State für `emailForm`/`testEmail`, aber Template rendert keinen SMTP/E-Mail-Abschnitt → UI zeigt/ändert keine SMTP-Daten, kein Test-Mail-Button. Aktuelle Sections nur System/Security/Theme/Flags/Danger.
+  - Generierte Typen (`src/api/gen/openapi.ts`) enthalten die Admin-SMTP-Pfade, werden aber nicht genutzt.
+- **Broken/Abweichungen (belegt durch Code)**
+  - `/inventory/settings/test-email` und `/inventory/orders/{order_id}/email` crashen, weil `email_settings`/`_get_email_settings` nicht definiert sind; auch `_send_email_message` referenziert diese Variable.
+  - SMTP-Ping/Test auf Tenant-Seite greifen immer auf ENV (`settings.SMTP_*`) zu, ignorieren gespeicherte System-Settings aus DB.
+  - OpenAPI-Pfade `/admin/smtp/settings` + `/admin/smtp/settings/test` fehlen vollständig im Backend und Frontend-UI.
+  - Keine Maskierung/`has_password`-Logik für Admin-E-Mail in UI, kein Request-ID-/Step-Logging rund um SMTP.
+- **Nächste Schritte**
+  - Gap-Analyse und Task-Liste in `TODO.md` ergänzen (max. 8 Tasks laut Auftrag).
+  - Backend SMTP-Test/Senden reparieren (DB-Quelle, request_id in Logs), Admin-SMTP-Endpunkte nach OpenAPI implementieren und UI anbinden.
+
+## Schritt 59 – SMTP Fix + UI/Backend Umsetzung
+- **Datum/Uhrzeit**: 2026-01-06T17:20:00+00:00
+- **Ziel**: Fehlende Admin-SMTP-Endpunkte laut OpenAPI implementieren, Tenant-Mailversand reparieren, TLS/Passwort-Handling sichern und Admin-UI mit Testmail-Funktion ausstatten.
+- **Backend**
+  - Neues Alembic-Update `0013_add_use_tls_to_system_email_settings` (Bool `use_tls`), `SystemEmailSetting` Model aktualisiert.
+  - `EmailSettings` erweitert um `use_tls`, Config `SMTP_USE_TLS` ergänzt, DB-Layer lädt/speichert TLS-Flag.
+  - Gemeinsamer Helper `app/core/email_utils.py` für Ping+Send mit strukturierten Logs (request_id/host/port/use_tls, StartTLS/Auth/Send-Dauer) ohne Passwort-Leaks.
+  - Admin-Router `/admin/smtp/settings` (GET/PUT) + `/admin/smtp/settings/test` implementiert inkl. `has_password`/TLS und Test-Response mit request_id; Router im Admin-Namespace registriert.
+  - Inventory-Routen nutzen DB-basierte SMTP-Settings, Ping/Send via Helper; NameError entfernt, Testmail/Order-Mail liefern Fehlertexte statt Crash, Ping liefert `use_tls`.
+  - Admin-System-Testmail nutzt neuen Helper und loggt request_id.
+- **Frontend (Admin)**
+  - Neue Typen/Wrappers für SMTP (Get/Put/Test).
+  - Settings-View um SMTP-Sektion erweitert (Host/Port/From/User/Passwort-Status/StartTLS, Speichern + Testmail-Button mit request_id-Hinweis), nutzt zentrale API-Instanz und Toasts.
+- **Offene Punkte**
+  - Weitere UX/Fehlerdetails (z. B. Detail-Klappbox mit request_id) optional nachrüsten; Monitoring der neuen Logs empfohlen.
+
+## Schritt 60 – Alembic Revision gekürzt
+- **Datum/Uhrzeit**: 2026-01-06T18:20:00+00:00
+- **Ziel**: Fehler beim Migration-Run beheben (`value too long for type character varying(32)` in `alembic_version`).
+- **Änderung**: Revision-ID gekürzt und Datei auf `0013_add_use_tls_flag` umbenannt; Revision-String jetzt 23 Zeichen (<32), damit Update des `alembic_version`-Felds funktioniert.
+
+## Schritt 61 – Admin Settings sichtbar machen
+- **Datum/Uhrzeit**: 2026-01-06T18:35:00+00:00
+- **Ziel**: SMTP/Settings-Abschnitt im Admin-Frontend wieder sichtbar machen (User meldete: „nichts mehr angezeigt“).
+- **Änderung**: Sections standardmäßig aufgeklappt (system/security/theme/flags/danger), Hinweisbox bei fehlendem Admin Key hinzugefügt, damit klar ist, warum Daten fehlen; Styles für Alert ergänzt.
+
+## Schritt 62 – NameError SmtpPingResponse behoben
+- **Datum/Uhrzeit**: 2026-01-06T18:50:00+00:00
+- **Ziel**: Uvicorn-Startfehler fixen (`NameError: SmtpPingResponse not defined` beim Laden von `inventory/routes.py`).
+- **Änderung**: Explizites Modul-Alias `inv_schemas` eingeführt und Decorator/Return-Type für `/inventory/settings/smtp-ping` darauf umgestellt, sodass die Klasse auch bei zirkulären Imports garantiert im Namespace liegt.
+
+## Schritt 63 – Settings-Abschnitte garantiert anzeigen
+- **Datum/Uhrzeit**: 2026-01-06T19:05:00+00:00
+- **Ziel**: UI-Bug beheben, bei dem in den Admin-Einstellungen nichts eingeblendet wurde (Sections waren dennoch vorhanden, aber versteckt).
+- **Änderung**: Collapse-State auf `reactive` `sectionOpen` umgestellt (statt `ref`-Objekt) und Buttons/UI nutzen jetzt `sectionOpen.*`. Alle Abschnitte sind initial sichtbar, Umschalter klappen nur noch per Klick zu.
+
 ## Schritt 54 – Analyse Branchen-Artikel-Mapping (Schritt 1)
 - **Datum/Uhrzeit**: 2026-01-06T15:45:00+00:00
 - **Ziel**: Inventar für den Admin-Editor „Branche ↔ Artikel“ erstellen und Skalierungsprobleme für 1000+ Artikel bewerten.

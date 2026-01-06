@@ -71,7 +71,10 @@ async function handleExport() {
 
 async function handleSave() {
   if (!authState.accessToken) return;
-  const updates = Object.entries(state.draft).map(([itemId, quantity]) => ({ item_id: itemId, quantity }));
+  const updates = Object.entries(state.draft).map(([itemId, quantity]) => ({
+    item_id: itemId,
+    quantity: Number.isFinite(quantity) ? Number(quantity) : 0
+  }));
   state.saving = true;
   state.error = null;
   state.success = null;
@@ -80,7 +83,10 @@ async function handleSave() {
     state.success = 'Inventur gespeichert';
     await loadItems();
   } catch (err: any) {
-    state.error = err?.message || 'Speichern fehlgeschlagen';
+    state.error =
+      err?.response?.data?.error?.message ||
+      err?.message ||
+      'Speichern fehlgeschlagen';
   } finally {
     state.saving = false;
   }

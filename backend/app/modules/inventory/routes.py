@@ -21,6 +21,7 @@ from app.core.deps_tenant import get_tenant_context
 from app.core.tenant import TenantContext
 from app.models.category import Category
 from app.models.item import Item
+from app.models.item_unit import ItemUnit
 from app.models.movement import InventoryMovement
 from app.models.order import InventoryOrder, InventoryOrderItem
 from app.models.tenant_setting import TenantSetting
@@ -29,6 +30,7 @@ from app.modules.inventory.schemas import (
     CategoryOut,
     CategoryUpdate,
     ItemCreate,
+    ItemUnitOut,
     ItemOut,
     ItemUpdate,
     ItemsPage,
@@ -100,6 +102,16 @@ async def list_categories(
         )
         for c in rows
     ]
+
+
+@router.get("/units", response_model=list[ItemUnitOut])
+async def list_units(
+    ctx: TenantContext = Depends(get_tenant_context),
+    user_ctx: CurrentUserContext = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> list[ItemUnitOut]:
+    rows = (await db.scalars(select(ItemUnit).where(ItemUnit.is_active == True))).all()  # noqa: E712
+    return [ItemUnitOut(code=u.code, label=u.label, is_active=u.is_active) for u in rows]
 
 
 @router.post("/categories", response_model=CategoryOut, dependencies=[Depends(require_owner_or_admin)])
@@ -461,9 +473,11 @@ async def _aggregate_consumption(
     start_dt = datetime.combine(start, datetime.min.time()).replace(tzinfo=timezone.utc)
     end_dt = datetime.combine(end + timedelta(days=1), datetime.min.time()).replace(tzinfo=timezone.utc)
 
+    period_col = func.date_trunc("month", InventoryMovement.created_at).label("period")
+
     base = (
         select(
-            func.date_trunc("month", InventoryMovement.created_at).label("period"),
+            period_col,
             Item.id.label("item_id"),
             Item.name.label("item_name"),
             Item.sku.label("item_sku"),
@@ -486,12 +500,12 @@ async def _aggregate_consumption(
     grouped = (
         await db.execute(
             base.group_by(
-                "period",
-                "item_id",
-                "item_name",
-                "item_sku",
-                "category_id",
-            ).order_by("period")
+                period_col,
+                Item.id,
+                Item.name,
+                Item.sku,
+                Item.category_id,
+            ).order_by(period_col)
         )
     ).all()
 
@@ -1357,6 +1371,7 @@ async def get_reorder_recommendations(
         Item.tenant_id == ctx.tenant.id,
         Item.is_active.is_(True),
         Item.target_stock > 0,
+        Item.order_mode.in_([1, 2, 3]),
         Item.quantity < Item.target_stock,
     ).order_by(diff_expr.desc())
 
@@ -1372,7 +1387,11 @@ async def get_reorder_recommendations(
                 quantity=item.quantity,
                 target_stock=item.target_stock,
                 min_stock=item.min_stock,
-                recommended_qty=max(item.target_stock - item.quantity, item.min_stock),
+                recommended_qty=max(
+                    item.target_stock - item.quantity,
+                    item.min_stock - item.quantity,
+                    1,
+                ),
             )
             for item in items
         ]

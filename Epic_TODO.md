@@ -1,7 +1,6 @@
 # Epic TODO
 
 ## Now
-- EPIC C: [C-03] Live-Suche-Komponente (Prefix+Debounce) konzipieren.
 - EPIC D: [D-03] KPI-Karten klickbar machen mit Fokus/ARIA.
 - EPIC E: [E-02] Bestell-Dialog-UI spezifizieren (mehrere Artikel).
 - EPIC F: [F-03] Offline-Queue UX-Flow skizzieren.

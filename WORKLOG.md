@@ -768,21 +768,63 @@
 - **Tests**
   - Nicht ausgeführt (UI-Styling)
 
-- Datum/Uhrzeit: 2026-01-06T15:36:33Z
-- Task-ID: EPIC-ROADMAP-SETUP
-- Was analysiert/geändert:
-  - Standards unter `docs/standards` geprüft (API/Frontend/Error/Design/Darkmode/Theme Tokens).
-  - Bestandsaufnahme 404/Not-Found: Customer-Router ohne Catch-All (unbekannte Pfade resultieren in Router-Navigation-Fehler/leerem View, Server liefert bei fehlender Route JSON `{error:{code:"http_error",message:"Not Found"}}`), Admin-Frontend ohne Router (Navigation rein per UI, 404 nur serverseitig bei fehlenden Assets), Backend `/` oder unbekannte Pfade liefern standardisierte JSON-Fehler via `register_exception_handlers`, Tenant-Resolver (`core/tenant.py`) gibt 404 `tenant_not_found` JSON bei fehlendem/inaktivem Tenant oder fehlendem Host/Slug; Reverse-Proxy-Annahme: Host aus `X-Forwarded-Host` + `BASE_DOMAIN`, Fallback `localhost`.
-  - Public/Health-Endpunkte identifiziert: `/health`, `/health/db`, `/meta`, `/metrics` (Prometheus), alle ohne Auth.
-  - Doku-Struktur erstellt: `docs/roadmap/INDEX.md` mit Epic-Template/Standards, neue Epics A–I mit Tasks/Akzeptanzkriterien, TODO/Epic_TODO priorisiert, Epic_WORKLOG angelegt.
-- Ergebnis: Roadmap-Epics vollständig angelegt, Template verbindlich dokumentiert, priorisierte Next Steps in TODO/Epic_TODO.
-- Nächste Schritte: Umsetzung der Now-Tasks (Tenant-Status-Endpoint + Frontend-Status-Flow, globale Katalog-Spezifikation, Reporting-Filter-Konzept etc.).
+## Schritt 55 – Zwei-Paneele-Editor für Branchen ↔ Artikel
+- **Datum/Uhrzeit**: 2026-01-06T15:58:00+00:00
+- **Ziel**: Skalierbare Bearbeitung der Branchen-Artikel-Zuordnung (1000+ Artikel) mit serverseitiger Suche/Pagination, Pending-Deltas und sicherem Replace-Call gemäß OpenAPI.
+- **Was wurde geändert**
+  - `GlobaleBranchenView`: Alte Checkbox-Liste durch Zwei-Paneele-Editor ersetzt (Verfügbare Artikel links mit Debounce-Suche, Kategorie-/Status-Filter und serverseitiger Pagination über `/admin/inventory/items`; Zugeordnete Artikel rechts mit clientseitiger Pagination, Pending-Status-Tags).
+  - Delta-Handling: Auswahlen erzeugen `pendingAdditions`/`pendingRemovals`; Speichern berechnet finale `item_ids` (Replace per PUT `/admin/inventory/industries/{industry_id}/items`). Buttons für Hinzufügen/Entfernen, Pending-Zusammenfassung, Undo via „Änderungen verwerfen“.
+  - Datenladen: Branchen + Kategorien + initiale Artikelseite werden beim Laden geholt; Zuordnungs-Load cached Items für Anzeige; Status/Fehlertexte nutzerfreundlich gehalten. Hinweis im UI, dass CSV/XLSX-Mapping-Import/Export in der API fehlt.
+- **Offene Punkte**
+  - Kein Badge für Überschneidungen (z. B. „in X Branchen“), da keine aggregierte API vorhanden; würde sonst N+1 erfordern.
+  - Mapping-Import/Export (CSV/XLSX) fehlt im Backend; TODO verweist auf benötigte Endpunkte für Delta-Add/Remove.
+- **Tests**
+  - `npm run build` (admin_frontend/admin-ui)
 
-- Datum/Uhrzeit: 2026-01-06T16:21:50Z
-- Task-ID: EPIC-A-02
-- Was analysiert/geändert:
-  - Öffentlichen Endpoint `/public/tenant-status` implementiert (Backend), nutzt Host/Header-Slug-Auflösung und meldet Status `ok/not_found/inactive/unavailable`.
-  - Public-Router in die FastAPI-App eingebunden; OpenAPI-Schema um neuen Pfad und `PublicTenantStatus`-Schema erweitert.
-  - TODO/Epic_TODO angepasst: A-02 aus „Now“ entfernt.
-- Ergebnis: Tenant-Status ist per GET erreichbar, prüft DB-Verfügbarkeit, liefert klare Statusobjekte ohne Exceptions.
-- Nächste Schritte: Frontend-Preflight und Tenant-Status-View (A-04/A-05), Router-Fallback (A-06).
+## Schritt 56 – Zwei-Paneele-Feinschliff (Assigned-Schutz)
+- **Datum/Uhrzeit**: 2026-01-06T16:15:00+00:00
+- **Ziel**: Missverständliche Mehrfachauswahl verhindern und den Status bereits zugeordneter Artikel im linken Paneel sichtbar machen.
+- **Was wurde geändert**
+  - Linkes Paneel deaktiviert Checkboxen für Artikel, die in der finalen Liste (initial + pending Add - pending Remove) bereits enthalten sind; zeigt Tag „Bereits zugeordnet“ neben dem Status-Tag.
+  - `finalItemIdSet` als Set-Cache eingeführt, um Disabled-Status und Badge effizient zu berechnen ohne doppelte Array-Suchen.
+- **Tests**
+  - `npm run build` (admin_frontend/admin-ui) – nicht erneut ausgeführt, UI-only Feinschliff
+
+## Schritt 57 – OpenAPI-Validierung der offenen Punkte
+- **Datum/Uhrzeit**: 2026-01-06T16:30:00+00:00
+- **Ziel**: Offene Aufgaben (Mapping-Import/Export, Überschneidungs-Badges) gegen die aktuelle Remote-OpenAPI prüfen.
+- **Was wurde geprüft**
+  - `https://api.test.myitnetwork.de/openapi.json` liefert unverändert nur `/admin/inventory/industries` (GET/POST/PATCH/DELETE) und `/admin/inventory/industries/{industry_id}/items` (GET/PUT). Keine CSV/XLSX Import-/Export-Endpunkte für Branchen-Mappings vorhanden.
+  - `page_size` für `/admin/inventory/items` ist max. 200 (default 50); Kategorie/Status/q-Filter bestätigt.
+  - Keine Aggregations-/Overlap-API (z. B. „in X Branchen“) vorhanden.
+- **Ergebnis**
+  - UI bleibt ohne Import/Export-Buttons; TODO-Einträge für Backend-Endpunkte bleiben bestehen.
+  - Überschneidungs-Badges weiterhin nicht umsetzbar ohne neue API; Dokumentation belassen.
+- **Tests**
+  - Nicht ausgeführt (Doku-/API-Check)
+
+## Schritt 58 – Branchen-Artikel auf Tenants anwenden (API-Lücke dokumentiert)
+- **Datum/Uhrzeit**: 2026-01-06T16:45:00+00:00
+- **Ziel**: Anforderung klären, Branchen-Artikel automatisiert allen Tenants derselben `industry_id` zuzuweisen, ohne vorhandene Bestände zu löschen/auf 0 zu setzen.
+- **Was wurde geprüft**
+  - Remote-OpenAPI (`https://api.test.myitnetwork.de/openapi.json`) enthält keinen Admin-Endpunkt, um Branchen-Artikel auf Tenants zu klonen oder einen Bulk-Assign mit initialem Bestand 0 auszulösen.
+  - Es gibt nur `/admin/inventory/industries/{industry_id}/items` (GET/PUT) auf globaler Ebene, keine Tenant-spezifische Operation für Branchen-Bulk-Zuweisung.
+- **Ergebnis**
+  - Umsetzung blockiert auf Backend-Seite: Es fehlt ein Endpunkt wie „Admin assign industry items to tenants“ mit Option `initial_qty=0` und „skip if exists (preserve qty)“.
+  - TODO ergänzt, bis Backend-API vorliegt.
+- **Tests**
+  - Nicht ausgeführt (Doku-Update)
+
+## Schritt 54 – Analyse Branchen-Artikel-Mapping (Schritt 1)
+- **Datum/Uhrzeit**: 2026-01-06T15:45:00+00:00
+- **Ziel**: Inventar für den Admin-Editor „Branche ↔ Artikel“ erstellen und Skalierungsprobleme für 1000+ Artikel bewerten.
+- **Was wurde analysiert**
+  - UI: `admin_frontend/admin-ui/src/views/GlobaleBranchenView.vue` nutzt eine Checkbox-Liste pro Artikel ohne Suche/Server-Paging; Artikel werden per `fetchGlobalItems` seitenweise (page_size 200) geladen und vollständig in den lokalen Zustand (`useGlobalMasterdata`) kopiert. Branchen-Auswahl steuert `selectedArticleIds`, Änderungen werden sofort via `setIndustryItems` gespeichert.
+  - API-Wrapper: `admin_frontend/admin-ui/src/api/globals.ts` (und parallele Funktionen in `api/admin.ts`) greifen auf `/admin/inventory/industries` (GET/POST/PATCH/DELETE) und `/admin/inventory/industries/{industry_id}/items` (GET/PUT) zu; Items kommen aus `/admin/inventory/items` mit optionalen Query-Parametern laut OpenAPI (q, category_id, active, page, page_size≤200) und Response `ItemsPage { items, total, page, page_size }`.
+  - OpenAPI: `IndustryArticlesUpdate` verlangt nur `item_ids: string[]` und wird als vollständiger Replace per PUT umgesetzt; kein Delta-/Bulk-Add/Remove-Endpunkt vorhanden. Kein Import/Export-Endpunkt für Branchen-Mapping, nur Artikel-Import/Export auf `/admin/inventory/items/(import|export)`.
+- **Ergebnis (Ist-Stand & Probleme)**
+  - Der Editor lädt aktuell alle Artikel (aktive) in den Speicher und rendert Checkboxen; bei 1000+ Artikeln unbenutzbar (Ladezeit, Scroll-Länge, fehlende Suche/Filter/Pagination).
+  - Speichern erzwingt einen kompletten Replace (`item_ids`), Deltas werden nicht gesammelt; Überschneidungen zwischen Branchen sind nicht erkennbar, keine Hinweise auf Mehrfachzuordnung.
+  - Import/Export für Branchen-Mappings fehlt in der API; nur Items lassen sich importieren/exportieren (keine Mapping-Dateien). Delta-Import für Zuordnungen erfordert Backend-Erweiterung.
+- **Nächste Schritte**
+  - Schritt 3 planen: Zwei-Paneele-Layout mit Server-Suche/Paging über `/admin/inventory/items`, Pending-Add/Remove-Deltas und Replace-Speichern (berechnete finale Liste). Filter nur gemäß OpenAPI (q, category_id, active). Import/Export-Konzept dokumentieren und als TODO für Backend ergänzen.

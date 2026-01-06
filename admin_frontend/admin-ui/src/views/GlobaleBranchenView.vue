@@ -388,6 +388,7 @@ import UiSection from "../components/ui/UiSection.vue";
 import type { components } from "../api/gen/openapi";
 
 type IndustryAssignResponse = components["schemas"]["IndustryAssignResponse"];
+type IndustryMappingImportResult = components["schemas"]["IndustryMappingImportResult"];
 
 const props = defineProps<{
   adminKey: string;

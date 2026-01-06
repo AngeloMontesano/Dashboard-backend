@@ -1001,7 +1001,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/admin/inventory/industries/{industry_id}/assign-to-tenants": {
+    "/admin/inventory/industries/{industry_id}/assign/tenants": {
         parameters: {
             query?: never;
             header?: never;
@@ -1010,8 +1010,8 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Admin Assign Industry Items */
-        post: operations["admin_assign_industry_items_admin_inventory_industries__industry_id__assign_to_tenants_post"];
+        /** Admin Assign Industry Items To Tenants */
+        post: operations["admin_assign_industry_items_to_tenants_admin_inventory_industries__industry_id__assign_tenants_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1366,10 +1366,13 @@ export interface components {
             /** Item Ids */
             item_ids: string[];
         };
-        /** IndustryAssignRequest */
-        IndustryAssignRequest: {
-            /** Tenant Ids */
-            tenant_ids?: string[] | null;
+        /** IndustryAssignTenantsRequest */
+        IndustryAssignTenantsRequest: {
+            /**
+             * Tenant Ids
+             * @default null
+             */
+            tenant_ids: string[];
             /**
              * Initial Quantity
              * @default 0
@@ -1381,43 +1384,35 @@ export interface components {
              */
             preserve_existing_quantity: boolean;
         };
-        /** IndustryAssignResponse */
-        IndustryAssignResponse: {
-            /** Industry Id */
-            industry_id: string;
-            /** Industry Name */
-            industry_name: string;
-            /** Total Items */
-            total_items: number;
-            /** Target Tenants */
-            target_tenants: number;
-            /** Created */
-            created: number;
-            /** Skipped Existing */
-            skipped_existing: number;
-            /** Synced Admin Items */
-            synced_admin_items: number;
-            /** Missing Tenants */
-            missing_tenants: string[];
-            /** Mismatched Tenants */
-            mismatched_tenants: string[];
-            /** Inactive Tenants */
-            inactive_tenants: string[];
-            /** Results */
-            results: components["schemas"]["IndustryAssignTenantResult"][];
-        };
         /** IndustryAssignTenantResult */
         IndustryAssignTenantResult: {
             /** Tenant Id */
             tenant_id: string;
             /** Tenant Slug */
             tenant_slug: string;
+            /** Tenant Name */
+            tenant_name: string;
             /** Created */
             created: number;
             /** Skipped Existing */
             skipped_existing: number;
-            /** Synced Admin Items */
-            synced_admin_items: number;
+        };
+        /** IndustryAssignResponse */
+        IndustryAssignResponse: {
+            /** Industry Id */
+            industry_id: string;
+            /** Template Items */
+            template_items: number;
+            /** Affected Tenants */
+            affected_tenants: number;
+            /** Created Total */
+            created_total: number;
+            /** Skipped Total */
+            skipped_total: number;
+            /** Initial Quantity */
+            initial_quantity: number;
+            /** Results */
+            results: components["schemas"]["IndustryAssignTenantResult"][];
         };
         /** IndustryCreate */
         IndustryCreate: {
@@ -4993,7 +4988,7 @@ export interface operations {
             };
         };
     };
-    admin_assign_industry_items_admin_inventory_industries__industry_id__assign_to_tenants_post: {
+    admin_assign_industry_items_to_tenants_admin_inventory_industries__industry_id__assign_tenants_post: {
         parameters: {
             query?: never;
             header?: {
@@ -5007,7 +5002,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["IndustryAssignRequest"];
+                "application/json": components["schemas"]["IndustryAssignTenantsRequest"];
             };
         };
         responses: {

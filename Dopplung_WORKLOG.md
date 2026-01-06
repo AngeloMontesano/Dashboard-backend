@@ -21,6 +21,10 @@
 | admin_frontend/admin-ui/src/components/tenants/TenantDrawer.vue:69-115 ↔ admin_frontend/admin-ui/src/styles/layout.css:231-282 | Component-Scoped Drawer/Card/Input vs. globale Card/Input | Admin | Card/Row/Section-Stile doppelt, nur Gaps/Min-Height abweichend |
 | admin_frontend/admin-ui/src/views/AdminTenantsView.vue:663-686 ↔ admin_frontend/admin-ui/src/styles/utilities.css:180-230 | Component-Scoped Settings-Grid/Form-Felder | Admin | Grid/Gap/Field-Layout wie `form-grid`/`field` Utilities, nur Spalten/Gap-Werte minimal anders |
 | admin_frontend/admin-ui/src/views/AdminSettingsView.vue:520-602 ↔ admin_frontend/admin-ui/src/styles/utilities.css:8-120 | Component-Scoped Stack/Collapsible/Alert/FieldGrid | Admin | Nutzt eigene Stack/Panel/Alert/Grid Styles, überschneidet mit section/stack/panel/chip-list Utilities |
+| admin_frontend/admin-ui/src/views/GlobaleArtikelView.vue:495-505 ↔ admin_frontend/admin-ui/src/styles/utilities.css:501-505 | Component-Scoped Modal Footer (Delete) | Admin | Modal-Footer-Duplikat, zusätzliche Delete-Ausrichtung (margin-right) |
+| admin_frontend/admin-ui/src/views/GlobaleKategorienView.vue:352-367 ↔ admin_frontend/admin-ui/src/styles/utilities.css:501-505 | Component-Scoped Modal Footer (Delete) | Admin | Gleiche Footer-Anordnung wie Utilities plus Delete-Ausrichtung |
+| admin_frontend/admin-ui/src/views/GlobaleEinheitenView.vue:338-347 ↔ admin_frontend/admin-ui/src/styles/utilities.css:501-505 | Component-Scoped Modal Footer (Delete) | Admin | Footer-Layout erneut definiert, identisch bis auf Delete-Margin |
+| admin_frontend/admin-ui/src/views/GlobaleBranchenView.vue:892-901 ↔ admin_frontend/admin-ui/src/styles/utilities.css:501-505 | Component-Scoped Modal Footer (Delete) | Admin | Wiederholung des Modal-Footers; Delete-Button nach links geschoben |
 
 Notizen:
 - Alle Fundstellen stammen aus Schritt 1 (Inventarisierung). Noch keine Deklaration wurde verändert.

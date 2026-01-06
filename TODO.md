@@ -6,20 +6,26 @@
 - Docs: WORKLOG und Roadmap (`docs/roadmap/CUSTOMER_UI_PARITY_WITH_ADMIN.md`) aktuell halten; offene Paritätslücken dokumentieren.
 - Backend (vorherige Lücken, weiterhin kritisch): Migration `0009_create_inventory_orders` ausrollen; Reporting-Query-Fix deployen; globale Stammdaten-/Industrie-Endpunkte und Admin-konforme Artikelrestriktionen ergänzen.
 - Backend (Admin): System-Actions Endpoints mit echter Funktionalität hinterlegen (Cache Reset, Reindex, Restart) – aktuell bewusst nicht unterstützt (keine neuen Abhängigkeiten).
+- Admin-Frontend Branchen ↔ Artikel: Backend-API für CSV/XLSX Mapping-Import/Export (Delta Add/Remove) bereitstellen; UI aktuell ohne Buttons, da OpenAPI keine Endpunkte kennt.
+- Admin-Frontend Branchen ↔ Artikel: Aggregierte Info für Überschneidungen (z. B. „in X Branchen“) per API liefern, damit Badge ohne N+1-Calls gerendert werden kann; aktuell nur Single-Branchen-Items vorhanden.
 
-## SOLL (UX/Konsistenz/Performance/Accessibility)
-- Customer: Nach Input-/Empty-State-Harmonisierung Light/Dark-Regressionstests (Screenshots) und Responsiveness prüfen.
-- Customer: Queue-/Bestell-Views mit klaren Busy/Confirm-Flows und konsistenter Button-Hierarchie ausstatten.
-- Customer: Fehlermeldungen weiter verfeinern (Backend-spezifische Codes/Messages abbilden), Queue-/Auth-Event-Logs in zentrale Telemetrie einspeisen.
-- Customer: DEV-Helfer nutzen, um `customer_auth_refresh_log` & `movement_queue_events` als JSON zu exportieren (Fehlerseite/Topbar Dev-Panel, import.meta.env.DEV).
-- Admin/Customer: Gemeinsame Toast/Overlay-Styles auf Token-Basis konsolidieren und A11y-Labels für Filter/Selects ergänzen.
-- Admin: Tenants/Memberships mit Server-Paging und Validierungen inkl. Confirm-Dialogen ausstatten; Theme-Toggle in Topbar ergänzen.
-- Admin: Deployment-ENV für Build-/Commit-Infos setzen (APP_VERSION, GIT_COMMIT, BUILD_TIMESTAMP, BUILD_BRANCH, IMAGE_TAG), damit UI echte Werte zeigt.
-- Admin (optional, nicht Teil dieser Aufgabe): Redis-gestütztes Caching und Cache-Reset-Endpunkt.
-- Admin (optional, nicht Teil dieser Aufgabe): Such-/Index-Engine und Reindex-Endpunkt.
-- Admin (optional, nicht Teil dieser Aufgabe): API-gestützter Restart-Hook (Orchestrator/Portainer/K8s).
+## Next
+- [A-08] (EPIC_A_TENANT_RESOLUTION) Status-Caching/Retry-Strategie umsetzen.
+- [B-06] (EPIC_B_GLOBAL_CATALOG_AND_INDUSTRY) View „Globale Artikel“ inkl. Branche/Typ planen.
+- [C-05] (EPIC_C_CUSTOMER_REPORTING_UX) Zeitraum-Presets + freie Datumauswahl definieren.
+- [D-04] (EPIC_D_CUSTOMER_DASHBOARD_NAVIGATION) Bestellungen-View Prefill für offene/Bestellwürdig vorbereiten.
+- [E-06] (EPIC_E_CUSTOMER_ORDERS_IMPROVEMENTS) Prefill „Bestellwürdig“ im Dialog aktivieren.
+- [F-05] (EPIC_F_OFFLINE_QUEUE_ERROR_HANDLING) Retry/Löschen gegen Queue-APIs verdrahten.
+- [G-05] (EPIC_G_DOCUMENTATION_AND_HELP) Help-Button Konzept Customer dokumentieren.
+- [H-03] (EPIC_H_MONITORING_LIGHTWEIGHT) Statische Statusseite entwerfen.
+- [I-02] (EPIC_I_CONTACT_DATA_AND_SUPPORT) Backend-Schema/Endpoints für globale Kontakte planen.
 
-## KANN (Nice-to-have)
-- Customer/Admin: Serverseitige Aggregationen für KPIs/Reporting zur Reduktion von Requests/Caching-Bedarf.
-- Customer: Snapshot/Export-Optionen für Dashboard/Reporting anbieten (Server-basiert, teilbar).
-- Admin: Verbesserte Hinweise/Badges für Tenant/Host-Kontext und optionale Snapshot-Freigabe.
+## Later
+- [B-10] (EPIC_B_GLOBAL_CATALOG_AND_INDUSTRY) Verteilungskonzept an Tenants dokumentieren.
+- [C-09] (EPIC_C_CUSTOMER_REPORTING_UX) Export-Konzept festlegen.
+- [D-08] (EPIC_D_CUSTOMER_DASHBOARD_NAVIGATION) QA-Checkliste Navigation erstellen.
+- [E-07] (EPIC_E_CUSTOMER_ORDERS_IMPROVEMENTS) Storno-Konzept dokumentieren.
+- [F-09] (EPIC_F_OFFLINE_QUEUE_ERROR_HANDLING) Telemetrie-Ereignisse definieren.
+- [G-08] (EPIC_G_DOCUMENTATION_AND_HELP) QA-Checkliste (Links, Rollen, Sichtbarkeit) erstellen.
+- [H-07] (EPIC_H_MONITORING_LIGHTWEIGHT) QA/Smoke-Plan für Statusseite ausarbeiten.
+- [I-08] (EPIC_I_CONTACT_DATA_AND_SUPPORT) QA-Checkliste für Kontakte erstellen.

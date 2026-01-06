@@ -92,7 +92,10 @@
                 </td>
                 <td class="mono">{{ cat.is_system ? "ja" : "nein" }}</td>
                 <td class="text-right">
-                  <button class="btnGhost small" type="button" @click.stop="openEdit(cat)">Bearbeiten</button>
+                  <div class="row gap8">
+                    <button class="btnGhost small" type="button" @click.stop="openEdit(cat)">Bearbeiten</button>
+                    <button class="btnGhost small danger" type="button" @click.stop="remove(cat)">Löschen</button>
+                  </div>
                 </td>
               </tr>
               <tr v-if="!filteredCategories.length">

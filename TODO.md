@@ -11,6 +11,7 @@
 - Customer: Nach Input-/Empty-State-Harmonisierung Light/Dark-Regressionstests (Screenshots) und Responsiveness prüfen.
 - Customer: Queue-/Bestell-Views mit klaren Busy/Confirm-Flows und konsistenter Button-Hierarchie ausstatten.
 - Customer: Fehlermeldungen weiter verfeinern (Backend-spezifische Codes/Messages abbilden), Queue-/Auth-Event-Logs in zentrale Telemetrie einspeisen.
+- Customer: DEV-Helfer nutzen, um `customer_auth_refresh_log` & `movement_queue_events` als JSON zu exportieren (Fehlerseite/Topbar Dev-Panel, import.meta.env.DEV).
 - Admin/Customer: Gemeinsame Toast/Overlay-Styles auf Token-Basis konsolidieren und A11y-Labels für Filter/Selects ergänzen.
 - Admin: Tenants/Memberships mit Server-Paging und Validierungen inkl. Confirm-Dialogen ausstatten; Theme-Toggle in Topbar ergänzen.
 - Admin: Deployment-ENV für Build-/Commit-Infos setzen (APP_VERSION, GIT_COMMIT, BUILD_TIMESTAMP, BUILD_BRANCH, IMAGE_TAG), damit UI echte Werte zeigt.

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, reactive, computed } from 'vue';
+import { onMounted, reactive, computed, ref } from 'vue';
 import UiPage from '@/components/ui/UiPage.vue';
 import UiSection from '@/components/ui/UiSection.vue';
 import UiToolbar from '@/components/ui/UiToolbar.vue';
@@ -123,6 +123,7 @@ function showError(err: unknown, fallback: string) {
 
 async function loadOrders() {
   if (!authState.accessToken) return;
+  if (state.loading) return;
   state.loading = true;
   state.error = null;
   try {
@@ -250,6 +251,9 @@ function addEmptyRow() {
 
 function removeRow(rowId: string) {
   state.createRows = state.createRows.filter((row) => row.id !== rowId);
+  if (confirmRemoveRow.value === rowId) {
+    confirmRemoveRow.value = null;
+  }
 }
 
 async function markComplete(orderId: string) {
@@ -361,11 +365,29 @@ onMounted(async () => {
         </template>
         <template #end>
           <div class="action-row">
-            <button class="btnGhost small" type="button" @click="loadOrders" :disabled="state.loading">
-              Neu laden
+            <button
+              class="btnGhost small"
+              type="button"
+              @click="loadOrders"
+              :disabled="state.loading"
+              :aria-busy="state.loading"
+            >
+              <span class="btn-label">
+                <span v-if="state.loading" class="btn-spinner" aria-hidden="true"></span>
+                Neu laden
+              </span>
             </button>
-            <button class="btnPrimary small" type="button" @click="createNewOrder" :disabled="state.creating">
-              Bestellung anlegen
+            <button
+              class="btnPrimary small"
+              type="button"
+              @click="createNewOrder"
+              :disabled="state.creating"
+              :aria-busy="state.creating"
+            >
+              <span class="btn-label">
+                <span v-if="state.creating" class="btn-spinner" aria-hidden="true"></span>
+                Bestellung anlegen
+              </span>
             </button>
           </div>
         </template>
@@ -441,9 +463,16 @@ onMounted(async () => {
                   <BaseInput v-model="row.note" type="text" placeholder="Notiz (optional)" />
                 </td>
                 <td>
-                  <button class="btnGhost small" type="button" @click="removeRow(row.id)">
-                    Entfernen
-                  </button>
+                  <div class="table-actions">
+                    <button
+                      class="btnGhost small danger"
+                      type="button"
+                      @click="confirmRemoveRow === row.id ? removeRow(row.id) : (confirmRemoveRow = row.id)"
+                    >
+                      {{ confirmRemoveRow === row.id ? 'Jetzt entfernen' : 'Entfernen' }}
+                    </button>
+                    <span v-if="confirmRemoveRow === row.id" class="inline-confirm">Nochmal klicken zum Bestätigen.</span>
+                  </div>
                 </td>
               </tr>
             </tbody>
@@ -486,7 +515,7 @@ onMounted(async () => {
                 <th>Nummer</th>
                 <th>Positionen</th>
                 <th>Status</th>
-                <th>Aktionen</th>
+                <th class="text-right">Aktionen</th>
               </tr>
             </thead>
             <tbody>
@@ -495,27 +524,53 @@ onMounted(async () => {
                 <td>{{ order.items.length }}</td>
                 <td><span :class="statusClass(order.status)">{{ order.status }}</span></td>
                 <td class="table-actions">
-                  <button class="btnGhost small" type="button" @click="downloadPdf(order.id)" :disabled="state.downloading[order.id]">
-                    PDF
+                  <button
+                    class="btnGhost small"
+                    type="button"
+                    @click="downloadPdf(order.id)"
+                    :disabled="state.downloading[order.id]"
+                    :aria-busy="state.downloading[order.id]"
+                  >
+                    <span class="btn-label">
+                      <span v-if="state.downloading[order.id]" class="btn-spinner" aria-hidden="true"></span>
+                      PDF
+                    </span>
                   </button>
-                  <button class="btnGhost small" type="button" @click="sendEmail(order.id)" :disabled="state.emailing[order.id]">
-                    E-Mail
+                  <button
+                    class="btnGhost small"
+                    type="button"
+                    @click="sendEmail(order.id)"
+                    :disabled="state.emailing[order.id]"
+                    :aria-busy="state.emailing[order.id]"
+                  >
+                    <span class="btn-label">
+                      <span v-if="state.emailing[order.id]" class="btn-spinner" aria-hidden="true"></span>
+                      E-Mail
+                    </span>
                   </button>
                   <button
                     class="btnPrimary small"
                     type="button"
                     @click="markComplete(order.id)"
                     :disabled="state.completing[order.id] || state.canceling[order.id]"
+                    :aria-busy="state.completing[order.id]"
                   >
-                    Erledigt
+                    <span class="btn-label">
+                      <span v-if="state.completing[order.id]" class="btn-spinner" aria-hidden="true"></span>
+                      Erledigt
+                    </span>
                   </button>
                   <button
-                    class="btnGhost small"
+                    class="btnGhost small danger"
                     type="button"
                     @click="markCanceled(order.id)"
                     :disabled="state.canceling[order.id] || state.completing[order.id]"
+                    :aria-busy="state.canceling[order.id]"
                   >
-                    Stornieren
+                    <span class="btn-label">
+                      <span v-if="state.canceling[order.id]" class="btn-spinner" aria-hidden="true"></span>
+                      Stornieren
+                    </span>
                   </button>
                 </td>
               </tr>
@@ -548,7 +603,7 @@ onMounted(async () => {
                 <th>Nummer</th>
                 <th>Positionen</th>
                 <th>Status</th>
-                <th>Aktionen</th>
+                <th class="text-right">Aktionen</th>
               </tr>
             </thead>
             <tbody>
@@ -557,11 +612,29 @@ onMounted(async () => {
                 <td>{{ order.items.length }}</td>
                 <td><span :class="statusClass(order.status)">{{ order.status }}</span></td>
                 <td class="table-actions">
-                  <button class="btnGhost small" type="button" @click="downloadPdf(order.id)" :disabled="state.downloading[order.id]">
-                    PDF
+                  <button
+                    class="btnGhost small"
+                    type="button"
+                    @click="downloadPdf(order.id)"
+                    :disabled="state.downloading[order.id]"
+                    :aria-busy="state.downloading[order.id]"
+                  >
+                    <span class="btn-label">
+                      <span v-if="state.downloading[order.id]" class="btn-spinner" aria-hidden="true"></span>
+                      PDF
+                    </span>
                   </button>
-                  <button class="btnGhost small" type="button" @click="sendEmail(order.id)" :disabled="state.emailing[order.id]">
-                    E-Mail
+                  <button
+                    class="btnGhost small"
+                    type="button"
+                    @click="sendEmail(order.id)"
+                    :disabled="state.emailing[order.id]"
+                    :aria-busy="state.emailing[order.id]"
+                  >
+                    <span class="btn-label">
+                      <span v-if="state.emailing[order.id]" class="btn-spinner" aria-hidden="true"></span>
+                      E-Mail
+                    </span>
                   </button>
                 </td>
               </tr>
@@ -591,7 +664,7 @@ onMounted(async () => {
                 <th>Nummer</th>
                 <th>Positionen</th>
                 <th>Status</th>
-                <th>Aktionen</th>
+                <th class="text-right">Aktionen</th>
               </tr>
             </thead>
             <tbody>
@@ -600,11 +673,29 @@ onMounted(async () => {
                 <td>{{ order.items.length }}</td>
                 <td><span :class="statusClass(order.status)">{{ order.status }}</span></td>
                 <td class="table-actions">
-                  <button class="btnGhost small" type="button" @click="downloadPdf(order.id)" :disabled="state.downloading[order.id]">
-                    PDF
+                  <button
+                    class="btnGhost small"
+                    type="button"
+                    @click="downloadPdf(order.id)"
+                    :disabled="state.downloading[order.id]"
+                    :aria-busy="state.downloading[order.id]"
+                  >
+                    <span class="btn-label">
+                      <span v-if="state.downloading[order.id]" class="btn-spinner" aria-hidden="true"></span>
+                      PDF
+                    </span>
                   </button>
-                  <button class="btnGhost small" type="button" @click="sendEmail(order.id)" :disabled="state.emailing[order.id]">
-                    E-Mail
+                  <button
+                    class="btnGhost small"
+                    type="button"
+                    @click="sendEmail(order.id)"
+                    :disabled="state.emailing[order.id]"
+                    :aria-busy="state.emailing[order.id]"
+                  >
+                    <span class="btn-label">
+                      <span v-if="state.emailing[order.id]" class="btn-spinner" aria-hidden="true"></span>
+                      E-Mail
+                    </span>
                   </button>
                 </td>
               </tr>

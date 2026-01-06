@@ -624,6 +624,20 @@
 - **Tests**
   - Keine neuen Tests notwendig (nur Doku).
 
+## Schritt 51 – Admin System-Endpunkte + Settings-Anzeige
+- **Datum/Uhrzeit**: 2026-01-06T12:05:00+00:00
+- **Ziel**: Backend-Platzhalter für System-Infos/Actions bereitstellen und UI mit Backend-Build/Commit verknüpfen.
+- **Was wurde geändert**
+  - Backend: Neuer Router `/admin/system` mit `/info` (Version/Env/Commit/DB-Status) und Platzhalter-Actions `/actions/cache-reset|reindex|restart` (supported=false).
+  - Admin-Router/OpenAPI-Tags erweitert (`admin-system`), Router eingebunden.
+  - Frontend Settings laden System-Info per `adminGetSystemInfo`; Backend-Build/Commit wird angezeigt, Danger-Zone-Texte verweisen auf nicht unterstützte Actions.
+  - TODO aktualisiert (Endpoints existieren als Platzhalter, echte Implementierung weiterhin offen).
+- **Ergebnis**
+  - Settings zeigen Backend-Build/Commit/Env/DB-Status aus der API; Danger-Zone verweist auf vorhandene, aber nicht unterstützte Actions.
+- **Tests**
+  - `npm run build` (admin_frontend/admin-ui)
+  - `python -m compileall app` (backend)
+
 ## Schritt 48 – Settings mit Build-Info ergänzt
 - **Datum/Uhrzeit**: 2026-01-06T11:26:00+00:00
 - **Ziel**: System-Abschnitt der Settings um verfügbare Build-/Versionsinformation ergänzen.

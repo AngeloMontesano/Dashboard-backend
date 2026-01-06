@@ -803,6 +803,18 @@
 - **Tests**
   - Nicht ausgeführt (Doku-/API-Check)
 
+## Schritt 58 – Branchen-Artikel auf Tenants anwenden (API-Lücke dokumentiert)
+- **Datum/Uhrzeit**: 2026-01-06T16:45:00+00:00
+- **Ziel**: Anforderung klären, Branchen-Artikel automatisiert allen Tenants derselben `industry_id` zuzuweisen, ohne vorhandene Bestände zu löschen/auf 0 zu setzen.
+- **Was wurde geprüft**
+  - Remote-OpenAPI (`https://api.test.myitnetwork.de/openapi.json`) enthält keinen Admin-Endpunkt, um Branchen-Artikel auf Tenants zu klonen oder einen Bulk-Assign mit initialem Bestand 0 auszulösen.
+  - Es gibt nur `/admin/inventory/industries/{industry_id}/items` (GET/PUT) auf globaler Ebene, keine Tenant-spezifische Operation für Branchen-Bulk-Zuweisung.
+- **Ergebnis**
+  - Umsetzung blockiert auf Backend-Seite: Es fehlt ein Endpunkt wie „Admin assign industry items to tenants“ mit Option `initial_qty=0` und „skip if exists (preserve qty)“.
+  - TODO ergänzt, bis Backend-API vorliegt.
+- **Tests**
+  - Nicht ausgeführt (Doku-Update)
+
 ## Schritt 54 – Analyse Branchen-Artikel-Mapping (Schritt 1)
 - **Datum/Uhrzeit**: 2026-01-06T15:45:00+00:00
 - **Ziel**: Inventar für den Admin-Editor „Branche ↔ Artikel“ erstellen und Skalierungsprobleme für 1000+ Artikel bewerten.

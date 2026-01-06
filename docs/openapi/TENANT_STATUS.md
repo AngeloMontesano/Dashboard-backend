@@ -13,6 +13,7 @@ Früher Tenant-Check vor App-Bootstrap, damit unbekannte/inaktive Tenants eine g
   - `X-Tenant-Slug` (optional, priorisiert gegenüber Query/Host)
   - `X-Forwarded-Host` (vom Proxy, Basis für Host-Ableitung)
 - Timeouts: 8s (Frontend), kein Auth-Refresh (`skipAuthRefresh` Flag im Client gesetzt).
+- HTTP-Status: immer 200, Fehlerzustände liegen im Feld `status` (kein 4xx/5xx-Leak nach außen).
 
 ## Responses (200)
 ```json
@@ -51,6 +52,12 @@ Früher Tenant-Check vor App-Bootstrap, damit unbekannte/inaktive Tenants eine g
 - Mit/ohne `X-Forwarded-Host`, mit/ohne `X-Tenant-Slug`, falscher Slug, fehlender Slug: Response bleibt in Schema (kein 500/Traceback).
 - Datenbank down simulieren (`SQLAlchemyError`) → `status=unavailable`, `reason` enthält Klassennamen.
 - 404-Routen im Frontend leiten auf TenantStatusView; Backend liefert hier immer 200 mit Status-Payload.
+
+## Review-Checkliste (A-01)
+- Header-Priorität dokumentiert (X-Tenant-Slug > Query `slug` > Host-Ableitung).
+- HTTP-Status bleibt 200 in allen Pfaden; Fehler sind nur im Feld `status`/`reason`.
+- Beispiele decken Proxy-Header, Slug-Override und Localhost-Query ab.
+- Reason-Codes sind konsistent mit QA-Szenarien (A-10/A-11) und OpenAPI-Schema.
 
 ## Akzeptanznotizen
 - Kein JSON-Fehler im Browser sichtbar; Frontend routet bei `status != ok` auf `TenantStatusView`.

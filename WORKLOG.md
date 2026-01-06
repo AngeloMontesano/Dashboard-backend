@@ -70,3 +70,13 @@
 - TENANT_STATUS-Spec erweitert um cURL-Beispiele, QA-Hinweise (A-10/A-11) und Fehlersimulation (DB down → unavailable).
 - Ziel: schnelleres Review von A-01 und klare Prüfschritte für Header-/Slug-Varianten; keine Task-IDs geändert.
 - Offene Punkte: Review/Abnahme A-01; danach QA-Checkliste (A-10) und Proxy-Szenarien (A-11) ausführen.
+
+## 2024-06-23
+- TENANT_STATUS-Spec um HTTP-Status-Hinweis (immer 200), Review-Checkliste und Klarstellung der Header-Priorität ergänzt.
+- Fokus: A-01 Review beschleunigen; QA/Proxy Tasks (A-10/A-11) weiterhin offen, keine Task-IDs angepasst.
+- Offene Punkte unverändert: A-01 Abnahme, danach QA-Checkliste und Proxy-Testplan ausführen.
+
+## 2024-06-24
+- EPIC_A Akzeptanzkriterien ergänzt: Tenant-Status-API liefert immer HTTP 200, Fehler nur im Feld `status/reason`.
+- Ziel: Review von A-01 vereinfachen und klar gegen A-10/A-11 abgrenzen; keine Task-IDs geändert.
+- Offene Punkte: A-01 Abnahme; danach QA-Checkliste (A-10) und Proxy-Tests (A-11) ausführen.

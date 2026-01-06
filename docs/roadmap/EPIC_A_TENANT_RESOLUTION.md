@@ -109,6 +109,7 @@ Frontend zeigt für unbekannte/inaktive Subdomains eine klare Seite statt JSON. 
 - Unbekannte/Inactive Tenant-Subdomain zeigt eine gestaltete Seite, kein JSON.
 - Router-Fallback zeigt 404-Seite, nicht leere Shell.
 - Tenant-Status-API antwortet ohne Auth mit Status ok/not_found/inactive/unavailable.
+- Tenant-Status-API liefert für alle Pfade HTTP 200, Fehlerzustände liegen ausschließlich in `status`/`reason`.
 - Retry/Support-Links funktionieren; Host/Tenant-Slug im UI sichtbar.
 - QA-Checkliste A-10 ist vorhanden und getestet (404-Fallback, Tenant not found/inaktiv/unavailable, Proxy-Header, Mobile, Darkmode).
 

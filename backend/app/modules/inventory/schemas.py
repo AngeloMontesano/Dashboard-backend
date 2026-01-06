@@ -321,6 +321,14 @@ class EmailSendResponse(BaseModel):
     error: Optional[str] = None
 
 
+class SmtpPingResponse(BaseModel):
+    ok: bool
+    error: Optional[str] = None
+    host: Optional[str] = None
+    port: Optional[int] = None
+    resolved_ips: list[str] = Field(default_factory=list)
+
+
 class ReorderItem(BaseModel):
     id: str
     name: str

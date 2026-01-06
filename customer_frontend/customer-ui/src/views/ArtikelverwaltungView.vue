@@ -685,7 +685,7 @@ watch(
         </div>
         <div class="table-meta">{{ total }} Artikel</div>
       </div>
-      <div class="table-wrapper" v-if="items.length">
+      <div class="tableWrap" v-if="items.length">
         <table class="table table--clickable">
           <thead>
             <tr>

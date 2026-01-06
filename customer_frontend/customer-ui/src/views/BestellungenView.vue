@@ -320,10 +320,10 @@ onMounted(async () => {
         </template>
         <template #end>
           <div class="action-row">
-            <button class="button button--ghost" type="button" @click="loadOrders" :disabled="state.loading">
+            <button class="btnGhost small" type="button" @click="loadOrders" :disabled="state.loading">
               Neu laden
             </button>
-            <button class="button button--primary" type="button" @click="createNewOrder" :disabled="state.creating">
+            <button class="btnPrimary small" type="button" @click="createNewOrder" :disabled="state.creating">
               Bestellung anlegen
             </button>
           </div>
@@ -377,7 +377,7 @@ onMounted(async () => {
         <h3 class="eyebrow">Neue Bestellung</h3>
         <p class="section-subtitle">Bestellwürdige Artikel werden automatisch vorausgewählt.</p>
 
-        <div class="table-wrapper" v-if="state.createRows.length">
+        <div class="tableWrap" v-if="state.createRows.length">
           <table class="table">
             <thead>
               <tr>
@@ -404,7 +404,7 @@ onMounted(async () => {
                   <input v-model="row.note" type="text" class="input" placeholder="optional" />
                 </td>
                 <td>
-                  <button class="button button--ghost" type="button" @click="removeRow(row.id)">
+                  <button class="btnGhost small" type="button" @click="removeRow(row.id)">
                     Entfernen
                   </button>
                 </td>
@@ -416,14 +416,14 @@ onMounted(async () => {
 
         <div class="action-row mt-sm">
           <button
-            class="button button--ghost"
+            class="btnGhost small"
             type="button"
             @click="prefillRowsFromRecommended(true)"
             :disabled="!state.recommended.length"
           >
             Bestellwürdig übernehmen
           </button>
-          <button class="button button--ghost" type="button" @click="addEmptyRow">
+          <button class="btnGhost small" type="button" @click="addEmptyRow">
             + Zeile
           </button>
         </div>
@@ -438,7 +438,7 @@ onMounted(async () => {
 
       <div class="mt-lg">
         <h3 class="eyebrow">Offene Bestellungen</h3>
-        <div class="table-wrapper" v-if="filteredOpenOrders.length">
+        <div class="tableWrap" v-if="filteredOpenOrders.length">
           <table class="table">
             <thead>
               <tr>
@@ -454,14 +454,14 @@ onMounted(async () => {
                 <td>{{ order.items.length }}</td>
                 <td>{{ order.status }}</td>
                 <td class="table-actions">
-                  <button class="button button--ghost" type="button" @click="downloadPdf(order.id)" :disabled="state.downloading[order.id]">
+                  <button class="btnGhost small" type="button" @click="downloadPdf(order.id)" :disabled="state.downloading[order.id]">
                     PDF
                   </button>
-                  <button class="button button--ghost" type="button" @click="sendEmail(order.id)" :disabled="state.emailing[order.id]">
+                  <button class="btnGhost small" type="button" @click="sendEmail(order.id)" :disabled="state.emailing[order.id]">
                     E-Mail
                   </button>
                   <button
-                    class="button button--primary"
+                    class="btnPrimary small"
                     type="button"
                     @click="markComplete(order.id)"
                     :disabled="state.completing[order.id] || state.canceling[order.id]"
@@ -469,7 +469,7 @@ onMounted(async () => {
                     Erledigt
                   </button>
                   <button
-                    class="button button--ghost"
+                    class="btnGhost small"
                     type="button"
                     @click="markCanceled(order.id)"
                     :disabled="state.canceling[order.id] || state.completing[order.id]"
@@ -486,7 +486,7 @@ onMounted(async () => {
 
       <div class="mt-lg">
         <h3 class="eyebrow">Erledigte Bestellungen</h3>
-        <div class="table-wrapper" v-if="filteredCompletedOrders.length">
+        <div class="tableWrap" v-if="filteredCompletedOrders.length">
           <table class="table">
             <thead>
               <tr>
@@ -502,10 +502,10 @@ onMounted(async () => {
                 <td>{{ order.items.length }}</td>
                 <td>{{ order.status }}</td>
                 <td class="table-actions">
-                  <button class="button button--ghost" type="button" @click="downloadPdf(order.id)" :disabled="state.downloading[order.id]">
+                  <button class="btnGhost small" type="button" @click="downloadPdf(order.id)" :disabled="state.downloading[order.id]">
                     PDF
                   </button>
-                  <button class="button button--ghost" type="button" @click="sendEmail(order.id)" :disabled="state.emailing[order.id]">
+                  <button class="btnGhost small" type="button" @click="sendEmail(order.id)" :disabled="state.emailing[order.id]">
                     E-Mail
                   </button>
                 </td>
@@ -518,7 +518,7 @@ onMounted(async () => {
 
       <div class="mt-lg">
         <h3 class="eyebrow">Stornierte Bestellungen</h3>
-        <div class="table-wrapper" v-if="filteredCanceledOrders.length">
+        <div class="tableWrap" v-if="filteredCanceledOrders.length">
           <table class="table">
             <thead>
               <tr>
@@ -534,10 +534,10 @@ onMounted(async () => {
                 <td>{{ order.items.length }}</td>
                 <td>{{ order.status }}</td>
                 <td class="table-actions">
-                  <button class="button button--ghost" type="button" @click="downloadPdf(order.id)" :disabled="state.downloading[order.id]">
+                  <button class="btnGhost small" type="button" @click="downloadPdf(order.id)" :disabled="state.downloading[order.id]">
                     PDF
                   </button>
-                  <button class="button button--ghost" type="button" @click="sendEmail(order.id)" :disabled="state.emailing[order.id]">
+                  <button class="btnGhost small" type="button" @click="sendEmail(order.id)" :disabled="state.emailing[order.id]">
                     E-Mail
                   </button>
                 </td>
@@ -550,7 +550,7 @@ onMounted(async () => {
 
       <div class="mt-lg">
         <h3 class="eyebrow">Bestellwürdig</h3>
-        <div class="table-wrapper" v-if="state.recommended.length">
+        <div class="tableWrap" v-if="state.recommended.length">
           <table class="table">
             <thead>
               <tr>

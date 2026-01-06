@@ -36,7 +36,7 @@ Ziel: Customer-Frontend optisch/strukturell 1:1 an Admin-Frontend angleichen und
 - [x] PrimeVue Dependencies/Plugins/Imports entfernt.
 - [x] PrimeVue-Komponenten durch Admin-Stil-Alternativen ersetzt (inkl. Toast).
 - [x] Reporting-Filter/Charts/Tables ohne PrimeVue funktionsfähig.
-- [ ] Tabellen/Card/Buttons/Input-Styling identisch zu Admin-Dark.
-- [ ] `npm run build` Customer erfolgreich.
+- [x] Tabellen/Card/Buttons/Input-Styling identisch zu Admin-Dark (Basis + Kompatibilitätslayer).
+- [x] `npm run build` Customer erfolgreich.
 - [ ] Dark-Mode visuell geprüft; Light-Mode TODO erfasst.
 - [x] WORKLOG/TODO aktualisiert.

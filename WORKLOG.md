@@ -194,6 +194,13 @@
 - Geänderte Dateien: `customer_frontend/customer-ui/src/styles/layout.css`, `customer_frontend/customer-ui/src/styles/utilities.css`, `customer_frontend/customer-ui/src/views/DashboardView.vue`, `customer_frontend/customer-ui/src/views/LagerbewegungenView.vue`, `customer_frontend/customer-ui/src/views/InventurView.vue`, `customer_frontend/customer-ui/src/views/ArtikelverwaltungView.vue`, `customer_frontend/customer-ui/src/views/EinstellungenView.vue`, `TODO.md`.
 - Nächste Schritte: Restliche Views (Bestellungen/Kategorien) und Detail-Politur prüfen, dann finalen Build/PrimeVue-Grep und visuelle Kontrolle Dark-Mode.
 
+- Datum/Uhrzeit: 2026-01-08T16:40:00Z
+- Task-ID: MIG-CUST-UI-VIEWS-2
+- Plan vor Umsetzung: Phase 4 fortsetzen – verbleibende Views (Kategorien, Bestellungen, Berichte-Feinschliff) auf Admin-Stil finalisieren: Buttons auf btnPrimary/btnGhost, Tabellen in tableWrap/table, Banner/Empty States vereinheitlichen, Filterleisten an Utilities anlehnen. Anschließend Build + PrimeVue-Grep.
+- Ergebnis: Kategorien/Bestellungen/Login auf Admin-Button-Pattern umgestellt, Tabellen auf `tableWrap/table`, Aktionen in Bestellungen/Kategorien auf btnPrimary/btnGhost, Create-Bestellung-Tabelle harmonisiert. Login-Button an Admin-Stil angepasst. Tabelle/Wrap in Artikelverwaltung korrigiert. ROADMAP-Checkliste aktualisiert (Build/PrimeVue entfernt, Styling-Fortschritt). TODO um Rest-Politur fokussiert.
+- Geänderte Dateien: `customer_frontend/customer-ui/src/views/KategorienView.vue`, `customer_frontend/customer-ui/src/views/BestellungenView.vue`, `customer_frontend/customer-ui/src/views/LoginView.vue`, `customer_frontend/customer-ui/src/views/ArtikelverwaltungView.vue`, `customer_frontend/customer-ui/src/styles/layout.css`, `customer_frontend/customer-ui/src/styles/utilities.css`, `docs/roadmap/CUSTOMER_UI_PARITY_WITH_ADMIN.md`, `TODO.md`, `WORKLOG.md`.
+- Nächste Schritte: Optional weitere View-Politur/QA Dark-Mode; finaler Build/PrimeVue-Grep erfolgt.
+
 ## Schritt 12 – UI-Harmonisierung Task 1 (Ist-Aufnahme)
 - **Datum/Uhrzeit**: 2026-01-05T15:43:05+00:00
 - **Ziel**: Bestandsaufnahme für Design-Harmonisierung (Global Styles, PrimeVue, Tokens, Layout-Bausteine) in Admin- und Customer-Frontend.

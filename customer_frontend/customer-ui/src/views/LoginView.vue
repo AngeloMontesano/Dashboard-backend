@@ -12,7 +12,7 @@
           <label for="password">Passwort</label>
           <input id="password" v-model="password" class="input" type="password" placeholder="••••••••" />
         </div>
-        <button class="button button--primary" :disabled="busy" @click="submit">
+        <button class="btnPrimary small" :disabled="busy" @click="submit">
           {{ busy ? 'Login...' : 'Anmelden' }}
         </button>
         <p v-if="error" class="text-danger text-small">{{ error }}</p>

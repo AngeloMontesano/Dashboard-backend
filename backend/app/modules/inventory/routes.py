@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import uuid
+import logging
 from datetime import date, datetime, timedelta, timezone
 from io import BytesIO, StringIO
+import socket
 from typing import Any, Literal
 
 from fastapi import APIRouter, Depends, File, HTTPException, Path, Query, UploadFile
@@ -15,7 +17,6 @@ from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 
 from app.core.db import get_db
-from app.core.config import settings
 from app.core.deps_auth import CurrentUserContext, get_current_user, require_owner_or_admin
 from app.core.deps_tenant import get_tenant_context
 from app.core.tenant import TenantContext
@@ -58,12 +59,15 @@ from app.modules.inventory.schemas import (
     EmailSendResponse,
     TestEmailRequest,
     TestEmailResponse,
+    SmtpPingResponse,
     MassImportResult,
     TenantPingResponse,
     TenantOutPing,
 )
+from app.modules.admin.smtp_settings_service import get_active_smtp_settings, SmtpConfig
 
 router = APIRouter(prefix="/inventory", tags=["inventory"])
+logger = logging.getLogger(__name__)
 
 
 @router.get("/ping", response_model=TenantPingResponse)
@@ -1024,28 +1028,74 @@ async def cancel_order(
     return _order_to_out(order, item_map)
 
 
+def _smtp_ping() -> tuple[bool, list[str], str | None, SmtpConfig | None]:
+    config = get_active_smtp_settings()
+    if not config or not config.host or not config.port or not config.from_email:
+        return False, [], "SMTP Konfiguration fehlt (Host/Port/From unvollständig)", config
+
+    resolved_ips: list[str] = []
+    try:
+        addr_info = socket.getaddrinfo(config.host, config.port, proto=socket.IPPROTO_TCP)
+        resolved_ips = sorted({info[4][0] for info in addr_info})
+    except socket.gaierror as e:
+        message = f"DNS Lookup fehlgeschlagen für {config.host} ({e})"
+        logger.warning(message, extra={"smtp_host": config.host, "smtp_port": config.port})
+        return False, resolved_ips, message, config
+    except Exception as e:  # noqa: BLE001
+        message = f"Auflösung für {config.host} fehlgeschlagen: {e}"
+        logger.warning(message, extra={"smtp_host": config.host, "smtp_port": config.port})
+        return False, resolved_ips, message, config
+
+    try:
+        with socket.create_connection((config.host, config.port), timeout=5):
+            pass
+    except socket.timeout:
+        message = f"Timeout beim Verbindungsaufbau zu {config.host}:{config.port}"
+        logger.warning(message, extra={"smtp_host": config.host, "smtp_port": config.port, "resolved_ips": resolved_ips})
+        return False, resolved_ips, message, config
+    except OSError as e:
+        message = f"Verbindungsaufbau zu {config.host}:{config.port} fehlgeschlagen ({e})"
+        logger.warning(message, extra={"smtp_host": config.host, "smtp_port": config.port, "resolved_ips": resolved_ips})
+        return False, resolved_ips, message, config
+
+    return True, resolved_ips, None, config
+
+
 def _send_email_message(*, to_email: str, subject: str, body: str) -> EmailSendResponse:
-    if not settings.SMTP_HOST or not settings.SMTP_PORT or not settings.SMTP_FROM:
-        return EmailSendResponse(ok=False, error="SMTP Konfiguration fehlt")
+    ok, resolved_ips, ping_error, config = _smtp_ping()
+    if not ok or not config:
+        return EmailSendResponse(ok=False, error=ping_error or "SMTP Konfiguration fehlt")
 
     import smtplib
     from email.message import EmailMessage
 
     message = EmailMessage()
     message["Subject"] = subject
-    message["From"] = settings.SMTP_FROM
+    message["From"] = config.from_email
     message["To"] = to_email
     message.set_content(body)
 
     try:
-        with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT, timeout=10) as smtp:
-            if settings.SMTP_USER and settings.SMTP_PASSWORD:
+        with smtplib.SMTP(config.host, config.port, timeout=10) as smtp:
+            if config.use_tls:
                 smtp.starttls()
-                smtp.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
+            if config.user and config.password:
+                smtp.login(config.user, config.password)
             smtp.send_message(message)
         return EmailSendResponse(ok=True, error=None)
+    except smtplib.SMTPAuthenticationError as e:  # noqa: BLE001
+        logger.warning("SMTP Auth fehlgeschlagen", exc_info=e, extra={"smtp_host": config.host, "resolved_ips": resolved_ips})
+        return EmailSendResponse(ok=False, error=f"SMTP Auth fehlgeschlagen: {e}")
+    except smtplib.SMTPException as e:  # noqa: BLE001
+        logger.warning("SMTP Fehler beim Senden", exc_info=e, extra={"smtp_host": config.host, "resolved_ips": resolved_ips})
+        return EmailSendResponse(ok=False, error=f"SMTP Fehler: {e}")
     except Exception as e:  # noqa: BLE001
-        return EmailSendResponse(ok=False, error=str(e))
+        logger.warning(
+            "E-Mail Versand fehlgeschlagen",
+            exc_info=e,
+            extra={"smtp_host": config.host, "smtp_port": config.port, "resolved_ips": resolved_ips},
+        )
+        return EmailSendResponse(ok=False, error=f"E-Mail Versand fehlgeschlagen: {e} (Host: {config.host}, Port: {config.port}, Resolved: {', '.join(resolved_ips) or 'n/a'})")
 
 
 def _format_order_email(
@@ -1416,27 +1466,59 @@ async def send_test_email(
     """
     Sendet eine Test-E-Mail an die angegebene Adresse, nutzt SMTP-Konfiguration aus Settings.
     """
-    if not settings.SMTP_HOST or not settings.SMTP_PORT or not settings.SMTP_FROM:
-        return TestEmailResponse(ok=False, error="SMTP Konfiguration fehlt")
+    ok, resolved_ips, ping_error, config = _smtp_ping()
+    if not ok or not config:
+        return TestEmailResponse(ok=False, error=ping_error)
 
     import smtplib
     from email.message import EmailMessage
 
     message = EmailMessage()
     message["Subject"] = "Test E-Mail Lagerverwaltung"
-    message["From"] = settings.SMTP_FROM
+    message["From"] = config.from_email
     message["To"] = payload.email
     message.set_content(f"Test E-Mail für Tenant {ctx.tenant.name} ({ctx.tenant.slug})")
 
     try:
-        with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT, timeout=10) as smtp:
-            if settings.SMTP_USER and settings.SMTP_PASSWORD:
+        with smtplib.SMTP(config.host, config.port, timeout=10) as smtp:
+            if config.use_tls:
                 smtp.starttls()
-                smtp.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
+            if config.user and config.password:
+                smtp.login(config.user, config.password)
             smtp.send_message(message)
         return TestEmailResponse(ok=True, error=None)
+    except smtplib.SMTPAuthenticationError as e:  # noqa: BLE001
+        logger.warning("SMTP Auth fehlgeschlagen (Test)", exc_info=e, extra={"smtp_host": config.host, "resolved_ips": resolved_ips})
+        return TestEmailResponse(ok=False, error=f"SMTP Auth fehlgeschlagen: {e}")
+    except smtplib.SMTPException as e:  # noqa: BLE001
+        logger.warning("SMTP Fehler beim Testversand", exc_info=e, extra={"smtp_host": config.host, "resolved_ips": resolved_ips})
+        return TestEmailResponse(ok=False, error=f"SMTP Fehler: {e}")
     except Exception as e:  # noqa: BLE001
-        return TestEmailResponse(ok=False, error=str(e))
+        logger.warning(
+            "E-Mail Testversand fehlgeschlagen",
+            exc_info=e,
+            extra={"smtp_host": config.host, "smtp_port": config.port, "resolved_ips": resolved_ips},
+        )
+        return TestEmailResponse(
+            ok=False,
+            error=f"E-Mail Versand fehlgeschlagen: {e} (Host: {config.host}, Port: {config.port}, Resolved: {', '.join(resolved_ips) or 'n/a'})",
+        )
+
+
+@router.get("/settings/smtp-ping", response_model=SmtpPingResponse, dependencies=[Depends(require_owner_or_admin)])
+async def smtp_ping() -> SmtpPingResponse:
+    """
+    Prüft DNS-Auflösung und TCP-Port-Erreichbarkeit der SMTP-Konfiguration.
+    """
+    ok, resolved_ips, error, config = _smtp_ping()
+    return SmtpPingResponse(
+        ok=ok,
+        error=error,
+        host=config.host if config else None,
+        port=config.port if config else None,
+        use_tls=config.use_tls if config else True,
+        resolved_ips=resolved_ips,
+    )
 
 
 # ----------------------

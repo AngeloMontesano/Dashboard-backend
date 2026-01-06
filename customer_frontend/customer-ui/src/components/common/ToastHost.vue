@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import StatusPill from './StatusPill.vue';
 import { useToast, type ToastVariant } from '@/composables/useToast';
 
 const { toasts, dismiss } = useToast();
@@ -13,16 +12,16 @@ const toneMap: Record<ToastVariant, ToastVariant> = {
 </script>
 
 <template>
-  <div class="toast-host" aria-live="polite">
-    <div v-for="toast in toasts" :key="toast.id" class="toast" role="status">
-      <div class="toast__header">
-        <StatusPill :label="toast.variant" :tone="toneMap[toast.variant]" />
-        <button class="button button--ghost" type="button" aria-label="Toast schließen" @click="dismiss(toast.id)">
+  <div class="toastHost" aria-live="polite">
+    <div v-for="toast in toasts" :key="toast.id" class="toastCard" role="status">
+      <div class="toastHeader">
+        <span class="toastPill" :class="toneMap[toast.variant]">{{ toast.variant }}</span>
+        <button class="btnGhost small" type="button" aria-label="Toast schließen" @click="dismiss(toast.id)">
           ✕
         </button>
       </div>
-      <p class="toast__title">{{ toast.title }}</p>
-      <p v-if="toast.description" class="toast__description">{{ toast.description }}</p>
+      <p class="toastTitle">{{ toast.title }}</p>
+      <p v-if="toast.description" class="toastDescription">{{ toast.description }}</p>
     </div>
   </div>
 </template>

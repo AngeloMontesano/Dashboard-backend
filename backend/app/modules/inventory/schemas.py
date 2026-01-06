@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import List, Optional
+from typing import List, Literal, Optional
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -98,6 +98,7 @@ class ItemUpdate(BaseModel):
 class ItemOut(ItemBase):
     id: str
     category_name: Optional[str] = None
+    is_admin_created: bool = False
 
 
 class ItemsPage(BaseModel):
@@ -148,3 +149,178 @@ class MovementPayload(BaseModel):
         if v not in {"IN", "OUT"}:
             raise ValueError("type must be IN or OUT")
         return v
+
+
+class InventoryUpdate(BaseModel):
+    item_id: str
+    quantity: int = Field(..., ge=0)
+
+
+class InventoryBulkUpdateRequest(BaseModel):
+    updates: List[InventoryUpdate]
+
+
+class InventoryBulkUpdateResult(BaseModel):
+    updated: int
+    errors: List[str] = []
+
+
+class ReportDataPoint(BaseModel):
+    period: str
+    value: float
+    item_id: Optional[str] = None
+    item_name: Optional[str] = None
+
+
+class ReportSeries(BaseModel):
+    label: str
+    itemId: Optional[str] = None
+    color: Optional[str] = None
+    data: List[ReportDataPoint]
+
+
+class ReportTopItem(BaseModel):
+    id: str
+    name: str
+    quantity: float
+
+
+class ReportKpis(BaseModel):
+    totalConsumption: float
+    averagePerMonth: float
+    months: List[str]
+    topItem: Optional[ReportTopItem] = None
+
+
+class ReportResponse(BaseModel):
+    series: List[ReportSeries]
+    kpis: ReportKpis
+
+
+class ItemUnitOut(BaseModel):
+    code: str
+    label: str
+    is_active: bool
+
+
+class OrderItemInput(BaseModel):
+    item_id: str
+    quantity: int = Field(..., gt=0)
+    note: Optional[str] = Field(default=None, max_length=255)
+
+
+class OrderCreate(BaseModel):
+    note: Optional[str] = Field(default=None, max_length=1024)
+    items: List[OrderItemInput]
+
+
+class OrderItemOut(BaseModel):
+    id: str
+    item_id: str
+    quantity: int
+    note: Optional[str] = None
+    item_name: Optional[str] = None
+    sku: Optional[str] = None
+    barcode: Optional[str] = None
+    category_id: Optional[str] = None
+
+
+class OrderOut(BaseModel):
+    id: str
+    number: str
+    status: Literal["OPEN", "COMPLETED", "CANCELED"]
+    note: Optional[str] = None
+    created_at: datetime
+    completed_at: Optional[datetime] = None
+    canceled_at: Optional[datetime] = None
+    items: List[OrderItemOut]
+
+
+class TenantSettingsBase(BaseModel):
+    company_name: str = Field("", max_length=255)
+    contact_email: str = Field("", max_length=255)
+    order_email: str = Field("", max_length=255)
+    auto_order_enabled: bool = False
+    auto_order_min: int = Field(0, ge=0)
+    export_format: str = Field("xlsx", max_length=32)
+    address: str = Field("", max_length=512)
+    address_postal_code: str = Field("", max_length=32)
+    address_city: str = Field("", max_length=128)
+    phone: str = Field("", max_length=64)
+    contact_name: str = Field("", max_length=255)
+    branch_number: str = Field("", max_length=64)
+    tax_number: str = Field("", max_length=64)
+    industry_id: Optional[str] = None
+
+
+class TenantSettingsUpdate(TenantSettingsBase):
+    pass
+
+
+class TenantSettingsOut(TenantSettingsBase):
+    id: str
+
+
+class IndustryBase(BaseModel):
+    name: str = Field(..., max_length=255)
+    description: str = Field("", max_length=512)
+    is_active: bool = True
+
+
+class IndustryCreate(IndustryBase):
+    pass
+
+
+class IndustryUpdate(BaseModel):
+    name: Optional[str] = Field(default=None, max_length=255)
+    description: Optional[str] = Field(default=None, max_length=512)
+    is_active: Optional[bool] = None
+
+
+class IndustryOut(IndustryBase):
+    id: str
+
+
+class IndustryArticlesUpdate(BaseModel):
+    item_ids: List[str]
+
+
+class MassImportResult(BaseModel):
+    imported: int
+    updated: int
+    errors: List[dict]
+
+
+class TestEmailRequest(BaseModel):
+    email: str = Field(..., max_length=255)
+
+
+class TestEmailResponse(BaseModel):
+    ok: bool
+    error: Optional[str] = None
+
+
+class OrderEmailRequest(BaseModel):
+    email: Optional[str] = Field(default=None, max_length=255)
+    note: Optional[str] = Field(default=None, max_length=1024)
+
+
+class EmailSendResponse(BaseModel):
+    ok: bool
+    error: Optional[str] = None
+
+
+class ReorderItem(BaseModel):
+    id: str
+    name: str
+    sku: str
+    barcode: str
+    category_id: Optional[str] = None
+    quantity: int
+    target_stock: int
+    min_stock: int
+    recommended_qty: int
+
+
+class ReorderResponse(BaseModel):
+    items: List[ReorderItem]

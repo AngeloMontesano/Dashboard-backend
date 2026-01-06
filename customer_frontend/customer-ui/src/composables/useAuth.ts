@@ -1,5 +1,6 @@
 import { reactive } from 'vue';
 import { authLogin } from '@/api/auth';
+import { setAuthToken } from '@/api/client';
 
 type AuthState = {
   accessToken: string;
@@ -35,6 +36,7 @@ function persist() {
       userId: state.userId
     })
   );
+  window.dispatchEvent(new Event('customer-auth-updated'));
 }
 
 function restore() {
@@ -48,12 +50,15 @@ function restore() {
     state.email = parsed.email || '';
     state.tenantId = parsed.tenantId || '';
     state.userId = parsed.userId || '';
+    setAuthToken(state.accessToken);
   } catch {
     // ignore parse errors
   }
 }
 
 restore();
+const handleAuthUpdated = () => restore();
+window.addEventListener('customer-auth-updated', handleAuthUpdated);
 
 export function useAuth() {
   async function login(email: string, password: string) {
@@ -67,6 +72,7 @@ export function useAuth() {
       state.tenantId = res.tenant_id || '';
       state.userId = res.user_id || '';
       persist();
+      setAuthToken(state.accessToken);
     } finally {
       state.loading = false;
     }
@@ -80,6 +86,7 @@ export function useAuth() {
     state.tenantId = '';
     state.userId = '';
     sessionStorage.removeItem(STORAGE_KEY);
+    setAuthToken(undefined);
   }
 
   function isAuthenticated() {

@@ -755,3 +755,13 @@
   - Queue: Bewegungs-Eingaben werden validiert (Barcode/QTY), Fehlerzentrum-Formular zeigt Feldhinweise; Queue-Aktions- und Refresh-Events landen in Session-Logs + Events für spätere Telemetrie.
 - **Tests**
   - `npm run build` (customer_frontend/customer-ui)
+
+## Schritt 53 – Telemetrie-Export für Auth-Refresh & Queue
+- **Datum/Uhrzeit**: 2026-01-06T15:30:00+00:00
+- **Ziel**: Logs für Token-Refresh und Movement-Queue unkompliziert als JSON exportieren und zentrale Telemetrie-Schnittstelle bereitstellen.
+- **Was wurde geändert**
+  - Neues Hilfsmodul `src/utils/telemetry.ts` mit Readern (`readAuthRefreshLog`, `readQueueEventLog`), Event-Subscription und optionalem JSON-Download der Snapshot-Daten.
+  - Auth-Refresh- und Queue-Logger nutzen die zentrale Telemetrie-API und senden weiterhin `customer-auth-refresh` bzw. `movement-queue-event`.
+  - Fehlerseite (`FehlgeschlageneBuchungenView`) bietet in DEV einen Export-Button, Topbar erhält ein kleines Dev-Panel (nur `import.meta.env.DEV`) mit Telemetry-Download.
+- **Tests**
+  - `npm run build` (customer_frontend/customer-ui)

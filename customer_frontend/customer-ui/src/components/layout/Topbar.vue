@@ -4,12 +4,14 @@ import { computed } from 'vue';
 import { useAuth } from '@/composables/useAuth';
 import { useTheme } from '@/composables/useTheme';
 import { useMovementQueue } from '@/composables/useMovementQueue';
+import { downloadTelemetrySnapshot } from '@/utils/telemetry';
 
 const route = useRoute();
 const router = useRouter();
 const { logout } = useAuth();
 const { theme, setTheme } = useTheme();
 const { attentionCount } = useMovementQueue();
+const isDev = import.meta.env.DEV;
 
 const title = computed(() => {
   switch (route.name) {
@@ -39,6 +41,11 @@ function handleLogout() {
   logout();
   router.push({ name: 'login' });
 }
+
+function exportTelemetry() {
+  downloadTelemetrySnapshot('customer-telemetry-log.json');
+}
+
 function onThemeChange(event: Event) {
   const value = (event.target as HTMLSelectElement).value as 'light' | 'dark' | 'system';
   setTheme(value);
@@ -56,6 +63,12 @@ function onThemeChange(event: Event) {
         Fehler
         <span class="badge-counter" v-if="issueCount">{{ issueCount }}</span>
       </RouterLink>
+      <details v-if="isDev" class="dev-tools">
+        <summary>Dev</summary>
+        <div class="dev-actions">
+          <button type="button" class="btnGhost small" @click="exportTelemetry">Telemetry export</button>
+        </div>
+      </details>
       <div class="toggle">
         <span>Theme</span>
         <select class="input" :value="theme" @change="onThemeChange">
@@ -89,5 +102,29 @@ function onThemeChange(event: Event) {
   justify-content: center;
   font-weight: 700;
   font-size: 0.75rem;
+}
+
+.dev-tools {
+  position: relative;
+}
+
+.dev-tools summary {
+  cursor: pointer;
+  user-select: none;
+}
+
+.dev-actions {
+  position: absolute;
+  right: 0;
+  z-index: 2;
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 12rem;
 }
 </style>

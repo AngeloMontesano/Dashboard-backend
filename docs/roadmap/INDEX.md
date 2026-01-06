@@ -34,6 +34,10 @@
 - [EPIC_H_MONITORING_LIGHTWEIGHT](EPIC_H_MONITORING_LIGHTWEIGHT.md)
 - [EPIC_I_CONTACT_DATA_AND_SUPPORT](EPIC_I_CONTACT_DATA_AND_SUPPORT.md)
 
+## Spezifikationen & Referenzen
+- Tenant-Status (A-01): [docs/openapi/TENANT_STATUS.md](../openapi/TENANT_STATUS.md), Schema `PublicTenantStatus` in [docs/openapi/openapi.json](../openapi/openapi.json)
+- OpenAPI Quelle (lokal): [docs/openapi/openapi.json](../openapi/openapi.json)
+
 ## Backlog & Logs
 - [TODO.md](../../TODO.md): Priorisierter Now/Next/Later-Backlog mit Epic/Task-IDs.
 - [Epic_TODO.md](../../Epic_TODO.md): Aufgaben je Epic (A–I) als Referenzliste.

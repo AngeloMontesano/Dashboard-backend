@@ -2009,11 +2009,11 @@
               "type": "integer",
               "maximum": 1000,
               "minimum": 1,
-              "description": "Maximale Anzahl zur\u00fcckgegebener Bewegungen",
+              "description": "Maximale Anzahl zurückgegebener Bewegungen",
               "default": 200,
               "title": "Limit"
             },
-            "description": "Maximale Anzahl zur\u00fcckgegebener Bewegungen"
+            "description": "Maximale Anzahl zurückgegebener Bewegungen"
           },
           {
             "name": "authorization",
@@ -2609,7 +2609,7 @@
           "admin-tenants"
         ],
         "summary": "Admin Delete Tenant",
-        "description": "L\u00f6scht einen Tenant nur mit expliziter Best\u00e4tigung.\nAufruf: DELETE /admin/tenants/{tenant_id}?confirm=true",
+        "description": "Löscht einen Tenant nur mit expliziter Bestätigung.\nAufruf: DELETE /admin/tenants/{tenant_id}?confirm=true",
         "operationId": "admin_delete_tenant_admin_tenants__tenant_id__delete",
         "parameters": [
           {
@@ -3311,7 +3311,7 @@
           "admin-audit"
         ],
         "summary": "Admin Get Audit",
-        "description": "Liefert Audit Log Eintr\u00e4ge mit optionalen Filtern.",
+        "description": "Liefert Audit Log Einträge mit optionalen Filtern.",
         "operationId": "admin_get_audit_admin_audit_get",
         "parameters": [
           {
@@ -3503,7 +3503,7 @@
           "admin-diagnostics"
         ],
         "summary": "Admin Diagnostics",
-        "description": "Diagnostik f\u00fcr typische Dateninkonsistenzen.\nLiefert nur Read-Informationen, keine \u00c4nderungen.",
+        "description": "Diagnostik für typische Dateninkonsistenzen.\nLiefert nur Read-Informationen, keine Änderungen.",
         "operationId": "admin_diagnostics_admin_diagnostics_get",
         "parameters": [
           {
@@ -4101,6 +4101,1211 @@
         }
       }
     },
+    "/admin/inventory/categories": {
+      "get": {
+        "tags": [
+          "admin",
+          "admin-inventory"
+        ],
+        "summary": "Admin List Categories",
+        "operationId": "admin_list_categories_admin_inventory_categories_get",
+        "parameters": [
+          {
+            "name": "x-admin-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Key"
+            }
+          },
+          {
+            "name": "x-admin-actor",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Actor"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CategoryOut"
+                  },
+                  "title": "Response Admin List Categories Admin Inventory Categories Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "admin",
+          "admin-inventory"
+        ],
+        "summary": "Admin Create Category",
+        "operationId": "admin_create_category_admin_inventory_categories_post",
+        "parameters": [
+          {
+            "name": "x-admin-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Key"
+            }
+          },
+          {
+            "name": "x-admin-actor",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Actor"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CategoryCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategoryOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/inventory/categories/{category_id}": {
+      "patch": {
+        "tags": [
+          "admin",
+          "admin-inventory"
+        ],
+        "summary": "Admin Update Category",
+        "operationId": "admin_update_category_admin_inventory_categories__category_id__patch",
+        "parameters": [
+          {
+            "name": "category_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Category Id"
+            }
+          },
+          {
+            "name": "x-admin-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Key"
+            }
+          },
+          {
+            "name": "x-admin-actor",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Actor"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CategoryUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategoryOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/inventory/units": {
+      "get": {
+        "tags": [
+          "admin",
+          "admin-inventory"
+        ],
+        "summary": "Admin List Units",
+        "operationId": "admin_list_units_admin_inventory_units_get",
+        "parameters": [
+          {
+            "name": "x-admin-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Key"
+            }
+          },
+          {
+            "name": "x-admin-actor",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Actor"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ItemUnitOut"
+                  },
+                  "title": "Response Admin List Units Admin Inventory Units Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "admin",
+          "admin-inventory"
+        ],
+        "summary": "Admin Upsert Unit",
+        "operationId": "admin_upsert_unit_admin_inventory_units_post",
+        "parameters": [
+          {
+            "name": "x-admin-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Key"
+            }
+          },
+          {
+            "name": "x-admin-actor",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Actor"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ItemUnitOut"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemUnitOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/inventory/items": {
+      "get": {
+        "tags": [
+          "admin",
+          "admin-inventory"
+        ],
+        "summary": "Admin List Items",
+        "operationId": "admin_list_items_admin_inventory_items_get",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Suche in SKU, Barcode, Name",
+              "title": "Q"
+            },
+            "description": "Suche in SKU, Barcode, Name"
+          },
+          {
+            "name": "category_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Category Id"
+            }
+          },
+          {
+            "name": "active",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": true,
+              "title": "Active"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Page Size"
+            }
+          },
+          {
+            "name": "x-admin-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Key"
+            }
+          },
+          {
+            "name": "x-admin-actor",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Actor"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemsPage"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "admin",
+          "admin-inventory"
+        ],
+        "summary": "Admin Create Item",
+        "operationId": "admin_create_item_admin_inventory_items_post",
+        "parameters": [
+          {
+            "name": "x-admin-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Key"
+            }
+          },
+          {
+            "name": "x-admin-actor",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Actor"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ItemCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/inventory/items/{item_id}": {
+      "patch": {
+        "tags": [
+          "admin",
+          "admin-inventory"
+        ],
+        "summary": "Admin Update Item",
+        "operationId": "admin_update_item_admin_inventory_items__item_id__patch",
+        "parameters": [
+          {
+            "name": "item_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Item Id"
+            }
+          },
+          {
+            "name": "x-admin-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Key"
+            }
+          },
+          {
+            "name": "x-admin-actor",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Actor"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ItemUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/inventory/items/import": {
+      "post": {
+        "tags": [
+          "admin",
+          "admin-inventory"
+        ],
+        "summary": "Admin Import Items",
+        "operationId": "admin_import_items_admin_inventory_items_import_post",
+        "parameters": [
+          {
+            "name": "x-admin-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Key"
+            }
+          },
+          {
+            "name": "x-admin-actor",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Actor"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_admin_import_items_admin_inventory_items_import_post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/inventory/items/export": {
+      "get": {
+        "tags": [
+          "admin",
+          "admin-inventory"
+        ],
+        "summary": "Admin Export Items",
+        "operationId": "admin_export_items_admin_inventory_items_export_get",
+        "parameters": [
+          {
+            "name": "x-admin-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Key"
+            }
+          },
+          {
+            "name": "x-admin-actor",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Actor"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Response Admin Export Items Admin Inventory Items Export Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/inventory/industries": {
+      "get": {
+        "tags": [
+          "admin",
+          "admin-inventory"
+        ],
+        "summary": "Admin List Industries",
+        "operationId": "admin_list_industries_admin_inventory_industries_get",
+        "parameters": [
+          {
+            "name": "x-admin-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Key"
+            }
+          },
+          {
+            "name": "x-admin-actor",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Actor"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/IndustryOut"
+                  },
+                  "title": "Response Admin List Industries Admin Inventory Industries Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "admin",
+          "admin-inventory"
+        ],
+        "summary": "Admin Create Industry",
+        "operationId": "admin_create_industry_admin_inventory_industries_post",
+        "parameters": [
+          {
+            "name": "x-admin-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Key"
+            }
+          },
+          {
+            "name": "x-admin-actor",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Actor"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IndustryCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IndustryOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/inventory/industries/{industry_id}": {
+      "patch": {
+        "tags": [
+          "admin",
+          "admin-inventory"
+        ],
+        "summary": "Admin Update Industry",
+        "operationId": "admin_update_industry_admin_inventory_industries__industry_id__patch",
+        "parameters": [
+          {
+            "name": "industry_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Industry Id"
+            }
+          },
+          {
+            "name": "x-admin-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Key"
+            }
+          },
+          {
+            "name": "x-admin-actor",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Actor"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IndustryUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IndustryOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/inventory/industries/{industry_id}/items": {
+      "get": {
+        "tags": [
+          "admin",
+          "admin-inventory"
+        ],
+        "summary": "Admin List Industry Items",
+        "operationId": "admin_list_industry_items_admin_inventory_industries__industry_id__items_get",
+        "parameters": [
+          {
+            "name": "industry_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Industry Id"
+            }
+          },
+          {
+            "name": "x-admin-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Key"
+            }
+          },
+          {
+            "name": "x-admin-actor",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Actor"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ItemOut"
+                  },
+                  "title": "Response Admin List Industry Items Admin Inventory Industries  Industry Id  Items Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "admin",
+          "admin-inventory"
+        ],
+        "summary": "Admin Set Industry Items",
+        "operationId": "admin_set_industry_items_admin_inventory_industries__industry_id__items_put",
+        "parameters": [
+          {
+            "name": "industry_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Industry Id"
+            }
+          },
+          {
+            "name": "x-admin-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Key"
+            }
+          },
+          {
+            "name": "x-admin-actor",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Actor"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IndustryArticlesUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Response Admin Set Industry Items Admin Inventory Industries  Industry Id  Items Put"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/admin/ping": {
       "get": {
         "tags": [
@@ -4442,6 +5647,20 @@
         ],
         "title": "AuditOut"
       },
+      "Body_admin_import_items_admin_inventory_items_import_post": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "format": "binary",
+            "title": "File"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_admin_import_items_admin_inventory_items_import_post"
+      },
       "Body_import_items_inventory_items_import_post": {
         "properties": {
           "file": {
@@ -4583,6 +5802,118 @@
         },
         "type": "object",
         "title": "HTTPValidationError"
+      },
+      "IndustryArticlesUpdate": {
+        "properties": {
+          "item_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Item Ids"
+          }
+        },
+        "type": "object",
+        "required": [
+          "item_ids"
+        ],
+        "title": "IndustryArticlesUpdate"
+      },
+      "IndustryCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "Name"
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 512,
+            "title": "Description",
+            "default": ""
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "IndustryCreate"
+      },
+      "IndustryOut": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "Name"
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 512,
+            "title": "Description",
+            "default": ""
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "default": true
+          },
+          "id": {
+            "type": "string",
+            "title": "Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "id"
+        ],
+        "title": "IndustryOut"
+      },
+      "IndustryUpdate": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 512
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "is_active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Active"
+          }
+        },
+        "type": "object",
+        "title": "IndustryUpdate"
       },
       "InventoryBulkUpdateRequest": {
         "properties": {
@@ -4813,6 +6144,11 @@
               }
             ],
             "title": "Category Name"
+          },
+          "is_admin_created": {
+            "type": "boolean",
+            "title": "Is Admin Created",
+            "default": false
           }
         },
         "type": "object",
@@ -5927,6 +7263,97 @@
             "type": "string",
             "title": "Id"
           },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "quantity": {
+            "type": "number",
+            "title": "Quantity"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "quantity"
+        ],
+        "title": "ReportTopItem"
+      },
+      "SKUExistsResponse": {
+        "properties": {
+          "exists": {
+            "type": "boolean",
+            "title": "Exists"
+          },
+          "normalized_sku": {
+            "type": "string",
+            "title": "Normalized Sku"
+          }
+        },
+        "type": "object",
+        "required": [
+          "exists",
+          "normalized_sku"
+        ],
+        "title": "SKUExistsResponse"
+      },
+      "TenantCreate": {
+        "properties": {
+          "slug": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 2,
+            "title": "Slug"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 2,
+            "title": "Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "slug",
+          "name"
+        ],
+        "title": "TenantCreate"
+      },
+      "TenantOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "slug": {
+            "type": "string",
+            "title": "Slug"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "slug",
+          "name",
+          "is_active"
+        ],
+        "title": "TenantOut"
+      },
+      "TenantOutPing": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
           "slug": {
             "type": "string",
             "title": "Slug"
@@ -5948,200 +7375,9 @@
           "is_active"
         ],
         "title": "TenantOutPing",
-        "description": "Minimaler Tenant Output f\u00fcr /inventory/ping."
+        "description": "Minimaler Tenant Output für /inventory/ping."
       },
       "TenantPingResponse": {
-        "properties": {
-          "ok": {
-            "type": "boolean",
-            "title": "Ok"
-          },
-          "tenant": {
-            "$ref": "#/components/schemas/TenantOutPing"
-          }
-        },
-        "type": "object",
-        "required": [
-          "ok",
-          "tenant"
-        ],
-        "title": "TenantPingResponse",
-        "description": "Response Modell f\u00fcr /inventory/ping."
-      },
-      "TenantSettingsOut": {
-        "properties": {
-          "company_name": {
-            "type": "string",
-            "maxLength": 255,
-            "title": "Company Name",
-            "default": ""
-          },
-          "contact_email": {
-            "type": "string",
-            "maxLength": 255,
-            "title": "Contact Email",
-            "default": ""
-          },
-          "order_email": {
-            "type": "string",
-            "maxLength": 255,
-            "title": "Order Email",
-            "default": ""
-          },
-          "auto_order_enabled": {
-            "type": "boolean",
-            "title": "Auto Order Enabled",
-            "default": false
-          },
-          "auto_order_min": {
-            "type": "integer",
-            "minimum": 0.0,
-            "title": "Auto Order Min",
-            "default": 0
-          },
-          "export_format": {
-            "type": "string",
-            "maxLength": 32,
-            "title": "Export Format",
-            "default": "xlsx"
-          },
-          "address": {
-            "type": "string",
-            "maxLength": 512,
-            "title": "Address",
-            "default": ""
-          },
-          "address_postal_code": {
-            "type": "string",
-            "maxLength": 32,
-            "title": "Address Postal Code",
-            "default": ""
-          },
-          "address_city": {
-            "type": "string",
-            "maxLength": 128,
-            "title": "Address City",
-            "default": ""
-          },
-          "phone": {
-            "type": "string",
-            "maxLength": 64,
-            "title": "Phone",
-            "default": ""
-          },
-          "contact_name": {
-            "type": "string",
-            "maxLength": 255,
-            "title": "Contact Name",
-            "default": ""
-          },
-          "branch_number": {
-            "type": "string",
-            "maxLength": 64,
-            "title": "Branch Number",
-            "default": ""
-          },
-          "tax_number": {
-            "type": "string",
-            "maxLength": 64,
-            "title": "Tax Number",
-            "default": ""
-          },
-          "id": {
-            "type": "string",
-            "title": "Id"
-          }
-        },
-        "type": "object",
-        "required": [
-          "id"
-        ],
-        "title": "TenantSettingsOut"
-      },
-      "TenantSettingsUpdate": {
-        "properties": {
-          "company_name": {
-            "type": "string",
-            "maxLength": 255,
-            "title": "Company Name",
-            "default": ""
-          },
-          "contact_email": {
-            "type": "string",
-            "maxLength": 255,
-            "title": "Contact Email",
-            "default": ""
-          },
-          "order_email": {
-            "type": "string",
-            "maxLength": 255,
-            "title": "Order Email",
-            "default": ""
-          },
-          "auto_order_enabled": {
-            "type": "boolean",
-            "title": "Auto Order Enabled",
-            "default": false
-          },
-          "auto_order_min": {
-            "type": "integer",
-            "minimum": 0.0,
-            "title": "Auto Order Min",
-            "default": 0
-          },
-          "export_format": {
-            "type": "string",
-            "maxLength": 32,
-            "title": "Export Format",
-            "default": "xlsx"
-          },
-          "address": {
-            "type": "string",
-            "maxLength": 512,
-            "title": "Address",
-            "default": ""
-          },
-          "address_postal_code": {
-            "type": "string",
-            "maxLength": 32,
-            "title": "Address Postal Code",
-            "default": ""
-          },
-          "address_city": {
-            "type": "string",
-            "maxLength": 128,
-            "title": "Address City",
-            "default": ""
-          },
-          "phone": {
-            "type": "string",
-            "maxLength": 64,
-            "title": "Phone",
-            "default": ""
-          },
-          "contact_name": {
-            "type": "string",
-            "maxLength": 255,
-            "title": "Contact Name",
-            "default": ""
-          },
-          "branch_number": {
-            "type": "string",
-            "maxLength": 64,
-            "title": "Branch Number",
-            "default": ""
-          },
-          "tax_number": {
-            "type": "string",
-            "maxLength": 64,
-            "title": "Tax Number",
-            "default": ""
-          }
-        },
-        "type": "object",
-        "title": "TenantSettingsUpdate"
-      },
-      "TenantUpdate": {
         "properties": {
           "name": {
             "anyOf": [
@@ -6258,7 +7494,9 @@
           "role": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "string",
+                "maxLength": 255,
+                "minLength": 2
               },
               {
                 "type": "null"

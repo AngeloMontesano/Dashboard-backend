@@ -56,6 +56,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/inventory/units": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Units */
+        get: operations["list_units_inventory_units_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/inventory/categories/{category_id}": {
         parameters: {
             query?: never;
@@ -721,6 +738,181 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/inventory/categories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Admin List Categories */
+        get: operations["admin_list_categories_admin_inventory_categories_get"];
+        put?: never;
+        /** Admin Create Category */
+        post: operations["admin_create_category_admin_inventory_categories_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/inventory/categories/{category_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Admin Update Category */
+        patch: operations["admin_update_category_admin_inventory_categories__category_id__patch"];
+        trace?: never;
+    };
+    "/admin/inventory/units": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Admin List Units */
+        get: operations["admin_list_units_admin_inventory_units_get"];
+        put?: never;
+        /** Admin Upsert Unit */
+        post: operations["admin_upsert_unit_admin_inventory_units_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/inventory/items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Admin List Items */
+        get: operations["admin_list_items_admin_inventory_items_get"];
+        put?: never;
+        /** Admin Create Item */
+        post: operations["admin_create_item_admin_inventory_items_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/inventory/items/{item_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Admin Update Item */
+        patch: operations["admin_update_item_admin_inventory_items__item_id__patch"];
+        trace?: never;
+    };
+    "/admin/inventory/items/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Admin Import Items */
+        post: operations["admin_import_items_admin_inventory_items_import_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/inventory/items/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Admin Export Items */
+        get: operations["admin_export_items_admin_inventory_items_export_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/inventory/industries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Admin List Industries */
+        get: operations["admin_list_industries_admin_inventory_industries_get"];
+        put?: never;
+        /** Admin Create Industry */
+        post: operations["admin_create_industry_admin_inventory_industries_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/inventory/industries/{industry_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Admin Update Industry */
+        patch: operations["admin_update_industry_admin_inventory_industries__industry_id__patch"];
+        trace?: never;
+    };
+    "/admin/inventory/industries/{industry_id}/items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Admin List Industry Items */
+        get: operations["admin_list_industry_items_admin_inventory_industries__industry_id__items_get"];
+        /** Admin Set Industry Items */
+        put: operations["admin_set_industry_items_admin_inventory_industries__industry_id__items_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/ping": {
         parameters: {
             query?: never;
@@ -901,6 +1093,14 @@ export interface components {
              */
             created_at: string;
         };
+        /** Body_admin_import_items_admin_inventory_items_import_post */
+        Body_admin_import_items_admin_inventory_items_import_post: {
+            /**
+             * File
+             * Format: binary
+             */
+            file: string;
+        };
         /** Body_import_items_inventory_items_import_post */
         Body_import_items_inventory_items_import_post: {
             /**
@@ -959,6 +1159,52 @@ export interface components {
         HTTPValidationError: {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
+        };
+        /** IndustryArticlesUpdate */
+        IndustryArticlesUpdate: {
+            /** Item Ids */
+            item_ids: string[];
+        };
+        /** IndustryCreate */
+        IndustryCreate: {
+            /** Name */
+            name: string;
+            /**
+             * Description
+             * @default
+             */
+            description: string;
+            /**
+             * Is Active
+             * @default true
+             */
+            is_active: boolean;
+        };
+        /** IndustryOut */
+        IndustryOut: {
+            /** Name */
+            name: string;
+            /**
+             * Description
+             * @default
+             */
+            description: string;
+            /**
+             * Is Active
+             * @default true
+             */
+            is_active: boolean;
+            /** Id */
+            id: string;
+        };
+        /** IndustryUpdate */
+        IndustryUpdate: {
+            /** Name */
+            name?: string | null;
+            /** Description */
+            description?: string | null;
+            /** Is Active */
+            is_active?: boolean | null;
         };
         /** InventoryBulkUpdateRequest */
         InventoryBulkUpdateRequest: {
@@ -1097,6 +1343,20 @@ export interface components {
             id: string;
             /** Category Name */
             category_name?: string | null;
+            /**
+             * Is Admin Created
+             * @default false
+             */
+            is_admin_created: boolean;
+        };
+        /** ItemUnitOut */
+        ItemUnitOut: {
+            /** Code */
+            code: string;
+            /** Label */
+            label: string;
+            /** Is Active */
+            is_active: boolean;
         };
         /** ItemUpdate */
         ItemUpdate: {
@@ -1513,6 +1773,8 @@ export interface components {
              * @default
              */
             tax_number: string;
+            /** Industry Id */
+            industry_id?: string | null;
             /** Id */
             id: string;
         };
@@ -1583,6 +1845,8 @@ export interface components {
              * @default
              */
             tax_number: string;
+            /** Industry Id */
+            industry_id?: string | null;
         };
         /** TenantUpdate */
         TenantUpdate: {
@@ -1826,6 +2090,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CategoryOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_units_inventory_units_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ItemUnitOut"][];
                 };
             };
             /** @description Validation Error */
@@ -3529,6 +3824,539 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TenantSettingsOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_list_categories_admin_inventory_categories_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-admin-key"?: string | null;
+                "x-admin-actor"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CategoryOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_create_category_admin_inventory_categories_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-admin-key"?: string | null;
+                "x-admin-actor"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CategoryCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CategoryOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_update_category_admin_inventory_categories__category_id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-admin-key"?: string | null;
+                "x-admin-actor"?: string | null;
+            };
+            path: {
+                category_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CategoryUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CategoryOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_list_units_admin_inventory_units_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-admin-key"?: string | null;
+                "x-admin-actor"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ItemUnitOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_upsert_unit_admin_inventory_units_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-admin-key"?: string | null;
+                "x-admin-actor"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ItemUnitOut"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ItemUnitOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_list_items_admin_inventory_items_get: {
+        parameters: {
+            query?: {
+                /** @description Suche in SKU, Barcode, Name */
+                q?: string | null;
+                category_id?: string | null;
+                active?: boolean | null;
+                page?: number;
+                page_size?: number;
+            };
+            header?: {
+                "x-admin-key"?: string | null;
+                "x-admin-actor"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ItemsPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_create_item_admin_inventory_items_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-admin-key"?: string | null;
+                "x-admin-actor"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ItemCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ItemOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_update_item_admin_inventory_items__item_id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-admin-key"?: string | null;
+                "x-admin-actor"?: string | null;
+            };
+            path: {
+                item_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ItemUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ItemOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_import_items_admin_inventory_items_import_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-admin-key"?: string | null;
+                "x-admin-actor"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_admin_import_items_admin_inventory_items_import_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_export_items_admin_inventory_items_export_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-admin-key"?: string | null;
+                "x-admin-actor"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_list_industries_admin_inventory_industries_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-admin-key"?: string | null;
+                "x-admin-actor"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IndustryOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_create_industry_admin_inventory_industries_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-admin-key"?: string | null;
+                "x-admin-actor"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IndustryCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IndustryOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_update_industry_admin_inventory_industries__industry_id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-admin-key"?: string | null;
+                "x-admin-actor"?: string | null;
+            };
+            path: {
+                industry_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IndustryUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IndustryOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_list_industry_items_admin_inventory_industries__industry_id__items_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-admin-key"?: string | null;
+                "x-admin-actor"?: string | null;
+            };
+            path: {
+                industry_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ItemOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_set_industry_items_admin_inventory_industries__industry_id__items_put: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-admin-key"?: string | null;
+                "x-admin-actor"?: string | null;
+            };
+            path: {
+                industry_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IndustryArticlesUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
                 };
             };
             /** @description Validation Error */

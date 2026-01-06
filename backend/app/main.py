@@ -34,6 +34,7 @@ OPENAPI_TAGS = [
     {"name": "admin-roles", "description": "Rollen Katalog."},
     {"name": "admin-audit", "description": "Admin Audit Log."},
     {"name": "admin-diagnostics", "description": "Daten Checks und Diagnosen."},
+    {"name": "admin-inventory", "description": "Globale Stammdaten und Branchenverwaltung."},
 ]
 
 

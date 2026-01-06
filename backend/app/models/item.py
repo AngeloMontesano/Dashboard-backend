@@ -23,10 +23,10 @@ class Item(Base):
     )
 
     # Tenant Isolation über tenant_id
-    tenant_id: Mapped[uuid.UUID] = mapped_column(
+    tenant_id: Mapped[uuid.UUID | None] = mapped_column(
         GUID(),
         ForeignKey("tenants.id", ondelete="RESTRICT"),
-        nullable=False,
+        nullable=True,
         index=True,
     )
 
@@ -106,6 +106,12 @@ class Item(Base):
     is_active: Mapped[bool] = mapped_column(
         Boolean,
         default=True,
+        nullable=False,
+    )
+
+    is_admin_created: Mapped[bool] = mapped_column(
+        Boolean,
+        default=False,
         nullable=False,
     )
 

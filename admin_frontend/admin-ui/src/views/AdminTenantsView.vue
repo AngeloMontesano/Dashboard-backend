@@ -292,6 +292,7 @@ import {
   adminDeleteTenant,
   adminGetTenantSettings,
   adminUpdateTenantSettings,
+  adminListIndustries,
 } from "../api/admin";
 import { useToast } from "../composables/useToast";
 import { useGlobalMasterdata } from "../composables/useGlobalMasterdata";
@@ -534,6 +535,16 @@ function resetFilters() {
   statusFilter.value = "all";
 }
 
+async function loadIndustriesList() {
+  if (!ensureAdminKey()) return;
+  try {
+    const res = await adminListIndustries(props.adminKey, props.actor);
+    replaceIndustries(res as any);
+  } catch (e: any) {
+    toast(`Branchen konnten nicht geladen werden: ${stringifyError(e)}`);
+  }
+}
+
 async function loadTenantSettings(tenantId: string) {
   if (!ensureAdminKey()) return;
   settingsState.loading = true;
@@ -661,6 +672,7 @@ watch(
   (key, prev) => {
     if (key && key !== prev) {
       loadTenants();
+      loadIndustriesList();
     }
   },
   { immediate: true }

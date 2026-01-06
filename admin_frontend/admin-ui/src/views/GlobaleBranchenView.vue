@@ -150,7 +150,16 @@
             <div class="mapping-pane">
               <div class="pane-header">
                 <div class="pane-title">Verfügbare Artikel</div>
-                <div class="text-muted text-small">Serverseitig, Mehrfachauswahl möglich.</div>
+                <div class="row gap8 wrap align-center">
+                  <span class="text-muted text-small">Serverseitig, Mehrfachauswahl möglich.</span>
+                  <span class="text-small">Ausgewählt: {{ availableSelectionCount }}</span>
+                  <button class="btnGhost tiny" type="button" :disabled="!availableItems.length" @click="selectAllAvailablePage">
+                    Seite auswählen
+                  </button>
+                  <button class="btnGhost tiny" type="button" :disabled="!availableSelectionCount" @click="clearAvailableSelection">
+                    Auswahl leeren
+                  </button>
+                </div>
               </div>
               <div class="pane-body" :class="{ loading: busy.loadAvailable }">
                 <div v-if="busy.loadAvailable" class="muted text-small">Lädt Artikel...</div>
@@ -201,7 +210,16 @@
             <div class="mapping-pane">
               <div class="pane-header">
                 <div class="pane-title">Zugeordnete Artikel</div>
-                <div class="text-muted text-small">Pending-Status wird angezeigt. Clientseitige Pagination.</div>
+                <div class="row gap8 wrap align-center">
+                  <span class="text-muted text-small">Pending-Status wird angezeigt. Clientseitige Pagination.</span>
+                  <span class="text-small">Ausgewählt: {{ assignedSelectionCount }}</span>
+                  <button class="btnGhost tiny" type="button" :disabled="!paginatedAssignedRows.length" @click="selectAllAssignedPage">
+                    Seite auswählen
+                  </button>
+                  <button class="btnGhost tiny" type="button" :disabled="!assignedSelectionCount" @click="clearAssignedSelection">
+                    Auswahl leeren
+                  </button>
+                </div>
               </div>
               <div class="pane-body" :class="{ loading: busy.loadMapping }">
                 <div v-if="busy.loadMapping" class="muted text-small">Zuordnung wird geladen...</div>
@@ -396,6 +414,9 @@ const finalItemIds = computed(() => {
 
 const finalItemIdSet = computed(() => new Set(finalItemIds.value));
 
+const availableSelectionCount = computed(() => selectedAvailableIds.value.length);
+const assignedSelectionCount = computed(() => selectedAssignedIds.value.length);
+
 const assignedRows = computed(() => {
   const removalSet = new Set(pendingRemovals.value);
   const additionSet = new Set(pendingAdditions.value);
@@ -523,6 +544,10 @@ async function loadAvailableItems() {
     availableItems.value = res.items as GlobalItem[];
     availableTotal.value = res.total;
     cacheItems(res.items as GlobalItem[]);
+    const availableIds = new Set(availableItems.value.map((i) => i.id));
+    selectedAvailableIds.value = selectedAvailableIds.value.filter(
+      (id) => availableIds.has(id) && !finalItemIdSet.value.has(id)
+    );
   } catch (e: any) {
     toast(`Artikel konnten nicht geladen werden: ${e?.message || e}`, "error");
   } finally {
@@ -709,6 +734,7 @@ async function saveMapping() {
     assignedItems.value = assignedRows.value
       .filter((row) => row.status !== "remove")
       .map((row) => row.item);
+    selectedAssignedIds.value = [];
     toast("Zuordnung gespeichert", "success");
   } catch (e: any) {
     toast(`Speichern fehlgeschlagen: ${e?.message || e}`, "error");
@@ -727,6 +753,27 @@ const canRemoveSelection = computed(
 function reloadAvailable() {
   availablePage.value = 1;
   loadAvailableItems();
+}
+
+function selectAllAvailablePage() {
+  if (!availableItems.value.length) return;
+  const selectable = availableItems.value
+    .filter((item) => !finalItemIdSet.value.has(item.id))
+    .map((item) => item.id);
+  selectedAvailableIds.value = selectable;
+}
+
+function clearAvailableSelection() {
+  selectedAvailableIds.value = [];
+}
+
+function selectAllAssignedPage() {
+  if (!paginatedAssignedRows.value.length) return;
+  selectedAssignedIds.value = paginatedAssignedRows.value.map((row) => row.item.id);
+}
+
+function clearAssignedSelection() {
+  selectedAssignedIds.value = [];
 }
 
 onMounted(() => {

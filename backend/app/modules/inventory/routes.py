@@ -38,6 +38,7 @@ from app.modules.inventory.schemas import (
     OrderItemOut,
     OrderOut,
     OrderEmailRequest,
+    TenantSettingsOut,
     ReportResponse,
     ReportSeries,
     ReportDataPoint,

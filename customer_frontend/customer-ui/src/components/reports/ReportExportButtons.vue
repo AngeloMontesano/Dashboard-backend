@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import Button from 'primevue/button';
-
 const props = withDefaults(
   defineProps<{
     disabled?: boolean;
@@ -21,33 +19,30 @@ const emit = defineEmits<{
 
 <template>
   <div class="export-actions">
-    <Button
-      label="CSV"
-      icon="pi pi-file"
-      severity="secondary"
-      outlined
-      :loading="loadingFormat === 'csv'"
-      :disabled="disabled"
+    <button
+      class="btnGhost small"
+      type="button"
+      :disabled="disabled || loadingFormat === 'csv'"
       @click="emit('export:csv')"
-    />
-    <Button
-      label="Excel"
-      icon="pi pi-file-excel"
-      severity="success"
-      outlined
-      :loading="loadingFormat === 'excel'"
-      :disabled="disabled"
+    >
+      {{ loadingFormat === 'csv' ? 'Lädt...' : 'CSV' }}
+    </button>
+    <button
+      class="btnGhost small"
+      type="button"
+      :disabled="disabled || loadingFormat === 'excel'"
       @click="emit('export:excel')"
-    />
-    <Button
-      label="PDF"
-      icon="pi pi-file-pdf"
-      severity="danger"
-      outlined
-      :loading="loadingFormat === 'pdf'"
-      :disabled="disabled"
+    >
+      {{ loadingFormat === 'excel' ? 'Lädt...' : 'Excel' }}
+    </button>
+    <button
+      class="btnPrimary small"
+      type="button"
+      :disabled="disabled || loadingFormat === 'pdf'"
       @click="emit('export:pdf')"
-    />
+    >
+      {{ loadingFormat === 'pdf' ? 'Lädt...' : 'PDF' }}
+    </button>
   </div>
 </template>
 

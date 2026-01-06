@@ -1,12 +1,5 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
-import Toast from 'primevue/toast';
-import { useToast } from 'primevue/usetoast';
-import Card from 'primevue/card';
-import DataTable from 'primevue/datatable';
-import Column from 'primevue/column';
-import Tag from 'primevue/tag';
-import ProgressSpinner from 'primevue/progressspinner';
 import type { ChartData } from 'chart.js';
 import { getReportData, exportCsv, exportExcel, exportPdf } from '@/api/reporting';
 import { fetchCategories, fetchItems, type Item, type Category } from '@/api/inventory';
@@ -15,11 +8,12 @@ import ReportKpiCards from '@/components/reports/ReportKpiCards.vue';
 import ReportCharts from '@/components/reports/ReportCharts.vue';
 import ReportExportButtons from '@/components/reports/ReportExportButtons.vue';
 import { useAuth } from '@/composables/useAuth';
+import { useToast } from '@/composables/useToast';
 import type { CategoryOption, ItemOption, ReportFilterState, ReportParams, ReportResponse, ReportSeries } from '@/types/reports';
 import { stringifyError } from '@/utils/error';
 
 const { state: authState } = useAuth();
-const toast = useToast();
+const { push: pushToast } = useToast();
 
 const defaultRange = getDefaultRange();
 const filters = reactive<ReportFilterState>({
@@ -102,11 +96,10 @@ async function loadCategories() {
       .filter((c: Category) => c.is_active)
       .map((c: Category) => ({ label: c.name, value: c.id } satisfies CategoryOption));
   } catch (err: any) {
-    toast.add({
-      severity: 'error',
-      summary: 'Kategorien fehlgeschlagen',
-      detail: stringifyError(err),
-      life: 5000
+    pushToast({
+      variant: 'danger',
+      title: 'Kategorien fehlgeschlagen',
+      description: stringifyError(err)
     });
   }
 }
@@ -137,11 +130,10 @@ async function selectCategoryItems() {
     filters.selectedItems = merged;
     triggerDebouncedLoad();
   } catch (err: any) {
-    toast.add({
-      severity: 'error',
-      summary: 'Kategorie-Übernahme fehlgeschlagen',
-      detail: stringifyError(err),
-      life: 5000
+    pushToast({
+      variant: 'danger',
+      title: 'Kategorie-Übernahme fehlgeschlagen',
+      description: stringifyError(err)
     });
   }
 }
@@ -154,7 +146,7 @@ function addSelectedItem(item: ItemOption) {
 
 function applyDateRange() {
   if (!filters.dateRange[0] || !filters.dateRange[1]) {
-    toast.add({ severity: 'warn', summary: 'Zeitraum fehlt', detail: 'Bitte Zeitraum auswählen.', life: 3500 });
+    pushToast({ variant: 'warning', title: 'Zeitraum fehlt', description: 'Bitte Zeitraum auswählen.' });
     return;
   }
   filters.appliedRange = [...filters.dateRange];
@@ -228,7 +220,7 @@ async function loadReports() {
   } catch (err: any) {
     const detail = stringifyError(err);
     error.value = 'Berichte konnten nicht geladen werden.';
-    toast.add({ severity: 'error', summary: 'Fehler beim Laden', detail, life: 6000 });
+    pushToast({ variant: 'danger', title: 'Fehler beim Laden', description: detail });
   } finally {
     loading.value = false;
   }
@@ -267,11 +259,10 @@ async function runItemSearch(query: string) {
     itemSuggestions.value = res.items.map(toItemOption);
   } catch (err: any) {
     if (controller.signal.aborted) return;
-    toast.add({
-      severity: 'warn',
-      summary: 'Suche fehlgeschlagen',
-      detail: stringifyError(err),
-      life: 4000
+    pushToast({
+      variant: 'warning',
+      title: 'Suche fehlgeschlagen',
+      description: stringifyError(err)
     });
   } finally {
     searching.value = false;
@@ -299,11 +290,10 @@ async function loadCategorySuggestions() {
     itemSuggestions.value = res.items.map(toItemOption);
   } catch (err: any) {
     if (controller.signal.aborted) return;
-    toast.add({
-      severity: 'warn',
-      summary: 'Suche fehlgeschlagen',
-      detail: stringifyError(err),
-      life: 4000
+    pushToast({
+      variant: 'warning',
+      title: 'Suche fehlgeschlagen',
+      description: stringifyError(err)
     });
   } finally {
     searching.value = false;
@@ -351,10 +341,14 @@ async function handleExport(format: 'csv' | 'excel' | 'pdf') {
     link.download = `berichte-${params.from}-${params.to}.${extension}`;
     link.click();
     window.URL.revokeObjectURL(url);
-    toast.add({ severity: 'success', summary: 'Export gestartet', detail: `${format.toUpperCase()} bereitgestellt.` });
+    pushToast({
+      variant: 'success',
+      title: 'Export gestartet',
+      description: `${format.toUpperCase()} bereitgestellt.`
+    });
   } catch (err: any) {
     const detail = stringifyError(err);
-    toast.add({ severity: 'error', summary: 'Export fehlgeschlagen', detail, life: 6000 });
+    pushToast({ variant: 'danger', title: 'Export fehlgeschlagen', description: detail });
   } finally {
     exporting.value = null;
   }
@@ -433,11 +427,10 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <section class="page-section">
-    <Toast />
-    <header class="page-section__header">
+  <section class="section page-section">
+    <header class="section-header">
       <div>
-        <p class="eyebrow">Transparenz</p>
+        <p class="section-subtitle">Transparenz</p>
         <h2 class="section-title">Berichte &amp; Analysen</h2>
         <p class="section-subtitle">Kennzahlen, Trends und Exportmöglichkeiten für dein Lager.</p>
       </div>
@@ -483,35 +476,39 @@ onBeforeUnmount(() => {
         :error="error"
       />
 
-      <Card>
-        <template #title>Top Artikel</template>
-        <template #subtitle>Sortiert nach Gesamtverbrauch im Zeitraum</template>
-        <template #content>
-          <div v-if="loading" class="table-loading">
-            <ProgressSpinner />
+      <article class="card table-card">
+        <header class="cardHeader">
+          <div>
+            <div class="cardTitle">Top Artikel</div>
+            <div class="cardHint">Sortiert nach Gesamtverbrauch im Zeitraum</div>
           </div>
-          <div v-else-if="error" class="table-loading error">{{ error }}</div>
-          <DataTable
-            v-else
-            :value="tableItems"
-            dataKey="name"
-            responsiveLayout="scroll"
-            size="small"
-            :emptyMessage="reportData ? 'Keine Artikel im Zeitraum' : 'Keine Daten'"
-          >
-            <Column field="name" header="Artikel">
-              <template #body="{ data }">
-                <span class="item-name">{{ data.name }}</span>
-              </template>
-            </Column>
-            <Column field="total" header="Gesamtverbrauch" class="text-right">
-              <template #body="{ data }">
-                <Tag severity="info" :value="data.total.toLocaleString('de-DE')" />
-              </template>
-            </Column>
-          </DataTable>
-        </template>
-      </Card>
+        </header>
+        <div v-if="loading" class="table-loading">
+          <span class="spinner" aria-label="Laden"></span>
+        </div>
+        <div v-else-if="error" class="table-loading error">{{ error }}</div>
+        <div v-else>
+          <div v-if="tableItems.length" class="tableWrap">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Artikel</th>
+                  <th class="right">Gesamtverbrauch</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="row in tableItems" :key="row.name">
+                  <td class="item-name">{{ row.name }}</td>
+                  <td class="right">
+                    <span class="tag neutral">{{ row.total.toLocaleString('de-DE') }}</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div v-else class="table-loading">Keine Artikel im Zeitraum</div>
+        </div>
+      </article>
     </div>
   </section>
 </template>
@@ -529,14 +526,29 @@ onBeforeUnmount(() => {
   justify-content: center;
   align-items: center;
   min-height: 160px;
-  color: var(--text-secondary-color, #6b7280);
+  color: var(--text-muted);
 }
 
 .table-loading.error {
-  color: var(--color-danger, #dc2626);
+  color: var(--danger);
 }
 
 .item-name {
   font-weight: 600;
+}
+
+.spinner {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 3px solid var(--border);
+  border-top-color: var(--primary);
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 </style>

@@ -3,11 +3,13 @@ import { useRoute, useRouter } from 'vue-router';
 import { computed } from 'vue';
 import { useAuth } from '@/composables/useAuth';
 import { useTheme } from '@/composables/useTheme';
+import { useMovementQueue } from '@/composables/useMovementQueue';
 
 const route = useRoute();
 const router = useRouter();
 const { logout } = useAuth();
 const { theme, setTheme } = useTheme();
+const { attentionCount } = useMovementQueue();
 
 const title = computed(() => {
   switch (route.name) {
@@ -19,6 +21,8 @@ const title = computed(() => {
       return 'Inventur';
     case 'berichte-analysen':
       return 'Berichte & Analysen';
+    case 'sync-probleme':
+      return 'Sync & Fehler';
     case 'bestellungen':
       return 'Bestellungen';
     case 'einstellungen':
@@ -28,6 +32,8 @@ const title = computed(() => {
       return 'Dashboard';
   }
 });
+
+const issueCount = computed(() => attentionCount.value);
 
 function handleLogout() {
   logout();
@@ -46,6 +52,10 @@ function onThemeChange(event: Event) {
       <div class="crumbs">Kundenportal</div>
     </div>
     <div class="section-actions">
+      <RouterLink class="btnGhost small badge-button" :to="{ name: 'sync-probleme' }">
+        Fehler
+        <span class="badge-counter" v-if="issueCount">{{ issueCount }}</span>
+      </RouterLink>
       <div class="toggle">
         <span>Theme</span>
         <select class="input" :value="theme" @change="onThemeChange">
@@ -59,3 +69,25 @@ function onThemeChange(event: Event) {
     </div>
   </header>
 </template>
+
+<style scoped>
+.badge-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.badge-counter {
+  min-width: 1.5rem;
+  height: 1.5rem;
+  padding: 0 0.35rem;
+  border-radius: 999px;
+  background: var(--danger-soft, #ffe5e5);
+  color: var(--danger, #b42318);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.75rem;
+}
+</style>

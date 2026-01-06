@@ -135,6 +135,13 @@ class RecommendedOrdersResponse(BaseModel):
     total: int
 
 
+class MovementItemOut(ItemOut):
+    """
+    Backwards-compatible alias for movement responses that include full item data.
+    """
+    pass
+
+
 class MovementPayload(BaseModel):
     client_tx_id: str = Field(..., max_length=128)
     type: str = Field(..., pattern="^(IN|OUT)$")

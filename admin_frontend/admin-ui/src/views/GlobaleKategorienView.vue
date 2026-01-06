@@ -1,23 +1,12 @@
 <template>
   <UiPage>
-    <UiSection title="Globale Kategorien" subtitle="Stammdaten verwalten – aktuell UI-only, da Backend-Endpunkte fehlen">
+    <UiSection title="Globale Kategorien" subtitle="Globale Stammdaten ohne Tenant-Kontext verwalten">
       <template #actions>
         <button class="btnGhost small" :disabled="busy.load" @click="loadCategories">
           {{ busy.load ? "lädt..." : "Neu laden" }}
         </button>
         <button class="btnPrimary small" @click="openCreateModal">Neu anlegen</button>
       </template>
-
-      <div class="table-card">
-        <div class="stack">
-          <p class="section-subtitle">
-            Backend-Unterstützung fehlt: Keine admin-fähigen OpenAPI-Pfade für globale Kategorien ohne Tenant-Kontext.
-            Aktionen wirken nur im UI und werden nicht gespeichert. Kategorien sollten deckungsgleich zu den in Artikeln
-            verwendeten Kategorien sein; Backend-Endpunkte zur Synchronisation fehlen. Fehlende Endpunkte sind in
-            TODO/Roadmap vermerkt.
-          </p>
-        </div>
-      </div>
 
       <div class="filter-card">
         <div class="stack">
@@ -40,7 +29,7 @@
       <div class="table-card">
         <div class="table-card__header">
           <div class="tableTitle">Kategorien</div>
-          <div class="text-muted text-small">Lokale Liste. Änderungen werden nicht serverseitig gespeichert.</div>
+          <div class="text-muted text-small">Schreibvorgänge erfolgen direkt gegen die Admin-API.</div>
         </div>
         <div class="tableWrap">
           <table class="table">
@@ -101,7 +90,7 @@
                   <span>System-Kategorie</span>
                 </label>
               </div>
-              <div class="hint">Aktion ist UI-only; Backend-Endpunkte fehlen noch.</div>
+              <div class="hint">Änderungen werden sofort in der Datenbank gespeichert.</div>
             </div>
             <div class="modal__footer">
               <button class="btnGhost" type="button" @click="closeModal">Abbrechen</button>
@@ -117,23 +106,27 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, ref } from "vue";
+import { computed, onMounted, reactive, ref, watch } from "vue";
 import { useToast } from "../composables/useToast";
 import {
   useGlobalMasterdata,
   type GlobalCategory,
-  generateId,
 } from "../composables/useGlobalMasterdata";
 import UiPage from "../components/ui/UiPage.vue";
 import UiSection from "../components/ui/UiSection.vue";
+import {
+  adminCreateGlobalCategory,
+  adminListGlobalCategories,
+  adminUpdateGlobalCategory,
+} from "../api/admin";
 
-defineProps<{
+const props = defineProps<{
   adminKey: string;
   actor: string;
 }>();
 
 const { toast } = useToast();
-const { categories, upsertCategory } = useGlobalMasterdata();
+const { categories, upsertCategory, replaceCategories } = useGlobalMasterdata();
 
 const search = ref("");
 const selectedId = ref("");
@@ -188,32 +181,66 @@ function closeModal() {
   modal.open = false;
 }
 
-function save() {
+async function loadCategories() {
+  if (!props.adminKey) {
+    toast("Bitte Admin Key setzen", "warning");
+    return;
+  }
+  busy.load = true;
+  try {
+    const res = await adminListGlobalCategories(props.adminKey, props.actor);
+    replaceCategories(res as GlobalCategory[]);
+    toast(`Kategorien geladen: ${res.length}`);
+  } catch (e: any) {
+    toast(e?.message || "Laden fehlgeschlagen", "error");
+  } finally {
+    busy.load = false;
+  }
+}
+
+async function save() {
   const name = modal.name.trim();
   if (!name) {
     toast("Name ist Pflicht", "warning");
     return;
   }
+  if (!props.adminKey) {
+    toast("Bitte Admin Key setzen", "warning");
+    return;
+  }
   busy.save = true;
-  const payload: GlobalCategory = {
-    id: modal.id || generateId(),
-    name,
-    is_active: modal.is_active,
-    is_system: modal.is_system,
-  };
-  upsertCategory(payload);
-  selectedId.value = payload.id;
-  toast(
-    modal.mode === "edit" ? "Kategorie aktualisiert (UI-only, Backend fehlt)" : "Kategorie angelegt (UI-only, Backend fehlt)",
-    "success"
-  );
-  busy.save = false;
-  closeModal();
+  try {
+    const payload = { name, is_active: modal.is_active };
+    let saved: GlobalCategory;
+    if (modal.mode === "edit" && modal.id) {
+      saved = await adminUpdateGlobalCategory(props.adminKey, props.actor, modal.id, payload);
+    } else {
+      saved = await adminCreateGlobalCategory(props.adminKey, props.actor, payload);
+    }
+    upsertCategory(saved);
+    selectedId.value = saved.id;
+    toast(modal.mode === "edit" ? "Kategorie aktualisiert" : "Kategorie angelegt", "success");
+  } catch (e: any) {
+    toast(e?.message || "Speichern fehlgeschlagen", "error");
+  } finally {
+    busy.save = false;
+    closeModal();
+  }
 }
 
-function loadCategories() {
-  busy.load = true;
-  toast("Backend-Unterstützung fehlt – kein Ladevorgang möglich", "warning");
-  busy.load = false;
-}
+watch(
+  () => props.adminKey,
+  (key, prev) => {
+    if (key && key !== prev) {
+      loadCategories();
+    }
+  },
+  { immediate: true }
+);
+
+onMounted(() => {
+  if (props.adminKey) {
+    loadCategories();
+  }
+});
 </script>

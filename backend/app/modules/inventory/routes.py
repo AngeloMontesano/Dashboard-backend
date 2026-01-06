@@ -198,8 +198,10 @@ async def update_category(
 # ----------------------
 # Items
 # ----------------------
-def _normalize_sku(sku: str) -> str:
+def _normalize_sku(sku: str, *, prefix_customer: bool = True) -> str:
     sku = sku.strip()
+    if not prefix_customer:
+        return sku
     if not sku.lower().startswith("z_"):
         return f"z_{sku}"
     return sku
@@ -246,6 +248,7 @@ def _item_out(item: Item, category: Category | None) -> ItemOut:
         target_stock=item.target_stock,
         recommended_stock=item.recommended_stock,
         order_mode=item.order_mode,
+        is_admin_created=item.is_admin_created,
     )
 
 
@@ -310,6 +313,11 @@ async def get_item(
             status_code=404,
             detail={"error": {"code": "item_not_found", "message": "Artikel nicht gefunden"}},
         )
+    if item.is_admin_created:
+        raise HTTPException(
+            status_code=403,
+            detail={"error": {"code": "item_readonly", "message": "Artikel wurde durch Admin erstellt und ist schreibgeschützt"}},
+        )
 
     category = None
     if item.category_id:
@@ -342,7 +350,7 @@ async def create_item(
     ctx: TenantContext = Depends(get_tenant_context),
     db: AsyncSession = Depends(get_db),
 ) -> ItemOut:
-    normalized_sku = _normalize_sku(payload.sku)
+    normalized_sku = _normalize_sku(payload.sku, prefix_customer=True)
     existing = await db.scalar(
         select(Item).where(Item.tenant_id == ctx.tenant.id, Item.sku == normalized_sku)
     )
@@ -369,6 +377,7 @@ async def create_item(
         target_stock=payload.target_stock,
         recommended_stock=payload.recommended_stock,
         order_mode=payload.order_mode,
+        is_admin_created=False,
     )
     db.add(item)
     await db.commit()
@@ -398,7 +407,7 @@ async def update_item(
         category = await db.get(Category, item.category_id) if item.category_id else None
 
     if payload.sku:
-        normalized_sku = _normalize_sku(payload.sku)
+        normalized_sku = _normalize_sku(payload.sku, prefix_customer=True)
         exists = await db.scalar(
             select(Item).where(
                 Item.tenant_id == ctx.tenant.id,
@@ -1128,6 +1137,7 @@ def _settings_to_out(settings: TenantSetting) -> TenantSettingsOut:
         contact_name=settings.contact_name,
         branch_number=settings.branch_number,
         tax_number=settings.tax_number,
+        industry_id=str(settings.industry_id) if settings.industry_id else None,
     )
 
 
@@ -1152,6 +1162,7 @@ async def _get_or_create_settings(*, ctx: TenantContext, db: AsyncSession) -> Te
         contact_name="",
         branch_number="",
         tax_number="",
+        industry_id=None,
     )
     db.add(settings)
     await db.commit()
@@ -1189,6 +1200,7 @@ async def update_tenant_settings(
     settings.contact_name = payload.contact_name.strip()
     settings.branch_number = payload.branch_number.strip()
     settings.tax_number = payload.tax_number.strip()
+    settings.industry_id = payload.industry_id
 
     await db.commit()
     await db.refresh(settings)
@@ -1701,6 +1713,9 @@ async def import_items(
                 select(Item).where(Item.tenant_id == ctx.tenant.id, Item.sku == normalized_sku)
             )
             if item:
+                if item.is_admin_created:
+                    errors.append({"row": str(idx), "error": "Admin-Artikel sind schreibgeschützt"})
+                    continue
                 item.barcode = barcode
                 item.name = name
                 item.description = row.get("description") or ""
@@ -1730,6 +1745,7 @@ async def import_items(
                     target_stock=target_stock,
                     recommended_stock=recommended_stock,
                     order_mode=order_mode,
+                    is_admin_created=False,
                 )
                 db.add(new_item)
                 imported += 1

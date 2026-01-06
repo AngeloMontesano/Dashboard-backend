@@ -13,6 +13,7 @@
 - Customer: Queue-/Bestell-Views mit klaren Busy/Confirm-Flows und konsistenter Button-Hierarchie ausstatten.
 - Customer: Queue-Fehler-Formularvalidierung und Feld-Hints im Fehlerzentrum nachschärfen (Barcode/Qty/Note).
 - Customer: Fehlermeldungen weiter verfeinern (Backend-spezifische Codes/Messages abbilden), Monitoring/Telemetry für Queue-Aktionen ergänzen.
+- Customer: Einheitliches Auth-Handling (401/403) in allen Views/Datenladepfaden ausrollen, inkl. Redirect/CTA und Bannern ohne HTTP-Slang.
 - Admin/Customer: Gemeinsame Toast/Overlay-Styles auf Token-Basis konsolidieren und A11y-Labels für Filter/Selects ergänzen.
 - Admin: Tenants/Memberships mit Server-Paging und Validierungen inkl. Confirm-Dialogen ausstatten; Theme-Toggle in Topbar ergänzen.
 - Admin: Backend-Build-/Version-Infos fehlen; UI zeigt nur App-Version aus package.json/VITE_BUILD_INFO. Serverseitige Build/Commit-Quelle ergänzen.

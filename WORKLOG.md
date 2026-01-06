@@ -709,3 +709,13 @@
   - Dokumentation ergänzt (`docs/standards/ERROR_HANDLING.md`), TODO um Folgeaufgaben (Validierung/Telemetry/Messages) erweitert.
 - **Tests**
   - `npm run build` (customer_frontend/customer-ui)
+
+## Schritt 50 – Dashboard-Auth-Fehler entschärfen
+- **Datum/Uhrzeit**: 2026-01-06T12:40:00+00:00
+- **Ziel**: Abgelaufene oder ungültige Sessions im Dashboard nicht mehr als rohe HTTP-Fehler anzeigen, sondern mit verständlicher Meldung und Login-Redirect reagieren.
+- **Was wurde geändert**
+  - Dashboard-Loader nutzt `classifyError` und bündelt Fehler mit freundlichen Texten statt „Request failed with status code ...“.
+  - 401/403 Fälle lösen einen Login-Redirect aus; Banner zeigt klar „Sitzung abgelaufen oder keine Berechtigung“.
+  - TODO ergänzt für roll-out des Auth-Handlings in weiteren Views.
+- **Tests**
+  - `npm run build` (customer_frontend/customer-ui)

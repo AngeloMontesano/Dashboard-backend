@@ -327,6 +327,7 @@ class SmtpPingResponse(BaseModel):
     host: Optional[str] = None
     port: Optional[int] = None
     resolved_ips: list[str] = Field(default_factory=list)
+    use_tls: bool = True
 
 
 class ReorderItem(BaseModel):

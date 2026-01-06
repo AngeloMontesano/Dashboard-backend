@@ -20,6 +20,9 @@ import type {
   TenantSettingsUpdate,
   AdminSystemInfo,
   AdminSystemActionResponse,
+  SmtpSettingsOut,
+  SmtpSettingsIn,
+  SmtpTestResponse,
   SystemEmailSettings,
   SystemEmailSettingsUpdate,
 } from "../types";
@@ -80,6 +83,8 @@ type AdminLoginResponse = { admin_key: string; actor?: string };
 type AdminSystemInfoResponse = AdminSystemInfo;
 type AdminSystemActionResponseRaw = AdminSystemActionResponse;
 type AdminSystemEmailSettingsResponse = SystemEmailSettings;
+type AdminSmtpSettingsResponse = SmtpSettingsOut;
+type AdminSmtpTestResponse = SmtpTestResponse;
 
 function withAdmin(adminKey: string, actor?: string) {
   return { headers: adminHeaders(adminKey, actor) };
@@ -184,6 +189,26 @@ export async function adminGetEmailSettings(adminKey: string, actor?: string) {
 
 export async function adminUpdateEmailSettings(adminKey: string, actor: string | undefined, payload: SystemEmailSettingsUpdate) {
   const res = await api.put<AdminSystemEmailSettingsResponse>("/admin/system/email", payload, withAdmin(adminKey, actor));
+  return res.data;
+}
+
+/* SMTP */
+export async function adminGetSmtpSettings(adminKey: string, actor?: string) {
+  const res = await api.get<AdminSmtpSettingsResponse>("/admin/smtp/settings", withAdmin(adminKey, actor));
+  return res.data;
+}
+
+export async function adminUpdateSmtpSettings(adminKey: string, actor: string | undefined, payload: SmtpSettingsIn) {
+  const res = await api.put<AdminSmtpSettingsResponse>("/admin/smtp/settings", payload, withAdmin(adminKey, actor));
+  return res.data;
+}
+
+export async function adminTestSmtpSettings(adminKey: string, actor: string | undefined, email: string) {
+  const res = await api.post<AdminSmtpTestResponse>(
+    "/admin/smtp/settings/test",
+    { email },
+    withAdmin(adminKey, actor)
+  );
   return res.data;
 }
 

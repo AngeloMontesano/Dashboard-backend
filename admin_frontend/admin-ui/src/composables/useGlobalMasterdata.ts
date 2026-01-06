@@ -9,7 +9,7 @@ export type GlobalItem = components["schemas"]["ItemOut"];
 export type GlobalItemCreate = components["schemas"]["ItemCreate"];
 export type GlobalItemUpdate = components["schemas"]["ItemUpdate"];
 
-export type GlobalType = {
+export type GlobalUnit = {
   id: string;
   name: string;
   description?: string;
@@ -28,7 +28,7 @@ type IndustryArticleMap = Record<string, string[]>;
 const state = reactive({
   categories: [] as GlobalCategory[],
   items: [] as GlobalItem[],
-  types: [] as GlobalType[],
+  units: [] as GlobalUnit[],
   industries: [] as GlobalIndustry[],
   industryArticles: {} as IndustryArticleMap,
 });
@@ -62,12 +62,12 @@ function upsertItem(item: GlobalItem) {
   }
 }
 
-function upsertType(entry: GlobalType) {
-  const idx = state.types.findIndex((c) => c.id === entry.id);
+function upsertUnit(entry: GlobalUnit) {
+  const idx = state.units.findIndex((c) => c.id === entry.id);
   if (idx >= 0) {
-    state.types.splice(idx, 1, entry);
+    state.units.splice(idx, 1, entry);
   } else {
-    state.types.push(entry);
+    state.units.push(entry);
   }
 }
 
@@ -95,19 +95,19 @@ function removeIndustry(industryId: string) {
 export function useGlobalMasterdata() {
   const categories = computed(() => state.categories);
   const items = computed(() => state.items);
-  const types = computed(() => state.types);
+  const units = computed(() => state.units);
   const industries = computed(() => state.industries);
   const industryArticles = computed(() => state.industryArticles);
 
   return {
     categories: readonly(categories),
     items: readonly(items),
-    types: readonly(types),
+    units: readonly(units),
     industries: readonly(industries),
     industryArticles: readonly(industryArticles),
     upsertCategory,
     upsertItem,
-    upsertType,
+    upsertUnit,
     upsertIndustry,
     setIndustryArticles,
     removeIndustry,
@@ -117,8 +117,8 @@ export function useGlobalMasterdata() {
     replaceItems(list: GlobalItem[]) {
       replaceCollection(state.items, list);
     },
-    replaceTypes(list: GlobalType[]) {
-      replaceCollection(state.types, list);
+    replaceUnits(list: GlobalUnit[]) {
+      replaceCollection(state.units, list);
     },
     replaceIndustries(list: GlobalIndustry[]) {
       replaceCollection(state.industries, list);

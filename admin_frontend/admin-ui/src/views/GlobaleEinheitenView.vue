@@ -1,8 +1,8 @@
 <template>
   <UiPage>
-    <UiSection title="Globale Kategorien" subtitle="Stammdaten verwalten – aktuell UI-only, da Backend-Endpunkte fehlen">
+    <UiSection title="Globale Einheiten" subtitle="Einheiten für Artikel (UI-only, Backend-Endpunkte fehlen)">
       <template #actions>
-        <button class="btnGhost small" :disabled="busy.load" @click="loadCategories">
+        <button class="btnGhost small" :disabled="busy.load" @click="loadUnits">
           {{ busy.load ? "lädt..." : "Neu laden" }}
         </button>
         <button class="btnPrimary small" @click="openCreateModal">Neu anlegen</button>
@@ -11,67 +11,66 @@
       <div class="table-card">
         <div class="stack">
           <p class="section-subtitle">
-            Backend-Unterstützung fehlt: Keine admin-fähigen OpenAPI-Pfade für globale Kategorien ohne Tenant-Kontext.
-            Aktionen wirken nur im UI und werden nicht gespeichert. Kategorien sollten deckungsgleich zu den in Artikeln
-            verwendeten Kategorien sein; Backend-Endpunkte zur Synchronisation fehlen. Fehlende Endpunkte sind in
-            TODO/Roadmap vermerkt.
+            Keine OpenAPI-Pfade für globale Einheiten vorhanden. Aktionen werden nur im UI gespeichert und dienen als
+            Vorbereitung, bis passende Backend-Endpunkte existieren. Einheiten sollten in Artikeln wiederverwendet
+            werden, sobald das Backend sie bereitstellt.
           </p>
         </div>
       </div>
 
       <div class="filter-card">
         <div class="stack">
-          <label class="field-label" for="global-category-search">Suche</label>
+          <label class="field-label" for="global-unit-search">Suche</label>
           <input
-            id="global-category-search"
+            id="global-unit-search"
             class="input"
             v-model.trim="search"
-            placeholder="Name enthält..."
-            aria-label="Globale Kategorien suchen"
+            placeholder="Einheit oder Beschreibung"
+            aria-label="Globale Einheiten filtern"
           />
-          <div class="hint">Filtert lokal. Kein Backend-Request.</div>
+          <div class="hint">Filtert nur den lokalen Zustand.</div>
         </div>
         <div class="stack">
-          <span class="text-muted text-small">Treffer: {{ filteredCategories.length }}</span>
+          <span class="text-muted text-small">Treffer: {{ filteredUnits.length }}</span>
           <button class="btnGhost small" type="button" :disabled="!search" @click="resetFilters">Filter zurücksetzen</button>
         </div>
       </div>
 
       <div class="table-card">
         <div class="table-card__header">
-          <div class="tableTitle">Kategorien</div>
-          <div class="text-muted text-small">Lokale Liste. Änderungen werden nicht serverseitig gespeichert.</div>
+          <div class="tableTitle">Einheiten</div>
+          <div class="text-muted text-small">UI-only, nicht im Backend gespeichert.</div>
         </div>
         <div class="tableWrap">
           <table class="table">
             <thead>
               <tr>
                 <th>Name</th>
+                <th>Beschreibung</th>
                 <th>Status</th>
-                <th class="narrowCol">System</th>
                 <th class="narrowCol"></th>
               </tr>
             </thead>
             <tbody>
               <tr
-                v-for="cat in filteredCategories"
-                :key="cat.id"
-                :class="{ rowActive: selectedId === cat.id }"
-                @click="select(cat.id)"
+                v-for="entry in filteredUnits"
+                :key="entry.id"
+                :class="{ rowActive: selectedId === entry.id }"
+                @click="select(entry.id)"
               >
-                <td>{{ cat.name }}</td>
+                <td>{{ entry.name }}</td>
+                <td class="text-muted text-small">{{ entry.description || "—" }}</td>
                 <td>
-                  <span class="tag" :class="cat.is_active ? 'ok' : 'bad'">
-                    {{ cat.is_active ? "aktiv" : "deaktiviert" }}
+                  <span class="tag" :class="entry.is_active ? 'ok' : 'bad'">
+                    {{ entry.is_active ? "aktiv" : "deaktiviert" }}
                   </span>
                 </td>
-                <td class="mono">{{ cat.is_system ? "ja" : "nein" }}</td>
                 <td class="text-right">
-                  <button class="btnGhost small" type="button" @click.stop="openEdit(cat)">Bearbeiten</button>
+                  <button class="btnGhost small" type="button" @click.stop="openEdit(entry)">Bearbeiten</button>
                 </td>
               </tr>
-              <tr v-if="!filteredCategories.length">
-                <td colspan="4" class="mutedPad">Noch keine Kategorien im UI hinterlegt.</td>
+              <tr v-if="!filteredUnits.length">
+                <td colspan="4" class="mutedPad">Noch keine Einheiten im UI hinterlegt.</td>
               </tr>
             </tbody>
           </table>
@@ -83,22 +82,22 @@
         <div class="modal-panel" @click.stop>
           <div class="modal">
             <div class="modal__header">
-              <div class="modal__title">{{ modal.mode === "create" ? "Kategorie anlegen" : "Kategorie bearbeiten" }}</div>
+              <div class="modal__title">{{ modal.mode === "create" ? "Einheit anlegen" : "Einheit bearbeiten" }}</div>
               <button class="btnGhost small" type="button" @click="closeModal">Schließen</button>
             </div>
             <div class="modal__body">
               <div class="form-grid">
                 <label class="field">
                   <span class="field-label">Name *</span>
-                  <input class="input" v-model.trim="modal.name" placeholder="z. B. Getränke" />
+                  <input class="input" v-model.trim="modal.name" placeholder="z. B. Stück, kg, l" />
+                </label>
+                <label class="field">
+                  <span class="field-label">Beschreibung</span>
+                  <textarea class="input" rows="2" v-model="modal.description" placeholder="Optional"></textarea>
                 </label>
                 <label class="field checkbox">
                   <input type="checkbox" v-model="modal.is_active" />
                   <span>Aktiv</span>
-                </label>
-                <label class="field checkbox">
-                  <input type="checkbox" v-model="modal.is_system" />
-                  <span>System-Kategorie</span>
                 </label>
               </div>
               <div class="hint">Aktion ist UI-only; Backend-Endpunkte fehlen noch.</div>
@@ -121,7 +120,7 @@ import { computed, reactive, ref } from "vue";
 import { useToast } from "../composables/useToast";
 import {
   useGlobalMasterdata,
-  type GlobalCategory,
+  type GlobalUnit,
   generateId,
 } from "../composables/useGlobalMasterdata";
 import UiPage from "../components/ui/UiPage.vue";
@@ -133,7 +132,7 @@ defineProps<{
 }>();
 
 const { toast } = useToast();
-const { categories, upsertCategory } = useGlobalMasterdata();
+const { units, upsertUnit } = useGlobalMasterdata();
 
 const search = ref("");
 const selectedId = ref("");
@@ -147,15 +146,17 @@ const modal = reactive({
   mode: "create" as "create" | "edit",
   id: "",
   name: "",
+  description: "",
   is_active: true,
-  is_system: false,
 });
 
-const filteredCategories = computed(() => {
+const filteredUnits = computed(() => {
   const term = search.value.trim().toLowerCase();
-  const list = categories.value || [];
+  const list = units.value || [];
   if (!term) return list;
-  return list.filter((c) => c.name.toLowerCase().includes(term));
+  return list.filter(
+    (t) => t.name.toLowerCase().includes(term) || (t.description || "").toLowerCase().includes(term)
+  );
 });
 
 function resetFilters() {
@@ -171,17 +172,17 @@ function openCreateModal() {
   modal.mode = "create";
   modal.id = "";
   modal.name = "";
+  modal.description = "";
   modal.is_active = true;
-  modal.is_system = false;
 }
 
-function openEdit(cat: GlobalCategory) {
+function openEdit(entry: GlobalUnit) {
   modal.open = true;
   modal.mode = "edit";
-  modal.id = cat.id;
-  modal.name = cat.name;
-  modal.is_active = cat.is_active;
-  modal.is_system = cat.is_system;
+  modal.id = entry.id;
+  modal.name = entry.name;
+  modal.description = entry.description || "";
+  modal.is_active = entry.is_active;
 }
 
 function closeModal() {
@@ -195,23 +196,23 @@ function save() {
     return;
   }
   busy.save = true;
-  const payload: GlobalCategory = {
+  const payload: GlobalUnit = {
     id: modal.id || generateId(),
     name,
+    description: modal.description?.trim() || "",
     is_active: modal.is_active,
-    is_system: modal.is_system,
   };
-  upsertCategory(payload);
+  upsertUnit(payload);
   selectedId.value = payload.id;
   toast(
-    modal.mode === "edit" ? "Kategorie aktualisiert (UI-only, Backend fehlt)" : "Kategorie angelegt (UI-only, Backend fehlt)",
+    modal.mode === "edit" ? "Einheit aktualisiert (UI-only, Backend fehlt)" : "Einheit angelegt (UI-only, Backend fehlt)",
     "success"
   );
   busy.save = false;
   closeModal();
 }
 
-function loadCategories() {
+function loadUnits() {
   busy.load = true;
   toast("Backend-Unterstützung fehlt – kein Ladevorgang möglich", "warning");
   busy.load = false;

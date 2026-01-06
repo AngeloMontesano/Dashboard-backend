@@ -558,3 +558,14 @@
   - TODO/Roadmap aktualisiert: fehlende Backend-Endpunkte für globale Stammdaten und Branchenfeld in Tenant-Settings dokumentiert.
 - **Tests**
   - `npm run build` (admin_frontend/admin-ui)
+
+## Schritt 44 – Admin Globales: Einheiten & Import/Export Hinweis
+- **Datum/Uhrzeit**: 2026-01-06T05:20:00Z
+- **Ziel**: Korrektur „Globale Typen“ → „Globale Einheiten“, Import/Export-Anforderungen sichtbar machen und Backend-Lücken dokumentieren (admin-fähige Artikel-Import/Export-Endpunkte, Einheiten, Schreibschutz/Prefix-Regel für Kundenartikel).
+- **Was wurde geändert**
+  - Neue View `GlobaleEinheitenView` (UI-only mangels Endpunkte) und Navigation/Title angepasst; bestehende Typen-View entfernt.
+  - Artikel-View ergänzt um Import/Export-Sektion mit deaktivierten Aktionen und Hinweisen auf fehlende Admin-Endpunkte; Hinweise auf Schreibschutz für Admin-Artikel und `z_`-Prefix für Kundenartikel aufgenommen.
+  - Globals-Composable um Einheiten-State ergänzt; Artikel-Form nutzt globale Einheiten (Fallback auf Standardwerte).
+  - TODO/Roadmap erweitert um benötigte Backend-Endpunkte (Admin-Import/Export, Einheiten, Schreibschutz/Prefix).
+- **Tests**
+  - `npm run build` (admin_frontend/admin-ui)

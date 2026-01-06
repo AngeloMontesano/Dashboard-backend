@@ -12,8 +12,38 @@
         <div class="stack">
           <p class="section-subtitle">
             Keine Admin/OpenAPI-Endpunkte für globale Artikel ohne Tenant-Kontext vorhanden. Aktionen wirken nur lokal
-            im UI, Speicherung im Backend ist noch nicht möglich.
+            im UI, Speicherung im Backend ist noch nicht möglich. Admin-Artikel sollen später schreibgeschützt für
+            Kunden sein; dafür fehlt aktuell die Backend-Unterstützung (Feld/Policy).
           </p>
+        </div>
+      </div>
+
+      <div class="table-card">
+        <div class="table-card__header">
+          <div class="tableTitle">Import / Export</div>
+          <div class="text-muted text-small">
+            Inventar-Import/Export-Endpunkte existieren nur tenant-gebunden mit Bearer-Token. Für Admin fehlt ein
+            globaler Endpoint mit Admin-Key. Aktionen bleiben daher deaktiviert.
+          </div>
+        </div>
+        <div class="box stack">
+          <div class="row gap8 wrap">
+            <button class="btnGhost small" type="button" disabled title="Backend-Endpunkt fehlt" @click="exportItems">
+              Export starten
+            </button>
+            <label class="btnGhost small file-btn" aria-disabled="true">
+              Datei wählen (xlsx/csv)
+              <input type="file" accept=".xlsx,.xls,.csv" disabled @change="onFileSelected" />
+            </label>
+            <button class="btnPrimary small" type="button" disabled title="Backend-Endpunkt fehlt" @click="importItems">
+              Import starten
+            </button>
+          </div>
+          <ul class="bullets">
+            <li>CSV/XLSX Strukturen wie im Customer-Frontend (alle Felder, inkl. Kategorie/Einheit).</li>
+            <li>Admin-Artikel müssen für Kunden gesperrt werden (Name/SKU/Barcode readonly) – Backend fehlt.</li>
+            <li>Kunden-Artikel sollen beim Anlegen einen <code>z_</code>-Prefix für SKU/Artikelnummer erhalten – Backend fehlt.</li>
+          </ul>
         </div>
       </div>
 
@@ -112,7 +142,7 @@
                 <label class="field">
                   <span class="field-label">Einheit *</span>
                   <select class="input" v-model="modal.unit">
-                    <option v-for="u in units" :key="u.id" :value="u.id">{{ u.label }}</option>
+                    <option v-for="u in units" :key="u.id" :value="u.id">{{ u.name }}</option>
                   </select>
                 </label>
                 <label class="field">
@@ -176,7 +206,7 @@ defineProps<{
 }>();
 
 const { toast } = useToast();
-const { items, categories, upsertItem } = useGlobalMasterdata();
+const { items, categories, units: globalUnits, upsertItem } = useGlobalMasterdata();
 
 const search = ref("");
 const categoryFilter = ref("");
@@ -185,12 +215,12 @@ const busy = reactive({
   load: false,
   save: false,
 });
-
-const units = [
-  { id: "pcs", label: "Stück" },
-  { id: "kg", label: "Kilogramm" },
-  { id: "l", label: "Liter" },
+const defaultUnits = [
+  { id: "pcs", name: "Stück", is_active: true },
+  { id: "kg", name: "Kilogramm", is_active: true },
+  { id: "l", name: "Liter", is_active: true },
 ];
+const units = computed(() => (globalUnits.value.length ? globalUnits.value : defaultUnits));
 
 const modal = reactive({
   open: false,
@@ -200,13 +230,14 @@ const modal = reactive({
   sku: "",
   barcode: "",
   description: "",
-  unit: units[0].id,
+  unit: units.value[0]?.id || "",
   category_id: "",
   quantity: 0,
   min_stock: 0,
   target_stock: 0,
   is_active: true,
 });
+const importFile = ref<File | null>(null);
 
 const filteredItems = computed(() => {
   const term = search.value.trim().toLowerCase();
@@ -303,5 +334,22 @@ function loadItems() {
   busy.load = true;
   toast("Backend-Unterstützung fehlt – kein Ladevorgang möglich", "warning");
   busy.load = false;
+}
+
+function exportItems() {
+  toast("Export nicht möglich: Admin-Endpoint fehlt (nur tenant-basierter Export vorhanden)", "warning");
+}
+
+function importItems() {
+  if (!importFile.value) {
+    toast("Bitte Datei wählen (XLSX/CSV)", "warning");
+    return;
+  }
+  toast("Import nicht möglich: Admin-Endpoint fehlt (nur tenant-basierter Import vorhanden)", "warning");
+}
+
+function onFileSelected(event: Event) {
+  const files = (event.target as HTMLInputElement).files;
+  importFile.value = files && files.length ? files[0] : null;
 }
 </script>

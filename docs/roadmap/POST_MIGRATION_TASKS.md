@@ -4,3 +4,5 @@
 - Frontend nutzt für die Typ-Generierung verbindlich die lokale Kopie `docs/openapi/openapi.json`; Remote-Schema-Zugriff bleibt optional und ist nicht mehr Bestandteil dieser Roadmap.
 - Neue Admin-/Inventory-Endpunkte für globale Stammdaten bereitstellen (Artikel/Kategorien/Typen/Branchen plus Branchen→Artikel-Mapping) ohne Tenant-Kontext, damit die Admin-Views aus `Globale Einstellungen` mehr als UI-only liefern können.
 - Tenant-Settings um Branchen-/Industrie-Feld erweitern (Schema + Admin-/Inventory-PUT/GET), damit die Dropdown-Auswahl in `AdminTenantsView` persistent gespeichert werden kann.
+- Admin-fähige Artikel-Import/Export-Endpunkte (alle Felder) und globale Einheiten-Endpoints ergänzen; derzeit existieren nur tenant-basierte Bearer-Varianten.
+- Backend-Policy ergänzen: Admin-Artikel für Kunden schreibgeschützt halten (Name/SKU/Barcode) und Kunden-Artikel beim Anlegen automatisch mit `z_`-Prefix versehen.

@@ -11,6 +11,10 @@ export type ItemUpdatePayload = components["schemas"]["ItemUpdate"];
 
 type ItemsPage = components["schemas"]["ItemsPage"];
 type ItemsQuery = NonNullable<paths["/inventory/items"]["get"]["parameters"]["query"]>;
+type ImportItemsResponse =
+  paths["/inventory/items/import"]["post"]["responses"]["200"]["content"]["application/json"];
+type ExportItemsResponse =
+  paths["/inventory/items/export"]["get"]["responses"]["200"]["content"]["application/json"];
 
 function bearer(token?: string) {
   if (!token) {
@@ -46,5 +50,28 @@ export async function createGlobalItem(token: string, payload: ItemCreatePayload
 
 export async function updateGlobalItem(token: string, id: string, payload: ItemUpdatePayload) {
   const res = await api.patch<GlobalItem>(`/inventory/items/${id}`, payload, { headers: bearer(token) });
+  return res.data;
+}
+
+export async function importGlobalItems(token: string, file: File, mapping?: Record<string, string>) {
+  const form = new FormData();
+  form.append("file", file);
+  if (mapping) {
+    form.append("mapping", JSON.stringify(mapping));
+  }
+
+  const res = await api.post<ImportItemsResponse>("/inventory/items/import", form, {
+    headers: {
+      ...bearer(token),
+      "Content-Type": "multipart/form-data",
+    },
+  });
+  return res.data;
+}
+
+export async function exportGlobalItems(token: string) {
+  const res = await api.get<ExportItemsResponse>("/inventory/items/export", {
+    headers: bearer(token),
+  });
   return res.data;
 }

@@ -321,7 +321,7 @@ async def list_items(
     category_id: str | None = Query(default=None),
     active: bool | None = Query(default=True),
     page: int = Query(default=1, ge=1),
-    page_size: int = Query(default=50, ge=1, le=200),
+    page_size: int = Query(default=50, ge=1, le=500),
     ctx: TenantContext = Depends(get_tenant_context),
     user_ctx: CurrentUserContext = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),

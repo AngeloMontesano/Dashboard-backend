@@ -103,4 +103,4 @@
 ## 2024-06-29
 - Roadmap-Index um GLOBAL_CATALOG-Spezifikation verlinkt; EPIC_B API-Annahmen und Akzeptanzkriterien mit Paging-/Fehlercode-Details ergänzt.
 - Ziel: Reviewer finden B-02/B-03 Referenzen zentral, keine Task-IDs geändert.
-- Offene Punkte: B-01/B-02 Review abschließen, Schemas in `docs/openapi/openapi.json` nachziehen, dann B-03/B-04 starten.
+- Offene Punkte: B-01/B-02 Review abschließen, Schemas in `docs/openapi/openapi.json` nachziehen, dann B-03/B-04 starten. Status-Codes/Paging-Limits jetzt dokumentiert.

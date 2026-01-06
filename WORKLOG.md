@@ -601,6 +601,54 @@
 - **Tests**
   - `npm run build` (admin_frontend/admin-ui)
 
+## Schritt 49 – Bekannte Lücken sichtbar machen
+- **Datum/Uhrzeit**: 2026-01-06T11:38:00+00:00
+- **Ziel**: Fehlende Backend-Funktionalität (Build/Commit, System-Actions) in Settings explizit kennzeichnen und Roadmap-Ergänzung für Backend-Follow-ups.
+- **Was wurde geändert**
+  - Settings/System: Backend-Build/Commit als nicht verfügbar markiert (kein Endpoint).
+  - Settings/Danger Zone: Hinweis auf fehlende Cache/Reindex-Endpoints ergänzt.
+  - Roadmap: Neues Task T6 für Backend-Gaps dokumentiert.
+- **Ergebnis**
+  - UI zeigt klar, dass Build/Commit und System-Actions fehlen; Backend-Arbeitsbedarf ist dokumentiert.
+- **Tests**
+  - `npm run build` (admin_frontend/admin-ui)
+
+## Schritt 48 – Settings mit Build-Info ergänzt
+- **Datum/Uhrzeit**: 2026-01-06T11:26:00+00:00
+- **Ziel**: System-Abschnitt der Settings um verfügbare Build-/Versionsinformation ergänzen.
+- **Was wurde geändert**
+  - `AdminSettingsView.vue`: Build Info zeigt jetzt die App-Version (aus `package.json` bzw. `VITE_BUILD_INFO`), statt eines leeren Platzhalters.
+- **Ergebnis**
+  - System-Sektion enthält eine konkrete Versionsanzeige; weiterhin keine Backend-Build-Daten vorhanden.
+- **Tests**
+  - `npm run build` (admin_frontend/admin-ui)
+
+## Schritt 46 – Admin Settings Analyse & Planung
+- **Datum/Uhrzeit**: 2026-01-06T11:08:24+00:00
+- **Ziel**: Ist-Zustand der Admin-Settings-View erfassen, API-Aufrufe und Blöcke dokumentieren, Plan für Refactor anlegen.
+- **Was wurde geprüft**
+  - Settings-View (`src/views/AdminSettingsView.vue`) enthält einen einzigen Card-Block mit KV-Rastern für Systeminfos (API Base, Base Domain, Observability-Link auf `VITE_GRAFANA_URL`), Admin-Key-Länge, Actor-Anzeige, Theme-Toggle (radio, emit `setTheme`), Admin-Context-Reset-Button sowie Security/Feature-Flag-Hinweise.
+  - Enthält „User Management (Quick)“-Sektion mit Create/Passwort/Status-Änderung; lädt Nutzer per `adminListUsers`, nutzt `adminCreateUser` und `adminUpdateUser` (Passwort/Active-Flag). `loadUsers` wird `onMounted` getriggert, bricht ohne Admin-Key ab.
+  - Weitere API-Aufrufe in Settings gibt es nicht; keine System-Action-Endpunkte (Cache reset/Reindex) im Admin-Frontend gefunden.
+  - Admin-Navigation (`src/App.vue`) hat dedizierte Benutzer-View (`AdminUsersView.vue`) mit vollständigem User-Management (Listen/Filter/Status/Passwort/CSV-Export).
+- **Ergebnis**
+  - Quick-User-Management gehört in die Benutzer-View und macht die Settings unklar; Settings-Inhalte müssen in System/Security/Theme/Flags/Danger-Zone gegliedert werden. Roadmap-Eintrag und TODO ergänzt.
+- **Offene Punkte**
+  - Danger-Zone-Aktionen fehlen als Endpunkte/Buttons; bei Refactor nur Hinweis/Platzhalter möglich, Backend-Klärung nötig.
+
+## Schritt 47 – Admin Settings restrukturiert & User-Quick-Actions verlagert
+- **Datum/Uhrzeit**: 2026-01-06T11:15:05+00:00
+- **Ziel**: Settings-Seite auf System/Security/Theme/Flags/Danger-Zone fokussieren und User-Management-Formulare in die Benutzer-Ansicht verschieben.
+- **Was wurde geändert**
+  - `AdminSettingsView.vue` in Abschnitte gegliedert (System mit Health-Anzeige, Security & Auth, Theme & UI, Feature Flags, Danger Zone). User-Management-Blöcke entfernt; Danger-Zone nur als Hinweis, da keine Endpunkte vorhanden.
+  - Neue Komponente `UserQuickActions.vue` mit bisherigem Quick-User-Management (Anlegen, Passwort setzen, Status) unter `components/users/`.
+  - `AdminUsersView.vue` bindet Quick-Actions ein, synchronisiert Auswahl/Liste und nutzt gemeinsame Update-Helfer.
+  - Roadmap aktualisiert; TODO bereinigt.
+- **Ergebnis**
+  - Settings zeigen nur noch systemweite, seltene Konfigurationen; User-Operationen liegen konsistent im Menüpunkt „Benutzer“. Danger-Zone weist auf fehlende System-Action-Endpunkte hin.
+- **Tests**
+  - `npm run build` (admin_frontend/admin-ui)
+
 ## Schritt 44 – Admin Globales: Einheiten & Import/Export Hinweis
 - **Datum/Uhrzeit**: 2026-01-06T05:20:00Z
 - **Ziel**: Korrektur „Globale Typen“ → „Globale Einheiten“, Import/Export-Anforderungen sichtbar machen und Backend-Lücken dokumentieren (admin-fähige Artikel-Import/Export-Endpunkte, Einheiten, Schreibschutz/Prefix-Regel für Kundenartikel).

@@ -11,11 +11,18 @@ export type ItemUpdatePayload = components["schemas"]["ItemUpdate"];
 
 export type GlobalUnit = components["schemas"]["ItemUnitOut"];
 export type GlobalIndustry = components["schemas"]["IndustryOut"];
+export type IndustryAssignRequest = components["schemas"]["IndustryAssignRequest"];
+export type IndustryAssignResponse = components["schemas"]["IndustryAssignResponse"];
+export type IndustryMappingImportResult = components["schemas"]["IndustryMappingImportResult"];
+export type IndustryOverlapCounts = components["schemas"]["IndustryOverlapCounts"];
 
 type ItemsPage = components["schemas"]["ItemsPage"];
 type ItemsQuery = NonNullable<paths["/admin/inventory/items"]["get"]["parameters"]["query"]>;
 type ImportItemsResponse =
   paths["/admin/inventory/items/import"]["post"]["responses"]["200"]["content"]["application/json"];
+type IndustryAssignRequest = components["schemas"]["IndustryAssignTenantsRequest"];
+type IndustryAssignResponse =
+  paths["/admin/inventory/industries/{industry_id}/assign/tenants"]["post"]["responses"]["200"]["content"]["application/json"];
 
 function withAdmin(adminKey: string, actor?: string) {
   return { headers: adminHeaders(adminKey, actor) };
@@ -172,6 +179,63 @@ export async function setIndustryItems(
 ) {
   const res = await api.put<{ ok: boolean; count: number }>(
     `/admin/inventory/industries/${industryId}/items`,
+    payload,
+    withAdmin(adminKey, actor)
+  );
+  return res.data;
+}
+
+export async function exportIndustryMapping(
+  adminKey: string,
+  industryId: string,
+  format: "csv" | "xlsx" = "csv",
+  actor?: string
+) {
+  const res = await api.get(`/admin/inventory/industries/${industryId}/items/export`, {
+    ...withAdmin(adminKey, actor),
+    params: { format },
+    responseType: "blob",
+  });
+  return res.data as Blob;
+}
+
+export async function importIndustryMapping(
+  adminKey: string,
+  industryId: string,
+  file: File,
+  actor?: string
+) {
+  const form = new FormData();
+  form.append("file", file);
+  const res = await api.post<IndustryMappingImportResult>(
+    `/admin/inventory/industries/${industryId}/items/import`,
+    form,
+    {
+      headers: {
+        ...withAdmin(adminKey, actor).headers,
+        "Content-Type": "multipart/form-data",
+      },
+    }
+  );
+  return res.data;
+}
+
+export async function fetchIndustryOverlapCounts(adminKey: string, itemIds: string[], actor?: string) {
+  const res = await api.get<IndustryOverlapCounts>(`/admin/inventory/industries/overlap-counts`, {
+    ...withAdmin(adminKey, actor),
+    params: { item_ids: itemIds },
+  });
+  return res.data;
+}
+
+export async function assignIndustryItemsToTenants(
+  adminKey: string,
+  industryId: string,
+  payload: IndustryAssignRequest,
+  actor?: string
+) {
+  const res = await api.post<IndustryAssignResponse>(
+    `/admin/inventory/industries/${industryId}/assign-to-tenants`,
     payload,
     withAdmin(adminKey, actor)
   );

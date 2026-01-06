@@ -1,14 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
-import Card from 'primevue/card';
-import Button from 'primevue/button';
-import Calendar from 'primevue/calendar';
-import Dropdown from 'primevue/dropdown';
-import MultiSelect from 'primevue/multiselect';
-import AutoComplete from 'primevue/autocomplete';
-import InputSwitch from 'primevue/inputswitch';
-import InputNumber from 'primevue/inputnumber';
-import Tag from 'primevue/tag';
+import { computed, ref, watch } from 'vue';
 import type { CategoryOption, ItemOption, ReportMode } from '@/types/reports';
 
 const props = withDefaults(
@@ -23,10 +14,12 @@ const props = withDefaults(
     topLimit: number;
     loading?: boolean;
     applying?: boolean;
+    searching?: boolean;
   }>(),
   {
     loading: false,
-    applying: false
+    applying: false,
+    searching: false
   }
 );
 
@@ -54,13 +47,6 @@ const showAllLines = computed({
   set: (value: boolean) => emit('update:aggregate', !value ? true : false)
 });
 
-const autocompleteValue = ref<string>('');
-
-const selectedItemsModel = computed({
-  get: () => props.selectedItems,
-  set: (val: ItemOption[]) => emit('update:selectedItems', val)
-});
-
 const dateRangeModel = computed({
   get: () => props.dateRange,
   set: (val: [Date | null, Date | null]) => emit('update:dateRange', val)
@@ -81,68 +67,160 @@ const topLimitModel = computed({
   set: (val: number) => emit('update:topLimit', val)
 });
 
-const handleItemSelect = (event: { value: ItemOption }) => {
-  if (!event?.value) return;
-  emit('add-item', event.value);
-  autocompleteValue.value = '';
-};
+const searchQuery = ref('');
+const highlightedOption = ref<string>('');
 
+watch(
+  () => props.itemSuggestions,
+  (list) => {
+    if (!list.length) {
+      highlightedOption.value = '';
+      return;
+    }
+    if (!list.find((opt) => opt.value === highlightedOption.value)) {
+      highlightedOption.value = list[0].value;
+    }
+  }
+);
+
+function formatInputDate(date: Date | null) {
+  if (!date) return '';
+  const year = date.getFullYear();
+  const month = `${date.getMonth() + 1}`.padStart(2, '0');
+  const day = `${date.getDate()}`.padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function parseInputDate(value: string) {
+  if (!value) return null;
+  const parts = value.split('-').map((p) => Number(p));
+  if (parts.length !== 3 || parts.some(Number.isNaN)) return null;
+  const [year, month, day] = parts;
+  return new Date(year, month - 1, day);
+}
+
+function onDateChange(position: 'start' | 'end', event: Event) {
+  const value = parseInputDate((event.target as HTMLInputElement).value);
+  const next: [Date | null, Date | null] = [...dateRangeModel.value];
+  if (position === 'start') next[0] = value;
+  if (position === 'end') next[1] = value;
+  emit('update:dateRange', next);
+}
+
+function onModeChange(event: Event) {
+  const value = (event.target as HTMLSelectElement).value as ReportMode;
+  selectedMode.value = value;
+}
+
+function onCategoryChange(event: Event) {
+  const value = (event.target as HTMLSelectElement).value;
+  selectedCategory.value = value || null;
+}
+
+function onTopLimitChange(event: Event) {
+  const value = Number((event.target as HTMLInputElement).value);
+  const safeValue = Number.isFinite(value) ? value : props.topLimit;
+  topLimitModel.value = safeValue;
+}
+
+function onToggleAllLines(event: Event) {
+  showAllLines.value = (event.target as HTMLInputElement).checked;
+}
+
+function onSearchInput(event: Event) {
+  searchQuery.value = (event.target as HTMLInputElement).value;
+  emit('search-items', searchQuery.value);
+}
+
+function onSuggestionChange(event: Event) {
+  highlightedOption.value = (event.target as HTMLSelectElement).value;
+}
+
+function addHighlighted() {
+  const candidateId = highlightedOption.value || props.itemSuggestions[0]?.value;
+  if (!candidateId) return;
+  const option = props.itemSuggestions.find((item) => item.value === candidateId);
+  if (option) {
+    emit('add-item', option);
+  }
+}
+
+function clearSelected() {
+  emit('update:selectedItems', []);
+}
+
+function removeItem(id: string) {
+  const remaining = props.selectedItems.filter((item) => item.value !== id);
+  emit('update:selectedItems', remaining);
+}
 </script>
 
 <template>
-  <Card class="report-card">
-    <template #title>Filter</template>
-    <template #subtitle>Zeitraum, Modus und Artikel-Auswahl steuern die Auswertung.</template>
+  <section class="section report-card">
+    <header class="section-header">
+      <div>
+        <h3 class="section-title">Filter</h3>
+        <p class="section-subtitle">Zeitraum, Modus und Auswahl steuern die Auswertung.</p>
+      </div>
+      <div class="section-actions">
+        <button class="btnPrimary small" type="button" :disabled="applying || loading" @click="emit('apply-range')">
+          {{ applying ? '...' : 'Zeitraum anwenden' }}
+        </button>
+      </div>
+    </header>
 
     <div class="filters-grid">
       <div class="field">
         <label class="field-label">Zeitraum</label>
-        <Calendar
-          v-model="dateRangeModel"
-          selectionMode="range"
-          :manualInput="false"
-          view="month"
-          dateFormat="mm/yy"
-          showIcon
-          placeholder="Zeitraum wählen"
-          class="w-full"
-        />
+        <div class="inline-range">
+          <input
+            class="input compat"
+            type="date"
+            :value="formatInputDate(dateRangeModel[0])"
+            @input="(event) => onDateChange('start', event)"
+          />
+          <span class="range-sep">bis</span>
+          <input
+            class="input compat"
+            type="date"
+            :value="formatInputDate(dateRangeModel[1])"
+            @input="(event) => onDateChange('end', event)"
+          />
+        </div>
         <small class="hint">Standard: letzte 30 Tage</small>
       </div>
 
       <div class="field">
         <label class="field-label">Modus</label>
-        <Dropdown v-model="selectedMode" :options="modeOptions" optionLabel="label" optionValue="value" class="w-full" />
+        <select class="input compat" :value="selectedMode" @change="onModeChange">
+          <option v-for="option in modeOptions" :key="option.value" :value="option.value">
+            {{ option.label }}
+          </option>
+        </select>
         <small class="hint">{{ modeOptions.find((o) => o.value === mode)?.description }}</small>
       </div>
 
       <div class="field">
         <label class="field-label">Kategorie</label>
-        <Dropdown
-          v-model="selectedCategory"
-          :options="categoryOptions"
-          optionLabel="label"
-          optionValue="value"
-          placeholder="Alle Kategorien"
-          showClear
-          class="w-full"
-        />
+        <select class="input compat" :value="selectedCategory || ''" @change="onCategoryChange">
+          <option value="">Alle Kategorien</option>
+          <option v-for="option in categoryOptions" :key="option.value" :value="option.value">
+            {{ option.label }}
+          </option>
+        </select>
         <div class="category-actions">
-          <Button
-            label="Zeitraum anwenden"
-            icon="pi pi-refresh"
-            :loading="applying"
-            @click="emit('apply-range')"
-          />
-          <Button
+          <button class="btnGhost small" type="button" :disabled="applying || loading" @click="emit('apply-range')">
+            {{ applying ? '...' : 'Aktualisieren' }}
+          </button>
+          <button
             v-if="mode === 'selected'"
-            label="Kategorie übernehmen"
-            icon="pi pi-check-circle"
-            severity="secondary"
-            outlined
+            class="btnPrimary small"
+            type="button"
             :disabled="!categoryId || loading"
             @click="emit('select-category-items')"
-          />
+          >
+            Kategorie übernehmen
+          </button>
         </div>
       </div>
     </div>
@@ -150,56 +228,69 @@ const handleItemSelect = (event: { value: ItemOption }) => {
     <div class="advanced-grid">
       <div class="field" v-if="mode !== 'top5'">
         <label class="field-label">Artikel auswählen</label>
-        <MultiSelect
-          v-model="selectedItemsModel"
-          :options="itemSuggestions"
-          optionLabel="label"
-          filter
-          placeholder="Artikel wählen"
-          class="w-full"
-        />
-        <div class="chips" v-if="selectedItems.length">
-          <Tag
-            v-for="item in selectedItems"
-            :key="item.value"
-            :value="item.label"
-            class="chip"
-          />
-        </div>
-      </div>
-
-      <div class="field" v-if="mode === 'selected'">
-        <label class="field-label">Artikel hinzufügen</label>
-        <AutoComplete
-          v-model="autocompleteValue"
-          :suggestions="itemSuggestions"
-          optionLabel="label"
-          optionValue="value"
-          :minLength="2"
+        <input
+          class="input compat"
+          type="search"
           placeholder="SKU, Barcode oder Name"
-          forceSelection
-          class="w-full"
-          @complete="(e) => emit('search-items', e.query)"
-          @item-select="handleItemSelect"
+          :value="searchQuery"
+          @input="onSearchInput"
         />
-        <small class="hint">Tippen zum Suchen, Enter zum Übernehmen</small>
+        <small class="hint">Tippen zum Suchen. Vorschläge auswählen und hinzufügen.</small>
+        <small v-if="searching" class="hint">Suche läuft...</small>
+
+        <select
+          class="input compat"
+          size="6"
+          :value="highlightedOption"
+          @change="onSuggestionChange"
+          @dblclick="addHighlighted"
+        >
+          <option v-for="item in itemSuggestions" :key="item.value" :value="item.value">
+            {{ item.label }}
+          </option>
+        </select>
+        <div class="category-actions">
+          <button class="btnGhost small" type="button" :disabled="!itemSuggestions.length" @click="addHighlighted">
+            Hinzufügen
+          </button>
+          <button class="btnGhost small" type="button" :disabled="!selectedItems.length" @click="clearSelected">
+            Auswahl leeren
+          </button>
+        </div>
+
+        <div class="chips" v-if="selectedItems.length">
+          <div v-for="item in selectedItems" :key="item.value" class="chip">
+            <span>{{ item.label }}</span>
+            <button class="btnGhost small" type="button" @click="removeItem(item.value)">✕</button>
+          </div>
+        </div>
       </div>
 
       <div class="field" v-if="mode === 'top5'">
         <label class="field-label">Limit Top Artikel</label>
-        <InputNumber v-model="topLimitModel" inputId="top-limit" :min="1" :max="10" showButtons class="w-full" />
+        <input
+          class="input compat"
+          type="number"
+          min="1"
+          max="10"
+          :value="topLimitModel"
+          @input="onTopLimitChange"
+        />
         <small class="hint">Standard: 5</small>
       </div>
 
       <div class="field" v-if="mode === 'all'">
         <div class="switch-row">
           <span class="field-label">Alle als Linien anzeigen</span>
-          <InputSwitch v-model="showAllLines" />
+          <label class="toggle switch-toggle">
+            <input type="checkbox" :checked="showAllLines" @change="onToggleAllLines" />
+            <span>{{ showAllLines ? 'Ja' : 'Nein' }}</span>
+          </label>
         </div>
         <small class="hint">Standard: Gesamtlinie. Aktivieren für Linien pro Artikel.</small>
       </div>
     </div>
-  </Card>
+  </section>
 </template>
 
 <style scoped>
@@ -227,12 +318,12 @@ const handleItemSelect = (event: { value: ItemOption }) => {
 }
 
 .field-label {
-  font-weight: 600;
-  color: var(--text-color, #2a2a2a);
+  font-weight: 700;
+  color: var(--text-strong);
 }
 
 .hint {
-  color: var(--text-secondary-color, #6b7280);
+  color: var(--text-muted);
 }
 
 .category-actions {
@@ -255,10 +346,27 @@ const handleItemSelect = (event: { value: ItemOption }) => {
 }
 
 .chip {
-  background: var(--surface-100, #f3f4f6);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
 }
 
-.w-full {
-  width: 100%;
+.inline-range {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.range-sep {
+  color: var(--text-muted);
+}
+
+.switch-toggle input {
+  margin-right: 6px;
 }
 </style>

@@ -16,10 +16,13 @@ import type {
   TenantUserUpdate,
   TenantUserOut,
   TenantUserApiOut,
+  TenantSettingsOut,
+  TenantSettingsUpdate,
+  AdminSystemInfo,
+  AdminSystemActionResponse,
 } from "../types";
 
-import { apiClient } from "./client";
-import { createApiClient } from "@shared/api-client";
+import { api, adminHeaders } from "./client";
 
 /*
   Admin API Wrapper
@@ -37,12 +40,43 @@ type AuditResponse = paths["/admin/audit"]["get"]["responses"]["200"]["content"]
 type DiagnosticsResponse = paths["/admin/diagnostics"]["get"]["responses"]["200"]["content"]["application/json"];
 type TenantUserListResponse =
   paths["/admin/tenants/{tenant_id}/users"]["get"]["responses"]["200"]["content"]["application/json"];
+type TenantSettingsResponse =
+  paths["/admin/tenants/{tenant_id}/settings"]["get"]["responses"]["200"]["content"]["application/json"];
+
+type AdminCategoriesResponse =
+  paths["/admin/inventory/categories"]["get"]["responses"]["200"]["content"]["application/json"];
+type AdminCategoryCreate = components["schemas"]["CategoryCreate"];
+type AdminCategoryUpdate = components["schemas"]["CategoryUpdate"];
+
+type AdminUnitsResponse = paths["/admin/inventory/units"]["get"]["responses"]["200"]["content"]["application/json"];
+type AdminUnitPayload = components["schemas"]["ItemUnitOut"];
+
+type AdminItemsResponse =
+  paths["/admin/inventory/items"]["get"]["responses"]["200"]["content"]["application/json"];
+type AdminItemsQuery = NonNullable<paths["/admin/inventory/items"]["get"]["parameters"]["query"]>;
+type AdminItemCreate = components["schemas"]["ItemCreate"];
+type AdminItemUpdate = components["schemas"]["ItemUpdate"];
+type AdminImportResponse =
+  paths["/admin/inventory/items/import"]["post"]["responses"]["200"]["content"]["application/json"];
+type AdminExportResponse =
+  paths["/admin/inventory/items/export"]["get"]["responses"]["200"]["content"]["application/json"];
+
+type AdminIndustriesResponse =
+  paths["/admin/inventory/industries"]["get"]["responses"]["200"]["content"]["application/json"];
+type AdminIndustryCreate = components["schemas"]["IndustryCreate"];
+type AdminIndustryUpdate = components["schemas"]["IndustryUpdate"];
+type AdminIndustryItemsResponse =
+  paths["/admin/inventory/industries/{industry_id}/items"]["get"]["responses"]["200"]["content"]["application/json"];
+type AdminIndustryItemsUpdate =
+  components["schemas"]["IndustryArticlesUpdate"];
 
 type AdminLoginPayload = components["schemas"]["AdminCredentialLogin"];
 type TenantUserCreatePayload = components["schemas"]["TenantUserCreate"];
 type TenantUserUpdatePayload = components["schemas"]["TenantUserUpdate"];
 
 type AdminLoginResponse = { admin_key: string; actor?: string };
+type AdminSystemInfoResponse = AdminSystemInfo;
+type AdminSystemActionResponseRaw = AdminSystemActionResponse;
 
 function withAdmin(adminKey: string, actor?: string) {
   return { headers: adminHeaders(adminKey, actor) };
@@ -65,9 +99,12 @@ export async function adminPing(adminKey: string, actor?: string) {
 }
 
 export async function adminLoginWithCredentials(email: string, password: string) {
-  const api = createApiClient({ timeout: 15000 });
-  const res = await api.post("/admin/login", { email, password });
-  return res.data as { admin_key: string; actor?: string };
+  const res = await api.post<AdminLoginResponse>(
+    "/admin/login",
+    { email, password },
+    { timeout: 15000 }
+  );
+  return res.data;
 }
 
 /* Tenants */
@@ -95,6 +132,26 @@ export async function adminDeleteTenant(adminKey: string, actor: string | undefi
   return true;
 }
 
+/* Tenant Settings */
+export async function adminGetTenantSettings(adminKey: string, actor: string | undefined, tenantId: string) {
+  const res = await api.get<TenantSettingsResponse>(`/admin/tenants/${tenantId}/settings`, withAdmin(adminKey, actor));
+  return res.data as TenantSettingsOut;
+}
+
+export async function adminUpdateTenantSettings(
+  adminKey: string,
+  actor: string | undefined,
+  tenantId: string,
+  payload: TenantSettingsUpdate
+) {
+  const res = await api.put<TenantSettingsOut>(
+    `/admin/tenants/${tenantId}/settings`,
+    payload,
+    withAdmin(adminKey, actor)
+  );
+  return res.data;
+}
+
 /* Users */
 export async function adminListUsers(adminKey: string, actor?: string) {
   const res = await api.get<UserListResponse>("/admin/users", withAdmin(adminKey, actor));
@@ -108,6 +165,27 @@ export async function adminCreateUser(adminKey: string, actor: string | undefine
 
 export async function adminUpdateUser(adminKey: string, actor: string | undefined, userId: string, payload: UserUpdate) {
   const res = await api.patch<UserOut>(`/admin/users/${userId}`, payload, withAdmin(adminKey, actor));
+  return res.data;
+}
+
+/* System */
+export async function adminGetSystemInfo(adminKey: string, actor?: string) {
+  const res = await api.get<AdminSystemInfoResponse>("/admin/system/info", withAdmin(adminKey, actor));
+  return res.data;
+}
+
+export async function adminSystemCacheReset(adminKey: string, actor?: string) {
+  const res = await api.post<AdminSystemActionResponseRaw>("/admin/system/actions/cache-reset", null, withAdmin(adminKey, actor));
+  return res.data;
+}
+
+export async function adminSystemReindex(adminKey: string, actor?: string) {
+  const res = await api.post<AdminSystemActionResponseRaw>("/admin/system/actions/reindex", null, withAdmin(adminKey, actor));
+  return res.data;
+}
+
+export async function adminSystemRestart(adminKey: string, actor?: string) {
+  const res = await api.post<AdminSystemActionResponseRaw>("/admin/system/actions/restart", null, withAdmin(adminKey, actor));
   return res.data;
 }
 
@@ -245,4 +323,110 @@ export async function adminGetAudit(adminKey: string, actor: string | undefined,
 
   const res = await api.get<AuditResponse>("/admin/audit", { ...withAdmin(adminKey, actor), params });
   return res.data as AuditOut[];
+}
+
+/* Admin Inventory: Categories */
+export async function adminListGlobalCategories(adminKey: string, actor?: string) {
+  const res = await api.get<AdminCategoriesResponse>("/admin/inventory/categories", withAdmin(adminKey, actor));
+  return res.data as components["schemas"]["CategoryOut"][];
+}
+
+export async function adminCreateGlobalCategory(adminKey: string, actor: string | undefined, payload: AdminCategoryCreate) {
+  const res = await api.post("/admin/inventory/categories", payload, withAdmin(adminKey, actor));
+  return res.data as components["schemas"]["CategoryOut"];
+}
+
+export async function adminUpdateGlobalCategory(
+  adminKey: string,
+  actor: string | undefined,
+  id: string,
+  payload: AdminCategoryUpdate
+) {
+  const res = await api.patch(`/admin/inventory/categories/${id}`, payload, withAdmin(adminKey, actor));
+  return res.data as components["schemas"]["CategoryOut"];
+}
+
+/* Admin Inventory: Units */
+export async function adminListUnits(adminKey: string, actor?: string) {
+  const res = await api.get<AdminUnitsResponse>("/admin/inventory/units", withAdmin(adminKey, actor));
+  return res.data as components["schemas"]["ItemUnitOut"][];
+}
+
+export async function adminUpsertUnit(adminKey: string, actor: string | undefined, payload: AdminUnitPayload) {
+  const res = await api.post<AdminUnitPayload>("/admin/inventory/units", payload, withAdmin(adminKey, actor));
+  return res.data;
+}
+
+/* Admin Inventory: Items */
+export async function adminListGlobalItems(adminKey: string, actor: string | undefined, params?: AdminItemsQuery) {
+  const res = await api.get<AdminItemsResponse>("/admin/inventory/items", { ...withAdmin(adminKey, actor), params });
+  return res.data as components["schemas"]["ItemsPage"];
+}
+
+export async function adminCreateGlobalItem(adminKey: string, actor: string | undefined, payload: AdminItemCreate) {
+  const res = await api.post("/admin/inventory/items", payload, withAdmin(adminKey, actor));
+  return res.data as components["schemas"]["ItemOut"];
+}
+
+export async function adminUpdateGlobalItem(
+  adminKey: string,
+  actor: string | undefined,
+  id: string,
+  payload: AdminItemUpdate
+) {
+  const res = await api.patch(`/admin/inventory/items/${id}`, payload, withAdmin(adminKey, actor));
+  return res.data as components["schemas"]["ItemOut"];
+}
+
+export async function adminImportGlobalItems(adminKey: string, actor: string | undefined, file: File) {
+  const form = new FormData();
+  form.append("file", file);
+  const res = await api.post<AdminImportResponse>("/admin/inventory/items/import", form, {
+    headers: { ...withAdmin(adminKey, actor).headers, "Content-Type": "multipart/form-data" },
+  });
+  return res.data;
+}
+
+export async function adminExportGlobalItems(adminKey: string, actor: string | undefined) {
+  const res = await api.get<AdminExportResponse>("/admin/inventory/items/export", withAdmin(adminKey, actor));
+  return res.data;
+}
+
+/* Admin Inventory: Industries */
+export async function adminListIndustries(adminKey: string, actor?: string) {
+  const res = await api.get<AdminIndustriesResponse>("/admin/inventory/industries", withAdmin(adminKey, actor));
+  return res.data;
+}
+
+export async function adminCreateIndustry(adminKey: string, actor: string | undefined, payload: AdminIndustryCreate) {
+  const res = await api.post("/admin/inventory/industries", payload, withAdmin(adminKey, actor));
+  return res.data as components["schemas"]["IndustryOut"];
+}
+
+export async function adminUpdateIndustry(
+  adminKey: string,
+  actor: string | undefined,
+  id: string,
+  payload: AdminIndustryUpdate
+) {
+  const res = await api.patch(`/admin/inventory/industries/${id}`, payload, withAdmin(adminKey, actor));
+  return res.data as components["schemas"]["IndustryOut"];
+}
+
+export async function adminGetIndustryItems(adminKey: string, actor: string | undefined, industryId: string) {
+  const res = await api.get<AdminIndustryItemsResponse>(
+    `/admin/inventory/industries/${industryId}/items`,
+    withAdmin(adminKey, actor)
+  );
+  return res.data;
+}
+
+export async function adminSetIndustryItems(
+  adminKey: string,
+  actor: string | undefined,
+  industryId: string,
+  payload: AdminIndustryItemsUpdate
+) {
+  const res = await api.put(`/admin/inventory/industries/${industryId}/items`, payload, withAdmin(adminKey, actor));
+  return res.data as { ok: boolean; count: number };
 }

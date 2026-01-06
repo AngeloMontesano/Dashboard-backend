@@ -6,24 +6,32 @@ import {
   createItem,
   fetchCategories,
   fetchItems,
+  fetchUnits,
   importItems,
   updateItem,
   type Category,
-  type Item
+  type Item,
+  type ItemUnit
 } from '@/api/inventory';
 import { useAuth } from '@/composables/useAuth';
+import AuthReauthBanner from '@/components/auth/AuthReauthBanner.vue';
+import { useAuthIssueBanner } from '@/composables/useAuthIssueBanner';
 import BaseInput from '@/components/common/BaseInput.vue';
 import BaseSelect from '@/components/common/BaseSelect.vue';
 import BaseField from '@/components/common/BaseField.vue';
 
 const router = useRouter();
-const { state: authState, isAuthenticated, logout } = useAuth();
+const { state: authState, isAuthenticated } = useAuth();
+const { authIssue, authMessage, handleAuthError: handleAuthIssue } = useAuthIssueBanner(
+  'Sitzung abgelaufen. Bitte neu anmelden.'
+);
 
 const hasWriteAccess = computed(() => Boolean(authState.accessToken) && authState.role !== 'readonly');
 const canOpenModals = computed(() => Boolean(authState.accessToken));
 const isLoggedIn = computed(() => isAuthenticated());
 
 const categories = ref<Category[]>([]);
+const units = ref<ItemUnit[]>([]);
 const items = ref<Item[]>([]);
 const total = ref(0);
 
@@ -125,6 +133,7 @@ const showCreateCard = computed(() => showCreate.value);
 const categoryOptions = computed(() =>
   categories.value.map((cat) => ({ label: cat.name, value: cat.id }))
 );
+const unitOptions = computed(() => units.value.map((u) => ({ label: u.label, value: u.code })));
 
 function resetCreateForm() {
   createForm.sku = '';
@@ -167,21 +176,33 @@ function hydrateFormFromItem(item: Item, target: typeof editForm | typeof create
   target.is_active = item.is_active;
 }
 
-function handleAuthError(err: any) {
-  const status = err?.response?.status;
-  if (status === 401) {
-    banner.error = 'Sitzung abgelaufen. Bitte erneut anmelden.';
-    logout();
-    router.push({ name: 'login', query: { redirect: '/artikelverwaltung' } });
-    return true;
-  }
-  return false;
+function assignError(err: unknown, fallback: string) {
+  const classified = handleAuthIssue(err);
+  const detail = classified.detailMessage || classified.userMessage || fallback;
+  banner.error = classified.category === 'auth' ? classified.userMessage : `${fallback}: ${detail}`;
+  return classified.category === 'auth';
 }
 
 async function loadCategories() {
   if (!authState.accessToken) return;
   const data = await fetchCategories(authState.accessToken);
   categories.value = data.filter((c: Category) => c.is_active);
+}
+
+async function loadUnits() {
+  if (!authState.accessToken) return;
+  try {
+    const data = await fetchUnits(authState.accessToken);
+    units.value = data.filter((u) => u.is_active);
+  } catch {
+    units.value = [
+      { code: 'pcs', label: 'Stück', is_active: true },
+      { code: 'kg', label: 'Kilogramm', is_active: true },
+      { code: 'g', label: 'Gramm', is_active: true },
+      { code: 'l', label: 'Liter', is_active: true },
+      { code: 'ml', label: 'Milliliter', is_active: true }
+    ];
+  }
 }
 
 async function loadItems() {
@@ -206,8 +227,7 @@ async function loadItems() {
       hydrateFormFromItem(selectedArticle.value, editForm);
     }
   } catch (err: any) {
-    if (handleAuthError(err)) return;
-    banner.error = err?.message || 'Konnte Artikel nicht laden.';
+    if (assignError(err, 'Konnte Artikel nicht laden.')) return;
   } finally {
     isLoading.value = false;
   }
@@ -242,7 +262,7 @@ async function handleQuickScan() {
       banner.scan = `${result.total} Treffer zum Barcode – Filter gesetzt.`;
     }
   } catch (err: any) {
-    if (handleAuthError(err)) return;
+    if (assignError(err, 'Schnellscan fehlgeschlagen.')) return;
     banner.scan = 'Schnellscan fehlgeschlagen.';
   }
 }
@@ -264,8 +284,7 @@ async function handleSaveSelected() {
     banner.message = 'Artikel gespeichert.';
     await loadItems();
   } catch (err: any) {
-    if (handleAuthError(err)) return;
-    banner.error = err?.response?.data?.error?.message || err?.message || 'Speichern fehlgeschlagen.';
+    if (assignError(err, 'Speichern fehlgeschlagen.')) return;
   } finally {
     isSaving.value = false;
   }
@@ -292,7 +311,7 @@ async function handleCreate() {
     selectedArticleId.value = created.id;
     hydrateFormFromItem(created, editForm);
   } catch (err: any) {
-    if (handleAuthError(err)) return;
+    if (assignError(err, 'Anlage fehlgeschlagen.')) return;
     createFeedback.error = err?.response?.data?.error?.message || err?.message || 'Anlage fehlgeschlagen.';
   } finally {
     isSaving.value = false;
@@ -396,8 +415,7 @@ async function handleExportAll() {
     window.URL.revokeObjectURL(url);
     banner.message = '';
   } catch (err: any) {
-    if (handleAuthError(err)) return;
-    banner.error = err?.message || 'Export fehlgeschlagen.';
+    if (assignError(err, 'Export fehlgeschlagen.')) return;
   } finally {
     isExporting.value = false;
   }
@@ -476,20 +494,13 @@ async function startImport() {
   importResult.updated = 0;
   importResult.errors = [];
   try {
-    const res = await importItems(authState.accessToken, file);
-    const hint = [`Importiert: ${res.imported}`, `Aktualisiert: ${res.updated}`];
-    if (res.errors.length) {
-      hint.push(`Fehler: ${res.errors.length}`);
-      error.value = res.errors
-        .slice(0, 3)
-        .map((e: { row: string; error: string }) => `Zeile ${e.row}: ${e.error}`)
-        .join('; ');
-    } else {
-      message.value = hint.join(' | ');
-    }
+    const res = await importItems(authState.accessToken, importFile.value, importMapping);
+    importResult.created = res.imported;
+    importResult.updated = res.updated;
+    importResult.errors = res.errors;
     await loadItems();
   } catch (err: any) {
-    if (handleAuthError(err)) return;
+    if (assignError(err, 'Import fehlgeschlagen.')) return;
     importError.value = err?.response?.data?.error?.message || err?.message || 'Import fehlgeschlagen.';
   } finally {
     importLoading.value = false;
@@ -534,6 +545,7 @@ function closeCreateCard() {
 
 onMounted(async () => {
   if (!isLoggedIn.value) return;
+  await loadUnits();
   await loadCategories();
   await loadItems();
   await nextTick();
@@ -544,11 +556,13 @@ watch(
   () => authState.accessToken,
   async (token) => {
     if (token) {
+      await loadUnits();
       await loadCategories();
       await loadItems();
     } else {
       categories.value = [];
       items.value = [];
+      units.value = [];
     }
   }
 );
@@ -592,17 +606,17 @@ watch(
         <p class="section-subtitle">Artikel, Barcodes und Mindestbestände verwalten.</p>
       </div>
       <div class="page-head__actions">
-        <button class="button button--ghost" type="button" @click="handleNavigateCategories">
+        <button class="btnGhost small" type="button" @click="handleNavigateCategories">
           Kategorien verwalten
         </button>
-        <button class="button button--ghost" type="button" @click="openImportModal" :disabled="!canOpenModals">
+        <button class="btnGhost small" type="button" @click="openImportModal" :disabled="!canOpenModals">
           Import CSV
         </button>
-        <button class="button button--ghost" type="button" @click="handleExportAll" :disabled="isExporting">
+        <button class="btnGhost small" type="button" @click="handleExportAll" :disabled="isExporting">
           {{ isExporting ? 'Exportiert...' : 'Export CSV' }}
         </button>
         <button
-          class="button button--primary"
+          class="btnPrimary small"
           type="button"
           @click="openCreateCard"
           :disabled="!canOpenModals"
@@ -611,6 +625,14 @@ watch(
         </button>
       </div>
     </header>
+
+    <AuthReauthBanner
+      v-if="authIssue"
+      class="mt-sm"
+      :message="authMessage"
+      retry-label="Neu laden"
+      @retry="() => loadItems()"
+    />
 
     <div v-if="banner.message" class="alert alert--success">{{ banner.message }}</div>
     <div v-if="banner.error" class="alert alert--error">{{ banner.error }}</div>
@@ -631,9 +653,10 @@ watch(
         <span class="toolbar__label sr-only">Suche</span>
         <input v-model="searchTerm" type="search" placeholder="Suche SKU, Barcode, Name" />
       </label>
-      <button class="button button--ghost toolbar__focus" type="button" @click="focusCreateBarcode">
+<!--      <button class="button button--ghost toolbar__focus" type="button" @click="focusCreateBarcode">
         Fokus auf Barcode
       </button>
+    -->    
       <label class="toolbar__field select-field">
         <span class="toolbar__label">Kategorie</span>
         <select v-model="filters.category_id">
@@ -668,7 +691,7 @@ watch(
         </div>
         <div class="table-meta">{{ total }} Artikel</div>
       </div>
-      <div class="table-wrapper" v-if="items.length">
+      <div class="tableWrap" v-if="items.length">
         <table class="table table--clickable">
           <thead>
             <tr>
@@ -708,12 +731,12 @@ watch(
         <p v-else>Keine Artikel gefunden. Nutze "Neuen Artikel anlegen" oder importiere per CSV.</p>
       </div>
       <div class="pagination">
-        <button class="button button--ghost" type="button" :disabled="filters.page <= 1" @click="filters.page -= 1">
+        <button class="btnGhost small" type="button" :disabled="filters.page <= 1" @click="filters.page -= 1">
           Zurück
         </button>
         <span>Seite {{ filters.page }}</span>
         <button
-          class="button button--ghost"
+          class="btnGhost small"
           type="button"
           :disabled="filters.page * filters.page_size >= total"
           @click="filters.page += 1"
@@ -730,9 +753,9 @@ watch(
           <h3 class="card__title">Ausgewählter Artikel: {{ selectedArticle.name }} ({{ selectedArticle.sku }})</h3>
         </div>
         <div class="detail-card__actions">
-          <button class="button button--ghost" type="button" @click="resetEditForm">Zurücksetzen</button>
+          <button class="btnGhost small" type="button" @click="resetEditForm">Zurücksetzen</button>
           <button
-            class="button button--primary"
+            class="btnPrimary small"
             type="button"
             :disabled="!isEditValid || !hasWriteAccess || isSaving"
             @click="handleSaveSelected"
@@ -780,7 +803,10 @@ watch(
           </label>
           <label>
             <span>Einheit *</span>
-            <input v-model="editForm.unit" :disabled="!hasWriteAccess" />
+            <select v-model="editForm.unit" :disabled="!hasWriteAccess">
+              <option value="">Bitte wählen</option>
+              <option v-for="u in unitOptions" :key="u.value" :value="u.value">{{ u.label }}</option>
+            </select>
             <small v-if="!editForm.unit">Einheit ist erforderlich.</small>
           </label>
           <label>
@@ -795,10 +821,11 @@ watch(
             <span>Soll-Bestand</span>
             <input type="number" min="0" v-model.number="editForm.target_stock" :disabled="!hasWriteAccess" />
           </label>
-          <label>
+<!--          <label>
             <span>Empfohlen</span>
             <input type="number" min="0" v-model.number="editForm.recommended_stock" :disabled="!hasWriteAccess" />
           </label>
+        -->
           <label>
             <span>Bestell-Modus</span>
             <select v-model.number="editForm.order_mode" :disabled="!hasWriteAccess">
@@ -808,9 +835,14 @@ watch(
               <option :value="3">3 - Automatisch nachbestellen</option>
             </select>
           </label>
-          <label class="checkbox">
-            <input type="checkbox" v-model="editForm.is_active" :disabled="!hasWriteAccess" />
-            <span>Aktiv</span>
+          <label class="checkbox-field">
+            <input
+              type="checkbox"
+              v-model="editForm.is_active"
+              :disabled="!hasWriteAccess"
+              aria-label="Artikel ist aktiv"
+            />
+            <span class="form-label">Aktiv</span>
           </label>
         </div>
       </div>
@@ -824,9 +856,9 @@ watch(
           <p class="card__hint">Pflichtfelder: Artikelnummer, Name, Barcode, Einheit.</p>
         </div>
         <div class="detail-card__actions">
-          <button class="button button--ghost" type="button" @click="resetCreateForm">Zurücksetzen</button>
-          <button class="button button--ghost" type="button" @click="closeCreateCard">Abbrechen</button>
-          <button class="button button--primary" type="button" :disabled="!isCreateValid || isSaving" @click="handleCreate">
+          <button class="btnGhost small" type="button" @click="resetCreateForm">Zurücksetzen</button>
+          <button class="btnGhost small" type="button" @click="closeCreateCard">Abbrechen</button>
+          <button class="btnPrimary small" type="button" :disabled="!isCreateValid || isSaving" @click="handleCreate">
             {{ isSaving ? 'Speichert...' : 'Speichern' }}
           </button>
         </div>
@@ -853,7 +885,12 @@ watch(
         </BaseField>
 
         <BaseField label="Einheit" :required="true" :error="!createForm.unit ? 'Einheit ist erforderlich.' : ''">
-          <BaseInput ref="createUnitInput" v-model="createForm.unit" />
+          <BaseSelect
+            ref="createUnitInput"
+            v-model="createForm.unit"
+            :options="unitOptions"
+            placeholder="Bitte wählen"
+          />
         </BaseField>
 
         <BaseField label="Kategorie">
@@ -861,9 +898,9 @@ watch(
         </BaseField>
 
         <BaseField label="Artikel ist aktiv" hint="Inaktive Artikel werden nicht in Auswahl und Buchungen angeboten.">
-          <label class="checkbox">
-            <input type="checkbox" v-model="createForm.is_active" />
-            <span>Aktiv</span>
+          <label class="checkbox-field">
+            <input type="checkbox" v-model="createForm.is_active" aria-label="Artikel ist aktiv" />
+            <span class="form-label">Aktiv</span>
           </label>
         </BaseField>
 
@@ -878,7 +915,7 @@ watch(
         @toggle="showMoreCreateFields = ($event.target as HTMLDetailsElement).open"
       >
         <summary>Weitere Felder</summary>
-        <div class="create-grid" style="margin-top: 12px">
+        <div class="create-grid mt-md">
           <BaseField label="Bestand">
             <BaseInput type="number" :min="0" v-model="createForm.quantity" />
           </BaseField>
@@ -910,7 +947,7 @@ watch(
       </details>
     </section>
 
-    <div v-else-if="!selectedArticle" class="placeholder" style="margin-top: 16px">
+    <div v-else-if="!selectedArticle" class="placeholder mt-md">
       <p>Wähle einen Artikel aus der Tabelle oder klicke auf "Neuer Artikel".</p>
     </div>
   </section>
@@ -922,7 +959,7 @@ watch(
           <p class="eyebrow">Import</p>
           <h3>CSV Import</h3>
         </div>
-        <button class="button button--ghost" type="button" @click="closeImportModal">Schließen</button>
+        <button class="btnGhost small" type="button" @click="closeImportModal">Schließen</button>
       </header>
 
       <div v-if="importError" class="alert alert--error">{{ importError }}</div>
@@ -937,7 +974,7 @@ watch(
         <p>Wähle eine CSV-Datei (UTF-8, Komma getrennt).</p>
         <input type="file" accept=".csv" @change="handleImportFile" />
         <div class="form-actions">
-          <button class="button button--primary" type="button" :disabled="!importFile" @click="importStep = 2">
+          <button class="btnPrimary small" type="button" :disabled="!importFile" @click="importStep = 2">
             Weiter
           </button>
         </div>
@@ -970,8 +1007,8 @@ watch(
           </table>
         </div>
         <div class="form-actions">
-          <button class="button button--ghost" type="button" @click="importStep = 1">Zurück</button>
-          <button class="button button--primary" type="button" :disabled="!isMappingValid" @click="importStep = 3">
+          <button class="btnGhost small" type="button" @click="importStep = 1">Zurück</button>
+          <button class="btnPrimary small" type="button" :disabled="!isMappingValid" @click="importStep = 3">
             Weiter
           </button>
         </div>
@@ -980,11 +1017,11 @@ watch(
       <div v-if="importStep === 3" class="wizard-step">
         <p>Import starten. Pflichtfelder müssen zugeordnet sein.</p>
         <div class="form-actions">
-          <button class="button button--ghost" type="button" @click="importStep = 2">Zurück</button>
-          <button class="button button--primary" type="button" :disabled="importLoading" @click="startImport">
+          <button class="btnGhost small" type="button" @click="importStep = 2">Zurück</button>
+          <button class="btnPrimary small" type="button" :disabled="importLoading" @click="startImport">
             {{ importLoading ? 'Import läuft...' : 'Import starten' }}
           </button>
-          <button class="button button--ghost" type="button" @click="closeImportModal">Schließen</button>
+          <button class="btnGhost small" type="button" @click="closeImportModal">Schließen</button>
         </div>
         <div v-if="!importLoading && (importResult.created || importResult.updated || importResult.errors.length)" class="import-result">
           <p>Erstellt: {{ importResult.created }}</p>
@@ -1145,13 +1182,6 @@ watch(
 
 .form-section h4 {
   margin: 0 0 4px;
-}
-
-.checkbox {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 8px;
 }
 
 .form-actions {

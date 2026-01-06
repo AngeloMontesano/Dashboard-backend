@@ -24,14 +24,13 @@ export default defineConfig(({ mode }) => {
     resolve: {
       alias: {
         '@': path.resolve(__dirname, 'src'),
-        '@shared/api-client': path.resolve(__dirname, '../../packages/api-client/src'),
         axios: path.resolve(__dirname, 'node_modules/axios/index.js')
       }
     },
     server: {
       port: 5173,
       host: '0.0.0.0',
-      allowedHosts
+      allowedHosts: true
     }
   };
 });

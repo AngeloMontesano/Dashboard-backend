@@ -1,19 +1,18 @@
 <template>
-  <div :class="['app-root', themeClass]">
-    <div v-if="authed" class="app-shell">
+  <div :class="['app', themeClass]">
+    <div v-if="authed" class="shell">
       <Sidebar />
-      <div class="app-content">
+      <main class="main">
         <Topbar />
-        <main class="page-surface">
+        <section class="workspace">
           <RouterView />
-        </main>
-      </div>
-      <ToastHost />
+        </section>
+      </main>
     </div>
-    <div v-else class="app-shell--login">
+    <div v-else class="auth-shell">
       <RouterView />
-      <ToastHost />
     </div>
+    <ToastHost />
   </div>
 </template>
 
@@ -27,8 +26,8 @@ import { useAuth } from './composables/useAuth';
 import { useTheme } from './composables/useTheme';
 
 const { isAuthenticated } = useAuth();
-const { theme } = useTheme();
+const { resolvedTheme } = useTheme();
 
-const themeClass = computed(() => theme.value);
+const themeClass = computed(() => (resolvedTheme.value === 'dark' ? 'theme-dark' : ''));
 const authed = computed(() => isAuthenticated());
 </script>

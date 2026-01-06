@@ -1,25 +1,22 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue';
-import Toast from 'primevue/toast';
-import { useToast } from 'primevue/usetoast';
-import Card from 'primevue/card';
-import DataTable from 'primevue/datatable';
-import Column from 'primevue/column';
-import Tag from 'primevue/tag';
-import ProgressSpinner from 'primevue/progressspinner';
+import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
 import type { ChartData } from 'chart.js';
-import { getReportData, exportCsv, exportExcel } from '@/api/reporting';
+import { getReportData, exportCsv, exportExcel, exportPdf } from '@/api/reporting';
 import { fetchCategories, fetchItems, type Item, type Category } from '@/api/inventory';
 import ReportFilters from '@/components/reports/ReportFilters.vue';
 import ReportKpiCards from '@/components/reports/ReportKpiCards.vue';
 import ReportCharts from '@/components/reports/ReportCharts.vue';
 import ReportExportButtons from '@/components/reports/ReportExportButtons.vue';
+import UiEmptyState from '@/components/ui/UiEmptyState.vue';
 import { useAuth } from '@/composables/useAuth';
+import { useToast } from '@/composables/useToast';
+import AuthReauthBanner from '@/components/auth/AuthReauthBanner.vue';
+import { useAuthIssueBanner } from '@/composables/useAuthIssueBanner';
 import type { CategoryOption, ItemOption, ReportFilterState, ReportParams, ReportResponse, ReportSeries } from '@/types/reports';
-import { stringifyError } from '@/utils/error';
 
 const { state: authState } = useAuth();
-const toast = useToast();
+const { push: pushToast } = useToast();
+const { authIssue, authMessage, handleAuthError } = useAuthIssueBanner();
 
 const defaultRange = getDefaultRange();
 const filters = reactive<ReportFilterState>({
@@ -42,7 +39,11 @@ const exporting = ref<'csv' | 'excel' | 'pdf' | null>(null);
 const consumptionChart = ref<ChartData<'bar'> | null>(null);
 const trendChart = ref<ChartData<'line'> | null>(null);
 const tableItems = ref<{ name: string; total: number; itemId?: string }[]>([]);
-let debounceTimer: number | undefined;
+let loadDebounceTimer: number | undefined;
+let searchDebounceTimer: number | undefined;
+let searchAbortController: AbortController | null = null;
+let lastSearchQuery = '';
+const searching = ref(false);
 
 const allItemOptions = computed<ItemOption[]>(() => {
   const map = new Map<string, ItemOption>();
@@ -84,8 +85,8 @@ function buildParams(): ReportParams | null {
 }
 
 function triggerDebouncedLoad() {
-  window.clearTimeout(debounceTimer);
-  debounceTimer = window.setTimeout(() => {
+  window.clearTimeout(loadDebounceTimer);
+  loadDebounceTimer = window.setTimeout(() => {
     void loadReports();
   }, 300);
 }
@@ -98,33 +99,12 @@ async function loadCategories() {
       .filter((c: Category) => c.is_active)
       .map((c: Category) => ({ label: c.name, value: c.id } satisfies CategoryOption));
   } catch (err: any) {
-    toast.add({
-      severity: 'error',
-      summary: 'Kategorien fehlgeschlagen',
-      detail: stringifyError(err),
-      life: 5000
-    });
-  }
-}
-
-async function searchItems(query: string) {
-  if (!authState.accessToken) return;
-  try {
-    const res = await fetchItems({
-      token: authState.accessToken,
-      q: query,
-      category_id: filters.categoryId || undefined,
-      active: true,
-      page: 1,
-      page_size: 20
-    });
-    itemSuggestions.value = res.items.map(toItemOption);
-  } catch (err: any) {
-    toast.add({
-      severity: 'warn',
-      summary: 'Suche fehlgeschlagen',
-      detail: stringifyError(err),
-      life: 4000
+    const classified = handleAuthError(err);
+    if (classified.category === 'auth') return;
+    pushToast({
+      variant: 'danger',
+      title: 'Kategorien fehlgeschlagen',
+      description: classified.detailMessage || classified.userMessage
     });
   }
 }
@@ -155,11 +135,12 @@ async function selectCategoryItems() {
     filters.selectedItems = merged;
     triggerDebouncedLoad();
   } catch (err: any) {
-    toast.add({
-      severity: 'error',
-      summary: 'Kategorie-Übernahme fehlgeschlagen',
-      detail: stringifyError(err),
-      life: 5000
+    const classified = handleAuthError(err);
+    if (classified.category === 'auth') return;
+    pushToast({
+      variant: 'danger',
+      title: 'Kategorie-Übernahme fehlgeschlagen',
+      description: classified.detailMessage || classified.userMessage
     });
   }
 }
@@ -172,7 +153,7 @@ function addSelectedItem(item: ItemOption) {
 
 function applyDateRange() {
   if (!filters.dateRange[0] || !filters.dateRange[1]) {
-    toast.add({ severity: 'warn', summary: 'Zeitraum fehlt', detail: 'Bitte Zeitraum auswählen.', life: 3500 });
+    pushToast({ variant: 'warning', title: 'Zeitraum fehlt', description: 'Bitte Zeitraum auswählen.' });
     return;
   }
   filters.appliedRange = [...filters.dateRange];
@@ -232,7 +213,10 @@ function buildTableData(series: ReportSeries[]) {
 async function loadReports() {
   if (!authState.accessToken) return;
   const params = buildParams();
-  if (!params) return;
+  if (!params) {
+    error.value = 'Bitte Zeitraum auswählen.';
+    return;
+  }
   loading.value = true;
   error.value = null;
   try {
@@ -241,12 +225,118 @@ async function loadReports() {
     reportData.value = { ...res, kpis: { ...res.kpis, months } };
     buildCharts(reportData.value);
   } catch (err: any) {
-    const detail = stringifyError(err);
-    error.value = detail;
-    toast.add({ severity: 'error', summary: 'Fehler beim Laden', detail, life: 6000 });
+    const classified = handleAuthError(err);
+    error.value = classified.userMessage || 'Berichte konnten nicht geladen werden.';
+    if (classified.category !== 'auth') {
+      pushToast({ variant: 'danger', title: 'Fehler beim Laden', description: classified.detailMessage || classified.userMessage });
+    }
   } finally {
     loading.value = false;
   }
+}
+
+function clearSearchDebounce() {
+  window.clearTimeout(searchDebounceTimer);
+  searchDebounceTimer = undefined;
+}
+
+function clearSearchController() {
+  if (searchAbortController) {
+    searchAbortController.abort();
+    searchAbortController = null;
+  }
+}
+
+async function runItemSearch(query: string) {
+  if (!authState.accessToken) return;
+  searching.value = true;
+  clearSearchController();
+  const controller = new AbortController();
+  searchAbortController = controller;
+  lastSearchQuery = query;
+
+  try {
+    const res = await fetchItems({
+      token: authState.accessToken,
+      q: query,
+      category_id: filters.categoryId || undefined,
+      active: true,
+      page: 1,
+      page_size: 20,
+      signal: controller.signal
+    });
+    itemSuggestions.value = res.items.map(toItemOption);
+  } catch (err: any) {
+    if (controller.signal.aborted) return;
+    const classified = handleAuthError(err);
+    if (classified.category === 'auth') return;
+    pushToast({
+      variant: 'warning',
+      title: 'Suche fehlgeschlagen',
+      description: classified.detailMessage || classified.userMessage
+    });
+  } finally {
+    searching.value = false;
+    if (searchAbortController === controller) {
+      searchAbortController = null;
+    }
+  }
+}
+
+async function loadCategorySuggestions() {
+  if (!authState.accessToken || !filters.categoryId) return;
+  searching.value = true;
+  clearSearchController();
+  const controller = new AbortController();
+  searchAbortController = controller;
+  try {
+    const res = await fetchItems({
+      token: authState.accessToken,
+      category_id: filters.categoryId,
+      active: true,
+      page: 1,
+      page_size: 20,
+      signal: controller.signal
+    });
+    itemSuggestions.value = res.items.map(toItemOption);
+  } catch (err: any) {
+    if (controller.signal.aborted) return;
+    const classified = handleAuthError(err);
+    if (classified.category === 'auth') return;
+    pushToast({
+      variant: 'warning',
+      title: 'Suche fehlgeschlagen',
+      description: classified.detailMessage || classified.userMessage
+    });
+  } finally {
+    searching.value = false;
+    if (searchAbortController === controller) {
+      searchAbortController = null;
+    }
+  }
+}
+
+function searchItems(query: string) {
+  const trimmed = (query || '').trim();
+  clearSearchDebounce();
+
+  if (!trimmed) {
+    clearSearchController();
+    lastSearchQuery = '';
+    if (filters.categoryId) {
+      searchDebounceTimer = window.setTimeout(() => {
+        void loadCategorySuggestions();
+      }, 280);
+    } else {
+      itemSuggestions.value = filters.selectedItems.slice();
+      searching.value = false;
+    }
+    return;
+  }
+
+  searchDebounceTimer = window.setTimeout(() => {
+    void runItemSearch(trimmed);
+  }, 320);
 }
 
 async function handleExport(format: 'csv' | 'excel' | 'pdf') {
@@ -255,59 +345,55 @@ async function handleExport(format: 'csv' | 'excel' | 'pdf') {
   if (!params) return;
   exporting.value = format;
   try {
-    if (format === 'pdf') {
-      await exportVisiblePdf();
-    } else {
-      const action = format === 'csv' ? exportCsv : exportExcel;
-      const blob = await action(authState.accessToken, params);
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      const extension = format === 'excel' ? 'xlsx' : format;
-      link.href = url;
-      link.download = `berichte-${params.from}-${params.to}.${extension}`;
-      link.click();
-      window.URL.revokeObjectURL(url);
-    }
-    toast.add({ severity: 'success', summary: 'Export gestartet', detail: `${format.toUpperCase()} bereitgestellt.` });
+    const action = format === 'csv' ? exportCsv : format === 'excel' ? exportExcel : exportPdf;
+    const blob = await action(authState.accessToken, params);
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    const extension = format === 'excel' ? 'xlsx' : format;
+    link.href = url;
+    link.download = `berichte-${params.from}-${params.to}.${extension}`;
+    link.click();
+    window.URL.revokeObjectURL(url);
+    pushToast({
+      variant: 'success',
+      title: 'Export gestartet',
+      description: `${format.toUpperCase()} bereitgestellt.`
+    });
   } catch (err: any) {
-    const detail = stringifyError(err);
-    toast.add({ severity: 'error', summary: 'Export fehlgeschlagen', detail, life: 6000 });
+    const classified = handleAuthError(err);
+    if (classified.category !== 'auth') {
+      pushToast({ variant: 'danger', title: 'Export fehlgeschlagen', description: classified.detailMessage || classified.userMessage });
+    }
   } finally {
     exporting.value = null;
   }
-}
-
-async function exportVisiblePdf() {
-  await nextTick();
-  const section = document.querySelector('.page-section');
-  if (!section) throw new Error('Bereich nicht gefunden');
-  const printWindow = window.open('', '_blank', 'width=1200,height=800');
-  if (!printWindow) throw new Error('Popup blockiert');
-  printWindow.document.write(`
-    <html>
-      <head>
-        <title>Berichte & Analysen</title>
-        <style>
-          body { font-family: Arial, sans-serif; padding: 16px; color: #111827; }
-          h2, h3 { margin: 0 0 8px; }
-          .section-stack { display: flex; flex-direction: column; gap: 12px; }
-          .card, .p-card { border: 1px solid #e5e7eb; border-radius: 12px; padding: 12px; }
-        </style>
-      </head>
-      <body>${section.innerHTML}</body>
-    </html>
-  `);
-  printWindow.document.close();
-  printWindow.focus();
-  printWindow.print();
-  printWindow.close();
 }
 
 watch(
   () => filters.categoryId,
   () => {
     triggerDebouncedLoad();
+    if (lastSearchQuery) {
+      searchItems(lastSearchQuery);
+    } else {
+      if (filters.categoryId) {
+        void loadCategorySuggestions();
+      } else {
+        itemSuggestions.value = filters.selectedItems.slice();
+      }
+    }
   }
+);
+
+watch(
+  () => filters.dateRange,
+  (range) => {
+    if (range[0] && range[1]) {
+      filters.appliedRange = [...range] as [Date, Date];
+      triggerDebouncedLoad();
+    }
+  },
+  { deep: true }
 );
 
 watch(
@@ -322,6 +408,9 @@ watch(
   (mode) => {
     if (mode !== 'selected') filters.selectedItems = [];
     if (mode === 'all') filters.aggregateAll = true;
+    if (mode === 'selected' && !lastSearchQuery && filters.categoryId) {
+      void loadCategorySuggestions();
+    }
     triggerDebouncedLoad();
   }
 );
@@ -344,14 +433,19 @@ onMounted(async () => {
   await loadCategories();
   await loadReports();
 });
+
+onBeforeUnmount(() => {
+  window.clearTimeout(loadDebounceTimer);
+  clearSearchDebounce();
+  clearSearchController();
+});
 </script>
 
 <template>
-  <section class="page-section">
-    <Toast />
-    <header class="page-section__header">
+  <section class="section page-section">
+    <header class="section-header">
       <div>
-        <p class="eyebrow">Transparenz</p>
+        <p class="section-subtitle">Transparenz</p>
         <h2 class="section-title">Berichte &amp; Analysen</h2>
         <p class="section-subtitle">Kennzahlen, Trends und Exportmöglichkeiten für dein Lager.</p>
       </div>
@@ -375,6 +469,7 @@ onMounted(async () => {
       :topLimit="filters.topLimit"
       :loading="loading"
       :applying="applying"
+      :searching="searching"
       @update:dateRange="(value) => (filters.dateRange = value)"
       @update:mode="(value) => (filters.mode = value)"
       @update:category="(value) => (filters.categoryId = value)"
@@ -388,6 +483,12 @@ onMounted(async () => {
     />
 
     <div class="section-stack">
+      <AuthReauthBanner
+        v-if="authIssue"
+        :message="authMessage"
+        retry-label="Erneut laden"
+        @retry="() => loadReports()"
+      />
       <ReportKpiCards :kpis="reportData?.kpis || null" :loading="loading" />
       <ReportCharts
         :consumptionData="consumptionChart"
@@ -396,35 +497,50 @@ onMounted(async () => {
         :error="error"
       />
 
-      <Card>
-        <template #title>Top Artikel</template>
-        <template #subtitle>Sortiert nach Gesamtverbrauch im Zeitraum</template>
-        <template #content>
-          <div v-if="loading" class="table-loading">
-            <ProgressSpinner />
+      <article class="card table-card">
+        <header class="cardHeader">
+          <div>
+            <div class="cardTitle">Top Artikel</div>
+            <div class="cardHint">Sortiert nach Gesamtverbrauch im Zeitraum</div>
           </div>
-          <div v-else-if="error" class="table-loading error">{{ error }}</div>
-          <DataTable
-            v-else
-            :value="tableItems"
-            dataKey="name"
-            responsiveLayout="scroll"
-            size="small"
-            :emptyMessage="reportData ? 'Keine Artikel im Zeitraum' : 'Keine Daten'"
-          >
-            <Column field="name" header="Artikel">
-              <template #body="{ data }">
-                <span class="item-name">{{ data.name }}</span>
+        </header>
+        <div v-if="loading" class="table-loading">
+          <span class="spinner" aria-label="Laden"></span>
+        </div>
+        <div v-else-if="error" class="table-loading error">{{ error }}</div>
+        <div v-else>
+          <div v-if="tableItems.length" class="tableWrap">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Artikel</th>
+                  <th class="right">Gesamtverbrauch</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="row in tableItems" :key="row.name">
+                  <td class="item-name">{{ row.name }}</td>
+                  <td class="right">
+                    <span class="tag neutral">{{ row.total.toLocaleString('de-DE') }}</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div v-else class="table-loading">
+            <UiEmptyState
+              title="Keine Artikel im Zeitraum"
+              description="Passe Zeitraum oder Filter an, um Verbrauchsdaten zu sehen."
+            >
+              <template #actions>
+                <button class="btnGhost small" type="button" :disabled="loading" @click="loadReports()">
+                  Neu laden
+                </button>
               </template>
-            </Column>
-            <Column field="total" header="Gesamtverbrauch" class="text-right">
-              <template #body="{ data }">
-                <Tag severity="info" :value="data.total.toLocaleString('de-DE')" />
-              </template>
-            </Column>
-          </DataTable>
-        </template>
-      </Card>
+            </UiEmptyState>
+          </div>
+        </div>
+      </article>
     </div>
   </section>
 </template>
@@ -442,14 +558,29 @@ onMounted(async () => {
   justify-content: center;
   align-items: center;
   min-height: 160px;
-  color: var(--text-secondary-color, #6b7280);
+  color: var(--text-muted);
 }
 
 .table-loading.error {
-  color: var(--color-danger, #dc2626);
+  color: var(--danger);
 }
 
 .item-name {
   font-weight: 600;
+}
+
+.spinner {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 3px solid var(--border);
+  border-top-color: var(--primary);
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 </style>

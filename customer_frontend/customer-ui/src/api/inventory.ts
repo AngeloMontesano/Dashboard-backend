@@ -1,52 +1,42 @@
-import { createApiClient } from './base';
+import { api, authHeaders } from "./client";
+import type { components, paths } from "./gen/openapi";
 
-function buildClient(token?: string) {
-  return createApiClient({ token });
-}
+export type Category = components["schemas"]["CategoryOut"];
+export type Item = components["schemas"]["ItemOut"];
+export type ItemsPage = components["schemas"]["ItemsPage"];
+type ItemsQuery = NonNullable<paths["/inventory/items"]["get"]["parameters"]["query"]>;
+type ItemCreatePayload = components["schemas"]["ItemCreate"];
+type ItemUpdatePayload = components["schemas"]["ItemUpdate"];
+export type MovementPayload = components["schemas"]["MovementPayload"];
+export type ItemUnit = { code: string; label: string; is_active?: boolean };
+type SkuExistsResponse = components["schemas"]["SKUExistsResponse"];
+type ImportItemsResponse =
+  paths["/inventory/items/import"]["post"]["responses"]["200"]["content"]["application/json"];
+type SettingsOut = components["schemas"]["TenantSettingsOut"];
+type SettingsUpdate = components["schemas"]["TenantSettingsUpdate"];
+type MassImportResult = components["schemas"]["MassImportResult"];
+type OrderOut = components["schemas"]["OrderOut"];
+type OrderCreate = components["schemas"]["OrderCreate"];
+type OrderEmailRequest = components["schemas"]["OrderEmailRequest"];
+type ReorderResponse = components["schemas"]["ReorderResponse"];
+export type OrderCreateItem = components["schemas"]["OrderItemInput"];
+type InventoryBulkUpdateRequest = components["schemas"]["InventoryBulkUpdateRequest"];
+type MovementsQuery = NonNullable<paths["/inventory/movements"]["get"]["parameters"]["query"]>;
+export type MovementOut = components["schemas"]["MovementOut"];
 
-export type Category = {
-  id: string;
-  name: string;
-  is_system: boolean;
-  is_active: boolean;
-};
-
-export type Item = {
-  id: string;
-  sku: string;
-  barcode: string;
-  name: string;
-  description: string;
-  quantity: number;
-  unit: string;
-  is_active: boolean;
-  category_id?: string | null;
-  category_name?: string | null;
-  min_stock: number;
-  max_stock: number;
-  target_stock: number;
-  recommended_stock: number;
-  order_mode: number;
-};
-
-export type ItemsPage = {
-  items: Item[];
-  total: number;
-  page: number;
-  page_size: number;
-};
-
-export type MovementPayload = {
-  client_tx_id: string;
-  type: 'IN' | 'OUT';
-  barcode: string;
-  qty: number;
-  note?: string;
-  created_at?: string;
+export type ImportItemsResult = {
+  imported: number;
+  updated: number;
+  errors: { row: string; error: string }[];
 };
 
 export async function fetchCategories(token: string) {
   const res = await api.get<Category[]>("/inventory/categories", { headers: authHeaders(token) });
+  return res.data;
+}
+
+export async function fetchUnits(token: string) {
+  const res = await api.get<ItemUnit[]>("/inventory/units", { headers: authHeaders(token) });
   return res.data;
 }
 
@@ -60,9 +50,13 @@ export async function updateCategory(token: string, id: string, payload: compone
   return res.data;
 }
 
-export async function fetchItems(params: ItemsQuery & { token: string }) {
-  const { token, ...query } = params;
-  const res = await api.get<ItemsPage>("/inventory/items", { params: query, headers: authHeaders(token) });
+export async function fetchItems(params: ItemsQuery & { token: string; signal?: AbortSignal }) {
+  const { token, signal, ...query } = params;
+  const res = await api.get<ItemsPage>("/inventory/items", {
+    params: query,
+    headers: authHeaders(token),
+    signal,
+  });
   return res.data;
 }
 
@@ -96,7 +90,12 @@ export async function importItems(token: string, file: File, mapping?: Record<st
       "Content-Type": "multipart/form-data",
     },
   });
-  return res.data;
+  const data = (res.data || {}) as Partial<ImportItemsResult>;
+  return {
+    imported: data.imported ?? 0,
+    updated: data.updated ?? 0,
+    errors: data.errors ?? [],
+  };
 }
 
 export async function exportItems(token: string) {
@@ -104,7 +103,102 @@ export async function exportItems(token: string) {
   return res.data.csv;
 }
 
+export async function exportInventory(token: string) {
+  const res = await api.get<Blob>("/inventory/inventory/export", {
+    headers: authHeaders(token),
+    responseType: "blob",
+  });
+  return res.data;
+}
+
 export async function postInventoryMovement(token: string, payload: MovementPayload) {
   const res = await api.post("/inventory/movements", payload, { headers: authHeaders(token) });
+  return res.data;
+}
+
+export async function bulkUpdateInventory(token: string, payload: InventoryBulkUpdateRequest) {
+  const res = await api.post("/inventory/inventory/bulk", payload, { headers: authHeaders(token) });
+  return res.data as { updated: number; errors: string[] };
+}
+
+export async function fetchMovements(params: MovementsQuery & { token: string }) {
+  const { token, ...query } = params;
+  const res = await api.get<MovementOut[]>("/inventory/movements", { params: query, headers: authHeaders(token) });
+  return res.data;
+}
+
+export async function fetchSettings(token: string) {
+  const res = await api.get<SettingsOut>("/inventory/settings", { headers: authHeaders(token) });
+  return res.data;
+}
+
+export async function updateSettings(token: string, payload: SettingsUpdate) {
+  const res = await api.put<SettingsOut>("/inventory/settings", payload, { headers: authHeaders(token) });
+  return res.data;
+}
+
+export async function exportSettings(token: string) {
+  const res = await api.get<Blob>("/inventory/settings/export", {
+    headers: authHeaders(token),
+    responseType: "blob",
+  });
+  return res.data;
+}
+
+export async function importSettings(token: string, file: File) {
+  const form = new FormData();
+  form.append("file", file);
+  const res = await api.post<MassImportResult>("/inventory/settings/import", form, {
+    headers: {
+      ...authHeaders(token),
+      "Content-Type": "multipart/form-data",
+    },
+  });
+  return res.data;
+}
+
+export async function sendTestEmail(token: string, email: string) {
+  const res = await api.post("/inventory/settings/test-email", { email }, { headers: authHeaders(token) });
+  return res.data as { ok: boolean; error?: string | null };
+}
+
+export async function listOrders(token: string, status?: "OPEN" | "COMPLETED" | "CANCELED") {
+  const res = await api.get<OrderOut[]>("/inventory/orders", {
+    params: status ? { status } : undefined,
+    headers: authHeaders(token),
+  });
+  return res.data;
+}
+
+export async function createOrder(token: string, payload: OrderCreate) {
+  const res = await api.post<OrderOut>("/inventory/orders", payload, { headers: authHeaders(token) });
+  return res.data;
+}
+
+export async function completeOrder(token: string, orderId: string) {
+  const res = await api.post<OrderOut>(`/inventory/orders/${orderId}/complete`, null, { headers: authHeaders(token) });
+  return res.data;
+}
+
+export async function cancelOrder(token: string, orderId: string) {
+  const res = await api.post<OrderOut>(`/inventory/orders/${orderId}/cancel`, null, { headers: authHeaders(token) });
+  return res.data;
+}
+
+export async function sendOrderEmail(token: string, orderId: string, payload: OrderEmailRequest) {
+  const res = await api.post(`/inventory/orders/${orderId}/email`, payload, { headers: authHeaders(token) });
+  return res.data as { ok: boolean; error?: string | null };
+}
+
+export async function downloadOrderPdf(token: string, orderId: string) {
+  const res = await api.get<Blob>(`/inventory/orders/${orderId}/pdf`, {
+    headers: authHeaders(token),
+    responseType: "blob",
+  });
+  return res.data;
+}
+
+export async function fetchReorderRecommendations(token: string) {
+  const res = await api.get<ReorderResponse>("/inventory/orders/recommended", { headers: authHeaders(token) });
   return res.data;
 }

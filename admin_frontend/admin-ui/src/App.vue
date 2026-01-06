@@ -9,7 +9,7 @@
     - Zentrales Toast Rendering (alle Views nutzen nur toast())
     - Sections links sind gekoppelt an Content rechts (keine "toten" Menüs)
   -->
-  <div :class="['app', ui.theme, ui.theme === 'theme-dark' ? 'dark' : '']">
+  <div :class="['app', appThemeClass]">
     <template v-if="!ui.authenticated">
       <AdminLoginView @loggedIn="applyLogin" />
     </template>
@@ -42,40 +42,54 @@
             </button>
           </nav>
 
+          <div class="sidebar-divider"></div>
+          <div class="navGroup">
+            <div class="navGroupTitle">Globale Einstellungen</div>
+            <div class="navGroupList">
+              <button
+                v-for="item in globalSections"
+                :key="item.id"
+                class="navItem"
+                :class="{ active: ui.section === item.id }"
+                @click="goSection(item.id)"
+              >
+                <span class="navIcon">{{ item.icon }}</span>
+                <span class="navLabel">{{ item.label }}</span>
+              </button>
+            </div>
+          </div>
+
           <!-- Bottom Area -->
           <div class="sideBottom">
             <!-- System Status -->
             <div class="sysBlock">
               <div class="sysTitle">System</div>
-
-              <div class="sysRow">
-                <div class="statusPill" :class="api.ok ? 'ok' : 'bad'">
-                  <span class="dot"></span>
-                  <span>API {{ api.ok ? "erreichbar" : "nicht erreichbar" }}</span>
+              <div class="sysRow compact">
+                <div class="statusInline">
+                  <span class="statusDot statusDot--lg" :class="api.ok ? 'ok' : 'bad'"></span>
+                  <span class="statusLabel">API erreichbar</span>
                 </div>
-                <button class="btnPrimary small" :disabled="api.busy" @click="checkApi">
-                  {{ api.busy ? "prüfe..." : "Prüfen" }}
-                </button>
               </div>
-
-              <div class="sysRow">
-                <div class="statusPill" :class="db.ok ? 'ok' : 'bad'">
-                  <span class="dot"></span>
-                  <span>DB {{ db.ok ? "erreichbar" : "nicht erreichbar" }}</span>
+              <div class="sysRow compact">
+                <div class="statusInline">
+                  <span class="statusDot statusDot--lg" :class="db.ok ? 'ok' : 'bad'"></span>
+                  <span class="statusLabel">DB erreichbar</span>
                 </div>
-                <button class="btnGhost small" :disabled="db.busy" @click="checkDb">
-                  {{ db.busy ? "prüfe..." : "Prüfen" }}
-                </button>
               </div>
+              <div class="hint">Status wird beim Login automatisch geprüft.</div>
             </div>
 
             <div class="divider"></div>
 
             <!-- Theme Quick Toggle -->
-            <label class="toggle">
-              <input type="checkbox" :checked="ui.theme === 'theme-dark'" @change="toggleSidebarTheme" />
-              <span>Darkmode</span>
-            </label>
+            <div class="toggle">
+              <span>Theme</span>
+              <select class="input full-width theme-select" :value="theme.value" @change="onThemeSelect">
+                <option value="system">System</option>
+                <option value="light">Light</option>
+                <option value="dark">Dark</option>
+              </select>
+            </div>
           </div>
         </aside>
 
@@ -149,6 +163,20 @@
               @tabChange="setOperationsTab"
             />
 
+          <!-- SECTION: Globale Stammdaten -->
+            <GlobaleArtikelView v-else-if="ui.section === 'globals-articles'" :adminKey="ui.adminKey" :actor="ui.actor" />
+            <GlobaleKategorienView
+              v-else-if="ui.section === 'globals-categories'"
+              :adminKey="ui.adminKey"
+              :actor="ui.actor"
+            />
+            <GlobaleEinheitenView v-else-if="ui.section === 'globals-units'" :adminKey="ui.adminKey" :actor="ui.actor" />
+            <GlobaleBranchenView
+              v-else-if="ui.section === 'globals-industries'"
+              :adminKey="ui.adminKey"
+              :actor="ui.actor"
+            />
+
           <!-- SECTION: Settings -->
             <AdminSettingsView
               v-else
@@ -156,7 +184,7 @@
               :actor="ui.actor"
               :apiOk="api.ok"
               :dbOk="db.ok"
-              :theme="ui.theme"
+              :theme="theme.value"
               :apiBase="apiBase"
               :baseDomain="baseDomain"
               @setTheme="setTheme"
@@ -186,13 +214,14 @@
   - Checks laufen über platform endpoints:
       GET /health
       GET /health/db
-    BaseURL kommt aus VITE_API_BASE
+    BaseURL läuft immer über den Proxy-Pfad /api
 */
 
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from "vue";
 import { useToast } from "./composables/useToast";
 import { platformHealth, platformHealthDb } from "./api/platform";
 import { getBaseDomain, getBaseURL } from "./api/base";
+import { useTheme } from "./composables/useTheme";
 
 /* Views */
 import AdminTenantsView from "./views/AdminTenantsView.vue";
@@ -202,13 +231,18 @@ import AdminSettingsView from "./views/AdminSettingsView.vue";
 import AdminLoginView from "./views/AdminLoginView.vue";
 import ToastHost from "./components/common/ToastHost.vue";
 import AdminOperationsView from "./views/AdminOperationsView.vue";
+import GlobaleArtikelView from "./views/GlobaleArtikelView.vue";
+import GlobaleKategorienView from "./views/GlobaleKategorienView.vue";
+import GlobaleEinheitenView from "./views/GlobaleEinheitenView.vue";
+import GlobaleBranchenView from "./views/GlobaleBranchenView.vue";
 
 /* Zentraler Toast State */
 const { toast } = useToast();
 const baseDomain = getBaseDomain();
 const apiBase = getBaseURL();
+const ADMIN_AUTH_STORAGE_KEY = "admin_auth";
 
-type OperationsTab = "overview" | "health" | "audit" | "snapshot" | "logs";
+type OperationsTab = "overview" | "health" | "audit" | "snapshot";
 
 /* Sidebar Sections */
 const sections = [
@@ -219,12 +253,26 @@ const sections = [
   { id: "settings", label: "Einstellungen", icon: "⚙️" },
 ] as const;
 
-type SectionId = (typeof sections)[number]["id"];
+const globalSections = [
+  { id: "globals-articles", label: "Globale Artikel", icon: "📦" },
+  { id: "globals-categories", label: "Globale Kategorien", icon: "🗂️" },
+  { id: "globals-units", label: "Globale Einheiten", icon: "🧭" },
+  { id: "globals-industries", label: "Globale Branchen", icon: "🏭" },
+] as const;
+
+type GlobalSectionId = (typeof globalSections)[number]["id"];
+type SectionId = (typeof sections)[number]["id"] | GlobalSectionId;
+
+const globalSectionPaths: Record<GlobalSectionId, string> = {
+  "globals-articles": "/globals/articles",
+  "globals-categories": "/globals/categories",
+  "globals-units": "/globals/units",
+  "globals-industries": "/globals/industries",
+};
 
 /* UI State */
 // TODO: Entfernen, sobald Admin-APIs ohne expliziten adminKey/actor auskommen.
 const ui = reactive({
-  theme: "theme-classic",
   actor: "",
   adminKey: "",
   authenticated: false,
@@ -232,6 +280,8 @@ const ui = reactive({
 });
 
 const operationsTab = ref<OperationsTab>("overview");
+const { theme, resolvedTheme, setTheme } = useTheme();
+const appThemeClass = computed(() => (resolvedTheme.value === "dark" ? "theme-dark" : "theme-classic"));
 
 const tenantContext = reactive({
   id: localStorage.getItem("adminSelectedTenantId") || "",
@@ -253,6 +303,9 @@ function goSection(sectionId: SectionId) {
   ui.section = sectionId;
   if (sectionId === "operations") {
     pushOperationsRoute(operationsTab.value);
+  } else if ((globalSectionPaths as Record<string, string>)[sectionId as string]) {
+    const targetPath = globalSectionPaths[sectionId as GlobalSectionId];
+    window.history.pushState({}, "", targetPath);
   } else {
     const targetPath = sectionId === "kunden" ? "/" : `/${sectionId}`;
     window.history.pushState({}, "", targetPath);
@@ -276,14 +329,16 @@ function setTenantContext(payload: { id: string; name: string; slug: string } | 
 
 function clearTenantContext() {
   setTenantContext(null);
-  toast("Tenant Auswahl entfernt");
 }
 
 function applyLogin(payload: { adminKey: string; actor: string }) {
   ui.adminKey = payload.adminKey;
   ui.actor = payload.actor || "admin";
   ui.authenticated = true;
-  toast("Admin Login erfolgreich, lade Portal...");
+  sessionStorage.setItem(
+    ADMIN_AUTH_STORAGE_KEY,
+    JSON.stringify({ adminKey: ui.adminKey, actor: ui.actor })
+  );
   quickRefresh();
 }
 
@@ -295,6 +350,10 @@ const pageTitle = computed(() => {
     memberships: "Tenant-User",
     operations: "Operations",
     settings: "Einstellungen",
+    "globals-articles": "Globale Artikel",
+    "globals-categories": "Globale Kategorien",
+    "globals-units": "Globale Einheiten",
+    "globals-industries": "Globale Branchen",
   };
   return m[ui.section];
 });
@@ -304,6 +363,10 @@ const pageSubtitle = computed(() => {
   if (ui.section === "users") return "Admin-Portal Benutzer verwalten";
   if (ui.section === "memberships") return "User mit Tenants verknüpfen und Rollen setzen";
   if (ui.section === "operations") return "Health, Audit, Snapshots und Logs";
+  if (ui.section === "globals-articles") return "Artikel-Stammdaten erfassen (Backend fehlt, UI-only)";
+  if (ui.section === "globals-categories") return "Kategorien als globale Stammdaten pflegen (UI-only)";
+  if (ui.section === "globals-units") return "Artikel-Einheiten pflegen (UI-only)";
+  if (ui.section === "globals-industries") return "Branchen pflegen und Artikel zuordnen (UI-only)";
   return "Security, Theme, Feature Flags";
 });
 
@@ -320,10 +383,9 @@ async function checkApi() {
   try {
     await platformHealth();
     api.ok = true;
-    toast("API erreichbar");
   } catch {
     api.ok = false;
-    toast("API nicht erreichbar");
+    toast("API nicht erreichbar", "danger");
   } finally {
     api.busy = false;
   }
@@ -334,10 +396,9 @@ async function checkDb() {
   try {
     await platformHealthDb();
     db.ok = true;
-    toast("DB erreichbar");
   } catch {
     db.ok = false;
-    toast("DB nicht erreichbar");
+    toast("DB nicht erreichbar", "danger");
   } finally {
     db.busy = false;
   }
@@ -358,36 +419,35 @@ function resetContext() {
   ui.adminKey = "";
   ui.actor = "";
   ui.authenticated = false;
-  toast("Admin Context zurückgesetzt");
+  sessionStorage.removeItem(ADMIN_AUTH_STORAGE_KEY);
 }
 
 /* Boot */
 onMounted(async () => {
-  const savedTheme = sessionStorage.getItem("adminTheme");
-  if (savedTheme) {
-    ui.theme = savedTheme;
-  }
-
   syncFromLocation();
+  const storedAuth = sessionStorage.getItem(ADMIN_AUTH_STORAGE_KEY);
+  if (storedAuth) {
+    try {
+      const parsed = JSON.parse(storedAuth) as { adminKey?: string; actor?: string };
+      ui.adminKey = parsed.adminKey || "";
+      ui.actor = parsed.actor || "";
+      ui.authenticated = Boolean(ui.adminKey);
+    } catch {
+      sessionStorage.removeItem(ADMIN_AUTH_STORAGE_KEY);
+    }
+  }
   window.addEventListener("popstate", syncFromLocation);
   await quickRefresh();
 });
 
-function toggleSidebarTheme() {
-  const next = ui.theme === "theme-dark" ? "theme-classic" : "theme-dark";
-  setTheme(next);
-}
-
-function setTheme(themeId: string) {
-  ui.theme = themeId;
-  sessionStorage.setItem("adminTheme", themeId);
-  toast(`Theme gesetzt: ${themeId.replace("theme-", "")}`);
+function onThemeSelect(event: Event) {
+  const mode = (event.target as HTMLSelectElement).value as "light" | "dark" | "system";
+  setTheme(mode);
 }
 
 function openMemberships(tenantId: string) {
   goSection("memberships");
   if (tenantId) localStorage.setItem("adminSelectedTenantId", tenantId);
-  toast("Wechsle zu Tenant-User Verwaltung");
 }
 
 function logout() {
@@ -395,7 +455,6 @@ function logout() {
   ui.actor = "";
   ui.authenticated = false;
   ui.section = "kunden";
-  toast("Abgemeldet", "info");
   window.history.pushState({}, "", "/login");
 }
 
@@ -421,9 +480,15 @@ function syncFromLocation() {
   const params = new URLSearchParams(window.location.search);
   const tabFromQuery = params.get("tab") as OperationsTab | null;
 
+  const globalMatch = Object.entries(globalSectionPaths).find(([, p]) => p === path);
+  if (globalMatch) {
+    ui.section = globalMatch[0] as GlobalSectionId;
+    return;
+  }
+
   if (path === "/operations") {
     ui.section = "operations";
-    if (tabFromQuery && ["overview", "health", "audit", "snapshot", "logs"].includes(tabFromQuery)) {
+    if (tabFromQuery && ["overview", "health", "audit", "snapshot"].includes(tabFromQuery)) {
       operationsTab.value = tabFromQuery;
     } else {
       operationsTab.value = "overview";
@@ -515,5 +580,25 @@ onBeforeUnmount(() => {
 .topbar.topbar-flat {
   padding: 10px 12px 12px;
   min-height: unset;
+}
+
+.sysRow.compact {
+  justify-content: flex-start;
+  padding: 4px 0;
+}
+
+.statusDot--lg {
+  width: 12px;
+  height: 12px;
+  border: 2px solid rgba(255, 255, 255, 0.15);
+}
+
+.theme-select {
+  color: var(--text);
+}
+
+.theme-select option {
+  color: #111;
+  background: #f7f7f7;
 }
 </style>

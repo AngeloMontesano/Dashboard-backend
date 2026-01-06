@@ -91,10 +91,13 @@ async def refresh(*, db: AsyncSession, tenant_id: str, refresh_token: str) -> tu
             RefreshSession.tenant_id == tenant_id,
             RefreshSession.refresh_token_hash == token_hash,
             RefreshSession.revoked_at.is_(None),
-            RefreshSession.expires_at > now,
         )
     )
     if session is None:
+        raise _http_401("invalid_refresh", "Invalid refresh token")
+
+    grace_cutoff = session.expires_at + timedelta(minutes=settings.REFRESH_TOKEN_GRACE_MIN)
+    if now > grace_cutoff:
         raise _http_401("invalid_refresh", "Invalid refresh token")
 
     user = await db.get(User, session.user_id)

@@ -1,148 +1,136 @@
 <template>
-  <!-- Kunden Section -->
-  <div class="grid2">
-    <!-- Left Card: Tenants -->
-    <div class="card">
-      <div class="cardHeader">
-        <div>
-          <div class="cardTitle">Kunden</div>
-          <div class="cardHint">Tenants auswählen und verwalten</div>
-        </div>
-        <div class="cardHeaderActions">
+  <UiPage>
+    <div class="card-grid">
+      <!-- Left Card: Tenants -->
+      <UiCard title="Kunden" subtitle="Tenants auswählen und verwalten">
+        <template #actions>
           <button class="btnGhost" @click="openCreateTenant">Tenant anlegen</button>
+        </template>
+
+        <div class="form-grid">
+          <input class="input" v-model.trim="tenantQuery" placeholder="Suche nach Name, Slug, ID" />
+          <select class="input" v-model="tenantFilter">
+            <option value="all">Alle</option>
+            <option value="active">Aktiv</option>
+            <option value="disabled">Deaktiviert</option>
+          </select>
         </div>
-      </div>
 
-      <div class="controls">
-        <input class="input" v-model.trim="tenantQuery" placeholder="Suche nach Name, Slug, ID" />
-        <select class="input" v-model="tenantFilter">
-          <option value="all">Alle</option>
-          <option value="active">Aktiv</option>
-          <option value="disabled">Deaktiviert</option>
-        </select>
-      </div>
-
-      <div class="meta">
-        <div class="muted">Treffer: {{ filteredTenants.length }}</div>
-        <div class="muted">Ausgewählt: {{ selectedTenant ? selectedTenant.slug : "keiner" }}</div>
-      </div>
-
-      <div class="tableWrap">
-        <table class="table">
-          <thead>
-            <tr>
-              <th>Slug</th>
-              <th>Name</th>
-              <th>Status</th>
-              <th class="right">Aktionen</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              v-for="t in filteredTenants"
-              :key="t.id"
-              :class="{ rowActive: selectedTenant?.id === t.id }"
-              @click="selectTenant(t)"
-            >
-              <td class="mono">{{ t.slug }}</td>
-              <td>{{ t.name }}</td>
-              <td>
-                <span class="tag" :class="t.active ? 'ok' : 'bad'">
-                  {{ t.active ? "aktiv" : "deaktiviert" }}
-                </span>
-              </td>
-              <td class="right">
-                <button class="link" @click.stop="openTenantDrawer(t)">Details</button>
-                <button class="link" @click.stop="toggleTenant(t)">
-                  {{ t.active ? "deaktivieren" : "aktivieren" }}
-                </button>
-              </td>
-            </tr>
-
-            <tr v-if="filteredTenants.length === 0">
-              <td colspan="4" class="mutedPad">Keine Tenants gefunden.</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div class="hintBox">
-        Hinweis: Suche ist Demo. Später: API Suche und Pagination.
-      </div>
-    </div>
-
-    <!-- Right Card: Kunden Workspace -->
-    <div class="card">
-      <div class="cardHeader">
-        <div>
-          <div class="cardTitle">Workspace</div>
-          <div class="cardHint">Kundenbezogene Funktionen</div>
+        <div class="stack-sm text-muted text-small">
+          <div>Treffer: {{ filteredTenants.length }}</div>
+          <div>Ausgewählt: {{ selectedTenant ? selectedTenant.slug : "keiner" }}</div>
         </div>
-        <div class="cardHeaderActions">
+
+        <div class="tableWrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Slug</th>
+                <th>Name</th>
+                <th>Status</th>
+                <th class="right">Aktionen</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                v-for="t in filteredTenants"
+                :key="t.id"
+                :class="{ rowActive: selectedTenant?.id === t.id }"
+                @click="selectTenant(t)"
+              >
+                <td class="mono">{{ t.slug }}</td>
+                <td>{{ t.name }}</td>
+                <td>
+                  <span class="tag" :class="t.active ? 'ok' : 'bad'">
+                    {{ t.active ? "aktiv" : "deaktiviert" }}
+                  </span>
+                </td>
+                <td class="right">
+                  <button class="link" @click.stop="openTenantDrawer(t)">Details</button>
+                  <button class="link" @click.stop="toggleTenant(t)">
+                    {{ t.active ? "deaktivieren" : "aktivieren" }}
+                  </button>
+                </td>
+              </tr>
+
+              <tr v-if="filteredTenants.length === 0">
+                <td colspan="4" class="mutedPad">Keine Tenants gefunden.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="text-muted text-small mt-4">
+          Hinweis: Suche ist Demo. Später: API Suche und Pagination.
+        </div>
+      </UiCard>
+
+      <!-- Right Card: Kunden Workspace -->
+      <UiCard title="Workspace" subtitle="Kundenbezogene Funktionen">
+        <template #actions>
           <button class="btnGhost" @click="copyDiagnostics">Snapshot kopieren</button>
-        </div>
-      </div>
+        </template>
 
-      <div class="tabs">
-        <button
-          v-for="t in kundenTabs"
-          :key="t.id"
-          class="tab"
-          :class="{ active: tab === t.id }"
-          @click="tab = t.id"
-        >
-          {{ t.label }}
-        </button>
-      </div>
-
-      <div class="panel" v-if="tab === 'kunden.uebersicht'">
-        <div class="kpis">
-          <div class="kpi">
-            <div class="kpiLabel">Aktive Tenants</div>
-            <div class="kpiValue">{{ tenants.filter(x => x.active).length }}</div>
-          </div>
-          <div class="kpi">
-            <div class="kpiLabel">Benutzer (Demo)</div>
-            <div class="kpiValue">{{ demoUsers.length }}</div>
-          </div>
-          <div class="kpi">
-            <div class="kpiLabel">Letzte Audits (Demo)</div>
-            <div class="kpiValue">{{ demoAudits.length }}</div>
-          </div>
-          <div class="kpi">
-            <div class="kpiLabel">API Status</div>
-            <div class="kpiValue">{{ apiOk ? "ok" : "down" }}</div>
-          </div>
+        <div class="tabs">
+          <button
+            v-for="t in kundenTabs"
+            :key="t.id"
+            class="tab"
+            :class="{ active: tab === t.id }"
+            @click="tab = t.id"
+          >
+            {{ t.label }}
+          </button>
         </div>
 
-        <div class="sectionTitle">Ausgewählter Tenant</div>
-        <div class="box">
-          <div v-if="!selectedTenant" class="muted">Kein Tenant ausgewählt.</div>
+        <div class="panel" v-if="tab === 'kunden.uebersicht'">
+          <div class="kpis">
+            <div class="kpi">
+              <div class="kpiLabel">Aktive Tenants</div>
+              <div class="kpiValue">{{ tenants.filter(x => x.active).length }}</div>
+            </div>
+            <div class="kpi">
+              <div class="kpiLabel">Benutzer (Demo)</div>
+              <div class="kpiValue">{{ demoUsers.length }}</div>
+            </div>
+            <div class="kpi">
+              <div class="kpiLabel">Letzte Audits (Demo)</div>
+              <div class="kpiValue">{{ demoAudits.length }}</div>
+            </div>
+            <div class="kpi">
+              <div class="kpiLabel">API Status</div>
+              <div class="kpiValue">{{ apiOk ? "ok" : "down" }}</div>
+            </div>
+          </div>
 
-          <div v-else class="kvGrid">
-            <div class="kv">
-              <div class="k">Name</div>
-              <div class="v">{{ selectedTenant.name }}</div>
-            </div>
-            <div class="kv">
-              <div class="k">Slug</div>
-              <div class="v mono">{{ selectedTenant.slug }}</div>
-            </div>
-            <div class="kv">
-              <div class="k">Status</div>
-              <div class="v">
-                <span class="tag" :class="selectedTenant.active ? 'ok' : 'bad'">
-                  {{ selectedTenant.active ? "aktiv" : "deaktiviert" }}
-                </span>
+          <div class="sectionTitle">Ausgewählter Tenant</div>
+          <div class="box">
+            <div v-if="!selectedTenant" class="muted">Kein Tenant ausgewählt.</div>
+
+            <div v-else class="kvGrid">
+              <div class="kv">
+                <div class="k">Name</div>
+                <div class="v">{{ selectedTenant.name }}</div>
+              </div>
+              <div class="kv">
+                <div class="k">Slug</div>
+                <div class="v mono">{{ selectedTenant.slug }}</div>
+              </div>
+              <div class="kv">
+                <div class="k">Status</div>
+                <div class="v">
+                  <span class="tag" :class="selectedTenant.active ? 'ok' : 'bad'">
+                    {{ selectedTenant.active ? "aktiv" : "deaktiviert" }}
+                  </span>
+                </div>
+              </div>
+              <div class="kv">
+                <div class="k">Tenant ID</div>
+                <div class="v mono">{{ selectedTenant.id }}</div>
               </div>
             </div>
-            <div class="kv">
-              <div class="k">Tenant ID</div>
-              <div class="v mono">{{ selectedTenant.id }}</div>
-            </div>
           </div>
         </div>
-      </div>
 
       <div class="panel" v-else-if="tab === 'kunden.benutzer'">
         <div class="sectionTitle">Benutzer (Demo)</div>
@@ -175,9 +163,9 @@
             </table>
           </div>
 
-          <div class="hintBox" style="margin-top: 10px;">
-            Später: Users tenant scoped laden, Reset über Admin Endpoint.
-          </div>
+      <div class="text-muted text-small mt-4">
+        Später: Users tenant scoped laden, Reset über Admin Endpoint.
+      </div>
         </div>
       </div>
 
@@ -188,7 +176,7 @@
             Später: Admin Memberships API nutzen.
           </div>
 
-          <div class="pillRow" style="margin-top: 10px;">
+          <div class="pill-row mt-4">
             <span class="tag neutral">owner</span>
             <span class="tag neutral">admin</span>
             <span class="tag neutral">worker</span>
@@ -204,7 +192,7 @@
             Später: Support Sessions pro Tenant.
           </div>
 
-          <div class="rowActions" style="margin-top: 12px;">
+          <div class="action-row mt-6">
             <button class="btnPrimary" @click="toast('Support Session erzeugt (Demo)')">Code erzeugen</button>
             <button class="btnGhost" @click="toast('Session beendet (Demo)')">Beenden</button>
           </div>
@@ -225,7 +213,7 @@
 
       <div class="drawerBody">
         <div class="sectionTitle">Aktionen</div>
-        <div class="rowActions">
+        <div class="action-row">
           <button class="btnPrimary" @click="toggleTenant(drawer.tenant)">
             {{ drawer.tenant?.active ? "Deaktivieren" : "Aktivieren" }}
           </button>
@@ -233,7 +221,7 @@
           <button class="btnGhost" @click="toast('Reset (Demo)')">Passwort Reset</button>
         </div>
 
-        <div class="sectionTitle" style="margin-top: 12px;">Notiz</div>
+        <div class="sectionTitle mt-6">Notiz</div>
         <textarea class="input area" v-model="drawer.note" placeholder="Interne Notiz"></textarea>
       </div>
     </aside>
@@ -247,7 +235,7 @@
       </div>
 
       <div class="modalBody">
-        <div class="formGrid">
+        <div class="form-grid">
           <div class="field">
             <div class="label">Name</div>
             <input class="input" v-model.trim="modal.name" placeholder="Bäckerei Muster" />
@@ -257,7 +245,7 @@
             <input class="input" v-model.trim="modal.slug" placeholder="baeckerei-muster" />
           </div>
         </div>
-        <div class="muted" style="margin-top: 10px;">Demo: wird lokal erzeugt.</div>
+        <div class="text-muted text-small mt-4">Demo: wird lokal erzeugt.</div>
       </div>
 
       <div class="modalFooter">
@@ -282,6 +270,8 @@
 
 import { computed, reactive, ref } from "vue";
 import { useToast } from "../composables/useToast";
+import UiPage from "../components/ui/UiPage.vue";
+import UiCard from "../components/ui/UiCard.vue";
 
 type Tenant = { id: string; slug: string; name: string; active: boolean };
 

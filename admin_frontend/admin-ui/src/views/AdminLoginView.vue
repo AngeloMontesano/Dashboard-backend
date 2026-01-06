@@ -1,76 +1,80 @@
 <template>
-  <div class="loginShell">
-    <div class="card loginCard">
-      <div class="cardHeader">
-        <div>
-          <div class="cardTitle">Admin Login</div>
-          <div class="cardHint">Admin Key erforderlich für /admin Endpunkte</div>
+  <UiPage>
+    <div class="auth-shell">
+      <div class="section auth-card stack">
+        <div class="stack-sm">
+          <div class="section-title">Admin Login</div>
+          <div class="text-muted text-small">Admin Key erforderlich für /admin Endpunkte</div>
         </div>
-      </div>
 
-      <div class="loginModes">
-        <label class="mode">
-          <input type="radio" value="key" v-model="mode" />
-          <span>Login mit Admin Key</span>
-        </label>
-        <label class="mode">
-          <input type="radio" value="user" v-model="mode" />
-          <span>Login mit Benutzer</span>
-        </label>
-      </div>
-
-      <div v-if="mode === 'key'" class="kvGrid">
-        <div class="kv">
-          <div class="k">Actor</div>
-          <div class="v">
-            <input class="input" v-model.trim="form.actor" placeholder="admin" />
+        <div class="stack-sm">
+          <div class="field-label">Login-Modus</div>
+          <div class="action-row">
+            <label class="field--inline">
+              <input type="radio" value="key" v-model="mode" />
+              <span>Login mit Admin Key</span>
+            </label>
+            <label class="field--inline">
+              <input type="radio" value="user" v-model="mode" />
+              <span>Login mit Benutzer</span>
+            </label>
           </div>
         </div>
-        <div class="kv">
-          <div class="k">Admin Key</div>
-          <div class="v">
-            <input class="input" v-model.trim="form.adminKey" type="password" placeholder="X-Admin-Key" />
+
+        <div v-if="mode === 'key'" class="kv-grid">
+          <div class="kv">
+            <div class="kv__label">Actor</div>
+            <div class="kv__value">
+              <input class="input" v-model.trim="form.actor" placeholder="admin" />
+            </div>
+          </div>
+          <div class="kv">
+            <div class="kv__label">Admin Key</div>
+            <div class="kv__value">
+              <input class="input" v-model.trim="form.adminKey" type="password" placeholder="X-Admin-Key" />
+            </div>
           </div>
         </div>
-      </div>
 
-      <div v-else class="kvGrid">
-        <div class="kv">
-          <div class="k">E-Mail</div>
-          <div class="v">
-            <input class="input" v-model.trim="form.email" placeholder="admin@test.myitnetwork.de" />
+        <div v-else class="kv-grid">
+          <div class="kv">
+            <div class="kv__label">E-Mail</div>
+            <div class="kv__value">
+              <input class="input" v-model.trim="form.email" placeholder="admin@test.myitnetwork.de" />
+            </div>
+          </div>
+          <div class="kv">
+            <div class="kv__label">Passwort</div>
+            <div class="kv__value">
+              <input class="input" v-model.trim="form.password" type="password" placeholder="Passwort" />
+            </div>
           </div>
         </div>
-        <div class="kv">
-          <div class="k">Passwort</div>
-          <div class="v">
-            <input class="input" v-model.trim="form.password" type="password" placeholder="Passwort" />
+
+        <div class="action-row">
+          <button class="btnPrimary" :disabled="busy" @click="login">
+            {{ busy ? "prüfe..." : "Login" }}
+          </button>
+          <div class="text-muted text-small">
+            <span v-if="mode === 'key'">Nutzung: /admin/ping mit Key und optional Actor.</span>
+            <span v-else>Login mit Admin-Portal User (liefert Admin Key automatisch).</span>
           </div>
         </div>
-      </div>
 
-      <div class="row gap8">
-        <button class="btnPrimary" :disabled="busy" @click="login">
-          {{ busy ? "prüfe..." : "Login" }}
-        </button>
-        <div class="muted">
-          <span v-if="mode === 'key'">Nutzung: /admin/ping mit Key und optional Actor.</span>
-          <span v-else>Login mit Admin-Portal User (liefert Admin Key automatisch).</span>
+        <div v-if="status.message" class="text-small" :class="statusClass">
+          {{ status.message }}
         </div>
-      </div>
-
-      <div v-if="status.message" class="status" :class="status.type">
-        {{ status.message }}
       </div>
     </div>
-  </div>
+  </UiPage>
 </template>
 
 <script setup lang="ts">
-import { reactive, ref } from "vue";
+import { computed, reactive, ref } from "vue";
 import { adminPing, adminLoginWithCredentials } from "../api/admin";
 import { getBaseURL } from "../api/base";
 import { useToast } from "../composables/useToast";
+import UiPage from "../components/ui/UiPage.vue";
 
 const emit = defineEmits<{
   (e: "loggedIn", payload: { adminKey: string; actor: string }): void;
@@ -84,11 +88,17 @@ const form = reactive({
 });
 
 const busy = ref(false);
-const mode = ref<"key" | "user">("key");
+const mode = ref<"key" | "user">("user");
 const { toast } = useToast();
 const status = reactive({
   message: "",
   type: "",
+});
+
+const statusClass = computed(() => {
+  if (status.type === "ok") return "text-success";
+  if (status.type === "error") return "text-danger";
+  return "text-info";
 });
 
 async function login() {
@@ -124,7 +134,6 @@ async function login() {
       console.info("[admin-login] Erfolg (user)", { actor });
       emit("loggedIn", { adminKey: res.admin_key, actor });
     }
-    toast("Login erfolgreich");
     status.message = "Login erfolgreich. Admin Portal wird geladen...";
     status.type = "ok";
   } catch (e: any) {
@@ -151,34 +160,3 @@ function asError(e: any): string {
   }
 }
 </script>
-
-<style scoped>
-.loginShell {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--surface-muted);
-}
-.loginCard {
-  width: 420px;
-}
-.loginModes{
-  display: flex;
-  gap: 12px;
-  margin-bottom: 10px;
-}
-.mode{
-  display: inline-flex;
-  gap: 6px;
-  align-items: center;
-  font-size: 13px;
-}
-.status{
-  margin-top: 10px;
-  font-size: 13px;
-}
-.status.info{ color: var(--muted); }
-.status.ok{ color: var(--ok); }
-.status.error{ color: var(--bad); }
-</style>

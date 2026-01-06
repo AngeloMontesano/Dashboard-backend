@@ -359,6 +359,7 @@ onMounted(() => {
   justify-content: flex-end;
   align-items: center;
   gap: 12px;
+  padding-top: 12px;
 }
 
 .modal__footer--with-delete .btnGhost.danger {

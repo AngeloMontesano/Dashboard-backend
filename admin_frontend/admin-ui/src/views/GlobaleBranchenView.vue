@@ -145,7 +145,16 @@
                 </label>
               </div>
             </div>
-            <div class="modal__footer">
+            <div class="modal__footer modal__footer--with-delete">
+              <button
+                v-if="modal.mode === 'edit'"
+                class="btnGhost small danger"
+                type="button"
+                :disabled="busy.save"
+                @click="removeFromModal"
+              >
+                Löschen
+              </button>
               <button class="btnGhost" type="button" @click="closeModal">Abbrechen</button>
               <button class="btnPrimary" type="button" :disabled="busy.save" @click="save">
                 {{ busy.save ? "speichert..." : "Speichern" }}
@@ -261,10 +270,16 @@ async function loadAll() {
   try {
     const [industryList, itemPage] = await Promise.all([
       fetchGlobalIndustries(props.adminKey, props.actor),
-      fetchGlobalItems(props.adminKey, props.actor, { page: 1, page_size: 500, active: true }),
+      fetchGlobalItems(props.adminKey, props.actor, { page: 1, page_size: 200, active: true }),
     ]);
     replaceIndustries(industryList);
-    replaceItems(itemPage.items as GlobalItem[]);
+    const allItems: GlobalItem[] = [...(itemPage.items as GlobalItem[])];
+    const totalPages = Math.ceil((itemPage.total || 0) / (itemPage.page_size || 200));
+    for (let p = 2; p <= totalPages; p += 1) {
+      const next = await fetchGlobalItems(props.adminKey, props.actor, { page: p, page_size: 200, active: true });
+      allItems.push(...(next.items as GlobalItem[]));
+    }
+    replaceItems(allItems);
   } catch (e: any) {
     toast(`Laden fehlgeschlagen: ${e?.message || e}`, "error");
   } finally {
@@ -332,6 +347,13 @@ async function remove(entry: GlobalIndustry) {
   }
 }
 
+async function removeFromModal() {
+  const current = industries.value.find((i) => i.id === modal.id);
+  if (!current) return;
+  await remove(current);
+  closeModal();
+}
+
 function toggleArticle(id: string, event: Event) {
   const checked = (event.target as HTMLInputElement).checked;
   if (checked) {
@@ -373,3 +395,16 @@ onMounted(() => {
   }
 });
 </script>
+
+<style scoped>
+.modal__footer--with-delete {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  padding-top: 12px;
+}
+
+.modal__footer--with-delete .btnGhost.danger {
+  margin-right: auto;
+}
+</style>

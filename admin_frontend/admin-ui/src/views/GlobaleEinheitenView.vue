@@ -128,7 +128,16 @@
                 </label>
               </div>
             </div>
-            <div class="modal__footer">
+            <div class="modal__footer modal__footer--with-delete">
+              <button
+                v-if="modal.mode === 'edit'"
+                class="btnGhost small danger"
+                type="button"
+                :disabled="busy.save"
+                @click="removeFromModal"
+              >
+                Löschen
+              </button>
               <button class="btnGhost" type="button" @click="closeModal">Abbrechen</button>
               <button class="btnPrimary" type="button" :disabled="busy.save" @click="save">
                 {{ busy.save ? "speichert..." : "Speichern" }}
@@ -271,6 +280,13 @@ async function remove(entry: GlobalUnit) {
   }
 }
 
+async function removeFromModal() {
+  const current = units.value.find((u) => u.code === modal.code);
+  if (!current) return;
+  await remove(current);
+  closeModal();
+}
+
 function onFileSelected(event: Event) {
   const files = (event.target as HTMLInputElement).files;
   importFile.value = files && files.length ? files[0] : null;
@@ -318,3 +334,16 @@ onMounted(() => {
   }
 });
 </script>
+
+<style scoped>
+.modal__footer--with-delete {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  padding-top: 12px;
+}
+
+.modal__footer--with-delete .btnGhost.danger {
+  margin-right: auto;
+}
+</style>

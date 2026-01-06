@@ -263,47 +263,55 @@
 
       <div class="table-card">
         <div class="table-card__header">
-          <div class="tableTitle">Branche auf Tenants anwenden</div>
+          <div class="tableTitle">Branchen-Artikel auf Tenants anwenden</div>
           <div class="text-muted text-small">
-            Weist alle Tenants mit dieser Branche die Artikel zu. Neue Artikel starten mit Bestand 0, bestehende Bestände bleiben unverändert.
+            Weist allen Tenants mit dieser Branche fehlende Artikel hinzu. Neue Artikel starten mit Bestand 0; bestehende Bestände werden nicht verändert.
           </div>
         </div>
         <div class="box stack">
-          <div class="row gap8 wrap align-center">
+          <div class="row gap12 wrap align-center">
+            <label class="field">
+              <span class="field-label">Initialer Bestand</span>
+              <input
+                class="input"
+                type="number"
+                min="0"
+                v-model.number="assign.initialQuantity"
+                aria-label="Initialer Bestand für neue Artikel"
+              />
+            </label>
+            <label class="field checkbox">
+              <input type="checkbox" v-model="assign.preserveExisting" disabled />
+              <span>Bestehende Bestände unverändert lassen</span>
+            </label>
             <button
               class="btnPrimary small"
               type="button"
-              :disabled="!selectedIndustryId || busy.assignTenants"
+              :disabled="!selectedIndustryId || assign.busy"
               @click="assignToTenants"
             >
-              {{ busy.assignTenants ? "weist zu..." : "Auf Tenants anwenden" }}
+              {{ assign.busy ? "weist zu..." : "Fehlende Artikel jetzt anwenden" }}
             </button>
-            <span class="text-muted text-small">Zielt auf Tenants mit gesetzter `industry_id`.</span>
           </div>
-          <div v-if="assignResult" class="assign-result">
-            <div class="row gap8 wrap align-center">
-              <span class="tag ok">Neu: {{ assignResult.created }}</span>
-              <span class="tag">Übersprungen: {{ assignResult.skipped_existing }}</span>
-              <span class="tag">Synced (Admin): {{ assignResult.synced_admin_items }}</span>
-              <span class="text-muted text-small">Tenants: {{ assignResult.target_tenants }} · Artikel: {{ assignResult.total_items }}</span>
+          <div class="hint">
+            Ziel-Tenants: alle mit derselben Branche (`industry_id`). Nur fehlende Artikel werden angelegt; vorhandene Bestände bleiben bestehen.
+          </div>
+          <div v-if="assign.result" class="result-card">
+            <div class="row gap8 wrap text-small">
+              <span>Tenants: {{ assign.result.affected_tenants }}</span>
+              <span>Vorlagen: {{ assign.result.template_items }}</span>
+              <span>Neu angelegt: {{ assign.result.created_total }}</span>
+              <span>Übersprungen: {{ assign.result.skipped_total }}</span>
+              <span>Initialer Bestand: {{ assign.result.initial_quantity }}</span>
             </div>
-            <div v-if="assignResult.results.length" class="assign-tenant-grid">
-              <div v-for="row in assignResult.results" :key="row.tenant_id" class="assign-tenant-row">
-                <div class="text-small mono">{{ row.tenant_slug }}</div>
-                <div class="text-small">Neu: {{ row.created }} · Übersprungen: {{ row.skipped_existing }} · Synced: {{ row.synced_admin_items }}</div>
+            <div class="item-list compact">
+              <div v-for="row in assign.result.results" :key="row.tenant_id" class="item-row">
+                <div class="item-meta">
+                  <div class="item-title">{{ row.tenant_name }}</div>
+                  <div class="text-muted text-small mono">{{ row.tenant_slug }} · {{ row.tenant_id }}</div>
+                </div>
+                <span class="tag">{{ row.created }} neu / {{ row.skipped_existing }} übersprungen</span>
               </div>
-            </div>
-            <div
-              v-if="
-                assignResult.missing_tenants.length || assignResult.mismatched_tenants.length || assignResult.inactive_tenants.length
-              "
-              class="hint text-small"
-            >
-              <div v-if="assignResult.missing_tenants.length">Fehlende Tenants: {{ assignResult.missing_tenants.join(', ') }}</div>
-              <div v-if="assignResult.mismatched_tenants.length">
-                Andere Branche in Einstellungen: {{ assignResult.mismatched_tenants.join(', ') }}
-              </div>
-              <div v-if="assignResult.inactive_tenants.length">Inaktive Tenants übersprungen: {{ assignResult.inactive_tenants.join(', ') }}</div>
             </div>
           </div>
         </div>
@@ -374,10 +382,10 @@ import {
   fetchGlobalCategories,
   assignIndustryItemsToTenants,
 } from "../api/globals";
-import type { components } from "../api/gen/openapi";
 import { debounce } from "../utils/debounce";
 import UiPage from "../components/ui/UiPage.vue";
 import UiSection from "../components/ui/UiSection.vue";
+import type { components } from "../api/gen/openapi";
 
 type IndustryAssignResponse = components["schemas"]["IndustryAssignResponse"];
 
@@ -429,7 +437,19 @@ const busy = reactive({
   assignTenants: false,
 });
 
-const assignResult = ref<IndustryAssignResponse | null>(null);
+type IndustryAssignResponse = components["schemas"]["IndustryAssignResponse"];
+
+const assign = reactive<{
+  initialQuantity: number;
+  preserveExisting: boolean;
+  result: IndustryAssignResponse | null;
+  busy: boolean;
+}>({
+  initialQuantity: 0,
+  preserveExisting: true,
+  result: null,
+  busy: false,
+});
 
 const modal = reactive({
   open: false,
@@ -500,7 +520,6 @@ watch(
   () => {
     selectedAvailableIds.value = [];
     selectedAssignedIds.value = [];
-    assignResult.value = null;
     if (!selectedIndustryId.value) {
       assignedItems.value = [];
       initialAssignedIds.value = [];
@@ -804,23 +823,27 @@ async function assignToTenants() {
     toast("Bitte Branche wählen", "warning");
     return;
   }
-  busy.assignTenants = true;
+  assign.busy = true;
+  assign.result = null;
   try {
     const res = await assignIndustryItemsToTenants(
       props.adminKey,
       selectedIndustryId.value,
-      { initial_quantity: 0, preserve_existing_quantity: true },
+      {
+        initial_quantity: assign.initialQuantity,
+        preserve_existing_quantity: assign.preserveExisting,
+      },
       props.actor
     );
-    assignResult.value = res;
+    assign.result = res;
     toast(
-      `Branchen-Artikel angewendet: ${res.created} neu, ${res.skipped_existing} übersprungen, ${res.target_tenants} Tenants`,
+      `Tenants aktualisiert: ${res.created_total} neue Artikel, ${res.skipped_total} bereits vorhanden`,
       "success"
     );
   } catch (e: any) {
-    toast(`Zuweisung fehlgeschlagen: ${e?.response?.data?.detail?.error?.message || e?.message || e}`, "error");
+    toast(`Zuweisung fehlgeschlagen: ${e?.message || e}`, "error");
   } finally {
-    busy.assignTenants = false;
+    assign.busy = false;
   }
 }
 
@@ -938,6 +961,14 @@ onMounted(() => {
   gap: 8px;
 }
 
+.item-list.compact {
+  grid-template-columns: 1fr;
+}
+
+.item-list.compact .item-row {
+  padding: 8px 10px;
+}
+
 .item-row {
   display: grid;
   grid-template-columns: auto 1fr auto;
@@ -960,32 +991,16 @@ onMounted(() => {
   text-overflow: ellipsis;
 }
 
+.result-card {
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+}
+
 .pane-body.loading {
   opacity: 0.7;
-}
-
-.assign-result {
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 10px 12px;
-  background: var(--surface-1);
-  display: grid;
-  gap: 8px;
-}
-
-.assign-tenant-grid {
-  display: grid;
-  gap: 6px;
-}
-
-.assign-tenant-row {
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 8px 10px;
-  background: var(--surface-2);
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
 }
 
 @media (max-width: 960px) {

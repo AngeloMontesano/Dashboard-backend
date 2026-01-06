@@ -297,31 +297,27 @@ class IndustryArticlesUpdate(BaseModel):
     item_ids: List[str]
 
 
-class IndustryAssignRequest(BaseModel):
-    tenant_ids: Optional[List[uuid.UUID]] = None
-    initial_quantity: int = Field(default=0, ge=0)
+class IndustryAssignTenantsRequest(BaseModel):
+    tenant_ids: Optional[List[str]] = None
+    initial_quantity: int = Field(0, ge=0)
     preserve_existing_quantity: bool = True
 
 
 class IndustryAssignTenantResult(BaseModel):
     tenant_id: str
     tenant_slug: str
+    tenant_name: str
     created: int
     skipped_existing: int
-    synced_admin_items: int
 
 
 class IndustryAssignResponse(BaseModel):
     industry_id: str
-    industry_name: str
-    total_items: int
-    target_tenants: int
-    created: int
-    skipped_existing: int
-    synced_admin_items: int
-    missing_tenants: List[str]
-    mismatched_tenants: List[str]
-    inactive_tenants: List[str]
+    template_items: int
+    affected_tenants: int
+    created_total: int
+    skipped_total: int
+    initial_quantity: int
     results: List[IndustryAssignTenantResult]
 
 

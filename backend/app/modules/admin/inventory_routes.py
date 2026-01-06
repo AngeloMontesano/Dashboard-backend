@@ -29,7 +29,7 @@ from app.modules.inventory.schemas import (
     IndustryOut,
     IndustryUpdate,
     IndustryArticlesUpdate,
-    IndustryAssignRequest,
+    IndustryAssignTenantsRequest,
     IndustryAssignResponse,
     IndustryAssignTenantResult,
 )
@@ -40,6 +40,10 @@ UNIT_COLUMNS: tuple[str, ...] = ("code", "label", "is_active")
 
 
 router = APIRouter(prefix="/inventory", tags=["admin-inventory"], dependencies=[Depends(require_admin_key), Depends(get_admin_actor)])
+
+
+def _error(code: str, message: str) -> dict:
+    return {"error": {"code": code, "message": message}}
 
 
 def _category_out(cat: Category) -> CategoryOut:
@@ -789,7 +793,7 @@ async def admin_list_industry_items(
 ) -> list[ItemOut]:
     industry = await db.get(Industry, industry_id)
     if industry is None:
-        raise HTTPException(status_code=404, detail={"error": {"code": "industry_not_found", "message": "Branche nicht gefunden"}})
+        raise HTTPException(status_code=404, detail=_error("industry_not_found", "Branche nicht gefunden"))
 
     mappings = (
         await db.scalars(
@@ -834,17 +838,17 @@ async def admin_set_industry_items(
     return {"ok": True, "count": len(payload.item_ids)}
 
 
-@router.post("/industries/{industry_id}/assign-to-tenants", response_model=IndustryAssignResponse)
-async def admin_assign_industry_items(
+@router.post("/industries/{industry_id}/assign/tenants", response_model=IndustryAssignResponse)
+async def admin_assign_industry_items_to_tenants(
     industry_id: str,
-    payload: IndustryAssignRequest,
+    payload: IndustryAssignTenantsRequest,
     db: AsyncSession = Depends(get_db),
-) -> IndustryAssignResponse:
+):
     industry = await db.get(Industry, industry_id)
     if industry is None:
         raise HTTPException(status_code=404, detail={"error": {"code": "industry_not_found", "message": "Branche nicht gefunden"}})
 
-    source_items = (
+    template_rows = (
         await db.scalars(
             select(Item)
             .join(IndustryArticle, IndustryArticle.item_id == Item.id)
@@ -852,141 +856,84 @@ async def admin_assign_industry_items(
         )
     ).all()
 
-    if not source_items:
+    if not template_rows:
         return IndustryAssignResponse(
             industry_id=str(industry.id),
-            industry_name=industry.name,
-            total_items=0,
-            target_tenants=0,
-            created=0,
-            skipped_existing=0,
-            synced_admin_items=0,
-            missing_tenants=[],
-            mismatched_tenants=[],
-            inactive_tenants=[],
+            template_items=0,
+            affected_tenants=0,
+            created_total=0,
+            skipped_total=0,
+            initial_quantity=payload.initial_quantity,
             results=[],
         )
 
-    requested_ids = set(payload.tenant_ids or [])
+    tenant_stmt = (
+        select(Tenant, TenantSetting)
+        .join(TenantSetting, TenantSetting.tenant_id == Tenant.id)
+        .where(TenantSetting.industry_id == industry.id)
+    )
+    if payload.tenant_ids:
+        tenant_stmt = tenant_stmt.where(Tenant.id.in_(payload.tenant_ids))
 
-    tenant_query = select(TenantSetting, Tenant).join(Tenant, Tenant.id == TenantSetting.tenant_id)
-    if requested_ids:
-        tenant_query = tenant_query.where(TenantSetting.tenant_id.in_(requested_ids))
-    else:
-        tenant_query = tenant_query.where(TenantSetting.industry_id == industry.id)
+    tenant_rows = (await db.execute(tenant_stmt)).all()
+    results: list[IndustryAssignTenantResult] = []
+    created_total = 0
+    skipped_total = 0
 
-    tenant_rows = (await db.execute(tenant_query)).all()
-    found_ids = {row[0].tenant_id for row in tenant_rows}
-    missing_tenants = [str(tid) for tid in requested_ids if tid not in found_ids]
+    template_skus = [_normalize_sku(item.sku, prefix_customer=True) for item in template_rows]
+    template_by_sku = {sku: item for sku, item in zip(template_skus, template_rows)}
 
-    mismatched_tenants: list[str] = []
-    inactive_tenants: list[str] = []
-    valid_tenants: list[tuple[TenantSetting, Tenant]] = []
-    for settings, tenant in tenant_rows:
-        if settings.industry_id != industry.id:
-            mismatched_tenants.append(str(settings.tenant_id))
-            continue
-        if tenant.is_active is False:
-            inactive_tenants.append(str(settings.tenant_id))
-            continue
-        valid_tenants.append((settings, tenant))
-
-    if not valid_tenants:
-        return IndustryAssignResponse(
-            industry_id=str(industry.id),
-            industry_name=industry.name,
-            total_items=len(source_items),
-            target_tenants=0,
-            created=0,
-            skipped_existing=0,
-            synced_admin_items=0,
-            missing_tenants=missing_tenants,
-            mismatched_tenants=mismatched_tenants,
-            inactive_tenants=inactive_tenants,
-            results=[],
-        )
-
-    source_by_sku = {item.sku: item for item in source_items}
-    source_skus = list(source_by_sku.keys())
-
-    tenant_ids = [settings.tenant_id for settings, _ in valid_tenants]
-    existing_map: dict = {}
-    if tenant_ids:
+    for tenant, _settings in tenant_rows:
         existing_items = (
             await db.scalars(
-                select(Item)
-                .where(
-                    Item.tenant_id.in_(tenant_ids),
-                    Item.sku.in_(source_skus),
+                select(Item).where(
+                    Item.tenant_id == tenant.id,
+                    Item.sku.in_(template_skus),
                 )
             )
         ).all()
-        for existing in existing_items:
-            existing_map.setdefault(existing.tenant_id, {})[existing.sku] = existing
+        existing_by_sku = {row.sku: row for row in existing_items}
 
-    total_created = 0
-    total_skipped = 0
-    total_synced = 0
-    tenant_results: list[IndustryAssignTenantResult] = []
-
-    for settings, tenant in valid_tenants:
-        existing_for_tenant: dict = existing_map.get(tenant.id, {})
         created = 0
-        skipped_existing = 0
-        synced_admin_items = 0
+        skipped = 0
 
-        for sku, src in source_by_sku.items():
-            existing = existing_for_tenant.get(sku)
+        for sku, template in template_by_sku.items():
+            existing = existing_by_sku.get(sku)
             if existing:
-                skipped_existing += 1
-                if existing.is_admin_created:
-                    if not payload.preserve_existing_quantity:
-                        existing.quantity = payload.initial_quantity
-                    existing.barcode = src.barcode
-                    existing.name = src.name
-                    existing.description = src.description
-                    existing.category_id = src.category_id
-                    existing.unit = src.unit
-                    existing.is_active = src.is_active
-                    existing.min_stock = src.min_stock
-                    existing.max_stock = src.max_stock
-                    existing.target_stock = src.target_stock
-                    existing.recommended_stock = src.recommended_stock
-                    existing.order_mode = src.order_mode
-                    synced_admin_items += 1
+                if not payload.preserve_existing_quantity:
+                    existing.quantity = max(existing.quantity, payload.initial_quantity)
+                skipped += 1
                 continue
 
-            db.add(
-                Item(
-                    tenant_id=tenant.id,
-                    sku=src.sku,
-                    barcode=src.barcode,
-                    name=src.name,
-                    description=src.description,
-                    category_id=src.category_id,
-                    quantity=payload.initial_quantity,
-                    unit=src.unit,
-                    is_active=src.is_active,
-                    min_stock=src.min_stock,
-                    max_stock=src.max_stock,
-                    target_stock=src.target_stock,
-                    recommended_stock=src.recommended_stock,
-                    order_mode=src.order_mode,
-                    is_admin_created=True,
-                )
+            new_item = Item(
+                tenant_id=tenant.id,
+                sku=sku,
+                barcode=template.barcode,
+                name=template.name,
+                description=template.description,
+                category_id=template.category_id,
+                quantity=payload.initial_quantity,
+                unit=template.unit,
+                is_active=template.is_active,
+                min_stock=template.min_stock,
+                max_stock=template.max_stock,
+                target_stock=template.target_stock,
+                recommended_stock=template.recommended_stock,
+                order_mode=template.order_mode,
+                is_admin_created=False,
             )
+            db.add(new_item)
             created += 1
 
-        total_created += created
-        total_skipped += skipped_existing
-        total_synced += synced_admin_items
-        tenant_results.append(
+        created_total += created
+        skipped_total += skipped
+        results.append(
             IndustryAssignTenantResult(
-                tenant_id=str(settings.tenant_id),
+                tenant_id=str(tenant.id),
                 tenant_slug=tenant.slug,
+                tenant_name=tenant.name,
                 created=created,
-                skipped_existing=skipped_existing,
-                synced_admin_items=synced_admin_items,
+                skipped_existing=skipped,
             )
         )
 
@@ -994,14 +941,10 @@ async def admin_assign_industry_items(
 
     return IndustryAssignResponse(
         industry_id=str(industry.id),
-        industry_name=industry.name,
-        total_items=len(source_items),
-        target_tenants=len(valid_tenants),
-        created=total_created,
-        skipped_existing=total_skipped,
-        synced_admin_items=total_synced,
-        missing_tenants=missing_tenants,
-        mismatched_tenants=mismatched_tenants,
-        inactive_tenants=inactive_tenants,
-        results=tenant_results,
+        template_items=len(template_rows),
+        affected_tenants=len(tenant_rows),
+        created_total=created_total,
+        skipped_total=skipped_total,
+        initial_quantity=payload.initial_quantity,
+        results=results,
     )

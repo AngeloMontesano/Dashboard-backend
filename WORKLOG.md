@@ -30,3 +30,33 @@
 ## 2024-06-13
 - QA-Checkliste (A-10) als eigene Section in EPIC_A ergänzt und Szenarien konkretisiert (404-Fallback, Header-Kombinationen, Mobile/Darkmode).
 - Offene Punkte bleiben: Proxy-404-Verhalten praktisch testen, QA-Checkliste durcharbeiten.
+
+## 2024-06-14
+- EPIC_A um Task A-11 ergänzt (Proxy/404 Smoke-Test-Plan mit Header-Kombinationen und erwarteten UI-States).
+- TODO-Liste „Later“ um A-11 erweitert, Umsetzung steht noch aus.
+- Epic_TODO um A-11 ergänzt, damit Tasklisten konsistent sind.
+
+## 2024-06-15
+- Parallelisierung ergänzt: drei Streams in TODO (Backend/Docs, Customer UX, Admin/Docs) für gleichzeitige Bearbeitung der Now-Tasks.
+- Keine neuen fachlichen Findings; Fokus auf Beschleunigung der Planungs-/QA-Arbeiten.
+
+## 2024-06-16
+- Vorbereitung Umsetzung: Startpunkte für Coding geklärt (Stream 1: A-01 Spezifikation finalisieren → Backend-Stub; Stream 2: A-04 Bootstrap-Check + C-02/D-01 UX-Flow; Stream 3: G-01/I-01 Doku-/Felddesign).
+- Keine neuen Blocker; nächste Schritte sind Kickoff der Stream-Arbeiten.
+
+## 2024-06-17
+- Parallelisierung für Next/Later ergänzt (TODO): Stream 1 (A-05/A-10/B-02), Stream 2 (C-03/C-04/D-02), Stream 3 (E-03/E-04/E-05/F-04/F-05).
+- Ziel: spätere Tasks früh bündeln, um Reviews/UX-Guidelines gemeinsam zu nutzen.
+
+## 2024-06-18
+- Umsetzungsvorbereitung konkretisiert: Stream 1 startet mit A-01 Draft in `docs/openapi` + Backend-Router-Stubs; Stream 2 legt UX-Wireframes für A-04/C-02/D-01 an; Stream 3 entwirft Felder/Abschnitte für G-01/I-01.
+- Keine neuen Blocker; offene QA-Themen (Proxy-404) bleiben offen, erst nach A-10/A-11 anpacken.
+
+## 2024-06-19
+- TODO ergänzt um klare Deliverables pro Stream (Now): Stream 1 Draft-Specs/Monitoring-Notiz, Stream 2 Wireframes/Flow-Diagramme, Stream 3 IA und Feldtabellen.
+- Ziel: ersten Artefakte je Stream vorziehen, um danach Coding zu starten; keine neuen Blocker.
+
+## 2024-06-20
+- Draft für A-01 erstellt: `docs/openapi/TENANT_STATUS.md` beschreibt Request/Response, Header-Reihenfolge, Reason-Codes und OpenAPI-Schema-Referenz.
+- EPIC_A ergänzt (API/Backend-Annahmen) um Verweis auf das neue Spec-Dokument; TODO-Deliverables (Stream 1) aktualisiert.
+- Offene Punkte: Review/Abnahme A-01-Spec; Proxy-404-Tests (A-11) weiterhin offen, QA-Checkliste (A-10) noch umzusetzen.

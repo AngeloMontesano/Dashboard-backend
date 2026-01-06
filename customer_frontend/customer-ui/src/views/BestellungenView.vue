@@ -360,25 +360,26 @@ onMounted(async () => {
         {{ state.error }}
       </div>
 
-      <div class="form-grid mt-md">
-        <label class="form-field">
-          <span class="form-label">Status-Filter</span>
+      <div class="filter-card two-column mt-md">
+        <div class="stack">
+          <label class="field-label">Status-Filter</label>
           <select v-model="state.filters.status" class="input">
             <option value="ALL">Alle</option>
             <option value="OPEN">Offen</option>
             <option value="COMPLETED">Erledigt</option>
             <option value="CANCELED">Storniert</option>
           </select>
-        </label>
-        <label class="form-field span-2">
-          <span class="form-label">Suche</span>
+        </div>
+        <div class="stack">
+          <label class="field-label">Suche</label>
           <input
             v-model="state.filters.search"
             type="text"
             class="input"
-            placeholder="Suche nach Nummer, Notiz oder Artikel"
+            placeholder="Nummer, Notiz oder Artikel suchen"
           />
-        </label>
+          <span class="hint">Filtert alle Tabellen. Groß/Kleinschreibung egal.</span>
+        </div>
       </div>
 
       <div class="cards-grid mt-md">

@@ -5,6 +5,10 @@
 - Customer: Shell-Mobile-Breakpoints fertigstellen (<1100px umgesetzt); weitere Feinjustierung/Sidebar-Toggle optional prüfen.
 - Customer: Reporting-PDF über API-Export statt DOM-Kopie (umgesetzt); Server-Export weiter verifizieren.
 - Backend: Migration `0009_create_inventory_orders` ausrollen; Reporting-Query-Fix (GROUP BY) deployen, damit Dashboard/Bestellungen/Inventur/Reporting keine 422/500 mehr liefern.
+- Backend/Admin: Globale Stammdaten-Endpunkte für Artikel/Kategorien/Typen/Branchen sowie Branchen→Artikel-Mapping ohne Tenant-Kontext bereitstellen; Admin-Views sind aktuell UI-only.
+- Backend/Admin: Tenant-Settings um Branchen-/Industrie-Feld erweitern (OpenAPI, Admin-/Inventory-Endpunkte); Dropdown in `AdminTenantsView` ist UI-only.
+- Backend/Admin: Admin-fähige Inventar-Import/Export-Endpunkte (Artikel, alle Felder) sowie globale Einheiten-Endpoints bereitstellen; aktuell nur tenant-basierte Bearer-Endpunkte vorhanden.
+- Backend: Admin-Artikel für Kunden schreibgeschützt machen (Name/SKU/Barcode readonly) und Kunden-Artikel bei Anlage automatisch mit `z_`-Prefix versehen; Admin-/Customer-APIs fehlen dafür.
 
 ## SOLL (UX/Konsistenz/Performance/Accessibility)
 - Admin: Tenants/Memberships mit Server-Paging und Validierung (Settings-Form, Delete-Confirms über Dialog-Komponente) ausstatten.

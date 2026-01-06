@@ -33,38 +33,6 @@
                 }
               }
             }
-          }
-        }
-      }
-    },
-    "/inventory/inventory/export": {
-      "get": {
-        "tags": [
-          "inventory"
-        ],
-        "summary": "Export Inventory",
-        "operationId": "export_inventory_inventory_inventory_export_get",
-        "parameters": [
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response"
           },
           "422": {
             "description": "Validation Error",
@@ -193,6 +161,59 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/CategoryOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inventory/units": {
+      "get": {
+        "tags": [
+          "inventory"
+        ],
+        "summary": "List Units",
+        "operationId": "list_units_inventory_units_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ItemUnitOut"
+                  },
+                  "title": "Response List Units Inventory Units Get"
                 }
               }
             }
@@ -712,7 +733,7 @@
             "schema": {
               "anyOf": [
                 {
-                  "type": "boolean"
+                  "type": "string"
                 },
                 {
                   "type": "null"
@@ -756,13 +777,13 @@
             }
           },
           {
-            "name": "aggregate",
-            "in": "query",
+            "name": "authorization",
+            "in": "header",
             "required": false,
             "schema": {
               "anyOf": [
                 {
-                  "type": "boolean"
+                  "type": "string"
                 },
                 {
                   "type": "null"
@@ -1085,11 +1106,6 @@
             "schema": {
               "anyOf": [
                 {
-                  "enum": [
-                    "OPEN",
-                    "COMPLETED",
-                    "CANCELED"
-                  ],
                   "type": "string"
                 },
                 {
@@ -1206,10 +1222,8 @@
             }
           }
         }
-      }
-    },
-    "/inventory/orders": {
-      "get": {
+      },
+      "post": {
         "tags": [
           "inventory"
         ],
@@ -1244,7 +1258,7 @@
           }
         },
         "responses": {
-          "200": {
+          "201": {
             "description": "Successful Response",
             "content": {
               "application/json": {
@@ -1458,25 +1472,6 @@
               "title": "Order Id"
             }
           },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "put": {
-        "tags": [
-          "inventory"
-        ],
-        "summary": "Update Tenant Settings",
-        "operationId": "update_tenant_settings_inventory_settings_put",
-        "parameters": [
           {
             "name": "authorization",
             "in": "header",
@@ -1545,27 +1540,6 @@
               "title": "Order Id"
             }
           },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/inventory/settings": {
-      "get": {
-        "tags": [
-          "inventory"
-        ],
-        "summary": "Get Tenant Settings",
-        "operationId": "get_tenant_settings_inventory_settings_get",
-        "parameters": [
           {
             "name": "authorization",
             "in": "header",
@@ -1902,16 +1876,6 @@
             }
           }
         ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/TestEmailRequest"
-              }
-            }
-          }
-        },
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -2009,10 +1973,6 @@
             "schema": {
               "anyOf": [
                 {
-                  "enum": [
-                    "IN",
-                    "OUT"
-                  ],
                   "type": "string"
                 },
                 {
@@ -2183,7 +2143,7 @@
         "requestBody": {
           "required": true,
           "content": {
-            "multipart/form-data": {
+            "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/InventoryBulkUpdateRequest"
               }
@@ -2191,7 +2151,7 @@
           }
         },
         "responses": {
-          "201": {
+          "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
@@ -2276,8 +2236,7 @@
             "schema": {
               "anyOf": [
                 {
-                  "type": "string",
-                  "maxLength": 200
+                  "type": "string"
                 },
                 {
                   "type": "null"
@@ -2348,7 +2307,7 @@
           }
         ],
         "responses": {
-          "201": {
+          "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
@@ -2467,24 +2426,17 @@
                   },
                   "title": "Response Admin List Tenants Admin Tenants Get"
                 }
-              ],
-              "title": "X-Admin-Key"
+              }
             }
           },
-          {
-            "name": "x-admin-actor",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
-              ],
-              "title": "X-Admin-Actor"
+              }
             }
           }
         }
@@ -2629,7 +2581,7 @@
           }
         },
         "responses": {
-          "201": {
+          "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
@@ -2772,16 +2724,6 @@
             }
           }
         ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UserUpdate"
-              }
-            }
-          }
-        },
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -3005,28 +2947,6 @@
               "title": "X-Admin-Key"
             }
           },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/admin/memberships": {
-      "post": {
-        "tags": [
-          "admin",
-          "admin-memberships"
-        ],
-        "summary": "Admin Create Membership",
-        "operationId": "admin_create_membership_admin_memberships_post",
-        "parameters": [
           {
             "name": "x-admin-actor",
             "in": "header",
@@ -3044,18 +2964,8 @@
             }
           }
         ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/MembershipCreate"
-              }
-            }
-          }
-        },
         "responses": {
-          "201": {
+          "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
@@ -4914,6 +4824,29 @@
         ],
         "title": "ItemOut"
       },
+      "ItemUnitOut": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "label",
+          "is_active"
+        ],
+        "title": "ItemUnitOut"
+      },
       "ItemUpdate": {
         "properties": {
           "sku": {
@@ -5230,10 +5163,10 @@
             ],
             "title": "Role"
           },
-          "category_id": {
+          "is_active": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "boolean"
               },
               {
                 "type": "null"
@@ -5280,8 +5213,7 @@
           "id",
           "sku",
           "barcode",
-          "qty",
-          "created_at"
+          "name"
         ],
         "title": "MovementItemOut"
       },
@@ -5336,8 +5268,7 @@
           "note": {
             "anyOf": [
               {
-                "type": "string",
-                "maxLength": 255
+                "type": "string"
               },
               {
                 "type": "null"
@@ -5473,7 +5404,8 @@
           "note": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "string",
+                "maxLength": 1024
               },
               {
                 "type": "null"
@@ -5673,41 +5605,14 @@
       },
       "RefreshRequest": {
         "properties": {
-          "period": {
+          "refresh_token": {
             "type": "string",
-            "title": "Period"
-          },
-          "value": {
-            "type": "number",
-            "title": "Value"
-          },
-          "item_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Item Id"
-          },
-          "item_name": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Item Name"
+            "title": "Refresh Token"
           }
         },
         "type": "object",
         "required": [
-          "period",
-          "value"
+          "refresh_token"
         ],
         "title": "RefreshRequest"
       },
@@ -5948,146 +5853,77 @@
         ],
         "title": "ReportTopItem"
       },
-      "TenantPingResponse": {
+      "SKUExistsResponse": {
         "properties": {
-          "ok": {
+          "exists": {
             "type": "boolean",
-            "title": "Ok"
+            "title": "Exists"
           },
-          "tenant": {
-            "$ref": "#/components/schemas/TenantOutPing"
+          "normalized_sku": {
+            "type": "string",
+            "title": "Normalized Sku"
           }
         },
         "type": "object",
         "required": [
-          "ok",
-          "tenant"
+          "exists",
+          "normalized_sku"
         ],
-        "title": "TenantPingResponse",
-        "description": "Response Modell f\u00fcr /inventory/ping."
+        "title": "SKUExistsResponse"
       },
-      "TenantSettingsOut": {
+      "TenantCreate": {
         "properties": {
-          "company_name": {
-            "type": "string",
-            "maxLength": 255,
-            "title": "Company Name",
-            "default": ""
-          },
-          "contact_email": {
-            "type": "string",
-            "maxLength": 255,
-            "title": "Contact Email",
-            "default": ""
-          },
-          "order_email": {
-            "type": "string",
-            "maxLength": 255,
-            "title": "Order Email",
-            "default": ""
-          },
-          "auto_order_enabled": {
-            "type": "boolean",
-            "title": "Auto Order Enabled",
-            "default": false
-          },
-          "auto_order_min": {
-            "type": "integer",
-            "minimum": 0.0,
-            "title": "Auto Order Min",
-            "default": 0
-          },
-          "export_format": {
-            "type": "string",
-            "maxLength": 32,
-            "title": "Export Format",
-            "default": "xlsx"
-          },
-          "address": {
-            "type": "string",
-            "maxLength": 512,
-            "title": "Address",
-            "default": ""
-          },
-          "address_postal_code": {
-            "type": "string",
-            "maxLength": 32,
-            "title": "Address Postal Code",
-            "default": ""
-          },
-          "address_city": {
-            "type": "string",
-            "maxLength": 128,
-            "title": "Address City",
-            "default": ""
-          },
-          "phone": {
+          "slug": {
             "type": "string",
             "maxLength": 64,
-            "title": "Phone",
-            "default": ""
+            "minLength": 2,
+            "title": "Slug"
           },
-          "contact_name": {
+          "name": {
             "type": "string",
             "maxLength": 255,
-            "title": "Contact Name",
-            "default": ""
-          },
-          "branch_number": {
-            "type": "string",
-            "maxLength": 64,
-            "title": "Branch Number",
-            "default": ""
-          },
-          "tax_number": {
-            "type": "string",
-            "maxLength": 64,
-            "title": "Tax Number",
-            "default": ""
-          },
+            "minLength": 2,
+            "title": "Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "slug",
+          "name"
+        ],
+        "title": "TenantCreate"
+      },
+      "TenantOut": {
+        "properties": {
           "id": {
             "type": "string",
             "title": "Id"
+          },
+          "slug": {
+            "type": "string",
+            "title": "Slug"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active"
           }
         },
         "type": "object",
         "required": [
-          "id"
+          "id",
+          "slug",
+          "name",
+          "is_active"
         ],
-        "title": "TenantSettingsOut"
+        "title": "TenantOut"
       },
-      "TenantSettingsUpdate": {
+      "TenantOutPing": {
         "properties": {
-          "company_name": {
-            "type": "string",
-            "maxLength": 255,
-            "title": "Company Name",
-            "default": ""
-          },
-          "contact_email": {
-            "type": "string",
-            "maxLength": 255,
-            "title": "Contact Email",
-            "default": ""
-          },
-          "order_email": {
-            "type": "string",
-            "maxLength": 255,
-            "title": "Order Email",
-            "default": ""
-          },
-          "auto_order_enabled": {
-            "type": "boolean",
-            "title": "Auto Order Enabled",
-            "default": false
-          },
-          "auto_order_min": {
-            "type": "integer",
-            "minimum": 0.0,
-            "title": "Auto Order Min",
-            "default": 0
-          },
-          "export_format": {
+          "id": {
             "type": "string",
             "title": "Id"
           },
@@ -6320,204 +6156,106 @@
             ],
             "title": "Name"
           },
-          "contact_name": {
-            "type": "string",
-            "maxLength": 255,
-            "title": "Contact Name",
-            "default": ""
-          },
-          "branch_number": {
-            "type": "string",
-            "maxLength": 64,
-            "title": "Branch Number",
-            "default": ""
-          },
-          "tax_number": {
-            "type": "string",
-            "maxLength": 64,
-            "title": "Tax Number",
-            "default": ""
+          "is_active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Active"
           }
         },
         "type": "object",
-        "title": "TenantSettingsUpdate"
+        "title": "TenantUpdate"
       },
-      "TenantSettingsOut": {
+      "TenantUserCreate": {
         "properties": {
-          "company_name": {
+          "email": {
             "type": "string",
-            "maxLength": 255,
-            "title": "Company Name",
-            "default": ""
+            "format": "email",
+            "title": "Email"
           },
-          "contact_email": {
+          "role": {
             "type": "string",
-            "maxLength": 255,
-            "title": "Contact Email",
-            "default": ""
+            "minLength": 1,
+            "title": "Role"
           },
-          "order_email": {
-            "type": "string",
-            "maxLength": 255,
-            "title": "Order Email",
-            "default": ""
+          "password": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 128,
+                "minLength": 4
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Password"
           },
-          "auto_order_enabled": {
+          "user_is_active": {
             "type": "boolean",
-            "title": "Auto Order Enabled",
-            "default": false
+            "title": "User Is Active",
+            "default": true
           },
-          "auto_order_min": {
-            "type": "integer",
-            "minimum": 0.0,
-            "title": "Auto Order Min",
-            "default": 0
-          },
-          "export_format": {
-            "type": "string",
-            "maxLength": 32,
-            "title": "Export Format",
-            "default": "xlsx"
-          },
-          "address": {
-            "type": "string",
-            "maxLength": 512,
-            "title": "Address",
-            "default": ""
-          },
-          "address_postal_code": {
-            "type": "string",
-            "maxLength": 32,
-            "title": "Address Postal Code",
-            "default": ""
-          },
-          "address_city": {
-            "type": "string",
-            "maxLength": 128,
-            "title": "Address City",
-            "default": ""
-          },
-          "phone": {
-            "type": "string",
-            "maxLength": 64,
-            "title": "Phone",
-            "default": ""
-          },
-          "contact_name": {
-            "type": "string",
-            "maxLength": 255,
-            "title": "Contact Name",
-            "default": ""
-          },
-          "branch_number": {
-            "type": "string",
-            "maxLength": 64,
-            "title": "Branch Number",
-            "default": ""
-          },
-          "tax_number": {
-            "type": "string",
-            "maxLength": 64,
-            "title": "Tax Number",
-            "default": ""
-          },
-          "id": {
-            "type": "string",
-            "title": "Id"
+          "membership_is_active": {
+            "type": "boolean",
+            "title": "Membership Is Active",
+            "default": true
           }
         },
         "type": "object",
         "required": [
-          "id"
+          "email",
+          "role"
         ],
-        "title": "TenantSettingsOut"
+        "title": "TenantUserCreate"
       },
-      "TenantSettingsUpdate": {
+      "TenantUserOut": {
         "properties": {
-          "company_name": {
+          "membership_id": {
             "type": "string",
-            "maxLength": 255,
-            "title": "Company Name",
-            "default": ""
+            "title": "Membership Id"
           },
-          "contact_email": {
+          "user_id": {
             "type": "string",
-            "maxLength": 255,
-            "title": "Contact Email",
-            "default": ""
+            "title": "User Id"
           },
-          "order_email": {
+          "email": {
             "type": "string",
-            "maxLength": 255,
-            "title": "Order Email",
-            "default": ""
+            "format": "email",
+            "title": "Email"
           },
-          "auto_order_enabled": {
+          "role": {
+            "type": "string",
+            "title": "Role"
+          },
+          "user_is_active": {
             "type": "boolean",
-            "title": "Auto Order Enabled",
-            "default": false
+            "title": "User Is Active"
           },
-          "auto_order_min": {
-            "type": "integer",
-            "minimum": 0.0,
-            "title": "Auto Order Min",
-            "default": 0
-          },
-          "export_format": {
-            "type": "string",
-            "maxLength": 32,
-            "title": "Export Format",
-            "default": "xlsx"
-          },
-          "address": {
-            "type": "string",
-            "maxLength": 512,
-            "title": "Address",
-            "default": ""
-          },
-          "address_postal_code": {
-            "type": "string",
-            "maxLength": 32,
-            "title": "Address Postal Code",
-            "default": ""
-          },
-          "address_city": {
-            "type": "string",
-            "maxLength": 128,
-            "title": "Address City",
-            "default": ""
-          },
-          "phone": {
-            "type": "string",
-            "maxLength": 64,
-            "title": "Phone",
-            "default": ""
-          },
-          "contact_name": {
-            "type": "string",
-            "maxLength": 255,
-            "title": "Contact Name",
-            "default": ""
-          },
-          "branch_number": {
-            "type": "string",
-            "maxLength": 64,
-            "title": "Branch Number",
-            "default": ""
-          },
-          "tax_number": {
-            "type": "string",
-            "maxLength": 64,
-            "title": "Tax Number",
-            "default": ""
+          "membership_is_active": {
+            "type": "boolean",
+            "title": "Membership Is Active"
           }
         },
         "type": "object",
-        "title": "TenantSettingsUpdate"
+        "required": [
+          "membership_id",
+          "user_id",
+          "email",
+          "role",
+          "user_is_active",
+          "membership_is_active"
+        ],
+        "title": "TenantUserOut"
       },
-      "TenantUpdate": {
+      "TenantUserUpdate": {
         "properties": {
-          "name": {
+          "role": {
             "anyOf": [
               {
                 "type": "string"
@@ -6526,18 +6264,36 @@
                 "type": "null"
               }
             ],
-            "title": "Note"
+            "title": "Role"
           },
-          "created_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Created At"
-          },
-          "completed_at": {
+          "password": {
             "anyOf": [
               {
                 "type": "string",
-                "format": "date-time"
+                "maxLength": 128,
+                "minLength": 4
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Password"
+          },
+          "user_is_active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Is Active"
+          },
+          "membership_is_active": {
+            "anyOf": [
+              {
+                "type": "boolean"
               },
               {
                 "type": "null"
@@ -6548,44 +6304,6 @@
         },
         "type": "object",
         "title": "TenantUserUpdate"
-      },
-      "TestEmailRequest": {
-        "properties": {
-          "email": {
-            "type": "string",
-            "maxLength": 255,
-            "title": "Email"
-          }
-        },
-        "type": "object",
-        "required": [
-          "email"
-        ],
-        "title": "TestEmailRequest"
-      },
-      "TestEmailResponse": {
-        "properties": {
-          "ok": {
-            "type": "boolean",
-            "title": "Ok"
-          },
-          "error": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Error"
-          }
-        },
-        "type": "object",
-        "required": [
-          "ok"
-        ],
-        "title": "TestEmailResponse"
       },
       "TestEmailRequest": {
         "properties": {
@@ -6675,54 +6393,110 @@
             "format": "email",
             "title": "Email"
           },
-          "canceled_at": {
+          "password": {
             "anyOf": [
               {
                 "type": "string",
-                "format": "date-time"
+                "maxLength": 128,
+                "minLength": 8
               },
               {
                 "type": "null"
               }
             ],
-            "title": "MovementItemsWrapper"
+            "title": "Password"
           }
-        ],
-        "title": "MovementListResponse"
-      },
-      "MovementItemOut": {
+        },
         "type": "object",
+        "required": [
+          "email"
+        ],
+        "title": "UserCreate"
+      },
+      "UserOut": {
         "properties": {
           "id": {
             "type": "string",
-            "format": "uuid",
             "title": "Id"
           },
-          "sku": {
+          "email": {
             "type": "string",
-            "title": "Sku"
+            "title": "Email"
           },
-          "barcode": {
-            "type": "string",
-            "title": "Barcode"
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active"
           },
-          "name": {
-            "type": "string",
-            "title": "Name"
-          },
-          "category_id": {
+          "has_password": {
+            "type": "boolean",
+            "title": "Has Password"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "email",
+          "is_active",
+          "has_password"
+        ],
+        "title": "UserOut"
+      },
+      "UserUpdate": {
+        "properties": {
+          "is_active": {
             "anyOf": [
               {
-                "type": "string",
-                "format": "uuid"
+                "type": "boolean"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Category Id"
+            "title": "Is Active"
+          },
+          "password": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 128,
+                "minLength": 8
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Password"
           }
         },
+        "type": "object",
+        "title": "UserUpdate"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          }
+        },
+        "type": "object",
         "required": [
           "loc",
           "msg",
@@ -6731,43 +6505,5 @@
         "title": "ValidationError"
       }
     }
-  },
-  "tags": [
-    {
-      "name": "platform",
-      "description": "Basis Endpunkte f\u00fcr Health, Meta und DB Readiness."
-    },
-    {
-      "name": "inventory",
-      "description": "Inventory Endpoints mit Tenant-Kontext und Rollen-Checks."
-    },
-    {
-      "name": "admin",
-      "description": "Admin Endpunkte. Zugriff nur mit X-Admin-Key."
-    },
-    {
-      "name": "admin-tenants",
-      "description": "Tenant Verwaltung f\u00fcr Admin."
-    },
-    {
-      "name": "admin-users",
-      "description": "User Verwaltung f\u00fcr Admin."
-    },
-    {
-      "name": "admin-memberships",
-      "description": "Membership Verwaltung f\u00fcr Admin."
-    },
-    {
-      "name": "admin-roles",
-      "description": "Rollen Katalog."
-    },
-    {
-      "name": "admin-audit",
-      "description": "Admin Audit Log."
-    },
-    {
-      "name": "admin-diagnostics",
-      "description": "Daten Checks und Diagnosen."
-    }
-  ]
+  }
 }

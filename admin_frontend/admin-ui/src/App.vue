@@ -45,12 +45,18 @@
           <div class="sidebar-divider"></div>
           <div class="navGroup">
             <div class="navGroupTitle">Globale Einstellungen</div>
-            <ul class="navGroupList">
-              <li>Globale Artikel</li>
-              <li>Globale Kategorien</li>
-              <li>Globale Typen</li>
-              <li>Globale Branchen</li>
-            </ul>
+            <div class="navGroupList">
+              <button
+                v-for="item in globalSections"
+                :key="item.id"
+                class="navItem"
+                :class="{ active: ui.section === item.id }"
+                @click="goSection(item.id)"
+              >
+                <span class="navIcon">{{ item.icon }}</span>
+                <span class="navLabel">{{ item.label }}</span>
+              </button>
+            </div>
           </div>
 
           <!-- Bottom Area -->
@@ -164,6 +170,20 @@
               @tabChange="setOperationsTab"
             />
 
+          <!-- SECTION: Globale Stammdaten -->
+            <GlobaleArtikelView v-else-if="ui.section === 'globals-articles'" :adminKey="ui.adminKey" :actor="ui.actor" />
+            <GlobaleKategorienView
+              v-else-if="ui.section === 'globals-categories'"
+              :adminKey="ui.adminKey"
+              :actor="ui.actor"
+            />
+            <GlobaleEinheitenView v-else-if="ui.section === 'globals-units'" :adminKey="ui.adminKey" :actor="ui.actor" />
+            <GlobaleBranchenView
+              v-else-if="ui.section === 'globals-industries'"
+              :adminKey="ui.adminKey"
+              :actor="ui.actor"
+            />
+
           <!-- SECTION: Settings -->
             <AdminSettingsView
               v-else
@@ -218,6 +238,10 @@ import AdminSettingsView from "./views/AdminSettingsView.vue";
 import AdminLoginView from "./views/AdminLoginView.vue";
 import ToastHost from "./components/common/ToastHost.vue";
 import AdminOperationsView from "./views/AdminOperationsView.vue";
+import GlobaleArtikelView from "./views/GlobaleArtikelView.vue";
+import GlobaleKategorienView from "./views/GlobaleKategorienView.vue";
+import GlobaleEinheitenView from "./views/GlobaleEinheitenView.vue";
+import GlobaleBranchenView from "./views/GlobaleBranchenView.vue";
 
 /* Zentraler Toast State */
 const { toast } = useToast();
@@ -236,7 +260,22 @@ const sections = [
   { id: "settings", label: "Einstellungen", icon: "⚙️" },
 ] as const;
 
-type SectionId = (typeof sections)[number]["id"];
+const globalSections = [
+  { id: "globals-articles", label: "Globale Artikel", icon: "📦" },
+  { id: "globals-categories", label: "Globale Kategorien", icon: "🗂️" },
+  { id: "globals-units", label: "Globale Einheiten", icon: "🧭" },
+  { id: "globals-industries", label: "Globale Branchen", icon: "🏭" },
+] as const;
+
+type GlobalSectionId = (typeof globalSections)[number]["id"];
+type SectionId = (typeof sections)[number]["id"] | GlobalSectionId;
+
+const globalSectionPaths: Record<GlobalSectionId, string> = {
+  "globals-articles": "/globals/articles",
+  "globals-categories": "/globals/categories",
+  "globals-units": "/globals/units",
+  "globals-industries": "/globals/industries",
+};
 
 /* UI State */
 // TODO: Entfernen, sobald Admin-APIs ohne expliziten adminKey/actor auskommen.
@@ -271,6 +310,9 @@ function goSection(sectionId: SectionId) {
   ui.section = sectionId;
   if (sectionId === "operations") {
     pushOperationsRoute(operationsTab.value);
+  } else if ((globalSectionPaths as Record<string, string>)[sectionId as string]) {
+    const targetPath = globalSectionPaths[sectionId as GlobalSectionId];
+    window.history.pushState({}, "", targetPath);
   } else {
     const targetPath = sectionId === "kunden" ? "/" : `/${sectionId}`;
     window.history.pushState({}, "", targetPath);
@@ -315,6 +357,10 @@ const pageTitle = computed(() => {
     memberships: "Tenant-User",
     operations: "Operations",
     settings: "Einstellungen",
+    "globals-articles": "Globale Artikel",
+    "globals-categories": "Globale Kategorien",
+    "globals-units": "Globale Einheiten",
+    "globals-industries": "Globale Branchen",
   };
   return m[ui.section];
 });
@@ -324,6 +370,10 @@ const pageSubtitle = computed(() => {
   if (ui.section === "users") return "Admin-Portal Benutzer verwalten";
   if (ui.section === "memberships") return "User mit Tenants verknüpfen und Rollen setzen";
   if (ui.section === "operations") return "Health, Audit, Snapshots und Logs";
+  if (ui.section === "globals-articles") return "Artikel-Stammdaten erfassen (Backend fehlt, UI-only)";
+  if (ui.section === "globals-categories") return "Kategorien als globale Stammdaten pflegen (UI-only)";
+  if (ui.section === "globals-units") return "Artikel-Einheiten pflegen (UI-only)";
+  if (ui.section === "globals-industries") return "Branchen pflegen und Artikel zuordnen (UI-only)";
   return "Security, Theme, Feature Flags";
 });
 
@@ -436,6 +486,12 @@ function syncFromLocation() {
   const path = window.location.pathname;
   const params = new URLSearchParams(window.location.search);
   const tabFromQuery = params.get("tab") as OperationsTab | null;
+
+  const globalMatch = Object.entries(globalSectionPaths).find(([, p]) => p === path);
+  if (globalMatch) {
+    ui.section = globalMatch[0] as GlobalSectionId;
+    return;
+  }
 
   if (path === "/operations") {
     ui.section = "operations";

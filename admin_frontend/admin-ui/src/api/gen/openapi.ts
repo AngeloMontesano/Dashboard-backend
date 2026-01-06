@@ -56,6 +56,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/inventory/units": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Units */
+        get: operations["list_units_inventory_units_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/inventory/categories/{category_id}": {
         parameters: {
             query?: never;
@@ -1098,6 +1115,15 @@ export interface components {
             /** Category Name */
             category_name?: string | null;
         };
+        /** ItemUnitOut */
+        ItemUnitOut: {
+            /** Code */
+            code: string;
+            /** Label */
+            label: string;
+            /** Is Active */
+            is_active: boolean;
+        };
         /** ItemUpdate */
         ItemUpdate: {
             /** Sku */
@@ -1826,6 +1852,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CategoryOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_units_inventory_units_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ItemUnitOut"][];
                 };
             };
             /** @description Validation Error */

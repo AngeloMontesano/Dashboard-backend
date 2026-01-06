@@ -49,3 +49,7 @@
 ## 2024-06-24
 - EPIC_A Akzeptanzkriterium ergänzt: Tenant-Status-API liefert in allen Pfaden HTTP 200, Fehler nur als `status/reason`.
 - Keine neuen Tasks; Fokus bleibt auf A-01 Review, anschließend QA/Proxy (A-10/A-11).
+
+## 2024-06-25
+- TENANT_STATUS-Spec um Proxy-Header-Matrix ergänzt (Vorbereitung A-11, Host/Slug/DB-down).
+- Keine Task-Änderungen; nächste Schritte bleiben A-01 Review, danach QA/Proxy-Checks (A-10/A-11).

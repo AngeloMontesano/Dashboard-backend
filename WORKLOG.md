@@ -80,3 +80,8 @@
 - EPIC_A Akzeptanzkriterien ergänzt: Tenant-Status-API liefert immer HTTP 200, Fehler nur im Feld `status/reason`.
 - Ziel: Review von A-01 vereinfachen und klar gegen A-10/A-11 abgrenzen; keine Task-IDs geändert.
 - Offene Punkte: A-01 Abnahme; danach QA-Checkliste (A-10) und Proxy-Tests (A-11) ausführen.
+
+## 2024-06-25
+- TENANT_STATUS-Spec um Proxy-Header-Matrix ergänzt (A-11 Vorbereitung) für Host/Slug/DB-down Szenarien.
+- Fokus: QA/Proxy-Reproduzierbarkeit erhöhen; keine neuen Tasks oder ID-Änderungen.
+- Offene Punkte unverändert: A-01 Abnahme, danach A-10/A-11 ausführen.

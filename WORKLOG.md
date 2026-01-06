@@ -767,3 +767,61 @@
   - Customer-Views folgen dem Admin-Look (Pill-Focus-Ring) und zeigen konsistente, wiederverwendbare Empty-States ohne gemischte Platzhalter-Texte.
 - **Tests**
   - Nicht ausgeführt (UI-Styling)
+
+- Datum/Uhrzeit: 2026-01-06T15:36:33Z
+- Task-ID: EPIC-ROADMAP-SETUP
+- Was analysiert/geändert:
+  - Standards unter `docs/standards` geprüft (API/Frontend/Error/Design/Darkmode/Theme Tokens).
+  - Bestandsaufnahme 404/Not-Found: Customer-Router ohne Catch-All (unbekannte Pfade resultieren in Router-Navigation-Fehler/leerem View, Server liefert bei fehlender Route JSON `{error:{code:"http_error",message:"Not Found"}}`), Admin-Frontend ohne Router (Navigation rein per UI, 404 nur serverseitig bei fehlenden Assets), Backend `/` oder unbekannte Pfade liefern standardisierte JSON-Fehler via `register_exception_handlers`, Tenant-Resolver (`core/tenant.py`) gibt 404 `tenant_not_found` JSON bei fehlendem/inaktivem Tenant oder fehlendem Host/Slug; Reverse-Proxy-Annahme: Host aus `X-Forwarded-Host` + `BASE_DOMAIN`, Fallback `localhost`.
+  - Public/Health-Endpunkte identifiziert: `/health`, `/health/db`, `/meta`, `/metrics` (Prometheus), alle ohne Auth.
+  - Doku-Struktur erstellt: `docs/roadmap/INDEX.md` mit Epic-Template/Standards, neue Epics A–I mit Tasks/Akzeptanzkriterien, TODO/Epic_TODO priorisiert, Epic_WORKLOG angelegt.
+- Ergebnis: Roadmap-Epics vollständig angelegt, Template verbindlich dokumentiert, priorisierte Next Steps in TODO/Epic_TODO.
+- Nächste Schritte: Umsetzung der Now-Tasks (Tenant-Status-Endpoint + Frontend-Status-Flow, globale Katalog-Spezifikation, Reporting-Filter-Konzept etc.).
+
+- Datum/Uhrzeit: 2026-01-06T16:21:50Z
+- Task-ID: EPIC-A-02
+- Was analysiert/geändert:
+  - Öffentlichen Endpoint `/public/tenant-status` implementiert (Backend), nutzt Host/Header-Slug-Auflösung und meldet Status `ok/not_found/inactive/unavailable`.
+  - Public-Router in die FastAPI-App eingebunden; OpenAPI-Schema um neuen Pfad und `PublicTenantStatus`-Schema erweitert.
+  - TODO/Epic_TODO angepasst: A-02 aus „Now“ entfernt.
+- Ergebnis: Tenant-Status ist per GET erreichbar, prüft DB-Verfügbarkeit, liefert klare Statusobjekte ohne Exceptions.
+- Nächste Schritte: Frontend-Preflight und Tenant-Status-View (A-04/A-05), Router-Fallback (A-06).
+
+- Datum/Uhrzeit: 2026-01-06T16:45:00Z
+- Task-ID: EPIC-A-04-06
+- Was analysiert/geändert:
+  - Customer-Bootstrap ruft vor App-Mount `/public/tenant-status` auf (`initTenantStatus`), nutzt bestehende Axios-Instanz und Tenant-Header.
+  - Neuer View `TenantStatusView` für States not_found/inactive/unavailable und Router-404; Catch-All Route führt auf die Statusseite.
+  - Router-Guard leitet bei nicht-OK Tenant-Status auf die Statusseite, Catch-All zeigt 404 statt JSON.
+  - TODO/Epic_TODO aktualisiert (A-04/A-05/A-06 erledigt).
+- Ergebnis: Unbekannte/inaktive Subdomains oder fehlende Pfade zeigen eine gestaltete Seite; App startet nur bei `status=ok`.
+- Nächste Schritte: Caching/Retry-Strategie (A-08) planen, UI-Texte finalisieren falls Support-Links ergänzt werden.
+
+- Datum/Uhrzeit: 2026-01-06T16:47:01Z
+- Task-ID: EPIC-B-01-02
+- Was analysiert/geändert:
+  - Datenmodell-Entwurf für globale Kataloge/Branchen dokumentiert (`docs/openapi/GLOBAL_CATALOG.md`): Tabellen, FKs, Indizes, Tenant-Feld `industry_id`.
+  - Admin-API-Spezifikation als Vorschlag festgehalten (CRUD für industries/categories/types/items, Mapping industry→items, Header-Anforderungen, Fehlercodes).
+  - EPIC_B Daten-/API-Abschnitte verlinken auf den Entwurf; TODO/Epic_TODO „B-01/B-02“ aus Now entfernt.
+- Ergebnis: Architektur- und API-Grundlage für globale Kataloge liegt vor, Konsum für Alembic/Backend-Implementierung vorbereitet.
+- Nächste Schritte: Alembic-Draft (B-03) und UI-Navigation/Views (B-04/B-05) planen, OpenAPI JSON nach Freigabe erweitern.
+
+- Datum/Uhrzeit: 2026-01-06T16:52:18Z
+- Task-ID: EPIC-C-03
+- Was analysiert/geändert:
+  - Live-Suche-Komponente für Reporting spezifiziert (Debounce 250–300ms, Prefix ab 2 Zeichen, Cancel bei neuem Input, Memory-Cache 60s).
+  - API-Annahme fixiert: `GET /inventory/items?query=<prefix>&limit=10` über zentrale Axios-Instanz + Tenant-Header, Fehlertexte via `classifyError`.
+  - UI/UX-Details ergänzt: Dropdown mit Loader/Empty-State, Chips-Auswahl, Keyboard-Support, keine Toast-Spam, Props/Events dokumentiert.
+  - EPIC_C aktualisiert, TODO/Epic_TODO bereinigt.
+- Ergebnis: C-03 (Konzept Live-Suche) abgeschlossen, Grundlage für Komponentenbau in Reporting-Filter gelegt.
+- Nächste Schritte: C-05 (Zeitraum-Presets) planen, C-04 Mehrfachauswahl finalisieren.
+
+- Datum/Uhrzeit: 2026-01-06T17:07:42Z
+- Task-ID: EPIC-D-03
+- Was analysiert/geändert:
+  - KPI-Karten-Navigation spezifiziert: Routen/Query-Prefill (offen/reorderOnly/heute) und Klick-UX in EPIC_D ergänzt.
+  - Vorgaben für `UiStatCard`: gesamte Karte klickbar mit `role="button"`, `tabindex="0"`, Fokus-Ring, Tooltip optional, Fehlerfall-Hinweis ohne Spam.
+  - Navigation per `router.push` mit Query-Prefill; Zielrouten `bestellungen` (status=open/reorderOnly) und `lagerbewegungen` (date=today) festgehalten.
+  - TODO/Epic_TODO bereinigt (D-03 aus Now entfernt).
+- Ergebnis: D-03 (Konzept Navigation) abgeschlossen, Implementierung kann mit klaren Vorgaben starten.
+- Nächste Schritte: D-04 Prefill-Handling in Bestellungen/Lagerbewegungen konkretisieren, QA-Checkliste (D-08) folgen.

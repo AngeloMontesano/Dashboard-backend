@@ -781,6 +781,15 @@
 - **Tests**
   - `npm run build` (admin_frontend/admin-ui)
 
+## Schritt 56 – Zwei-Paneele-Feinschliff (Assigned-Schutz)
+- **Datum/Uhrzeit**: 2026-01-06T16:15:00+00:00
+- **Ziel**: Missverständliche Mehrfachauswahl verhindern und den Status bereits zugeordneter Artikel im linken Paneel sichtbar machen.
+- **Was wurde geändert**
+  - Linkes Paneel deaktiviert Checkboxen für Artikel, die in der finalen Liste (initial + pending Add - pending Remove) bereits enthalten sind; zeigt Tag „Bereits zugeordnet“ neben dem Status-Tag.
+  - `finalItemIdSet` als Set-Cache eingeführt, um Disabled-Status und Badge effizient zu berechnen ohne doppelte Array-Suchen.
+- **Tests**
+  - `npm run build` (admin_frontend/admin-ui) – nicht erneut ausgeführt, UI-only Feinschliff
+
 ## Schritt 54 – Analyse Branchen-Artikel-Mapping (Schritt 1)
 - **Datum/Uhrzeit**: 2026-01-06T15:45:00+00:00
 - **Ziel**: Inventar für den Admin-Editor „Branche ↔ Artikel“ erstellen und Skalierungsprobleme für 1000+ Artikel bewerten.

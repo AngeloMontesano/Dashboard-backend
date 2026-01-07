@@ -136,4 +136,6 @@
 - Phase 1 abgeschlossen: Next-Aufgaben A-05/A-10/B-02/C-03/C-04/C-05/D-02/E-03/E-04/E-05/F-04/G-05/H-04/I-04 dokumentiert.
 - B-03 Alembic-Entwurf gestartet: globale Typen-Tabelle und Item-Relation ergänzt (Migration + Model).
 - B-04 Admin-UI Navigationspunkt „Globale Kataloge“ ergänzt (Übersichts-View).
+- B-05 Admin-UI: Navigationspunkt für bestehende „Globale Typen“-View ergänzt (UI-only).
+- B-05 Admin-UI: Global-Types-State im Masterdata-Store ergänzt (UI-only Datenhaltung).
 - Offene Punkte: restliche Next-Tasks fortführen (A-05/I-04 Review), B-03 Review der Migration.

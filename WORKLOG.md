@@ -850,3 +850,55 @@
   - Customer-Frontend verhindert rohe JSON-Ausgabe durch Tenant-Status-View und Router-Catch-All; Admin-Frontend erhält bei fehlendem Server-Rewrite einen serverseitigen 404/JSON.
 - Geänderte Dateien: `docs/roadmap/INDEX.md`, `TODO.md`, `Epic_TODO.md`, `Epic_WORKLOG.md`, `WORKLOG.md`.
 - Offene Punkte: Admin-Frontend-Deployment braucht Rewrite-Regel für unbekannte Pfade; Tenant-Status-Routing/Retry laut Epic A umsetzen; Monitoring/Docs-Epics in Now/Next abarbeiten.
+
+## Schritt 12 – Admin UI Style-System (Analyse)
+- Datum/Uhrzeit: 2026-01-09T09:00:00Z
+- Task-ID: ADMIN-UI-STYLES-ANALYSE
+- Ist-Zustand
+  - Admin-Styles liegen bereits in `admin_frontend/admin-ui/src/styles/` (tokens/base/layout/utilities), aber Layout/Component-Styles sind gemischt in `layout.css` und view-spezifische Styles sind in mehreren Views per `<style scoped>` verteilt.
+  - Theme-Handling läuft über `src/composables/useTheme.ts` (DOM-Manipulation + LocalStorage), jedoch ohne dedizierte Utility-Schicht.
+  - Wiederkehrende Layout-Patterns: Filterkarten, Tabellenkarten, Detailkarten, Toolbar/Action-Reihen in `AdminUsersView`, `AdminTenantsView`, `Globale*` Views.
+- Probleme (Auszug mit Pfaden)
+  - Mehrfach definierte Modal-Footer-Styles in Views (`GlobaleEinheitenView.vue`, `GlobaleKategorienView.vue`, `GlobaleArtikelView.vue`, `GlobaleBranchenView.vue`) statt zentraler Utility.
+  - Inline-Styles in Komponenten (`components/audit/AuditDrawer.vue`, `components/tenants/TenantDrawer.vue`).
+  - Utility-Klassen wie `.row`, `.gap8`, `.wrap` werden genutzt, sind aber in den globalen Styles nicht klar dokumentiert/zentral gepflegt.
+  - Tokens: fehlende/inkonsistente Token-Nutzung (z. B. `--space-10` genutzt, aber nicht definiert; Status-Farben `--ok/--bad` nicht explizit gemappt).
+  - File-Input/Import-Row wirkt inkonsistent in `GlobaleEinheitenView.vue`, `GlobaleKategorienView.vue`, `GlobaleArtikelView.vue` (Buttons + File-Input unterschiedliche Höhen).
+  - Theme-Settings-Styles liegen view-lokal in `AdminSettingsView.vue` statt systemweit.
+- Plan (Aufgabenliste)
+  - Styles modularisieren: Layout primitives in `layout.css`, wiederverwendbare Komponenten-Styles nach `components.css`, Utilities erweitern (u-* Klassen) und View-Styles auslagern.
+  - Tokens konsolidieren (Spacing, Input-Tokens, Status-Aliasse) und Input-Styles auf Tokens umstellen.
+  - Theme-Utility `src/theme/theme.ts` einführen und `useTheme` darauf aufbauen (data-theme, LocalStorage, system fallback).
+  - Layout-Verbesserungen: Filter- und Action-Reihen konsistent ausrichten, File-Input-Row auf Button-Höhe bringen, Grid-Layouts responsiv mit `minmax`/`auto-fit` konsolidieren.
+  - Dokumentation aktualisieren: `WORKLOG.md`, `TODO.md`, `docs/standards/ADMIN_UI_STANDARDS.md` (plus optional Roadmap).
+
+## Schritt 13 – Admin UI Style-System (Umsetzung)
+- Datum/Uhrzeit: 2026-01-09T12:00:00Z
+- Task-ID: ADMIN-UI-STYLES-IMPLEMENT
+- Was geändert wurde
+  - Styles modularisiert: `layout.css` enthält Layout-Primitives (Shell/Page/Section/Grid/Breakpoints), `components.css` kapselt Buttons/Inputs/Cards/Tables/Drawer/Toast, Utilities erweitert (`u-*`, Spacing, Form-Utilities) und View-spezifische Scoped-Styles entfernt.
+  - Tokens erweitert: Spacing-Skala ergänzt (`--space-3`, `--space-10`), Input-Tokens eingeführt, Status-Aliasse `--ok/--bad` ergänzt.
+  - Theme-Handling zentralisiert über `src/theme/theme.ts` (data-theme, LocalStorage, system fallback). `useTheme` nutzt die neue Utility.
+  - Layout-Politur: Filter-Cards auf 2-Spalten-Layout vereinheitlicht, File-Input-Buttons standardisiert (`.file-btn`), Mapping-Layout (Branchen) in Komponenten-Styles ausgelagert.
+  - Inline-Styles entfernt (Audit/Tenant Drawer), Button-Klasse `btn` in Settings auf `btnPrimary` umgestellt.
+  - Dokumentation ergänzt: `docs/standards/ADMIN_UI_STANDARDS.md` und Roadmap `docs/roadmap/STYLE_SYSTEM_ADMIN.md`.
+- Ergebnis
+  - Styles sind jetzt in Tokens/Base/Layout/Components/Utilities aufgeteilt und bereit für 1:1 Übernahme ins Customer-Frontend.
+  - Theme-API ist zentral, konsistent und nutzt `data-theme`.
+  - View-Layouts sind konsistenter (Filter-Grid, Import/Export Rows, Mapping-Layout) ohne Design-Änderung.
+- Entscheidungen (Rationale)
+  - Neue `components.css`, um Buttons/Inputs/Tables von Layout-Primitives zu trennen und Wiederverwendung zu erleichtern.
+  - `u-*` Utilities eingeführt, um Inline-Styles und Scoped-Styles zu reduzieren.
+  - Theme-State bewusst im HTML-`data-theme`, damit Tokens für alle Komponenten greifen.
+
+## Schritt 14 – Admin UI Aurora Background
+- Datum/Uhrzeit: 2026-01-09T13:00:00Z
+- Task-ID: ADMIN-UI-AURORA
+- Was geändert wurde
+  - Aurora/Glow-Hintergrund zentral in `src/styles/background/aurora.css` ergänzt (Light/Dark Tokens, Animation nur via transform/scale, respects reduced motion).
+  - Globaler Import in `src/main.ts` ergänzt; Hintergrund wird in `App.vue` über `.bg-aurora` gerendert (Login animiert, Rest statisch).
+  - `app-content` z-index gesetzt, damit Content über dem Background liegt.
+- Einbauorte
+  - CSS: `admin_frontend/admin-ui/src/styles/background/aurora.css`
+  - Layout: `admin_frontend/admin-ui/src/App.vue`
+  - Import: `admin_frontend/admin-ui/src/main.ts`

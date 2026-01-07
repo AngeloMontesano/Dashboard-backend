@@ -48,6 +48,8 @@
 | customer_frontend/customer-ui/src/styles/layout.css:382-387 ↔ customer_frontend/customer-ui/src/styles/layout.css:548-548 | TableWrap vs Table-Wrapper | Customer | `.tableWrap` und `.table-wrapper` duplizieren Border/Radius/Background in derselben Datei (Compatibility-Layer) |
 | admin_frontend/admin-ui/src/styles/utilities.css:170-231 ↔ customer_frontend/customer-ui/src/styles/utilities.css:170-216 | Detail-Card Utilities | beide | Detail-Card/Box/Grid definieren gleiche Struktur, aber Radius/Surface/Spacing/Label-Tokens weichen ab |
 | customer_frontend/customer-ui/src/views/ArtikelverwaltungView.vue:1155-1167 ↔ customer_frontend/customer-ui/src/styles/utilities.css:180-186 | Detail-Card Header Overrides | Customer | Scoped Header/Actions überschreiben Utility-Header (align-items/gap/margin), semantisch gleich |
+| admin_frontend/admin-ui/src/styles/utilities.css:252-260 ↔ customer_frontend/customer-ui/src/styles/layout.css:518-519 | Form-Grid/Field (Compatibility Layer) | Customer | Compatibility-Form-Grid/Field dupliziert Admin-Utility (Grid/Gaps identisch), nur Label-Spacing minimal abweichend |
+| admin_frontend/admin-ui/src/styles/utilities.css:258-260 ↔ customer_frontend/customer-ui/src/styles/layout.css:520-520 | Field Label Styling | Customer | `.field label` Wiederholung von Admin-Utility-Label-Stil (Font-Weight/Color/Size) im Compatibility-Layer |
 
 Notizen:
 - Alle Fundstellen stammen aus Schritt 1 (Inventarisierung). Noch keine Deklaration wurde verändert.

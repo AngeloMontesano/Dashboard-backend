@@ -42,6 +42,8 @@
 | admin_frontend/admin-ui/src/styles/layout.css:390-407 ↔ customer_frontend/customer-ui/src/styles/layout.css:382-400 | TableWrap/Table Styles | beide | TableWrap/Table haben gleiche Struktur/Padding; Radius/Background/THead-Colors leicht abweichend |
 | admin_frontend/admin-ui/src/styles/layout.css:373-387 ↔ customer_frontend/customer-ui/src/styles/layout.css:366-379 | Tag Styles | beide | `.tag`/`.tag.ok/.bad/.warn/.neutral` nahezu identisch; Customer nutzt Token-mix, Admin var(--tag-*) Aliase |
 | admin_frontend/admin-ui/src/styles/layout.css:367-371 ↔ customer_frontend/customer-ui/src/styles/layout.css:360-363 | Button Small Variants | beide | `.btnPrimary.small`/`.btnGhost.small` identisch in Padding/Font; doppelte Pflege ohne Abweichung |
+| admin_frontend/admin-ui/src/styles/layout.css:416-433 ↔ customer_frontend/customer-ui/src/styles/layout.css:408-425 | Table Helper Styles | beide | Table Hover/Right/MutedPad/RowActive nahezu gleich; Customer nutzt direkte rgba/`--text-muted`, Admin Tokens (`--table-row-*`, `--muted`) |
+| admin_frontend/admin-ui/src/styles/layout.css:357-365 ↔ customer_frontend/customer-ui/src/styles/utilities.css:306-310 | Button Ghost Danger | beide | Danger-Button nutzt unterschiedliche Token (Admin `--tag-bad-*`, Customer `--danger`/`--surface-2`), aber gleicher Zweck/Struktur |
 
 Notizen:
 - Alle Fundstellen stammen aus Schritt 1 (Inventarisierung). Noch keine Deklaration wurde verändert.

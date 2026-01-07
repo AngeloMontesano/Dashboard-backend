@@ -10,11 +10,16 @@
     - Sections links sind gekoppelt an Content rechts (keine "toten" Menüs)
   -->
   <div :class="['app', appThemeClass]">
-    <template v-if="!ui.authenticated">
-      <AdminLoginView @loggedIn="applyLogin" />
-    </template>
-    <template v-else>
-      <div class="shell">
+    <div
+      class="bg-aurora"
+      :class="ui.authenticated ? 'bg-aurora--static' : 'bg-aurora--animated'"
+    ></div>
+    <div class="app-content">
+      <template v-if="!ui.authenticated">
+        <AdminLoginView @loggedIn="applyLogin" />
+      </template>
+      <template v-else>
+        <div class="shell">
         <!-- =========================================================
              SIDEBAR
         ========================================================== -->
@@ -235,8 +240,9 @@
             />
           </section>
         </main>
-      </div>
-    </template>
+        </div>
+      </template>
+    </div>
 
     <!-- =========================================================
          ZENTRALER TOAST

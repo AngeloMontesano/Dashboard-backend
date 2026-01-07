@@ -890,3 +890,15 @@
   - Neue `components.css`, um Buttons/Inputs/Tables von Layout-Primitives zu trennen und Wiederverwendung zu erleichtern.
   - `u-*` Utilities eingeführt, um Inline-Styles und Scoped-Styles zu reduzieren.
   - Theme-State bewusst im HTML-`data-theme`, damit Tokens für alle Komponenten greifen.
+
+## Schritt 14 – Admin UI Aurora Background
+- Datum/Uhrzeit: 2026-01-09T13:00:00Z
+- Task-ID: ADMIN-UI-AURORA
+- Was geändert wurde
+  - Aurora/Glow-Hintergrund zentral in `src/styles/background/aurora.css` ergänzt (Light/Dark Tokens, Animation nur via transform/scale, respects reduced motion).
+  - Globaler Import in `src/main.ts` ergänzt; Hintergrund wird in `App.vue` über `.bg-aurora` gerendert (Login animiert, Rest statisch).
+  - `app-content` z-index gesetzt, damit Content über dem Background liegt.
+- Einbauorte
+  - CSS: `admin_frontend/admin-ui/src/styles/background/aurora.css`
+  - Layout: `admin_frontend/admin-ui/src/App.vue`
+  - Import: `admin_frontend/admin-ui/src/main.ts`

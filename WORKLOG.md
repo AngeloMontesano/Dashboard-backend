@@ -902,3 +902,11 @@
   - CSS: `admin_frontend/admin-ui/src/styles/background/aurora.css`
   - Layout: `admin_frontend/admin-ui/src/App.vue`
   - Import: `admin_frontend/admin-ui/src/main.ts`
+
+## Schritt 15 – Admin Login Background Milkiness
+- Datum/Uhrzeit: 2026-01-09T13:30:00Z
+- Task-ID: ADMIN-UI-AURORA-TUNE
+- Was geändert wurde
+  - Login-Overlay milchiger gestaltet durch semi-transparente Hintergrundmischung + Blur auf `.auth-shell`.
+- Einbauort
+  - `admin_frontend/admin-ui/src/styles/utilities.css`

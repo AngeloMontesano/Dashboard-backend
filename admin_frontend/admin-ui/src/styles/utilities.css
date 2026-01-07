@@ -426,7 +426,9 @@
   display: grid;
   place-items: center;
   padding: var(--space-12);
-  background: var(--bg);
+  position: relative;
+  background: color-mix(in srgb, var(--bg) 82%, transparent);
+  backdrop-filter: blur(18px);
 }
 
 .auth-card{

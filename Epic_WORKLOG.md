@@ -92,4 +92,12 @@
 - EPIC_I I-04 Admin-UI Formulare für globale Kontakte konkretisiert (Felder, Validierung, Save-Verhalten).
 - EPIC_C C-04 Mehrfachauswahl (Chips, Limits, States) beschrieben.
 - EPIC_E E-04 Validierungsregeln für Bestell-Dialog ergänzt.
-- Ziel: weitere Next-Tasks parallelisiert dokumentiert; keine Task-IDs geändert.
+- EPIC_C C-05 Zeitraum-Presets (Presets/Custom/Limit) dokumentiert.
+- EPIC_E E-05 Fehlerdarstellung ohne rote Ränder definiert.
+- EPIC_B B-02 Schema-Sync in `docs/openapi/openapi.json` ergänzt (Global Categories/Types/Industries).
+- Ziel: Phase 1 abgeschlossen; Next-Tasks dokumentiert, keine Task-IDs geändert.
+- EPIC_B B-03 Alembic-Entwurf: globale Typen-Tabelle + Item-Relation ergänzt (Migration + Model).
+- EPIC_B B-04 Admin-UI: Navigationspunkt „Globale Kataloge“ mit Übersichts-View ergänzt.
+- EPIC_B B-05 Admin-UI: Navigationspunkt für bestehende „Globale Typen“-View ergänzt (UI-only).
+- EPIC_B B-05 Admin-UI: Global-Types-State im Masterdata-Store ergänzt (UI-only).
+- EPIC_B B-05 Backend/Frontend: Admin-API für globale Typen ergänzt und View angebunden.

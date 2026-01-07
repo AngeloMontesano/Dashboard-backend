@@ -48,6 +48,11 @@
 | customer_frontend/customer-ui/src/styles/layout.css:382-387 ↔ customer_frontend/customer-ui/src/styles/layout.css:548-548 | TableWrap vs Table-Wrapper | Customer | `.tableWrap` und `.table-wrapper` duplizieren Border/Radius/Background in derselben Datei (Compatibility-Layer) |
 | admin_frontend/admin-ui/src/styles/utilities.css:170-231 ↔ customer_frontend/customer-ui/src/styles/utilities.css:170-216 | Detail-Card Utilities | beide | Detail-Card/Box/Grid definieren gleiche Struktur, aber Radius/Surface/Spacing/Label-Tokens weichen ab |
 | customer_frontend/customer-ui/src/views/ArtikelverwaltungView.vue:1155-1167 ↔ customer_frontend/customer-ui/src/styles/utilities.css:180-186 | Detail-Card Header Overrides | Customer | Scoped Header/Actions überschreiben Utility-Header (align-items/gap/margin), semantisch gleich |
+| admin_frontend/admin-ui/src/styles/utilities.css:252-260 ↔ customer_frontend/customer-ui/src/styles/layout.css:518-519 | Form-Grid/Field (Compatibility Layer) | Customer | Compatibility-Form-Grid/Field dupliziert Admin-Utility (Grid/Gaps identisch), nur Label-Spacing minimal abweichend |
+| admin_frontend/admin-ui/src/styles/utilities.css:258-260 ↔ customer_frontend/customer-ui/src/styles/layout.css:520-520 | Field Label Styling | Customer | `.field label` Wiederholung von Admin-Utility-Label-Stil (Font-Weight/Color/Size) im Compatibility-Layer |
+| admin_frontend/admin-ui/src/styles/layout.css:331-355 ↔ customer_frontend/customer-ui/src/styles/layout.css:333-357 | Primary/Ghost Button Base | beide | Button-Grundstil (Radius/Padding/Weight/Disabled) identisch; Shadow/Surface-Tokens leicht abweichend |
+| admin_frontend/admin-ui/src/styles/layout.css:326-329 ↔ customer_frontend/customer-ui/src/styles/layout.css:328-331 | Status Label | beide | `.statusLabel` identisch in Font/Weight, doppelte Pflege ohne Abweichung |
+| admin_frontend/admin-ui/src/styles/layout.css:323-324 ↔ customer_frontend/customer-ui/src/styles/layout.css:325-326 | Status Dot Colors | beide | `.statusDot.ok/.bad` identisch (success/danger Tokens), reine Dublette |
 
 Notizen:
 - Alle Fundstellen stammen aus Schritt 1 (Inventarisierung). Noch keine Deklaration wurde verändert.

@@ -6,7 +6,7 @@ services:
     ports:
       - "5432:5432"
     networks:
-      ${NET_NAME}:
+      docker:
         ipv4_address: ${DB_IP}
 
   api:
@@ -35,7 +35,7 @@ services:
     depends_on:
       - api
     networks:
-      ${NET_NAME}:
+      docker:
         ipv4_address: ${ADMIN_UI_IP}
 
   customer_ui:
@@ -45,7 +45,7 @@ services:
     depends_on:
       - api
     networks:
-      ${NET_NAME}:
+      docker:
         ipv4_address: ${CUSTOMER_UI_IP}
 
 networks:

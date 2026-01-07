@@ -29,6 +29,36 @@ Frontend zeigt für unbekannte/inaktive Subdomains eine klare Seite statt JSON. 
 - Keine rohen Statuscodes im sichtbaren Text; technische Details einklappbar.
 - CTA-Pattern: Primär "Zurück zur Startseite" oder "Support kontaktieren", Sekundär "Erneut versuchen".
 
+### A-05 Tenant-Status-View – Copy & Layout (Entwurf)
+**Layout-Bausteine**
+- Icon/Illustration (neutral, nicht alarmierend).
+- Titel + Kurztext (max. 2 Sätze).
+- Aktionen (Primary/Secondary).
+- Support-Block (E-Mail/Telefon/Link).
+- Technische Details (optional einklappbar: `host`, `slug`, `status`, `reason`).
+
+**States & Texte**
+- **Tenant not found**
+  - Titel: „Mandant nicht gefunden“
+  - Text: „Für diese Adresse ist kein Mandant hinterlegt. Prüfe die URL oder kontaktiere den Support.“
+  - Primary: „Zur Startseite“ → Root ohne Subdomain
+  - Secondary: „Support kontaktieren“
+- **Tenant inactive**
+  - Titel: „Mandant inaktiv“
+  - Text: „Dieser Mandant ist derzeit deaktiviert. Bitte wende dich an den Support.“
+  - Primary: „Support kontaktieren“
+  - Secondary: „Erneut versuchen“
+- **Service unavailable**
+  - Titel: „Service nicht verfügbar“
+  - Text: „Der Dienst ist gerade nicht erreichbar. Bitte versuche es in wenigen Minuten erneut.“
+  - Primary: „Erneut versuchen“
+  - Secondary: „Status prüfen“ (optional, falls Statusseite existiert)
+- **Unknown path (404)**
+  - Titel: „Seite nicht gefunden“
+  - Text: „Diese Seite gibt es nicht. Wechsle zur Startseite oder suche im Menü.“
+  - Primary: „Zur Startseite“
+  - Secondary: „Support kontaktieren“
+
 ## 7) API/Backend Annahmen
 - Neuer öffentlicher Endpoint `GET /api/public/tenant-status?slug=` liefert `{status: ok|not_found|inactive|unavailable, host, slug}`.
 - Bestehende Tenant-Resolve-Logik bleibt; Status-Endpoint nutzt dieselbe Prüfung ohne Login.

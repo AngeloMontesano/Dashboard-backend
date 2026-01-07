@@ -90,3 +90,46 @@
 - EPIC_A QA-Checkliste mit Verweis auf die Proxy-Header-Matrix (TENANT_STATUS.md) ergänzt, damit A-10/A-11 dieselben Szenarien nutzen.
 - Keine Task-Änderungen; Ziel bleibt A-01 Review abschließen, danach QA/Proxy-Checks.
 - Offene Punkte unverändert: A-01 Abnahme, QA-Checkliste (A-10), Proxy-Testplan (A-11).
+
+## 2024-06-27
+- Roadmap-Index ergänzt: Spezifikations-Link A-01 weist nun explizit auf die Proxy-Header-Matrix hin (Vorbereitung A-11).
+- Keine Task-Änderungen; offene Punkte bleiben A-01 Abnahme, danach QA/Proxy (A-10/A-11).
+
+## 2024-06-28
+- Globale-Katalog-Spezifikation präzisiert (Paging-Metadaten, Fehlermeldungen `industry_in_use/category_in_use/item_in_use/forbidden_system_record`, cURL-Beispiele, QA-Checkliste) in `docs/openapi/GLOBAL_CATALOG.md`.
+- Ziel: Review von B-02/B-03 beschleunigen und Referenzfehler klar benennen; keine Änderungen an Tasks.
+- Offene Punkte: B-01/B-02 Review, danach Alembic-Entwurf (B-03) und Admin-UI-Navigation (B-04) starten.
+
+## 2024-06-29
+- Roadmap-Index um GLOBAL_CATALOG-Spezifikation verlinkt; EPIC_B API-Annahmen und Akzeptanzkriterien mit Paging-/Fehlercode-Details ergänzt.
+- Ziel: Reviewer finden B-02/B-03 Referenzen zentral, keine Task-IDs geändert.
+- Offene Punkte: B-01/B-02 Review abschließen, Schemas in `docs/openapi/openapi.json` nachziehen, dann B-03/B-04 starten. Status-Codes/Paging-Limits jetzt dokumentiert.
+
+## 2024-06-30
+- GLOBAL_CATALOG-Spec ergänzt: Pflicht-Header `X-Admin-Key`, optional `X-Admin-Actor`; Response-Envelope ohne zusätzliches `data`-Wrapping, Listen mit `{total, limit, offset}`; Index/EPIC_B um Headerpflicht ergänzt.
+- Ziel: Konsistente Header-/Envelope-Annahme für B-02/B-03 Review festschreiben; keine Task-IDs geändert.
+- Offene Punkte: B-01/B-02 Review abschließen, Schemas in `docs/openapi/openapi.json` nachziehen, danach Alembic-Entwurf (B-03) starten.
+
+## 2024-07-01
+- EPIC_B Akzeptanzkriterium ergänzt: Admin-Global-Endpunkte erzwingen `X-Admin-Key` und liefern nackte Ressourcen/Listen ohne `data`-Wrapper; Index verweist jetzt explizit auf den Envelope-Hinweis.
+- Ziel: Reviewer sehen Header-/Envelope-Pflicht direkt im Epic; Tasks unverändert.
+- Offene Punkte: Schema-Sync in `docs/openapi/openapi.json`, danach B-03/B-04 starten.
+
+## 2024-07-02
+- Mehrere Next-Tasks parallel konkretisiert: F-04 Komponentenstruktur (Queue), G-05 Help-Button Konzept Customer, H-04 Monitoring-Light Compose-Snippet als Draft.
+- Ziel: „Next“ greifbarer machen, ohne Implementierung; Tasks bleiben unverändert.
+- Offene Punkte: Schema-Sync in `docs/openapi/openapi.json` (B-02), danach B-03/B-04; weitere Next-Tasks (A-05/A-10/C-03/D-02/E-03/F-04/G-05/H-04/I-04) fortführen.
+
+## 2024-07-03
+- Weitere Next-Tasks parallel konkretisiert: C-03 Live-Suche (Formate/States/A11y), D-02 Router-Prefill-Interface (Query vs. Store), E-03 Dialog-Komponente (Props/Emits/State).
+- Ziel: Umsetzungsvorlagen für Customer-UX ohne Coding liefern; Tasks unverändert.
+- Offene Punkte: B-02 Schema-Sync, danach B-03/B-04; restliche Next-Tasks fortführen (A-05/A-10/C-04/E-04/F-04/I-04).
+
+## 2026-01-07
+- A-05 Tenant-Status-View (Copy/Layout) in EPIC_A konkretisiert (States, CTAs, Support-Block, technische Details).
+- I-04 Admin-UI Formulare für globale Kontaktdaten in EPIC_I konkretisiert (Felder, Helpertexte, Validierung, Save-Verhalten).
+- C-04 Mehrfachauswahl im Reporting konkretisiert (Chips, Limits, States, Interaktion).
+- E-04 Validierungsregeln für Bestell-Dialog präzisiert (Pflichtfelder, Limits, Hinweise).
+- C-05 Zeitraum-Presets im Reporting ergänzt (Presets, Custom Range, Limits).
+- E-05 Fehlerdarstellung ohne rote Ränder konkretisiert (Hint/Error-Regeln).
+- Offene Punkte: B-02 Schema-Sync in `docs/openapi/openapi.json`, danach B-03/B-04; restliche Next-Tasks fortführen (A-10, A-05/I-04 Review).

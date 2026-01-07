@@ -1,8 +1,6 @@
 services:
   db:
     image: postgres:16
-    env_file:
-      - ../.env
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
@@ -18,8 +16,6 @@ services:
   api:
     build: .
     working_dir: /app
-    env_file:
-      - ../.env
     environment:
       PYTHONPATH: /app
       DATABASE_URL: ${DATABASE_URL}

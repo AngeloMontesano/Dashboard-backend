@@ -134,4 +134,6 @@
 - E-05 Fehlerdarstellung ohne rote Ränder konkretisiert (Hint/Error-Regeln).
 - B-02 Schema-Sync in `docs/openapi/openapi.json` ergänzt (Admin Global Categories/Types/Industries + Schemas).
 - Phase 1 abgeschlossen: Next-Aufgaben A-05/A-10/B-02/C-03/C-04/C-05/D-02/E-03/E-04/E-05/F-04/G-05/H-04/I-04 dokumentiert.
-- Offene Punkte: B-03/B-04 starten; restliche Next-Tasks fortführen (A-05/I-04 Review).
+- B-03 Alembic-Entwurf gestartet: globale Typen-Tabelle und Item-Relation ergänzt (Migration + Model).
+- B-04 Admin-UI Navigationspunkt „Globale Kataloge“ ergänzt (Übersichts-View).
+- Offene Punkte: restliche Next-Tasks fortführen (A-05/I-04 Review), B-03 Review der Migration.

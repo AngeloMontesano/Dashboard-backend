@@ -96,3 +96,5 @@
 - EPIC_E E-05 Fehlerdarstellung ohne rote Ränder definiert.
 - EPIC_B B-02 Schema-Sync in `docs/openapi/openapi.json` ergänzt (Global Categories/Types/Industries).
 - Ziel: Phase 1 abgeschlossen; Next-Tasks dokumentiert, keine Task-IDs geändert.
+- EPIC_B B-03 Alembic-Entwurf: globale Typen-Tabelle + Item-Relation ergänzt (Migration + Model).
+- EPIC_B B-04 Admin-UI: Navigationspunkt „Globale Kataloge“ mit Übersichts-View ergänzt.

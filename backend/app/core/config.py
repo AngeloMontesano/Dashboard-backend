@@ -1,12 +1,16 @@
 from __future__ import annotations
 
+import os
+from pathlib import Path
+
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
+    env_file_path = Path(os.getenv("ENV_FILE", ".env"))
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=str(env_file_path) if env_file_path.exists() else None,
         env_file_encoding="utf-8",
         extra="ignore",
     )
@@ -34,13 +38,6 @@ class Settings(BaseSettings):
     # Multi-Tenancy
     BASE_DOMAIN: str = Field(..., description="Base domain für Tenant Subdomains, z.B. test.myitnetwork.de")
     BASE_ADMIN_DOMAIN: str = Field(..., description="Base domain für Admin UI Subdomains")
-
-    SMTP_HOST: str | None = Field(default=None, description="SMTP Host für Test-E-Mails")
-    SMTP_PORT: int | None = Field(default=None, description="SMTP Port für Test-E-Mails")
-    SMTP_USER: str | None = Field(default=None, description="SMTP Benutzername")
-    SMTP_PASSWORD: str | None = Field(default=None, description="SMTP Passwort")
-    SMTP_FROM: str | None = Field(default=None, description="Absender für Test-E-Mails")
-    SMTP_USE_TLS: bool = Field(default=True, description="Ob StartTLS für SMTP verwendet werden soll")
 
 
 settings = Settings()

@@ -36,6 +36,7 @@
 
 ## Spezifikationen & Referenzen
 - Tenant-Status (A-01): [docs/openapi/TENANT_STATUS.md](../openapi/TENANT_STATUS.md) inkl. Proxy-Header-Matrix (A-11 Vorbereitung); Schema `PublicTenantStatus` in [docs/openapi/openapi.json](../openapi/openapi.json)
+- Globale Kataloge (B-02): [docs/openapi/GLOBAL_CATALOG.md](../openapi/GLOBAL_CATALOG.md) mit Paging-Defaults (`limit=50`, max 200), Fehlercodes (`industry_in_use/category_in_use/item_in_use/forbidden_system_record`), Status-Codes, Headerpflicht (`X-Admin-Key`), Response-Envelope ohne `data`-Wrapper und QA/Review-Checkliste; Schemas in [docs/openapi/openapi.json](../openapi/openapi.json) nachziehen
 - OpenAPI Quelle (lokal): [docs/openapi/openapi.json](../openapi/openapi.json)
 
 ## Backlog & Logs

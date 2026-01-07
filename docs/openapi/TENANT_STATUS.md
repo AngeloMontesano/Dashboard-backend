@@ -59,6 +59,17 @@ Früher Tenant-Check vor App-Bootstrap, damit unbekannte/inaktive Tenants eine g
 - Beispiele decken Proxy-Header, Slug-Override und Localhost-Query ab.
 - Reason-Codes sind konsistent mit QA-Szenarien (A-10/A-11) und OpenAPI-Schema.
 
+## Proxy-Header-Matrix (A-11 Vorbereitung)
+| Szenario | X-Forwarded-Host | X-Tenant-Slug | Query `slug` | Erwarteter Status/Reason |
+| --- | --- | --- | --- | --- |
+| 1) Host korrekt, kein Slug | `foo.example.com` | – | – | `ok`/`not_found` je nach Tenant; keine 404/500 |
+| 2) Host korrekt, Slug Header falsch | `foo.example.com` | `bar` | – | Slug = `bar` (Header gewinnt), Status gemäß `bar` |
+| 3) Host korrekt, Slug Query falsch | `foo.example.com` | – | `bar` | Slug = `bar` (Query gewinnt vs Host), Status gemäß `bar` |
+| 4) Host leer, Slug Header gesetzt | – | `bar` | – | Slug = `bar`, Status gemäß `bar` |
+| 5) Host leer, Slug Query gesetzt | – | – | `bar` | Slug = `bar`, Status gemäß `bar` |
+| 6) Host ohne Subdomain, kein Slug | `example.com` | – | – | `status=not_found`, `reason=missing_slug` |
+| 7) DB down | beliebig | beliebig | beliebig | `status=unavailable`, `reason=OperationalError` |
+
 ## Akzeptanznotizen
 - Kein JSON-Fehler im Browser sichtbar; Frontend routet bei `status != ok` auf `TenantStatusView`.
 - 404-Routen landen ebenfalls auf `TenantStatusView` (UI-only 404).

@@ -9,6 +9,7 @@
 - A-08: Status-Caching/Retry-Strategie
 - A-09: Telemetrie/Logging für Tenant-Fehler
 - A-10: QA-Checkliste (States/Mobile/Darkmode)
+- A-11: Proxy/404 Smoke-Test-Plan (Header-Kombinationen)
 
 ## EPIC B – Globale Kataloge & Branchen
 - B-01: Datenmodell-Entwurf globale Tabellen/Keys

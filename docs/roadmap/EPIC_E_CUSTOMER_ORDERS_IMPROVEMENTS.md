@@ -55,6 +55,21 @@ Bestellungen schneller erfassen: „Bestellwürdig“ vorausgefüllt, Dialog fü
   - Prefill „Bestellwürdig“ Badge sichtbar, setzt Filter `reorderOnly=true` und optional Checkbox im Dialog, die alle Artikel aus Bestellwürdig vorauswählt (Backend-Vorbereitung erforderlich).
 - Telemetrie (optional): Event „order_dialog_open“, „order_dialog_submit“, „order_dialog_cancel“ mit Zeilenzahl und Prefill-Flag, ohne PII.
 
+### Dialog-Komponente (E-03)
+- Komponentenname: `OrderMultiAddDialog`.
+- Props:
+  - `open: boolean`, `prefillReorderOnly: boolean`, `busy: boolean`.
+  - `initialRows?: OrderRow[]` (optional, default eine leere Zeile).
+- Emits:
+  - `submit(rows: OrderRow[])`, `close()`.
+- State:
+  - `rows: OrderRow[]`, `errors: Record<rowId, string[]>`, `hasInvalidRows: boolean`.
+- Unterkomponenten:
+  - `OrderRowItemSelect` (Prefix-Suche), `OrderRowQuantityInput`, `OrderRowNoteInput`.
+  - `OrderRowActions` (Add/Remove).
+- Submit-Regeln:
+  - Leere Zeilen werden ignoriert, aber UI zeigt Hinweis „Leere Zeilen entfernt“.
+  - Bei `busy=true` sind Add/Remove/Submit disabled.
 ## 9) Tasks (umsetzbar, klein)
 - **E-01** – Prefill-Logik definieren (Quelle: Dashboard/CTA oder Standard).  
   - Bereich: customer  

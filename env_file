@@ -1,0 +1,108 @@
+############################
+# Global
+############################
+TZ=Europe/Berlin
+
+
+############################
+# Network (Root docker-compose.yml)
+############################
+NET_NAME=docker
+DB_IP=192.168.99.60
+API_IP=192.168.99.61
+ADMIN_UI_IP=192.168.99.62
+CUSTOMER_UI_IP=192.168.99.63
+
+
+############################
+# Backend / API
+############################
+API_PORT=8000
+ENVIRONMENT=prod
+
+APP_VERSION=0.1.0
+GIT_COMMIT=manual
+BUILD_TIMESTAMP=unknown
+BUILD_BRANCH=unknown
+IMAGE_TAG=unknown
+
+ADMIN_API_KEY=change-me
+JWT_SECRET=please-set-a-long-random-secret
+JWT_ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRES_MIN=15
+REFRESH_TOKEN_EXPIRES_DAYS=30
+REFRESH_TOKEN_GRACE_MIN=5
+
+BASE_DOMAIN=example.com
+BASE_ADMIN_DOMAIN=admin.example.com
+
+
+############################
+# Database
+############################
+POSTGRES_DB=lager
+POSTGRES_USER=lager
+POSTGRES_PASSWORD=change-me
+
+DATABASE_URL=postgresql+asyncpg://lager:change-me@db:5432/lager
+
+POSTGRES_DB_TEST=lager_test
+DATABASE_URL_TEST=postgresql+asyncpg://lager:change-me@db_test:5432/lager_test
+
+
+############################
+# Database NAS Volume
+############################
+POSTGRES_DATA_DIR=/volume1/docker/lagersoftware_saas/postgres/data
+
+
+############################
+# Backend NAS Volumes (Prod)
+############################
+API_LOGS_DIR=/volume1/docker/lagersoftware_saas/backend/logs
+API_STORAGE_DIR=/volume1/docker/lagersoftware_saas/backend/storage
+
+
+############################
+# Backend Code Mount (nur Dev, sonst ungenutzt)
+############################
+BACKEND_APP_DIR=/volume1/docker/lagersoftware_saas/backend/app
+
+
+############################
+# Admin Frontend NAS
+############################
+ADMIN_UI_NODE_CACHE=/volume1/docker/lagersoftware_saas/admin-ui/node-cache
+ADMIN_UI_LOGS=/volume1/docker/lagersoftware_saas/admin-ui/logs
+
+# Nur Dev
+ADMIN_UI_APP_DIR=/volume1/docker/lagersoftware_saas/admin-ui/app
+
+
+############################
+# Customer Frontend NAS
+############################
+CUSTOMER_UI_NODE_CACHE=/volume1/docker/lagersoftware_saas/customer-ui/node-cache
+CUSTOMER_UI_LOGS=/volume1/docker/lagersoftware_saas/customer-ui/logs
+
+# Nur Dev
+CUSTOMER_UI_APP_DIR=/volume1/docker/lagersoftware_saas/customer-ui/app
+
+
+############################
+# Frontend (Vite Build-Time)
+############################
+VITE_BASE_DOMAIN=example.com
+VITE_TENANT_SLUG=kunde1
+VITE_GRAFANA_URL=http://localhost:3000
+VITE_BUILD_INFO=1.0.0
+
+
+############################
+# Initial Seed Data
+############################
+SEED_TENANT_SLUG=kunde1
+SEED_TENANT_NAME=Kunde 1
+SEED_ADMIN_EMAIL=admin@example.com
+SEED_ADMIN_PASSWORD=change-me
+SEED_ADMIN_ROLE=owner

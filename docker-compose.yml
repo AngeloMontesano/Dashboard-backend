@@ -3,17 +3,16 @@ services:
     extends:
       file: ./backend/docker-compose.yml
       service: db
-    #env_file:
-      #- .env
     ports:
       - "5432:5432"
+    networks:
+      docker:
+        ipv4_address: 192.168.99.60
 
   api:
     extends:
       file: ./backend/docker-compose.yml
       service: api
-    #env_file:
-      #- .env
     environment:
       PYTHONPATH: /app
     ports:
@@ -24,25 +23,33 @@ services:
     dns:
       - 1.1.1.1
       - 8.8.8.8
-    
+    networks:
+      docker:
+        ipv4_address: 192.168.99.61
 
   admin_ui:
     build: ./admin_frontend/admin-ui
-    #env_file:
-      #- .env
     ports:
       - "5173:5173"
     depends_on:
       - api
+    networks:
+      docker:
+        ipv4_address: 192.168.99.62
 
   customer_ui:
     build: ./customer_frontend/customer-ui
-    #env_file:
-      #- .env
     ports:
-      - "6173:6173"
+      - "6173:5173"
     depends_on:
       - api
+    networks:
+      docker:
+        ipv4_address: 192.168.99.63
 
 volumes:
   pgdata:
+
+networks:
+  docker:
+    external: true

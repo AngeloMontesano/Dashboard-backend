@@ -32,6 +32,7 @@
   /* Border & Shadow */
   --border: rgba(15, 23, 42, 0.10);
   --shadow-sm: 0 8px 18px rgba(2, 6, 23, 0.10);
+  --shadow-md: 0 10px 24px rgba(2, 6, 23, 0.12);
   --shadow-lg: 0 10px 30px rgba(2, 6, 23, 0.08);
 
   /* Radius */
@@ -41,13 +42,22 @@
 
   /* Spacing */
   --space-2: 4px;
+  --space-3: 6px;
   --space-4: 8px;
   --space-6: 12px;
   --space-8: 16px;
+  --space-10: 20px;
   --space-12: 24px;
   --space-16: 32px;
   --space-24: 48px;
   --space-32: 64px;
+
+  /* Inputs */
+  --input-surface: var(--surface);
+  --input-border: var(--border);
+  --input-focus: rgba(59, 91, 219, 0.55);
+  --input-placeholder: var(--placeholder);
+  --input-text: var(--text-strong);
 
   /* Focus */
   --focus-ring: rgba(59, 91, 219, 0.12);
@@ -78,6 +88,8 @@
   --tag-neutral-bg: color-mix(in srgb, var(--neutral) 14%, transparent);
   --tag-neutral-border: color-mix(in srgb, var(--neutral) 34%, transparent);
   --tag-neutral-text: var(--text-strong);
+  --ok: var(--success);
+  --bad: var(--danger);
   --radius: var(--radius-md);
   --radius2: var(--radius-sm);
   --table-head-text: #334155;
@@ -108,6 +120,7 @@
 
   --border: rgba(148, 163, 184, 0.30);
   --shadow-sm: 0 10px 26px rgba(0, 0, 0, 0.38);
+  --shadow-md: 0 12px 30px rgba(0, 0, 0, 0.42);
   --shadow-lg: 0 16px 44px rgba(0, 0, 0, 0.38);
 
   --tag-ok-bg: rgba(34, 197, 94, 0.24);
@@ -122,6 +135,12 @@
   --tag-neutral-bg: rgba(148, 163, 184, 0.28);
   --tag-neutral-border: rgba(148, 163, 184, 0.52);
   --tag-neutral-text: #e8edf7;
+
+  --input-surface: var(--surface);
+  --input-border: var(--border);
+  --input-focus: rgba(92, 124, 255, 0.55);
+  --input-placeholder: var(--placeholder);
+  --input-text: var(--text-strong);
 
   --table-head-text: #e2e8f0;
   --table-row-hover: rgba(255, 255, 255, 0.06);
@@ -150,6 +169,7 @@
 
   --border: rgba(148, 163, 184, 0.22);
   --shadow-sm: 0 10px 26px rgba(3, 7, 18, 0.40);
+  --shadow-md: 0 12px 30px rgba(3, 7, 18, 0.50);
   --shadow-lg: 0 14px 36px rgba(3, 7, 18, 0.55);
 
   --tag-ok-bg: rgba(34, 197, 94, 0.22);
@@ -164,6 +184,12 @@
   --tag-neutral-bg: rgba(148, 163, 184, 0.28);
   --tag-neutral-border: rgba(148, 163, 184, 0.52);
   --tag-neutral-text: #e0f2fe;
+
+  --input-surface: var(--surface);
+  --input-border: var(--border);
+  --input-focus: rgba(56, 189, 248, 0.55);
+  --input-placeholder: var(--placeholder);
+  --input-text: var(--text-strong);
 
   --table-head-text: #e0f2fe;
   --table-row-hover: rgba(255, 255, 255, 0.07);

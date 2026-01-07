@@ -33,7 +33,7 @@
         @selectUser="selectById"
       />
 
-      <div class="filter-card">
+      <div class="filter-card two-column">
         <div class="stack">
           <label class="field-label" for="user-search">Suche E-Mail</label>
           <input

@@ -17,7 +17,7 @@
         </div>
       </div>
 
-      <div class="filter-card">
+      <div class="filter-card two-column">
         <div class="stack">
           <label class="field-label" for="global-type-search">Suche</label>
           <input

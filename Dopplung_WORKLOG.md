@@ -40,6 +40,8 @@
 | admin_frontend/admin-ui/src/styles/utilities.css:240-244 ↔ customer_frontend/customer-ui/src/styles/layout.css:515-516 | Card-Grid Utility | beide | `card-grid`/`cards-grid` nahezu gleiches Grid/Minmax, abweichendes Gap (space-6 vs space-12) |
 | admin_frontend/admin-ui/src/styles/utilities.css:252-262 ↔ customer_frontend/customer-ui/src/views/EinstellungenView.vue:200-265 | Form-Grid/Field Utility | beide | Customer view nutzt Utility-Klassen (`form-grid`, `.align-self-end`) inline; kein Abweichungswert, doppelte Pflege durch scoped Kontext |
 | admin_frontend/admin-ui/src/styles/layout.css:390-407 ↔ customer_frontend/customer-ui/src/styles/layout.css:382-400 | TableWrap/Table Styles | beide | TableWrap/Table haben gleiche Struktur/Padding; Radius/Background/THead-Colors leicht abweichend |
+| admin_frontend/admin-ui/src/styles/layout.css:373-387 ↔ customer_frontend/customer-ui/src/styles/layout.css:366-379 | Tag Styles | beide | `.tag`/`.tag.ok/.bad/.warn/.neutral` nahezu identisch; Customer nutzt Token-mix, Admin var(--tag-*) Aliase |
+| admin_frontend/admin-ui/src/styles/layout.css:367-371 ↔ customer_frontend/customer-ui/src/styles/layout.css:360-363 | Button Small Variants | beide | `.btnPrimary.small`/`.btnGhost.small` identisch in Padding/Font; doppelte Pflege ohne Abweichung |
 
 Notizen:
 - Alle Fundstellen stammen aus Schritt 1 (Inventarisierung). Noch keine Deklaration wurde verändert.

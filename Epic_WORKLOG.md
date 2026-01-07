@@ -45,3 +45,58 @@
 ## 2024-06-23
 - TENANT_STATUS-Spec ergänzt (Status immer 200, Review-Checkliste, Header-Priorität). Keine Task-ID-Änderungen.
 - Offene Punkte: A-01 Review abschließen; danach QA/Proxy-Aufgaben (A-10/A-11) angehen.
+
+## 2024-06-24
+- EPIC_A Akzeptanzkriterium ergänzt: Tenant-Status-API liefert in allen Pfaden HTTP 200, Fehler nur als `status/reason`.
+- Keine neuen Tasks; Fokus bleibt auf A-01 Review, anschließend QA/Proxy (A-10/A-11).
+
+## 2024-06-25
+- TENANT_STATUS-Spec um Proxy-Header-Matrix ergänzt (Vorbereitung A-11, Host/Slug/DB-down).
+- Keine Task-Änderungen; nächste Schritte bleiben A-01 Review, danach QA/Proxy-Checks (A-10/A-11).
+
+## 2024-06-26
+- EPIC_A QA-Checkliste verweist jetzt auf Proxy-Header-Matrix in TENANT_STATUS.md, damit A-10/A-11 konsistent prüfen.
+- Tasks unverändert; Fokus: A-01 Review, dann QA/Proxy-Checks.
+
+## 2024-06-27
+- Roadmap-Index-Referenz für A-01 erwähnt jetzt die Proxy-Header-Matrix (A-11 Vorbereitung) für konsistente QA.
+- Keine Task-Änderungen; nächste Schritte unverändert (A-01 Review, dann A-10/A-11).
+
+## 2024-06-28
+- EPIC_B Spezifikation `docs/openapi/GLOBAL_CATALOG.md` erweitert: Paging-Metadaten in Listen, zusätzliche Fehlercodes (`industry_in_use/category_in_use/item_in_use/forbidden_system_record`), cURL-Beispiele und QA-Checkliste.
+- Ziel: B-02 Review und anschließender Alembic-Entwurf (B-03) beschleunigen; keine neuen Tasks oder ID-Anpassungen.
+
+## 2024-06-29
+- Roadmap-Index verlinkt GLOBAL_CATALOG-Spezifikation; EPIC_B ergänzt um Paging-/Fehlercode-Annahmen und Akzeptanzkriterium.
+- Ziel: B-02/B-03 Reviewer haben zentrale Referenzen; keine Task-IDs geändert.
+- Status-Codes und Paging-Limits in GLOBAL_CATALOG.md dokumentiert; offene Punkte: B-01/B-02 Review, Schemas in openapi.json nachziehen, danach B-03/B-04.
+
+## 2024-06-30
+- GLOBAL_CATALOG.md ergänzt um Headerpflicht (`X-Admin-Key`, optional `X-Admin-Actor`) und Response-Envelope-Hinweis (kein zusätzliches `data`, Listen mit `{total, limit, offset}`); EPIC_B/Index entsprechend angepasst.
+- Ziel: Header-/Envelope-Kontrakt für B-02/B-03 festziehen; Tasks unverändert, offene Punkte bleiben Schema-Sync in openapi.json und Start B-03/B-04.
+
+## 2024-07-01
+- EPIC_B Akzeptanzkriterium präzisiert (Headerpflicht, nackte Ressourcen ohne `data`-Wrapper); Roadmap-Index verweist auf den Envelope-Hinweis.
+- Ziel: Reviewer können Header-/Envelope-Pflicht direkt im Epic nachvollziehen; Tasks bleiben gleich, offene Punkte: Schema-Sync in openapi.json, danach B-03/B-04.
+
+## 2024-07-02
+- EPIC_F um Komponentenstruktur (F-04) ergänzt; EPIC_G Help-Button Konzept Customer (G-05) konkretisiert; EPIC_H Deploy-Snippet ohne Grafana (H-04) ergänzt.
+- Ziel: mehrere Next-Tasks parallel dokumentiert, ohne Implementierung; Tasks unverändert.
+
+## 2024-07-03
+- EPIC_C Live-Suche (C-03) um Datenformate/States/A11y ergänzt; EPIC_D Router-Prefill-Interface (D-02) beschrieben; EPIC_E Dialog-Komponente (E-03) skizziert.
+- Ziel: mehrere Next-Tasks parallel konkretisiert; keine Task-IDs geändert.
+
+## 2026-01-07
+- EPIC_A A-05 Tenant-Status-View erweitert: Layout-Bausteine, States, CTAs, Support-Block.
+- EPIC_I I-04 Admin-UI Formulare für globale Kontakte konkretisiert (Felder, Validierung, Save-Verhalten).
+- EPIC_C C-04 Mehrfachauswahl (Chips, Limits, States) beschrieben.
+- EPIC_E E-04 Validierungsregeln für Bestell-Dialog ergänzt.
+- EPIC_C C-05 Zeitraum-Presets (Presets/Custom/Limit) dokumentiert.
+- EPIC_E E-05 Fehlerdarstellung ohne rote Ränder definiert.
+- EPIC_B B-02 Schema-Sync in `docs/openapi/openapi.json` ergänzt (Global Categories/Types/Industries).
+- Ziel: Phase 1 abgeschlossen; Next-Tasks dokumentiert, keine Task-IDs geändert.
+- EPIC_B B-03 Alembic-Entwurf: globale Typen-Tabelle + Item-Relation ergänzt (Migration + Model).
+- EPIC_B B-04 Admin-UI: Navigationspunkt „Globale Kataloge“ mit Übersichts-View ergänzt.
+- EPIC_B B-05 Admin-UI: Navigationspunkt für bestehende „Globale Typen“-View ergänzt (UI-only).
+- EPIC_B B-05 Admin-UI: Global-Types-State im Masterdata-Store ergänzt (UI-only).

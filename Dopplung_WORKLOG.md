@@ -44,6 +44,8 @@
 | admin_frontend/admin-ui/src/styles/layout.css:367-371 ↔ customer_frontend/customer-ui/src/styles/layout.css:360-363 | Button Small Variants | beide | `.btnPrimary.small`/`.btnGhost.small` identisch in Padding/Font; doppelte Pflege ohne Abweichung |
 | admin_frontend/admin-ui/src/styles/layout.css:416-433 ↔ customer_frontend/customer-ui/src/styles/layout.css:408-425 | Table Helper Styles | beide | Table Hover/Right/MutedPad/RowActive nahezu gleich; Customer nutzt direkte rgba/`--text-muted`, Admin Tokens (`--table-row-*`, `--muted`) |
 | admin_frontend/admin-ui/src/styles/layout.css:357-365 ↔ customer_frontend/customer-ui/src/styles/utilities.css:306-310 | Button Ghost Danger | beide | Danger-Button nutzt unterschiedliche Token (Admin `--tag-bad-*`, Customer `--danger`/`--surface-2`), aber gleicher Zweck/Struktur |
+| admin_frontend/admin-ui/src/styles/utilities.css:252-255 ↔ customer_frontend/customer-ui/src/styles/utilities.css:319-323 | Form-Grid Utility | beide | `form-grid` Grid/Minmax sehr ähnlich, Customer nutzt kleinere min-width + größeres Gap (space-8 vs space-6) |
+| customer_frontend/customer-ui/src/styles/layout.css:382-387 ↔ customer_frontend/customer-ui/src/styles/layout.css:548-548 | TableWrap vs Table-Wrapper | Customer | `.tableWrap` und `.table-wrapper` duplizieren Border/Radius/Background in derselben Datei (Compatibility-Layer) |
 
 Notizen:
 - Alle Fundstellen stammen aus Schritt 1 (Inventarisierung). Noch keine Deklaration wurde verändert.

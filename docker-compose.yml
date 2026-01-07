@@ -29,7 +29,9 @@ services:
         ipv4_address: ${API_IP}
 
   admin_ui:
-    build: ./admin_frontend/admin-ui
+    build:
+      context: ./admin_frontend/admin-ui
+      dockerfile: Dockerfile
     ports:
       - "5173:5173"
     depends_on:
@@ -39,7 +41,9 @@ services:
         ipv4_address: ${ADMIN_UI_IP}
 
   customer_ui:
-    build: ./customer_frontend/customer-ui
+    build:
+      context: ./customer_frontend/customer-ui
+      dockerfile: Dockerfile
     ports:
       - "5173:5173"
     depends_on:

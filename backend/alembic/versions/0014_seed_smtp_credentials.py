@@ -43,7 +43,7 @@ def upgrade() -> None:
                 UPDATE system_email_settings
                 SET host = :host,
                     port = :port,
-                    "user" = :user,
+                    user = :user,
                     password = :password,
                     from_email = :from_email,
                     use_tls = :use_tls,
@@ -59,7 +59,7 @@ def upgrade() -> None:
             sa.text(
                 """
                 INSERT INTO system_email_settings
-                    (id, host, port, "user", password, from_email, use_tls, created_at, updated_at)
+                    (id, host, port, user, password, from_email, use_tls, created_at, updated_at)
                 VALUES
                     (:id, :host, :port, :user, :password, :from_email, :use_tls, now(), now())
                 """
@@ -76,13 +76,13 @@ def downgrade() -> None:
             UPDATE system_email_settings
             SET host = NULL,
                 port = NULL,
-                "user" = NULL,
+                user = NULL,
                 password = NULL,
                 from_email = NULL,
                 use_tls = true
             WHERE host = :host
               AND port = :port
-              AND "user" = :user
+              AND user = :user
               AND from_email = :from_email
             """
         ),

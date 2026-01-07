@@ -438,8 +438,6 @@ const busy = reactive({
   assignTenants: false,
 });
 
-type IndustryAssignResponse = components["schemas"]["IndustryAssignResponse"];
-
 const assign = reactive<{
   initialQuantity: number;
   preserveExisting: boolean;

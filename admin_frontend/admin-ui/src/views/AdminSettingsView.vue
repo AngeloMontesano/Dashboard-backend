@@ -184,7 +184,7 @@
             <div class="kv">
               <div class="k">Aktionen</div>
               <div class="v actionsRow">
-                <button class="btn" :disabled="busy.smtpSave || busy.smtpLoad" @click="saveEmailSettings">
+                <button class="btnPrimary" :disabled="busy.smtpSave || busy.smtpLoad" @click="saveEmailSettings">
                   {{ busy.smtpSave ? "Speichert..." : "Speichern" }}
                 </button>
                 <div class="row gap8 wrap">
@@ -388,6 +388,7 @@ type SmtpFormState = {
 const emailForm = ref<SmtpFormState>({
   host: "",
   port: 587,
+  user: "",
   from_email: "",
   has_password: false,
   use_tls: true,
@@ -515,88 +516,3 @@ async function sendTestEmail() {
   }
 }
 </script>
-
-<style scoped>
-.stack{
-  display: grid;
-  gap: 12px;
-}
-.collapsible{
-  border: 1px solid var(--border);
-  border-radius: var(--radius2);
-  background: var(--surface2);
-  padding: 12px;
-  box-shadow: var(--shadow);
-}
-.collapsibleHeader{
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 8px;
-}
-.sectionHint{
-  color: var(--muted);
-  font-size: 12px;
-}
-.fieldGrid{
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 10px;
-}
-.field .k{
-  margin-bottom: 4px;
-}
-.themeSelector{
-  display: flex;
-  gap: 12px;
-}
-.themeOption{
-  display: inline-flex;
-  gap: 6px;
-  align-items: center;
-  padding: 6px 10px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius2);
-  background: var(--surface);
-  cursor: pointer;
-}
-.themeOption input{
-  margin: 0;
-}
-
-.settingsSection{
-  display: grid;
-  gap: 12px;
-}
-
-.sectionHeader{
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.checkboxRow{
-  display: inline-flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.alert{
-  border: 1px solid var(--border);
-  background: var(--surface2);
-  border-radius: var(--radius2);
-  padding: 10px 12px;
-  margin-bottom: 12px;
-}
-.alert.warn{
-  border-color: var(--orange-500, #f59e0b);
-}
-.alertTitle{
-  font-weight: 600;
-}
-.alertText{
-  color: var(--muted);
-  font-size: 13px;
-}
-</style>

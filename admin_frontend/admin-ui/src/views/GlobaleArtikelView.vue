@@ -491,16 +491,3 @@ onMounted(() => {
   }
 });
 </script>
-
-<style scoped>
-.modal__footer--with-delete {
-  display: flex;
-  gap: 12px;
-  justify-content: flex-end;
-  padding-top: 12px;
-}
-
-.modal__footer--with-delete .btnGhost.danger {
-  margin-right: auto;
-}
-</style>

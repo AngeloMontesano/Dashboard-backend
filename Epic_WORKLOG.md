@@ -82,3 +82,7 @@
 ## 2024-07-02
 - EPIC_F um Komponentenstruktur (F-04) ergänzt; EPIC_G Help-Button Konzept Customer (G-05) konkretisiert; EPIC_H Deploy-Snippet ohne Grafana (H-04) ergänzt.
 - Ziel: mehrere Next-Tasks parallel dokumentiert, ohne Implementierung; Tasks unverändert.
+
+## 2024-07-03
+- EPIC_C Live-Suche (C-03) um Datenformate/States/A11y ergänzt; EPIC_D Router-Prefill-Interface (D-02) beschrieben; EPIC_E Dialog-Komponente (E-03) skizziert.
+- Ziel: mehrere Next-Tasks parallel konkretisiert; keine Task-IDs geändert.

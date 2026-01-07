@@ -119,3 +119,8 @@
 - Mehrere Next-Tasks parallel konkretisiert: F-04 Komponentenstruktur (Queue), G-05 Help-Button Konzept Customer, H-04 Monitoring-Light Compose-Snippet als Draft.
 - Ziel: „Next“ greifbarer machen, ohne Implementierung; Tasks bleiben unverändert.
 - Offene Punkte: Schema-Sync in `docs/openapi/openapi.json` (B-02), danach B-03/B-04; weitere Next-Tasks (A-05/A-10/C-03/D-02/E-03/F-04/G-05/H-04/I-04) fortführen.
+
+## 2024-07-03
+- Weitere Next-Tasks parallel konkretisiert: C-03 Live-Suche (Formate/States/A11y), D-02 Router-Prefill-Interface (Query vs. Store), E-03 Dialog-Komponente (Props/Emits/State).
+- Ziel: Umsetzungsvorlagen für Customer-UX ohne Coding liefern; Tasks unverändert.
+- Offene Punkte: B-02 Schema-Sync, danach B-03/B-04; restliche Next-Tasks fortführen (A-05/A-10/C-04/E-04/F-04/I-04).

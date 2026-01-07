@@ -5,8 +5,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
 
-from app.core.config import settings
-
 
 DATA_DIR = Path(__file__).resolve().parents[2] / "data"
 DATA_DIR.mkdir(exist_ok=True)
@@ -83,19 +81,9 @@ def save_smtp_settings(payload: dict) -> SmtpConfig:
 
 def get_active_smtp_settings() -> Optional[SmtpConfig]:
     """
-    Liest zuerst gespeicherte SMTP Settings, fällt dann auf ENV zurück.
+    Liest gespeicherte SMTP Settings aus Datei.
     """
     stored = load_smtp_settings()
     if stored and stored.host and stored.port and stored.from_email:
         return stored
-
-    if settings.SMTP_HOST and settings.SMTP_PORT and settings.SMTP_FROM:
-        return SmtpConfig(
-            host=settings.SMTP_HOST,
-            port=settings.SMTP_PORT,
-            from_email=settings.SMTP_FROM,
-            user=settings.SMTP_USER,
-            password=settings.SMTP_PASSWORD,
-            use_tls=True,
-        )
     return None

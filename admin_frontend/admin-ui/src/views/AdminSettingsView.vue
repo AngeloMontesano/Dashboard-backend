@@ -388,6 +388,7 @@ type SmtpFormState = {
 const emailForm = ref<SmtpFormState>({
   host: "",
   port: 587,
+  user: "",
   from_email: "",
   has_password: false,
   use_tls: true,

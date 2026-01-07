@@ -61,6 +61,13 @@ class Item(Base):
         index=True,
     )
 
+    type_id: Mapped[uuid.UUID | None] = mapped_column(
+        GUID(),
+        ForeignKey("global_types.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
+
     quantity: Mapped[int] = mapped_column(
         Integer,
         nullable=False,
@@ -117,3 +124,4 @@ class Item(Base):
 
     # Beziehungen
     category = relationship("Category", lazy="selectin")
+    global_type = relationship("GlobalType", lazy="selectin")

@@ -1,7 +1,5 @@
   admin_ui:
     build: ./admin-ui
-    #env_file:
-      #- ../.env
     ports:
       - "5173:5173"
     depends_on:

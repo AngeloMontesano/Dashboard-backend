@@ -114,3 +114,8 @@
 - EPIC_B Akzeptanzkriterium ergänzt: Admin-Global-Endpunkte erzwingen `X-Admin-Key` und liefern nackte Ressourcen/Listen ohne `data`-Wrapper; Index verweist jetzt explizit auf den Envelope-Hinweis.
 - Ziel: Reviewer sehen Header-/Envelope-Pflicht direkt im Epic; Tasks unverändert.
 - Offene Punkte: Schema-Sync in `docs/openapi/openapi.json`, danach B-03/B-04 starten.
+
+## 2024-07-02
+- Mehrere Next-Tasks parallel konkretisiert: F-04 Komponentenstruktur (Queue), G-05 Help-Button Konzept Customer, H-04 Monitoring-Light Compose-Snippet als Draft.
+- Ziel: „Next“ greifbarer machen, ohne Implementierung; Tasks bleiben unverändert.
+- Offene Punkte: Schema-Sync in `docs/openapi/openapi.json` (B-02), danach B-03/B-04; weitere Next-Tasks (A-05/A-10/C-03/D-02/E-03/F-04/G-05/H-04/I-04) fortführen.

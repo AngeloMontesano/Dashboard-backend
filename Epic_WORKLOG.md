@@ -78,3 +78,7 @@
 ## 2024-07-01
 - EPIC_B Akzeptanzkriterium präzisiert (Headerpflicht, nackte Ressourcen ohne `data`-Wrapper); Roadmap-Index verweist auf den Envelope-Hinweis.
 - Ziel: Reviewer können Header-/Envelope-Pflicht direkt im Epic nachvollziehen; Tasks bleiben gleich, offene Punkte: Schema-Sync in openapi.json, danach B-03/B-04.
+
+## 2024-07-02
+- EPIC_F um Komponentenstruktur (F-04) ergänzt; EPIC_G Help-Button Konzept Customer (G-05) konkretisiert; EPIC_H Deploy-Snippet ohne Grafana (H-04) ergänzt.
+- Ziel: mehrere Next-Tasks parallel dokumentiert, ohne Implementierung; Tasks unverändert.

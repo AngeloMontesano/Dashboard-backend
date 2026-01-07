@@ -1,12 +1,17 @@
 from __future__ import annotations
 
+import os
+from pathlib import Path
+from typing import ClassVar
+
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
+    env_file_path: ClassVar[Path] = Path(os.getenv("ENV_FILE", ".env"))
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=str(env_file_path) if env_file_path.exists() else None,
         env_file_encoding="utf-8",
         extra="ignore",
     )

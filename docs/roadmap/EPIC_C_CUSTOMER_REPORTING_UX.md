@@ -57,8 +57,27 @@ Berichte & Analysen mit klarer, performanter UX, inkl. Live-Suche, Mehrfachauswa
 - Empty/Loading States:
   - Loading: „Suche läuft…“
   - Empty: „Keine Artikel gefunden“
-  - Error: „Suche derzeit nicht verfügbar“
+- Error: „Suche derzeit nicht verfügbar“
 
+### Mehrfachauswahl (C-04)
+- Ziel: Artikel und Kategorien als Mehrfachauswahl mit Chips, konsistente Interaktion für beide Filter.
+- Layout:
+  - Eingabefeld + Dropdown (Suchfeld) oben, Chips darunter (wrap).
+  - Chips zeigen `label`, optional `sku` als Prefix, `x` zum Entfernen.
+- Interaktion:
+  - Auswahl per Klick/Enter fügt Chip hinzu und leert Input.
+  - „Alle entfernen“ löscht Auswahl (mit Bestätigung bei >5 Chips).
+  - Keyboard: Backspace im leeren Input entfernt letzten Chip.
+- Limits:
+  - Max 25 Artikel, max 10 Kategorien (mit Hinweis „Limit erreicht“).
+  - Doppelte Auswahl wird verhindert; bereits gewählte Items im Dropdown disabled.
+- States:
+  - Loading: Dropdown zeigt Spinner + „Lade Vorschläge…“
+  - Empty: „Keine Treffer“, CTA „Filter zurücksetzen“ (optional).
+  - Error: „Filter derzeit nicht verfügbar“ (kein Toast-Spam).
+- Datenfluss:
+  - Article-Chips aus `ItemOption[]`, Kategorie-Chips aus `{id, name}`.
+  - Emittiert `update:selectedItems` und `update:selectedCategories`.
 ## 9) Tasks (umsetzbar, klein)
 - **C-01** – Filter-API/Parameter validieren und dokumentieren (Reporting/Items).  
   - Bereich: docs/backend  

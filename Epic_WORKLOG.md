@@ -90,4 +90,6 @@
 ## 2026-01-07
 - EPIC_A A-05 Tenant-Status-View erweitert: Layout-Bausteine, States, CTAs, Support-Block.
 - EPIC_I I-04 Admin-UI Formulare für globale Kontakte konkretisiert (Felder, Validierung, Save-Verhalten).
+- EPIC_C C-04 Mehrfachauswahl (Chips, Limits, States) beschrieben.
+- EPIC_E E-04 Validierungsregeln für Bestell-Dialog ergänzt.
 - Ziel: weitere Next-Tasks parallelisiert dokumentiert; keine Task-IDs geändert.

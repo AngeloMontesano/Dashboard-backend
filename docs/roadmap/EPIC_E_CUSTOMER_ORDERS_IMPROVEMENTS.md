@@ -70,6 +70,20 @@ Bestellungen schneller erfassen: „Bestellwürdig“ vorausgefüllt, Dialog fü
 - Submit-Regeln:
   - Leere Zeilen werden ignoriert, aber UI zeigt Hinweis „Leere Zeilen entfernt“.
   - Bei `busy=true` sind Add/Remove/Submit disabled.
+
+### Validierungsregeln (E-04)
+- Pflichtfelder je Zeile:
+  - Artikel (`itemId`) muss gesetzt sein.
+  - Menge (`quantity`) > 0, Integer, max 9999.
+- Optional:
+  - Notiz (`note`) max 200 Zeichen, kein HTML.
+- Submit-Regeln:
+  - Submit blockiert, wenn mindestens eine Zeile ungültig ist.
+  - Globaler Hinweis oberhalb der Tabelle: „Bitte unvollständige Zeilen korrigieren“.
+- Feldhinweise:
+  - Artikel fehlt → „Bitte Artikel auswählen“.
+  - Menge fehlt/ungültig → „Menge größer 0“.
+  - Notiz zu lang → „Max. 200 Zeichen“.
 ## 9) Tasks (umsetzbar, klein)
 - **E-01** – Prefill-Logik definieren (Quelle: Dashboard/CTA oder Standard).  
   - Bereich: customer  

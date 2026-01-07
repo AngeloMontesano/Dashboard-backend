@@ -128,4 +128,6 @@
 ## 2026-01-07
 - A-05 Tenant-Status-View (Copy/Layout) in EPIC_A konkretisiert (States, CTAs, Support-Block, technische Details).
 - I-04 Admin-UI Formulare für globale Kontaktdaten in EPIC_I konkretisiert (Felder, Helpertexte, Validierung, Save-Verhalten).
-- Offene Punkte: B-02 Schema-Sync in `docs/openapi/openapi.json`, danach B-03/B-04; restliche Next-Tasks fortführen (A-10/I-04 Review, A-05 Review).
+- C-04 Mehrfachauswahl im Reporting konkretisiert (Chips, Limits, States, Interaktion).
+- E-04 Validierungsregeln für Bestell-Dialog präzisiert (Pflichtfelder, Limits, Hinweise).
+- Offene Punkte: B-02 Schema-Sync in `docs/openapi/openapi.json`, danach B-03/B-04; restliche Next-Tasks fortführen (A-10, E-05, C-05, A-05/I-04 Review).

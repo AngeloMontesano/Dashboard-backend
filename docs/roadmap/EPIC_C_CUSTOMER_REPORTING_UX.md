@@ -47,6 +47,17 @@ Berichte & Analysen mit klarer, performanter UX, inkl. Live-Suche, Mehrfachauswa
 - Fehler: nutzt `classifyError`; bei Netzwerk/Server Fehler-Hinweis im Dropdown, kein Toast-Spam.
 - Caching: Memory-Cache für letzte 10 Queries (prefix-basiert), Treffer 60s halten, um wiederholte Eingaben zu beschleunigen.
 - Props/Events (Vue): `modelValue: ItemOption[]`, `placeholder`, `loading` (readonly), `@update:modelValue` (array), `@search` (internal, nicht public).
+- Datenformate:
+  - `ItemOption`: `{id: string, name: string, sku?: string}`.
+  - Response-Mapping: `{id, name, sku}` → `label = sku ? "${sku} – ${name}" : name`.
+  - Limit: UI zeigt max 10 Treffer, „Mehr anzeigen“ ist bewusst nicht Teil des Inputs.
+- Accessibility:
+  - Input `aria-autocomplete="list"`, Dropdown `role="listbox"`, Option `role="option"`.
+  - `aria-live="polite"` für „Keine Treffer“.
+- Empty/Loading States:
+  - Loading: „Suche läuft…“
+  - Empty: „Keine Artikel gefunden“
+  - Error: „Suche derzeit nicht verfügbar“
 
 ## 9) Tasks (umsetzbar, klein)
 - **C-01** – Filter-API/Parameter validieren und dokumentieren (Reporting/Items).  

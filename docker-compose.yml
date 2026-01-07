@@ -6,8 +6,8 @@ services:
     ports:
       - "5432:5432"
     networks:
-      docker:
-        ipv4_address: 192.168.99.60
+      ${NET_NAME}:
+        ipv4_address: ${DB_IP}
 
   api:
     extends:
@@ -15,6 +15,7 @@ services:
       service: api
     environment:
       PYTHONPATH: /app
+      TZ: ${TZ}
     ports:
       - "${API_PORT:-8000}:8000"
     depends_on:
@@ -24,8 +25,8 @@ services:
       - 1.1.1.1
       - 8.8.8.8
     networks:
-      docker:
-        ipv4_address: 192.168.99.61
+      ${NET_NAME}:
+        ipv4_address: ${API_IP}
 
   admin_ui:
     build: ./admin_frontend/admin-ui
@@ -34,21 +35,18 @@ services:
     depends_on:
       - api
     networks:
-      docker:
-        ipv4_address: 192.168.99.62
+      ${NET_NAME}:
+        ipv4_address: ${ADMIN_UI_IP}
 
   customer_ui:
     build: ./customer_frontend/customer-ui
     ports:
-      - "6173:5173"
+      - "5173:5173"
     depends_on:
       - api
     networks:
-      docker:
-        ipv4_address: 192.168.99.63
-
-volumes:
-  pgdata:
+      ${NET_NAME}:
+        ipv4_address: ${CUSTOMER_UI_IP}
 
 networks:
   docker:

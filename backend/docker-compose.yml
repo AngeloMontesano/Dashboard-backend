@@ -16,6 +16,10 @@ services:
   api:
     build: .
     working_dir: /app
+    volumes: 
+      - ${BACKEND_APP_DIR}:/app
+      - ${API_LOGS_DIR}:/app/logs
+      - ${API_STORAGE_DIR}:/app/storage
     environment:
       PYTHONPATH: /app
       DATABASE_URL: ${DATABASE_URL}
@@ -41,3 +45,8 @@ services:
 
 volumes:
   pgdata:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${POSTGRES_DATA_DIR}

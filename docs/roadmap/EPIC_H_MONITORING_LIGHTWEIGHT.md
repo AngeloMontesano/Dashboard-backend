@@ -32,6 +32,24 @@ Leichtgewichtiges DB/Service-Monitoring ohne Grafana: Statusseiten, Logs, Health
 - Statusobjekt: `{api: ok|degraded|down, db: ok|down, version, commit, timestamp}`.
 - Logquellen: Container-Logs (`docker logs`), evtl. Tail-Endpoint.
 
+### Deploy-Variante ohne Grafana (H-04)
+- Ziel: Statusseite + DB-Checks ohne zusätzliche Services wie Grafana.
+- Compose-Snippet (Beispiel, Ports anpassen):
+  ```yaml
+  services:
+    dashboard-backend:
+      ports:
+        - "8000:8000"
+    status-page:
+      image: caddy:alpine
+      ports:
+        - "8080:80"
+      volumes:
+        - ./docs/status:/usr/share/caddy:ro
+  ```
+- Status-Check: Static HTML ruft `/health` und `/health/db` via Fetch (internes Netz).
+- Security: nur intern exposen oder Basic-Auth am Reverse-Proxy.
+
 ## 9) Tasks (umsetzbar, klein)
 - **H-01** – Monitoring-Optionen evaluieren (caddy-status, static HTML, simple dashboard).  
   - Bereich: docs/devops  

@@ -15,4 +15,5 @@ class GlobalType(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(GUID(), primary_key=True, default=uuid.uuid4)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[str] = mapped_column(String(512), nullable=False, default="")
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)

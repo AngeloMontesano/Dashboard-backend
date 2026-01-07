@@ -16,6 +16,23 @@ export type IndustryAssignResponse = components["schemas"]["IndustryAssignRespon
 export type IndustryMappingImportResult = components["schemas"]["IndustryMappingImportResult"];
 export type IndustryOverlapCounts = components["schemas"]["IndustryOverlapCounts"];
 
+export type GlobalType = {
+  id: string;
+  name: string;
+  description?: string;
+  is_active: boolean;
+};
+export type GlobalTypeCreatePayload = {
+  name: string;
+  description?: string;
+  is_active?: boolean;
+};
+export type GlobalTypeUpdatePayload = {
+  name?: string;
+  description?: string;
+  is_active?: boolean;
+};
+
 type ItemsPage = components["schemas"]["ItemsPage"];
 type ItemsQuery = NonNullable<paths["/admin/inventory/items"]["get"]["parameters"]["query"]>;
 type ImportItemsResponse =
@@ -94,6 +111,31 @@ export async function exportGlobalUnits(adminKey: string, format: "csv" | "xlsx"
     responseType: "blob",
   });
   return res.data as Blob;
+}
+
+/* Typen */
+export async function fetchGlobalTypes(adminKey: string, actor?: string) {
+  const res = await api.get<GlobalType[]>("/admin/inventory/types", withAdmin(adminKey, actor));
+  return res.data;
+}
+
+export async function createGlobalType(adminKey: string, payload: GlobalTypeCreatePayload, actor?: string) {
+  const res = await api.post<GlobalType>("/admin/inventory/types", payload, withAdmin(adminKey, actor));
+  return res.data;
+}
+
+export async function updateGlobalType(
+  adminKey: string,
+  id: string,
+  payload: GlobalTypeUpdatePayload,
+  actor?: string
+) {
+  const res = await api.patch<GlobalType>(`/admin/inventory/types/${id}`, payload, withAdmin(adminKey, actor));
+  return res.data;
+}
+
+export async function deleteGlobalType(adminKey: string, id: string, actor?: string) {
+  await api.delete(`/admin/inventory/types/${id}`, withAdmin(adminKey, actor));
 }
 
 /* Artikel */

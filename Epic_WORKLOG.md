@@ -100,3 +100,4 @@
 - EPIC_B B-04 Admin-UI: Navigationspunkt „Globale Kataloge“ mit Übersichts-View ergänzt.
 - EPIC_B B-05 Admin-UI: Navigationspunkt für bestehende „Globale Typen“-View ergänzt (UI-only).
 - EPIC_B B-05 Admin-UI: Global-Types-State im Masterdata-Store ergänzt (UI-only).
+- EPIC_B B-05 Backend/Frontend: Admin-API für globale Typen ergänzt und View angebunden.

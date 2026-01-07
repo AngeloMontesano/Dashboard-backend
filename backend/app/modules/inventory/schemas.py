@@ -53,6 +53,7 @@ class ItemBase(BaseModel):
     unit: str = Field("pcs", max_length=32)
     is_active: bool = True
     category_id: Optional[str] = None
+    type_id: Optional[str] = None
     min_stock: int = 0
     max_stock: int = 0
     target_stock: int = 0
@@ -80,6 +81,7 @@ class ItemUpdate(BaseModel):
     unit: Optional[str] = Field(default=None, max_length=32)
     is_active: Optional[bool] = None
     category_id: Optional[str] = None
+    type_id: Optional[str] = None
     min_stock: Optional[int] = None
     max_stock: Optional[int] = None
     target_stock: Optional[int] = None
@@ -213,6 +215,26 @@ class ItemUnitOut(BaseModel):
     code: str
     label: str
     is_active: bool
+
+
+class GlobalTypeBase(BaseModel):
+    name: str = Field(..., max_length=255)
+    description: str = Field("", max_length=512)
+    is_active: bool = True
+
+
+class GlobalTypeCreate(GlobalTypeBase):
+    pass
+
+
+class GlobalTypeUpdate(BaseModel):
+    name: Optional[str] = Field(default=None, max_length=255)
+    description: Optional[str] = Field(default=None, max_length=512)
+    is_active: Optional[bool] = None
+
+
+class GlobalTypeOut(GlobalTypeBase):
+    id: str
 
 
 class OrderItemInput(BaseModel):

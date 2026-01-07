@@ -23,6 +23,7 @@ def upgrade() -> None:
         "global_types",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True, nullable=False),
         sa.Column("name", sa.String(length=255), nullable=False),
+        sa.Column("description", sa.String(length=512), nullable=False, server_default=""),
         sa.Column("is_active", sa.Boolean(), nullable=False, server_default=sa.true()),
     )
     op.create_unique_constraint("uq_global_types_name", "global_types", ["name"])

@@ -138,4 +138,5 @@
 - B-04 Admin-UI Navigationspunkt „Globale Kataloge“ ergänzt (Übersichts-View).
 - B-05 Admin-UI: Navigationspunkt für bestehende „Globale Typen“-View ergänzt (UI-only).
 - B-05 Admin-UI: Global-Types-State im Masterdata-Store ergänzt (UI-only Datenhaltung).
+- B-05 Backend/Frontend: Globale Typen an Admin-API angebunden (CRUD + View-Wiring).
 - Offene Punkte: restliche Next-Tasks fortführen (A-05/I-04 Review), B-03 Review der Migration.

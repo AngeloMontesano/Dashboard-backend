@@ -59,7 +59,7 @@ def upgrade() -> None:
             sa.text(
                 """
                 INSERT INTO system_email_settings
-                    (id, host, port, user, password, from_email, use_tls, created_at, updated_at)
+                    (id, host, port, 'user', password, from_email, use_tls, created_at, updated_at)
                 VALUES
                     (:id, :host, :port, :user, :password, :from_email, :use_tls, now(), now())
                 """

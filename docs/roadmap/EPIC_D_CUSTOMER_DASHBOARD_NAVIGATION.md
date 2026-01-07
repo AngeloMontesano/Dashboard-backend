@@ -46,6 +46,15 @@ KPI-Karten im Customer-Dashboard sind klickbar und führen zu den passenden Deta
 - Fehlerfälle:
   - Wenn Router-Navigation fehlschlägt, einmalige Toast/Hint („Navigation nicht möglich“), kein Spam.
 
+### Router-Interface für Prefill (D-02)
+- Variante A (Query):
+  - `?status=open` (Bestellungen), `?reorderOnly=true` (Bestellwürdig), `?date=today` (Lagerbewegungen).
+  - Parsing in Ziel-Views: `useRoute().query`, boolean cast für `reorderOnly`.
+  - Vorteil: URL teilbar, Back-Button funktioniert ohne Store.
+- Variante B (State/Store):
+  - `router.push({ name, state: { prefill } })` oder Store (`useOrdersStore().setPrefill`).
+  - Nur als Fallback, wenn Query zu lang wird; nicht primär.
+- Empfehlung: Variante A (Query) als Default; Fallback via Store bei Bedarf.
 ## 9) Tasks (umsetzbar, klein)
 - **D-01** – Ziel-Routen und Filterparameter festlegen.  
   - Bereich: docs/customer  

@@ -84,6 +84,17 @@ Bestellungen schneller erfassen: „Bestellwürdig“ vorausgefüllt, Dialog fü
   - Artikel fehlt → „Bitte Artikel auswählen“.
   - Menge fehlt/ungültig → „Menge größer 0“.
   - Notiz zu lang → „Max. 200 Zeichen“.
+
+### Fehlerdarstellung ohne rote Ränder (E-05)
+- Stil:
+  - Keine roten Rahmen auf leeren Feldern.
+  - Dezente Outline erst nach Touch/Blur bei Fehler.
+  - Helper-Text unter Feld, Icon optional (neutral).
+- Zustände:
+  - „Hint“ (neutral) für leere Pflichtfelder vor Submit.
+  - „Error“ (dezent) erst nach Submit oder Feld-Touch.
+- Copy:
+  - Globaler Hinweis bleibt oben, Feldhinweise bleiben lokal.
 ## 9) Tasks (umsetzbar, klein)
 - **E-01** – Prefill-Logik definieren (Quelle: Dashboard/CTA oder Standard).  
   - Bereich: customer  

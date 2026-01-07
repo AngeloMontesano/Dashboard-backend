@@ -92,4 +92,6 @@
 - EPIC_I I-04 Admin-UI Formulare für globale Kontakte konkretisiert (Felder, Validierung, Save-Verhalten).
 - EPIC_C C-04 Mehrfachauswahl (Chips, Limits, States) beschrieben.
 - EPIC_E E-04 Validierungsregeln für Bestell-Dialog ergänzt.
+- EPIC_C C-05 Zeitraum-Presets (Presets/Custom/Limit) dokumentiert.
+- EPIC_E E-05 Fehlerdarstellung ohne rote Ränder definiert.
 - Ziel: weitere Next-Tasks parallelisiert dokumentiert; keine Task-IDs geändert.

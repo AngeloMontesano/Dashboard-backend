@@ -78,6 +78,19 @@ Berichte & Analysen mit klarer, performanter UX, inkl. Live-Suche, Mehrfachauswa
 - Datenfluss:
   - Article-Chips aus `ItemOption[]`, Kategorie-Chips aus `{id, name}`.
   - Emittiert `update:selectedItems` und `update:selectedCategories`.
+
+### Zeitraum-Presets (C-05)
+- Presets:
+  - „Letzte 7 Tage“, „Letzte 30 Tage“, „Letzte 90 Tage“.
+  - Optional: „Dieses Jahr“ (ab Jan 1) nur wenn Performance ok.
+- Custom Range:
+  - Date-Picker mit `from`/`to`, Validierung `from <= to`.
+  - Max Range 365 Tage, Hinweis bei Überschreitung: „Zeitraum zu groß“.
+- Interaktion:
+  - Preset-Auswahl setzt `from/to` sofort und triggert Refresh.
+  - Wechsel auf Custom hält letzte Preset-Werte als Start.
+- Anzeige:
+  - Aktiver Preset-Button visuell markiert, Custom zeigt Datumswerte.
 ## 9) Tasks (umsetzbar, klein)
 - **C-01** – Filter-API/Parameter validieren und dokumentieren (Reporting/Items).  
   - Bereich: docs/backend  

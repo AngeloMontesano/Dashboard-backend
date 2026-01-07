@@ -1,9 +1,3 @@
-## Done (Recent)
-- [ADMIN-UI-01] (ADMIN_UI_STYLE_SYSTEM) Admin-Styles modularisieren (tokens/base/layout/utilities/components), View-Styles auslagern und Utilities dokumentieren.
-- [ADMIN-UI-02] (ADMIN_UI_STYLE_SYSTEM) Theme-Handling zentralisieren (`src/theme/theme.ts`) und useTheme darauf aufbauen.
-- [ADMIN-UI-03] (ADMIN_UI_STYLE_SYSTEM) Layout-Politur für Filter-/Action-Reihen und Import-File-Inputs (Grid/Spacing, responsive).
-- [ADMIN-UI-04] (ADMIN_UI_STYLE_SYSTEM) Admin-Standards dokumentieren (`docs/standards/ADMIN_UI_STANDARDS.md`) + WORKLOG/TODO pflegen.
-
 ## Now (Top 10)
 - [A-01] Tenant-Status-API spezifizieren (`/api/public/tenant-status`) – Epic A
 - [A-04] Customer-Bootstrap prüft Tenant-Status vor Router-Init – Epic A

@@ -49,6 +49,24 @@ Endnutzerfreundliche Fehleroberfläche für die Offline Queue (IndexedDB) mit kl
 - Busy/Retry: Buttons zeigen Spinner bei laufender Aktion; Auto-Retry-Status sichtbar („Retry läuft in Xs“ optional).
 - Empty States: Pro Tab ein freundlicher Text („Keine Fehlversuche in dieser Kategorie“), CTA „Alle anzeigen“ (Tab `all`) oder „Erneut synchronisieren“.
 
+### Komponentenstruktur (F-04)
+- `QueueList` (Liste + Tabs + Filter)
+  - Props: `items: QueueItem[]`, `activeTab: ErrorCategory`, `search: string`, `loading: boolean`
+  - Emits: `update:activeTab`, `update:search`, `select(itemId)`, `retry(itemId)`, `remove(itemId)`
+- `QueueItemRow`
+  - Props: `item: QueueItem`, `compact: boolean`
+  - Slots: `actions` (Retry/Löschen/Details)
+- `QueueItemDetail` (Drawer/Modal)
+  - Props: `item: QueueItem | null`, `open: boolean`, `busyAction?: 'retry' | 'remove'`
+  - Emits: `close`, `retry(itemId)`, `remove(itemId)`, `login()`
+- `QueueFilters`
+  - Props: `categories: ErrorCategory[]`, `active: ErrorCategory`, `search: string`
+  - Emits: `update:active`, `update:search`
+- `QueueActions`
+  - Props: `item: QueueItem`, `busy?: boolean`
+  - Actions: `Retry`, `Löschen`, bei `auth` zusätzlich `Neu anmelden`
+- Konvention: Alle Komponenten nutzen zentrale UI-Buttons/Badges, keine neuen Farben/Styles.
+
 ## 9) Tasks (umsetzbar, klein)
 - **F-01** – Datenmodell der Queue-Einträge dokumentieren (bestehende Felder).  
   - Bereich: docs/customer  

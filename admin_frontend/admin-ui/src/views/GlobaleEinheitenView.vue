@@ -14,7 +14,7 @@
         </div>
       </div>
 
-      <div class="filter-card">
+      <div class="filter-card two-column">
         <div class="stack">
           <label class="field-label" for="global-unit-search">Suche</label>
           <input
@@ -334,16 +334,3 @@ onMounted(() => {
   }
 });
 </script>
-
-<style scoped>
-.modal__footer--with-delete {
-  display: flex;
-  gap: 12px;
-  justify-content: flex-end;
-  padding-top: 12px;
-}
-
-.modal__footer--with-delete .btnGhost.danger {
-  margin-right: auto;
-}
-</style>

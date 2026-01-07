@@ -133,4 +133,5 @@
 - C-05 Zeitraum-Presets im Reporting ergänzt (Presets, Custom Range, Limits).
 - E-05 Fehlerdarstellung ohne rote Ränder konkretisiert (Hint/Error-Regeln).
 - B-02 Schema-Sync in `docs/openapi/openapi.json` ergänzt (Admin Global Categories/Types/Industries + Schemas).
-- Offene Punkte: B-03/B-04 starten; restliche Next-Tasks fortführen (A-10, A-05/I-04 Review).
+- Phase 1 abgeschlossen: Next-Aufgaben A-05/A-10/B-02/C-03/C-04/C-05/D-02/E-03/E-04/E-05/F-04/G-05/H-04/I-04 dokumentiert.
+- Offene Punkte: B-03/B-04 starten; restliche Next-Tasks fortführen (A-05/I-04 Review).

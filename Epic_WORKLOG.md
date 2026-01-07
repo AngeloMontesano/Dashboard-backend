@@ -95,4 +95,4 @@
 - EPIC_C C-05 Zeitraum-Presets (Presets/Custom/Limit) dokumentiert.
 - EPIC_E E-05 Fehlerdarstellung ohne rote Ränder definiert.
 - EPIC_B B-02 Schema-Sync in `docs/openapi/openapi.json` ergänzt (Global Categories/Types/Industries).
-- Ziel: weitere Next-Tasks parallelisiert dokumentiert; keine Task-IDs geändert.
+- Ziel: Phase 1 abgeschlossen; Next-Tasks dokumentiert, keine Task-IDs geändert.

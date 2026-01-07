@@ -86,3 +86,8 @@
 ## 2024-07-03
 - EPIC_C Live-Suche (C-03) um Datenformate/States/A11y ergänzt; EPIC_D Router-Prefill-Interface (D-02) beschrieben; EPIC_E Dialog-Komponente (E-03) skizziert.
 - Ziel: mehrere Next-Tasks parallel konkretisiert; keine Task-IDs geändert.
+
+## 2026-01-07
+- EPIC_A A-05 Tenant-Status-View erweitert: Layout-Bausteine, States, CTAs, Support-Block.
+- EPIC_I I-04 Admin-UI Formulare für globale Kontakte konkretisiert (Felder, Validierung, Save-Verhalten).
+- Ziel: weitere Next-Tasks parallelisiert dokumentiert; keine Task-IDs geändert.

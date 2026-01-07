@@ -124,3 +124,8 @@
 - Weitere Next-Tasks parallel konkretisiert: C-03 Live-Suche (Formate/States/A11y), D-02 Router-Prefill-Interface (Query vs. Store), E-03 Dialog-Komponente (Props/Emits/State).
 - Ziel: Umsetzungsvorlagen für Customer-UX ohne Coding liefern; Tasks unverändert.
 - Offene Punkte: B-02 Schema-Sync, danach B-03/B-04; restliche Next-Tasks fortführen (A-05/A-10/C-04/E-04/F-04/I-04).
+
+## 2026-01-07
+- A-05 Tenant-Status-View (Copy/Layout) in EPIC_A konkretisiert (States, CTAs, Support-Block, technische Details).
+- I-04 Admin-UI Formulare für globale Kontaktdaten in EPIC_I konkretisiert (Felder, Helpertexte, Validierung, Save-Verhalten).
+- Offene Punkte: B-02 Schema-Sync in `docs/openapi/openapi.json`, danach B-03/B-04; restliche Next-Tasks fortführen (A-10/I-04 Review, A-05 Review).

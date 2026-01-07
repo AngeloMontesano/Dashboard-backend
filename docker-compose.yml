@@ -48,6 +48,14 @@ services:
       docker:
         ipv4_address: ${CUSTOMER_UI_IP}
 
+volumes:
+  pgdata:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${POSTGRES_DATA_DIR}
+
 networks:
   docker:
     external: true

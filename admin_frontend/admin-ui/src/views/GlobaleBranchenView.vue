@@ -16,7 +16,7 @@
         </div>
       </div>
 
-      <div class="filter-card">
+      <div class="filter-card two-column">
         <div class="stack">
           <label class="field-label" for="global-industry-search">Suche</label>
           <input
@@ -438,8 +438,6 @@ const busy = reactive({
   saveMapping: false,
   assignTenants: false,
 });
-
-type IndustryAssignResponse = components["schemas"]["IndustryAssignResponse"];
 
 const assign = reactive<{
   initialQuantity: number;
@@ -888,134 +886,3 @@ onMounted(() => {
   }
 });
 </script>
-
-<style scoped>
-.modal__footer--with-delete {
-  display: flex;
-  gap: 12px;
-  justify-content: flex-end;
-  padding-top: 12px;
-}
-
-.modal__footer--with-delete .btnGhost.danger {
-  margin-right: auto;
-}
-
-.grid-2 {
-  display: grid;
-  grid-template-columns: 1.2fr 1fr;
-  gap: 12px;
-  align-items: end;
-}
-
-.info-line {
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 10px 12px;
-}
-
-.mapping-grid {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  gap: 12px;
-}
-
-.mapping-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  justify-content: center;
-  align-items: center;
-}
-
-.mapping-pane {
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--surface-1);
-  display: flex;
-  flex-direction: column;
-  min-height: 320px;
-}
-
-.pane-header {
-  padding: 12px;
-  border-bottom: 1px solid var(--border);
-}
-
-.pane-title {
-  font-weight: 700;
-}
-
-.pane-body {
-  padding: 8px 12px;
-  flex: 1;
-  overflow: auto;
-}
-
-.pane-footer {
-  padding: 8px 12px 12px;
-  border-top: 1px solid var(--border);
-}
-
-.item-list {
-  display: grid;
-  gap: 8px;
-}
-
-.item-list.compact {
-  grid-template-columns: 1fr;
-}
-
-.item-list.compact .item-row {
-  padding: 8px 10px;
-}
-
-.item-row {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--surface-1);
-}
-
-.item-meta {
-  min-width: 0;
-}
-
-.item-title {
-  font-weight: 600;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.result-card {
-  margin-top: 12px;
-  padding: 12px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--surface-2);
-}
-
-.pane-body.loading {
-  opacity: 0.7;
-}
-
-@media (max-width: 960px) {
-  .grid-2 {
-    grid-template-columns: 1fr;
-  }
-
-  .mapping-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .mapping-actions {
-    flex-direction: row;
-  }
-}
-</style>

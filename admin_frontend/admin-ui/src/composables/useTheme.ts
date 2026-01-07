@@ -1,46 +1,21 @@
-import { ref } from "vue";
+import { onBeforeUnmount, ref } from "vue";
+import { applyTheme, getTheme, onThemeChange, setTheme as persistTheme } from "../theme/theme";
+import type { ResolvedTheme, ThemeMode } from "../theme/theme";
 
-type ThemeMode = "light" | "dark" | "system";
-
-const STORAGE_KEY = "admin_theme";
-const theme = ref<ThemeMode>("system");
-const resolvedTheme = ref<"light" | "dark">("light");
-let mediaListenerAttached = false;
-
-function apply(mode: ThemeMode) {
-  const effective =
-    mode === "system"
-      ? window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches
-        ? "dark"
-        : "light"
-      : mode;
-
-  resolvedTheme.value = effective;
-  document.documentElement.dataset.theme = effective;
-  document.documentElement.classList.toggle("theme-dark", effective === "dark");
-  document.documentElement.classList.toggle("theme-classic", effective !== "dark");
-}
-
-export function initTheme() {
-  const stored = localStorage.getItem(STORAGE_KEY) as ThemeMode | null;
-  theme.value = stored || "system";
-  apply(theme.value);
-
-  if (typeof window !== "undefined" && window.matchMedia && !mediaListenerAttached) {
-    const media = window.matchMedia("(prefers-color-scheme: dark)");
-    const handler = () => {
-      if (theme.value === "system") apply("system");
-    };
-    media.addEventListener("change", handler);
-    mediaListenerAttached = true;
-  }
-}
+const theme = ref<ThemeMode>(getTheme());
+const resolvedTheme = ref<ResolvedTheme>(applyTheme(theme.value));
 
 export function useTheme() {
+  const unsubscribe = onThemeChange((nextTheme, resolved) => {
+    theme.value = nextTheme;
+    resolvedTheme.value = resolved;
+  });
+
+  onBeforeUnmount(() => unsubscribe());
+
   function setTheme(mode: ThemeMode) {
     theme.value = mode;
-    localStorage.setItem(STORAGE_KEY, mode);
-    apply(mode);
+    resolvedTheme.value = persistTheme(mode);
   }
 
   return { theme, resolvedTheme, setTheme };

@@ -114,3 +114,22 @@
 - EPIC_B Akzeptanzkriterium ergänzt: Admin-Global-Endpunkte erzwingen `X-Admin-Key` und liefern nackte Ressourcen/Listen ohne `data`-Wrapper; Index verweist jetzt explizit auf den Envelope-Hinweis.
 - Ziel: Reviewer sehen Header-/Envelope-Pflicht direkt im Epic; Tasks unverändert.
 - Offene Punkte: Schema-Sync in `docs/openapi/openapi.json`, danach B-03/B-04 starten.
+
+## 2024-07-02
+- Mehrere Next-Tasks parallel konkretisiert: F-04 Komponentenstruktur (Queue), G-05 Help-Button Konzept Customer, H-04 Monitoring-Light Compose-Snippet als Draft.
+- Ziel: „Next“ greifbarer machen, ohne Implementierung; Tasks bleiben unverändert.
+- Offene Punkte: Schema-Sync in `docs/openapi/openapi.json` (B-02), danach B-03/B-04; weitere Next-Tasks (A-05/A-10/C-03/D-02/E-03/F-04/G-05/H-04/I-04) fortführen.
+
+## 2024-07-03
+- Weitere Next-Tasks parallel konkretisiert: C-03 Live-Suche (Formate/States/A11y), D-02 Router-Prefill-Interface (Query vs. Store), E-03 Dialog-Komponente (Props/Emits/State).
+- Ziel: Umsetzungsvorlagen für Customer-UX ohne Coding liefern; Tasks unverändert.
+- Offene Punkte: B-02 Schema-Sync, danach B-03/B-04; restliche Next-Tasks fortführen (A-05/A-10/C-04/E-04/F-04/I-04).
+
+## 2026-01-07
+- A-05 Tenant-Status-View (Copy/Layout) in EPIC_A konkretisiert (States, CTAs, Support-Block, technische Details).
+- I-04 Admin-UI Formulare für globale Kontaktdaten in EPIC_I konkretisiert (Felder, Helpertexte, Validierung, Save-Verhalten).
+- C-04 Mehrfachauswahl im Reporting konkretisiert (Chips, Limits, States, Interaktion).
+- E-04 Validierungsregeln für Bestell-Dialog präzisiert (Pflichtfelder, Limits, Hinweise).
+- C-05 Zeitraum-Presets im Reporting ergänzt (Presets, Custom Range, Limits).
+- E-05 Fehlerdarstellung ohne rote Ränder konkretisiert (Hint/Error-Regeln).
+- Offene Punkte: B-02 Schema-Sync in `docs/openapi/openapi.json`, danach B-03/B-04; restliche Next-Tasks fortführen (A-10, A-05/I-04 Review).

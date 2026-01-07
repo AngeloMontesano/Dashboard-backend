@@ -78,3 +78,20 @@
 ## 2024-07-01
 - EPIC_B Akzeptanzkriterium präzisiert (Headerpflicht, nackte Ressourcen ohne `data`-Wrapper); Roadmap-Index verweist auf den Envelope-Hinweis.
 - Ziel: Reviewer können Header-/Envelope-Pflicht direkt im Epic nachvollziehen; Tasks bleiben gleich, offene Punkte: Schema-Sync in openapi.json, danach B-03/B-04.
+
+## 2024-07-02
+- EPIC_F um Komponentenstruktur (F-04) ergänzt; EPIC_G Help-Button Konzept Customer (G-05) konkretisiert; EPIC_H Deploy-Snippet ohne Grafana (H-04) ergänzt.
+- Ziel: mehrere Next-Tasks parallel dokumentiert, ohne Implementierung; Tasks unverändert.
+
+## 2024-07-03
+- EPIC_C Live-Suche (C-03) um Datenformate/States/A11y ergänzt; EPIC_D Router-Prefill-Interface (D-02) beschrieben; EPIC_E Dialog-Komponente (E-03) skizziert.
+- Ziel: mehrere Next-Tasks parallel konkretisiert; keine Task-IDs geändert.
+
+## 2026-01-07
+- EPIC_A A-05 Tenant-Status-View erweitert: Layout-Bausteine, States, CTAs, Support-Block.
+- EPIC_I I-04 Admin-UI Formulare für globale Kontakte konkretisiert (Felder, Validierung, Save-Verhalten).
+- EPIC_C C-04 Mehrfachauswahl (Chips, Limits, States) beschrieben.
+- EPIC_E E-04 Validierungsregeln für Bestell-Dialog ergänzt.
+- EPIC_C C-05 Zeitraum-Presets (Presets/Custom/Limit) dokumentiert.
+- EPIC_E E-05 Fehlerdarstellung ohne rote Ränder definiert.
+- Ziel: weitere Next-Tasks parallelisiert dokumentiert; keine Task-IDs geändert.

@@ -43,7 +43,7 @@ def upgrade() -> None:
                 UPDATE system_email_settings
                 SET host = :host,
                     port = :port,
-                    user = :user,
+                    "user" = :user,
                     password = :password,
                     from_email = :from_email,
                     use_tls = :use_tls,

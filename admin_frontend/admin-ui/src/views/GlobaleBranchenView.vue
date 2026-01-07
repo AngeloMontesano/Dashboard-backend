@@ -387,7 +387,8 @@ import UiPage from "../components/ui/UiPage.vue";
 import UiSection from "../components/ui/UiSection.vue";
 import type { components } from "../api/gen/openapi";
 
-type IndustryAssignResponse = components["schemas"]["IndustryAssignResponse"];
+// Duplicate declaration retained for history; commented out because the active definition lives below.
+// type IndustryAssignResponse = components["schemas"]["IndustryAssignResponse"];
 type IndustryMappingImportResult = components["schemas"]["IndustryMappingImportResult"];
 
 const props = defineProps<{

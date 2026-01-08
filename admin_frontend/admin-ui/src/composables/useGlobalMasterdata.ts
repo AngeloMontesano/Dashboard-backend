@@ -18,6 +18,13 @@ export type GlobalIndustry = {
   is_active: boolean;
 };
 
+export type GlobalType = {
+  id: string;
+  name: string;
+  description?: string;
+  is_active: boolean;
+};
+
 type IndustryArticleMap = Record<string, string[]>;
 
 const state = reactive({
@@ -25,6 +32,7 @@ const state = reactive({
   items: [] as GlobalItem[],
   units: [] as GlobalUnit[],
   industries: [] as GlobalIndustry[],
+  types: [] as GlobalType[],
   industryArticles: {} as IndustryArticleMap,
 });
 
@@ -75,6 +83,15 @@ function upsertIndustry(entry: GlobalIndustry) {
   }
 }
 
+function upsertType(entry: GlobalType) {
+  const idx = state.types.findIndex((t) => t.id === entry.id);
+  if (idx >= 0) {
+    state.types.splice(idx, 1, entry);
+  } else {
+    state.types.push(entry);
+  }
+}
+
 function setIndustryArticles(industryId: string, articleIds: string[]) {
   state.industryArticles[industryId] = Array.from(new Set(articleIds));
 }
@@ -92,6 +109,7 @@ export function useGlobalMasterdata() {
   const items = computed(() => state.items);
   const units = computed(() => state.units);
   const industries = computed(() => state.industries);
+  const types = computed(() => state.types);
   const industryArticles = computed(() => state.industryArticles);
 
   return {
@@ -99,11 +117,13 @@ export function useGlobalMasterdata() {
     items: readonly(items),
     units: readonly(units),
     industries: readonly(industries),
+    types: readonly(types),
     industryArticles: readonly(industryArticles),
     upsertCategory,
     upsertItem,
     upsertUnit,
     upsertIndustry,
+    upsertType,
     setIndustryArticles,
     removeIndustry,
     replaceCategories(list: GlobalCategory[]) {
@@ -117,6 +137,9 @@ export function useGlobalMasterdata() {
     },
     replaceIndustries(list: GlobalIndustry[]) {
       replaceCollection(state.industries, list);
+    },
+    replaceTypes(list: GlobalType[]) {
+      replaceCollection(state.types, list);
     },
     generateId,
   };

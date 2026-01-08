@@ -49,12 +49,11 @@ Tenant-Kontext wird zentral in `app/core/tenant.py` / `get_tenant_context` gelö
 - **Prometheus:** Counter `http_requests_total` & Histogram `http_request_duration_seconds` für jede Route/Status.【F:backend/app/observability/metrics.py†L1-L200】
 - **Request-ID Propagation:** Responses setzen `X-Request-Id`, Fehler-Responses ebenso – nützlich für Korrelation mit Frontend/Browser-Konsole.【F:backend/app/core/errors.py†L15-L43】【F:backend/app/main.py†L45-L75】
 
-## Konfiguration (.env)
-Beispiel erzeugen:
-```bash
-cp .env.example .env
-```
-Wichtige Keys (Repo-Root `.env`, von Compose geladen):
+## Konfiguration (Environment Variables)
+Konfiguration erfolgt ausschließlich über Environment Variables (z. B. in Portainer pro Stack).
+Optional kann lokal eine `.env` Datei genutzt werden, wenn sie existiert oder über `ENV_FILE` gesetzt wird – sie ist jedoch nie erforderlich.
+
+Wichtige Keys:
 - Datenbank: `DATABASE_URL`, `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`
 - Auth: `JWT_SECRET`, `JWT_ALGORITHM`, `ACCESS_TOKEN_EXPIRES_MIN`, `REFRESH_TOKEN_EXPIRES_DAYS`, `REFRESH_TOKEN_GRACE_MIN`
 - Domains: `BASE_DOMAIN` (z. B. `test.myitnetwork.de`), `BASE_ADMIN_DOMAIN`
@@ -70,7 +69,7 @@ docker compose up -d --build
 
 ## Seeding
 - Läuft automatisch, wenn die DB leer ist.
-- Werte können via `SEED_*` Variablen in `.env` überschrieben werden.
+- Werte können via `SEED_*` Environment Variables überschrieben werden.
 
 ## Multi-Tenant Inventar/Artikel (Stand)
 - **Tenant-Isolation**: Alle Inventar-Endpoints filtern strikt per `tenant_id` aus dem Host/Subdomain-Kontext (`X-Forwarded-Host`/`Host`). Ohne gültigen Tenant gibt es 404.

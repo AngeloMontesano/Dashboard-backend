@@ -12,6 +12,7 @@ from app.core.db import get_db
 from app.models.category import Category
 from app.models.item import Item
 from app.models.item_unit import ItemUnit
+from app.models.global_type import GlobalType
 from app.models.industry import Industry, IndustryArticle
 from app.models.tenant import Tenant
 from app.models.tenant_setting import TenantSetting
@@ -25,6 +26,9 @@ from app.modules.inventory.schemas import (
     ItemUpdate,
     ItemsPage,
     ItemUnitOut,
+    GlobalTypeCreate,
+    GlobalTypeOut,
+    GlobalTypeUpdate,
     IndustryCreate,
     IndustryOut,
     IndustryUpdate,
@@ -69,6 +73,7 @@ def _item_out_admin(item: Item, category: Category | None) -> ItemOut:
         unit=item.unit,
         is_active=item.is_active,
         category_id=str(item.category_id) if item.category_id else None,
+        type_id=str(item.type_id) if item.type_id else None,
         category_name=category.name if category else None,
         min_stock=item.min_stock,
         max_stock=item.max_stock,
@@ -76,6 +81,15 @@ def _item_out_admin(item: Item, category: Category | None) -> ItemOut:
         recommended_stock=item.recommended_stock,
         order_mode=item.order_mode,
         is_admin_created=item.is_admin_created,
+    )
+
+
+def _global_type_out(entry: GlobalType) -> GlobalTypeOut:
+    return GlobalTypeOut(
+        id=str(entry.id),
+        name=entry.name,
+        description=entry.description,
+        is_active=entry.is_active,
     )
 
 
@@ -161,6 +175,82 @@ async def admin_delete_category(
         item.category_id = None
 
     await db.delete(category)
+    await db.commit()
+    return Response(status_code=204)
+
+
+@router.get("/types", response_model=list[GlobalTypeOut])
+async def admin_list_types(db: AsyncSession = Depends(get_db)) -> list[GlobalTypeOut]:
+    rows = (await db.scalars(select(GlobalType).order_by(GlobalType.name.asc()))).all()
+    return [_global_type_out(entry) for entry in rows]
+
+
+@router.post("/types", response_model=GlobalTypeOut)
+async def admin_create_type(payload: GlobalTypeCreate, db: AsyncSession = Depends(get_db)) -> GlobalTypeOut:
+    exists = await db.scalar(select(GlobalType).where(func.lower(GlobalType.name) == func.lower(payload.name)))
+    if exists:
+        raise HTTPException(
+            status_code=400,
+            detail={"error": {"code": "type_exists", "message": "Typ existiert bereits"}},
+        )
+    entry = GlobalType(
+        name=payload.name.strip(),
+        description=payload.description.strip() if payload.description else "",
+        is_active=payload.is_active,
+    )
+    db.add(entry)
+    await db.commit()
+    await db.refresh(entry)
+    return _global_type_out(entry)
+
+
+@router.patch("/types/{type_id}", response_model=GlobalTypeOut)
+async def admin_update_type(
+    type_id: str,
+    payload: GlobalTypeUpdate,
+    db: AsyncSession = Depends(get_db),
+) -> GlobalTypeOut:
+    entry = await db.get(GlobalType, type_id)
+    if entry is None:
+        raise HTTPException(status_code=404, detail={"error": {"code": "type_not_found", "message": "Typ nicht gefunden"}})
+
+    if payload.name:
+        conflict = await db.scalar(
+            select(GlobalType).where(
+                func.lower(GlobalType.name) == func.lower(payload.name),
+                GlobalType.id != entry.id,
+            )
+        )
+        if conflict:
+            raise HTTPException(
+                status_code=400,
+                detail={"error": {"code": "type_exists", "message": "Typ existiert bereits"}},
+            )
+        entry.name = payload.name.strip()
+    if payload.description is not None:
+        entry.description = payload.description.strip() if payload.description else ""
+    if payload.is_active is not None:
+        entry.is_active = payload.is_active
+
+    await db.commit()
+    await db.refresh(entry)
+    return _global_type_out(entry)
+
+
+@router.delete("/types/{type_id}", status_code=204)
+async def admin_delete_type(
+    type_id: str,
+    db: AsyncSession = Depends(get_db),
+) -> Response:
+    entry = await db.get(GlobalType, type_id)
+    if entry is None:
+        raise HTTPException(status_code=404, detail={"error": {"code": "type_not_found", "message": "Typ nicht gefunden"}})
+
+    items = (await db.scalars(select(Item).where(Item.type_id == entry.id))).all()
+    for item in items:
+        item.type_id = None
+
+    await db.delete(entry)
     await db.commit()
     return Response(status_code=204)
 

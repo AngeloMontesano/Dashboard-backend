@@ -1,6 +1,6 @@
 <template>
-  <div class="table-card" id="backup-monitoring-details">
-    <div class="table-card__header">
+  <details class="table-card" id="backup-monitoring-details" open>
+    <summary class="table-card__header">
       <div class="stack-sm">
         <div class="tableTitle">Monitoring Details</div>
         <div class="text-muted text-small">
@@ -8,7 +8,7 @@
         </div>
       </div>
       <a class="btnGhost small" href="#backup-monitoring">Zur Übersicht</a>
-    </div>
+    </summary>
 
     <div class="detail-grid">
       <div class="detail-box">
@@ -55,7 +55,7 @@
         </tbody>
       </table>
     </div>
-  </div>
+  </details>
 </template>
 
 <script setup lang="ts">

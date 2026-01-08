@@ -235,6 +235,9 @@
           <!-- SECTION: Backup -->
             <AdminBackupView v-else-if="ui.section === 'backup'" :tenant="tenantContext" />
 
+          <!-- SECTION: Backup -->
+            <AdminBackupView v-else-if="ui.section === 'backup'" :tenant="tenantContext" />
+
           <!-- SECTION: Settings -->
             <AdminSettingsView
               v-else
@@ -444,6 +447,7 @@ const pageSubtitle = computed(() => {
   if (ui.section === "users") return "Admin-Portal Benutzer verwalten";
   if (ui.section === "memberships") return "User mit Tenants verknüpfen und Rollen setzen";
   if (ui.section === "operations") return "Health, Audit, Snapshots und Logs";
+  if (ui.section === "backup") return "Tenant-spezifische Backups mit Schema-Introspektion";
   if (ui.section === "globals-articles") return "Artikel-Stammdaten verwalten";
   if (ui.section === "globals-categories") return "Kategorien als globale Stammdaten pflegen";
   if (ui.section === "globals-types") return "Typen für globale Artikel pflegen";

@@ -193,7 +193,11 @@ function closeModal() {
   modal.open = false;
 }
 
-function save() {
+async function save() {
+  if (!props.adminKey) {
+    toast("Admin Key erforderlich", "warning");
+    return;
+  }
   const name = modal.name.trim();
   if (!name) {
     toast("Name ist Pflicht", "warning");
@@ -205,54 +209,56 @@ function save() {
     description: modal.description?.trim() || "",
     is_active: modal.is_active,
   };
-  const request = modal.mode === "edit"
-    ? updateGlobalType(props.adminKey, modal.id, payload, props.actor)
-    : createGlobalType(props.adminKey, payload, props.actor);
-  request
-    .then((result) => {
-      upsertType(result);
-      selectedId.value = result.id;
-      toast(modal.mode === "edit" ? "Typ aktualisiert" : "Typ angelegt", "success");
-      closeModal();
-    })
-    .catch(() => {
-      toast("Speichern fehlgeschlagen", "danger");
-    })
-    .finally(() => {
-      busy.save = false;
-    });
+  try {
+    const result =
+      modal.mode === "edit"
+        ? await updateGlobalType(props.adminKey, modal.id, payload, props.actor)
+        : await createGlobalType(props.adminKey, payload, props.actor);
+    upsertType(result);
+    selectedId.value = result.id;
+    toast(modal.mode === "edit" ? "Typ aktualisiert" : "Typ angelegt", "success");
+    closeModal();
+  } catch (e: any) {
+    toast(`Speichern fehlgeschlagen: ${e?.response?.data?.detail?.error?.message || e?.message || e}`, "danger");
+  } finally {
+    busy.save = false;
+  }
 }
 
-function loadTypes() {
+async function loadTypes() {
+  if (!props.adminKey) {
+    toast("Admin Key erforderlich", "warning");
+    return;
+  }
   busy.load = true;
-  fetchGlobalTypes(props.adminKey, props.actor)
-    .then((rows) => {
-      replaceTypes(rows);
-      toast("Typen geladen", "success");
-    })
-    .catch(() => {
-      toast("Typen konnten nicht geladen werden", "danger");
-    })
-    .finally(() => {
-      busy.load = false;
-    });
+  try {
+    const rows = await fetchGlobalTypes(props.adminKey, props.actor);
+    replaceTypes(rows);
+    toast("Typen geladen", "success");
+  } catch (e: any) {
+    toast(`Typen konnten nicht geladen werden: ${e?.message || e}`, "danger");
+  } finally {
+    busy.load = false;
+  }
 }
 
-function remove(entry: GlobalType) {
+async function remove(entry: GlobalType) {
+  if (!props.adminKey) {
+    toast("Admin Key erforderlich", "warning");
+    return;
+  }
   if (!confirm(`Typ "${entry.name}" löschen?`)) return;
   busy.save = true;
-  deleteGlobalType(props.adminKey, entry.id, props.actor)
-    .then(() => {
-      replaceTypes(types.value.filter((t) => t.id !== entry.id));
-      toast("Typ gelöscht", "success");
-      if (selectedId.value === entry.id) selectedId.value = "";
-    })
-    .catch(() => {
-      toast("Löschen fehlgeschlagen", "danger");
-    })
-    .finally(() => {
-      busy.save = false;
-    });
+  try {
+    await deleteGlobalType(props.adminKey, entry.id, props.actor);
+    replaceTypes(types.value.filter((t) => t.id !== entry.id));
+    toast("Typ gelöscht", "success");
+    if (selectedId.value === entry.id) selectedId.value = "";
+  } catch (e: any) {
+    toast(`Löschen fehlgeschlagen: ${e?.response?.data?.detail?.error?.message || e?.message || e}`, "danger");
+  } finally {
+    busy.save = false;
+  }
 }
 
 onMounted(() => {

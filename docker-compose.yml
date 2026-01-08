@@ -6,9 +6,9 @@ services:
     ports:
       - "5432:5432"
     # Variante A (ipvlan, eigene LAN-IP)
-    # networks:
-    #   docker:
-    #     ipv4_address: 192.168.10.60
+    networks:
+      docker:
+        ipv4_address: 192.168.10.60
 
   api:
     extends:
@@ -25,9 +25,9 @@ services:
       - 1.1.1.1
       - 8.8.8.8
     # Variante A (ipvlan, eigene LAN-IP)
-    # networks:
-    #   docker:
-    #     ipv4_address: 192.168.10.61
+    networks:
+      docker:
+        ipv4_address: 192.168.10.61
 
   admin_ui:
     build: ./admin_frontend/admin-ui
@@ -36,9 +36,9 @@ services:
     depends_on:
       - api
     # Variante A (ipvlan, eigene LAN-IP)
-    # networks:
-    #   docker:
-    #     ipv4_address: 192.168.10.62
+    networks:
+      docker:
+        ipv4_address: 192.168.10.62
 
   customer_ui:
     build: ./customer_frontend/customer-ui
@@ -47,9 +47,9 @@ services:
     depends_on:
       - api
     # Variante A (ipvlan, eigene LAN-IP)
-    # networks:
-    #   docker:
-    #     ipv4_address: 192.168.10.63
+    networks:
+      docker:
+        ipv4_address: 192.168.10.63
 
   control:
     image: alpine:3.20
@@ -73,3 +73,8 @@ services:
 
 volumes:
   pgdata:
+
+
+networks:
+  docker:
+    external: true

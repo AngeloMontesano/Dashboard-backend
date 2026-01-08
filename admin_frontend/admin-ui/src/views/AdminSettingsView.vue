@@ -286,6 +286,52 @@
 
         <section class="settingsSection">
           <div class="sectionHeader">
+            <div class="sectionTitle">Demo-Artikel</div>
+            <button class="btnGhost small" @click="toggleSection('demo')" :aria-expanded="sectionOpen.demo">
+              {{ sectionOpen.demo ? "Einklappen" : "Aufklappen" }}
+            </button>
+          </div>
+          <div v-if="sectionOpen.demo" class="stack">
+            <div class="muted">
+              Importiert 10 Kategorien und 50 Demo-Artikel für den Tenant <strong>kunde1</strong>.
+            </div>
+            <div class="row gap8 wrap">
+              <button class="btnPrimary" :disabled="demoImporting || !adminKey" @click="importDemoInventory">
+                {{ demoImporting ? "Importiert..." : "Demo-Artikel importieren" }}
+              </button>
+            </div>
+            <div v-if="demoImportResult" class="kvGrid">
+              <div class="kv">
+                <div class="k">Tenant</div>
+                <div class="v">
+                  {{ demoImportResult.tenant_slug }}
+                  <span class="muted">
+                    ({{ demoImportResult.tenant_created ? "neu erstellt" : "aktualisiert" }})
+                  </span>
+                </div>
+              </div>
+              <div class="kv">
+                <div class="k">Kategorien</div>
+                <div class="v">
+                  erstellt: {{ demoImportResult.categories_created }},
+                  aktualisiert: {{ demoImportResult.categories_updated }}
+                </div>
+              </div>
+              <div class="kv">
+                <div class="k">Artikel</div>
+                <div class="v">
+                  erstellt: {{ demoImportResult.items_created }},
+                  aktualisiert: {{ demoImportResult.items_updated }}
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div class="divider"></div>
+
+        <section class="settingsSection">
+          <div class="sectionHeader">
             <div class="sectionTitle">Danger Zone / System Actions</div>
             <button class="btnGhost small" @click="toggleSection('danger')" :aria-expanded="sectionOpen.danger">
               {{ sectionOpen.danger ? "Einklappen" : "Aufklappen" }}
@@ -322,6 +368,7 @@ import { ref, watch, reactive, computed, withDefaults } from "vue";
 import {
   adminGetSystemInfo,
   adminGetSmtpSettings,
+  adminImportDemoInventory,
   adminUpdateSmtpSettings,
   adminTestSmtpSettings,
 } from "../api/admin";
@@ -329,6 +376,7 @@ import { useToast } from "../composables/useToast";
 import pkg from "../../package.json";
 import type {
   AdminSystemInfo,
+  DemoInventoryImportResponse,
   SmtpSettingsIn,
   SmtpSettingsOut,
 } from "../types";
@@ -364,6 +412,7 @@ const sectionOpen = reactive({
   theme: true,
   flags: true,
   smtp: true,
+  demo: true,
   danger: true,
 });
 const themes = [
@@ -398,6 +447,8 @@ const testEmail = ref("");
 const savingEmail = ref(false);
 const testingEmail = ref(false);
 const loadingEmail = ref(false);
+const demoImporting = ref(false);
+const demoImportResult = ref<DemoInventoryImportResponse | null>(null);
 
 function onThemeChange(themeId: ThemeMode) {
   localTheme.value = themeId;
@@ -513,6 +564,20 @@ async function sendTestEmail() {
     toast(`Testmail fehlgeschlagen: ${asError(e)}`, "danger");
   } finally {
     testingEmail.value = false;
+  }
+}
+
+async function importDemoInventory() {
+  if (!props.adminKey) return;
+  demoImporting.value = true;
+  demoImportResult.value = null;
+  try {
+    demoImportResult.value = await adminImportDemoInventory(props.adminKey, props.actor);
+    toast("Demo-Artikel importiert.", "success");
+  } catch (e: any) {
+    toast(`Demo-Artikel Import fehlgeschlagen: ${asError(e)}`, "danger");
+  } finally {
+    demoImporting.value = false;
   }
 }
 </script>

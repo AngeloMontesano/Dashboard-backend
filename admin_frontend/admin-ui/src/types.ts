@@ -106,3 +106,13 @@ export type SystemEmailSettingsUpdate = {
   password: string | null;
   from_email: string | null;
 };
+
+export type DemoInventoryImportResponse = {
+  ok: boolean;
+  tenant_slug: string;
+  tenant_created: boolean;
+  categories_created: number;
+  categories_updated: number;
+  items_created: number;
+  items_updated: number;
+};

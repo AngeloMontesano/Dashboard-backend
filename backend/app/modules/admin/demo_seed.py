@@ -1,15 +1,10 @@
 from __future__ import annotations
 
-import asyncio
-
-from app.core.db import get_sessionmaker
-from app.modules.admin.demo_seed import seed_kunde1_inventory
 from dataclasses import dataclass
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.db import get_sessionmaker
 from app.models.category import Category
 from app.models.item import Item
 from app.models.tenant import Tenant
@@ -89,37 +84,6 @@ ITEM_SEEDS = [
 ]
 
 
-async def _get_or_create_tenant(db: AsyncSession, slug: str, name: str) -> Tenant:
-    tenant = await db.scalar(select(Tenant).where(Tenant.slug == slug))
-    if tenant:
-        tenant.name = name
-        tenant.is_active = True
-        return tenant
-
-    tenant = Tenant(slug=slug, name=name, is_active=True)
-    db.add(tenant)
-    await db.flush()
-    return tenant
-
-
-async def _get_or_create_categories(db: AsyncSession, tenant: Tenant) -> dict[str, Category]:
-    existing = (
-        await db.scalars(select(Category).where(Category.tenant_id == tenant.id, Category.name.in_(CATEGORIES)))
-    ).all()
-    category_map = {cat.name: cat for cat in existing}
-
-    for name in CATEGORIES:
-        if name in category_map:
-            category_map[name].is_active = True
-            continue
-        category = Category(name=name, tenant_id=tenant.id, is_active=True, is_system=False)
-        db.add(category)
-        category_map[name] = category
-
-    await db.flush()
-    return category_map
-
-
 def _stock_values(index: int) -> tuple[int, int, int, int]:
     min_stock = 5 + (index % 4) * 3
     target_stock = min_stock + 10 + (index % 5) * 2
@@ -135,11 +99,48 @@ def _stock_values(index: int) -> tuple[int, int, int, int]:
     return quantity, min_stock, max_stock, target_stock
 
 
-async def _seed_items(db: AsyncSession, tenant: Tenant, categories: dict[str, Category]) -> None:
-    existing_items = (
-        await db.scalars(select(Item).where(Item.tenant_id == tenant.id))
+async def seed_kunde1_inventory(
+    db: AsyncSession,
+    *,
+    slug: str = "kunde1",
+    name: str = "Kunde 1",
+) -> dict[str, int | bool | str]:
+    tenant = await db.scalar(select(Tenant).where(Tenant.slug == slug))
+    tenant_created = False
+    if tenant:
+        tenant.name = name
+        tenant.is_active = True
+    else:
+        tenant = Tenant(slug=slug, name=name, is_active=True)
+        db.add(tenant)
+        await db.flush()
+        tenant_created = True
+
+    existing_categories = (
+        await db.scalars(select(Category).where(Category.tenant_id == tenant.id, Category.name.in_(CATEGORIES)))
     ).all()
+    category_map = {cat.name: cat for cat in existing_categories}
+    categories_created = 0
+    categories_updated = 0
+
+    for category_name in CATEGORIES:
+        if category_name in category_map:
+            category = category_map[category_name]
+            category.is_active = True
+            category.is_system = False
+            categories_updated += 1
+            continue
+        category = Category(name=category_name, tenant_id=tenant.id, is_active=True, is_system=False)
+        db.add(category)
+        category_map[category_name] = category
+        categories_created += 1
+
+    await db.flush()
+
+    existing_items = (await db.scalars(select(Item).where(Item.tenant_id == tenant.id))).all()
     existing_by_sku = {item.sku: item for item in existing_items}
+    items_created = 0
+    items_updated = 0
 
     for index, seed in enumerate(ITEM_SEEDS, start=1):
         sku = f"BAK-{index:03d}"
@@ -153,7 +154,7 @@ async def _seed_items(db: AsyncSession, tenant: Tenant, categories: dict[str, Ca
             item.name = seed.name
             item.barcode = barcode
             item.description = f"Bäckerbedarf: {seed.name}"
-            item.category_id = categories[seed.category].id
+            item.category_id = category_map[seed.category].id
             item.quantity = quantity
             item.min_stock = min_stock
             item.max_stock = max_stock
@@ -162,6 +163,7 @@ async def _seed_items(db: AsyncSession, tenant: Tenant, categories: dict[str, Ca
             item.order_mode = order_mode
             item.unit = seed.unit
             item.is_active = True
+            items_updated += 1
             continue
 
         item = Item(
@@ -170,7 +172,7 @@ async def _seed_items(db: AsyncSession, tenant: Tenant, categories: dict[str, Ca
             barcode=barcode,
             name=seed.name,
             description=f"Bäckerbedarf: {seed.name}",
-            category_id=categories[seed.category].id,
+            category_id=category_map[seed.category].id,
             quantity=quantity,
             min_stock=min_stock,
             max_stock=max_stock,
@@ -182,21 +184,13 @@ async def _seed_items(db: AsyncSession, tenant: Tenant, categories: dict[str, Ca
             is_admin_created=False,
         )
         db.add(item)
+        items_created += 1
 
-
-async def main() -> None:
-    sessionmaker = get_sessionmaker()
-    async with sessionmaker() as db:
-        result = await seed_kunde1_inventory(db)
-        await db.commit()
-        print("Seeded tenant 'kunde1' with categories and items.")
-        print(result)
-        tenant = await _get_or_create_tenant(db, slug="kunde1", name="Kunde 1")
-        categories = await _get_or_create_categories(db, tenant)
-        await _seed_items(db, tenant, categories)
-        await db.commit()
-        print("Seeded tenant 'kunde1' with categories and items.")
-
-
-if __name__ == "__main__":
-    asyncio.run(main())
+    return {
+        "tenant_slug": slug,
+        "tenant_created": tenant_created,
+        "categories_created": categories_created,
+        "categories_updated": categories_updated,
+        "items_created": items_created,
+        "items_updated": items_updated,
+    }

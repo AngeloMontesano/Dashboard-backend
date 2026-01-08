@@ -51,5 +51,25 @@ services:
     #   docker:
     #     ipv4_address: 192.168.10.63
 
+  control:
+    image: alpine:3.20
+    container_name: lm_saas_control
+    depends_on:
+      - api
+      - admin_ui
+      - customer_ui
+    command: >
+      sh -lc "
+      apk add --no-cache curl >/dev/null;
+      while true; do
+        echo '[CONTROL] checking...';
+        curl -fsS http://api:8000/health || echo '[FAIL] api';
+        curl -fsS http://admin_ui:5173/ || echo '[FAIL] admin_ui';
+        curl -fsS http://customer_ui:5173/ || echo '[FAIL] customer_ui';
+        sleep 10;
+      done
+      "
+
+
 volumes:
   pgdata:

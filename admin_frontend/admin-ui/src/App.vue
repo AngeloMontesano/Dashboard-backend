@@ -12,7 +12,7 @@
   <div :class="['app', appThemeClass]">
     <div
       class="bg-aurora"
-      :class="ui.authenticated ? 'bg-aurora--static' : 'bg-aurora--animated'"
+      :class="ui.authenticated ? 'bg-aurora--static' : 'bg-aurora--hidden'"
     ></div>
     <div class="app-content">
       <template v-if="!ui.authenticated">

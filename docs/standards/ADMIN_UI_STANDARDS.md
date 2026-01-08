@@ -71,3 +71,7 @@ Reihenfolge der Importe in `admin_frontend/admin-ui/src/main.ts`:
 - `data-theme` wird auf `<html>` gesetzt (`light`/`dark`).
 - Persistenz in `localStorage` (`admin_theme`), Fallback: System Preference.
 - Views verwenden `useTheme()` für UI-Toggles.
+
+## Login Background
+- Der Login-Background liegt zentral in `src/styles/background/login.css` und ist mit dem Customer-Login abgestimmt.
+- Login nutzt nur diesen Background (Aurora-Layer ist dort deaktiviert).

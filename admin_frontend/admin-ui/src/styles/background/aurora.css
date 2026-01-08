@@ -61,6 +61,10 @@
   animation: none;
 }
 
+.bg-aurora--hidden{
+  opacity: 0;
+}
+
 @keyframes aurora-float-left{
   0%{
     transform: translate3d(0, 0, 0) scale(1);

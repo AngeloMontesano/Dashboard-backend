@@ -267,6 +267,14 @@
             <input type="checkbox" v-model="settingsState.form.auto_order_enabled" :disabled="settingsState.loading" />
             <span>Auto-Bestellung aktiv</span>
           </label>
+          <label class="field checkbox">
+            <input
+              type="checkbox"
+              v-model="settingsState.form.barcode_scanner_reduce_enabled"
+              :disabled="settingsState.loading"
+            />
+            <span>Barcodescanner Bestand reduzieren</span>
+          </label>
         </div>
         <div class="settings-grid" v-if="settingsState.form && settingsState.activeTab === 'sales'">
           <label class="field">

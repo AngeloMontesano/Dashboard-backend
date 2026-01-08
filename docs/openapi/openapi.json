@@ -10942,6 +10942,11 @@
             "title": "Tax Number",
             "default": ""
           },
+          "barcode_scanner_reduce_enabled": {
+            "type": "boolean",
+            "title": "Barcode Scanner Reduce Enabled",
+            "default": false
+          },
           "industry_id": {
             "anyOf": [
               {
@@ -11060,6 +11065,11 @@
             "maxLength": 64,
             "title": "Tax Number",
             "default": ""
+          },
+          "barcode_scanner_reduce_enabled": {
+            "type": "boolean",
+            "title": "Barcode Scanner Reduce Enabled",
+            "default": false
           },
           "industry_id": {
             "anyOf": [

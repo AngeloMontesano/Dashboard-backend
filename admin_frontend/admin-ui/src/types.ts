@@ -9,6 +9,8 @@ export type TenantCreate = components["schemas"]["TenantCreate"];
 export type TenantUpdate = components["schemas"]["TenantUpdate"];
 export type TenantSettingsOut = components["schemas"]["TenantSettingsOut"];
 export type TenantSettingsUpdate = components["schemas"]["TenantSettingsUpdate"];
+export type GlobalCustomerSettingsOut = components["schemas"]["GlobalCustomerSettingsOut"];
+export type GlobalCustomerSettingsUpdate = components["schemas"]["GlobalCustomerSettingsUpdate"];
 
 export type UserOut = components["schemas"]["UserOut"];
 export type UserCreate = components["schemas"]["UserCreate"];

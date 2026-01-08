@@ -226,6 +226,14 @@
               :adminKey="ui.adminKey"
               :actor="ui.actor"
             />
+            <GlobaleKundenEinstellungenView
+              v-else-if="ui.section === 'globals-customer-settings'"
+              :adminKey="ui.adminKey"
+              :actor="ui.actor"
+            />
+
+          <!-- SECTION: Backup -->
+            <AdminBackupView v-else-if="ui.section === 'backup'" :tenant="tenantContext" />
 
           <!-- SECTION: Settings -->
             <AdminSettingsView
@@ -288,6 +296,7 @@ import GlobaleKategorienView from "./views/GlobaleKategorienView.vue";
 import GlobaleTypenView from "./views/GlobaleTypenView.vue";
 import GlobaleEinheitenView from "./views/GlobaleEinheitenView.vue";
 import GlobaleBranchenView from "./views/GlobaleBranchenView.vue";
+import AdminBackupView from "./views/AdminBackupView.vue";
 
 /* Zentraler Toast State */
 const { toast } = useToast();
@@ -307,6 +316,7 @@ const adminDashboardSections = [
   { id: "users", label: "Admin User", icon: "👤" },
   { id: "settings", label: "Einstellungen", icon: "⚙️" },
   { id: "operations", label: "Operations", icon: "🛠️" },
+  { id: "backup", label: "Backup", icon: "💾" },
 ] as const;
 
 const globalSections = [
@@ -316,6 +326,7 @@ const globalSections = [
   { id: "globals-types", label: "Globale Typen", icon: "🏷️" },
   { id: "globals-units", label: "Globale Einheiten", icon: "🧭" },
   { id: "globals-industries", label: "Globale Branchen", icon: "🏭" },
+  { id: "globals-customer-settings", label: "Globale Kunden Einstellung", icon: "🧾" },
 ] as const;
 
 type CustomerSectionId = (typeof customerSections)[number]["id"];
@@ -330,6 +341,7 @@ const globalSectionPaths: Record<GlobalSectionId, string> = {
   "globals-types": "/globals/types",
   "globals-units": "/globals/units",
   "globals-industries": "/globals/industries",
+  "globals-customer-settings": "/globals/customer-settings",
 };
 
 /* UI State */
@@ -414,6 +426,7 @@ const pageTitle = computed(() => {
     users: "Benutzer",
     memberships: "Kunden User",
     operations: "Operations",
+    backup: "Backup",
     settings: "Einstellungen",
     "globals-catalog": "Globale Kataloge",
     "globals-articles": "Globale Artikel",
@@ -421,6 +434,7 @@ const pageTitle = computed(() => {
     "globals-types": "Globale Typen",
     "globals-units": "Globale Einheiten",
     "globals-industries": "Globale Branchen",
+    "globals-customer-settings": "Globale Kunden Einstellung",
   };
   return m[ui.section];
 });
@@ -582,6 +596,7 @@ function syncFromLocation() {
     "/kunden": "kunden",
     "/users": "users",
     "/memberships": "memberships",
+    "/backup": "backup",
     "/settings": "settings",
   };
 

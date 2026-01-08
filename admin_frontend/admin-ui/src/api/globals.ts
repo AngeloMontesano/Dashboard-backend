@@ -5,9 +5,9 @@ export type GlobalCategory = components["schemas"]["CategoryOut"];
 export type CategoryCreatePayload = components["schemas"]["CategoryCreate"];
 export type CategoryUpdatePayload = components["schemas"]["CategoryUpdate"];
 
-export type GlobalItem = components["schemas"]["ItemOut"];
-export type ItemCreatePayload = components["schemas"]["ItemCreate"];
-export type ItemUpdatePayload = components["schemas"]["ItemUpdate"];
+export type GlobalItem = components["schemas"]["ItemOut"] & { type_id?: string | null };
+export type ItemCreatePayload = components["schemas"]["ItemCreate"] & { type_id?: string | null };
+export type ItemUpdatePayload = components["schemas"]["ItemUpdate"] & { type_id?: string | null };
 
 export type GlobalUnit = components["schemas"]["ItemUnitOut"];
 export type GlobalIndustry = components["schemas"]["IndustryOut"];
@@ -15,6 +15,23 @@ export type IndustryAssignRequest = components["schemas"]["IndustryAssignRequest
 export type IndustryAssignResponse = components["schemas"]["IndustryAssignResponse"];
 export type IndustryMappingImportResult = components["schemas"]["IndustryMappingImportResult"];
 export type IndustryOverlapCounts = components["schemas"]["IndustryOverlapCounts"];
+
+export type GlobalType = {
+  id: string;
+  name: string;
+  description?: string;
+  is_active: boolean;
+};
+export type GlobalTypeCreatePayload = {
+  name: string;
+  description?: string;
+  is_active?: boolean;
+};
+export type GlobalTypeUpdatePayload = {
+  name?: string;
+  description?: string;
+  is_active?: boolean;
+};
 
 type ItemsPage = components["schemas"]["ItemsPage"];
 type ItemsQuery = NonNullable<paths["/admin/inventory/items"]["get"]["parameters"]["query"]>;
@@ -94,6 +111,31 @@ export async function exportGlobalUnits(adminKey: string, format: "csv" | "xlsx"
     responseType: "blob",
   });
   return res.data as Blob;
+}
+
+/* Typen */
+export async function fetchGlobalTypes(adminKey: string, actor?: string) {
+  const res = await api.get<GlobalType[]>("/admin/inventory/types", withAdmin(adminKey, actor));
+  return res.data;
+}
+
+export async function createGlobalType(adminKey: string, payload: GlobalTypeCreatePayload, actor?: string) {
+  const res = await api.post<GlobalType>("/admin/inventory/types", payload, withAdmin(adminKey, actor));
+  return res.data;
+}
+
+export async function updateGlobalType(
+  adminKey: string,
+  id: string,
+  payload: GlobalTypeUpdatePayload,
+  actor?: string
+) {
+  const res = await api.patch<GlobalType>(`/admin/inventory/types/${id}`, payload, withAdmin(adminKey, actor));
+  return res.data;
+}
+
+export async function deleteGlobalType(adminKey: string, id: string, actor?: string) {
+  await api.delete(`/admin/inventory/types/${id}`, withAdmin(adminKey, actor));
 }
 
 /* Artikel */

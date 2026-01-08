@@ -2,7 +2,7 @@
 
 - Aufgabe: OpenAPI-Typgenerierung einführen (Scripts + lokale Spec).  
   - App: admin & customer  
-  - Dateien: `admin_frontend/admin-ui/package.json`, `customer_frontend/customer-ui/package.json`, `docs/openapi/openapi.json`, `src/api/gen/openapi.ts` je App.  
+  - Dateien: `admin_frontend/admin-ui/package.json`, `customer_frontend/customer-ui/package.json`, `src/api/gen/openapi.ts` je App (Quelle: `https://api.test.myitnetwork.de/openapi.json`).  
   - Ziel: Typen reproduzierbar generieren (remote/local) und als Basis für Wrapper nutzen.
 
 - Aufgabe: Axios-Clients zentralisieren und Basis-URL auf `/api` fixieren.  

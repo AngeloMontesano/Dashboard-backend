@@ -5,10 +5,9 @@
 - Die generierten Typen dienen als einzige Quelle für Payload-Formate in zentralen API-Wrappern.
 
 ## Generierung
-- Remote: `npm run gen:types` (nutzt `https://api.test.myitnetwork.de/openapi.json`).
-- Lokal: `npm run gen:types:local` (nutzt `docs/openapi/openapi.json`).
+- `npm run gen:types` nutzt `https://api.test.myitnetwork.de/openapi.json` als Single Source of Truth.
 - Die generierte Datei landet je Frontend unter `src/api/gen/openapi.ts`.
-- `docs/openapi/openapi.json` enthält die referenzierte Spezifikation im Repository.
+- Lokale Kopien werden nicht als Quelle für die Typgenerierung verwendet.
 
 ## Nutzung in Wrappern (Beispiele)
 - Admin Tenants:
@@ -28,7 +27,7 @@
 ## Regeln
 - `src/api/gen/openapi.ts` wird nicht manuell editiert.
 - Wrapper nutzen die generierten Typen für Requests (Payload) und Responses (Resultate).
-- Neue Endpunkte zuerst in `docs/openapi/openapi.json` pflegen (lokale Quelle), dann Typen regenerieren; Remote-Schema ist optional.
+- Neue Endpunkte zuerst im zentralen OpenAPI unter `https://api.test.myitnetwork.de/openapi.json` pflegen, dann Typen regenerieren.
 
 ## Known Issues
 - Backend muss die aktualisierten OpenAPI-Definitionen (Login, Items-Import/Export, Movements, Set-Password, Reporting) bestätigen, damit die generierten Typen zur Laufzeit passen.

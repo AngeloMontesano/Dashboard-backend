@@ -232,6 +232,9 @@
               :actor="ui.actor"
             />
 
+          <!-- SECTION: Backup -->
+            <AdminBackupView v-else-if="ui.section === 'backup'" :tenant="tenantContext" />
+
           <!-- SECTION: Settings -->
             <AdminSettingsView
               v-else
@@ -293,7 +296,7 @@ import GlobaleKategorienView from "./views/GlobaleKategorienView.vue";
 import GlobaleTypenView from "./views/GlobaleTypenView.vue";
 import GlobaleEinheitenView from "./views/GlobaleEinheitenView.vue";
 import GlobaleBranchenView from "./views/GlobaleBranchenView.vue";
-import GlobaleKundenEinstellungenView from "./views/GlobaleKundenEinstellungenView.vue";
+import AdminBackupView from "./views/AdminBackupView.vue";
 
 /* Zentraler Toast State */
 const { toast } = useToast();
@@ -313,6 +316,7 @@ const adminDashboardSections = [
   { id: "users", label: "Admin User", icon: "👤" },
   { id: "settings", label: "Einstellungen", icon: "⚙️" },
   { id: "operations", label: "Operations", icon: "🛠️" },
+  { id: "backup", label: "Backup", icon: "💾" },
 ] as const;
 
 const globalSections = [
@@ -422,6 +426,7 @@ const pageTitle = computed(() => {
     users: "Benutzer",
     memberships: "Kunden User",
     operations: "Operations",
+    backup: "Backup",
     settings: "Einstellungen",
     "globals-catalog": "Globale Kataloge",
     "globals-articles": "Globale Artikel",
@@ -439,6 +444,7 @@ const pageSubtitle = computed(() => {
   if (ui.section === "users") return "Admin-Portal Benutzer verwalten";
   if (ui.section === "memberships") return "User mit Tenants verknüpfen und Rollen setzen";
   if (ui.section === "operations") return "Health, Audit, Snapshots und Logs";
+  if (ui.section === "backup") return "Tenant-spezifische Backups mit Schema-Introspektion";
   if (ui.section === "globals-articles") return "Artikel-Stammdaten verwalten";
   if (ui.section === "globals-categories") return "Kategorien als globale Stammdaten pflegen";
   if (ui.section === "globals-types") return "Typen für globale Artikel pflegen";
@@ -592,6 +598,7 @@ function syncFromLocation() {
     "/kunden": "kunden",
     "/users": "users",
     "/memberships": "memberships",
+    "/backup": "backup",
     "/settings": "settings",
   };
 

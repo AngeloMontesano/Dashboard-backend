@@ -19,7 +19,7 @@
       <div class="table-card">
         <div class="table-card__header">
           <div class="tableTitle">Import / Export</div>
-          <div class="text-muted text-small">CSV-Trenner: Semikolon. Kategorien/Einheiten müssen existieren.</div>
+          <div class="text-muted text-small">CSV-Trenner: Semikolon. Kategorien/Einheiten/Typen müssen existieren.</div>
         </div>
         <div class="box stack">
           <div class="row gap8 wrap">
@@ -39,6 +39,7 @@
           </div>
           <ul class="bullets">
             <li>Pflichtfelder: <code>sku</code>, <code>barcode</code>, <code>name</code>. Kategorienamen müssen vorhanden sein.</li>
+            <li>Optional: <code>type</code> (Typname, falls gepflegt).</li>
             <li>CSV Header: {{ csvColumns.join(";") }}</li>
           </ul>
         </div>
@@ -302,6 +303,7 @@ const csvColumns = [
   "target_stock",
   "recommended_stock",
   "order_mode",
+  "type",
 ];
 
 const unitOptions = computed<GlobalUnit[]>(() => {

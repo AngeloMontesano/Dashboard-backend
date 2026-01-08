@@ -141,4 +141,5 @@
 - B-05 Backend/Frontend: Globale Typen an Admin-API angebunden (CRUD + View-Wiring).
 - B-05 Admin-UI: Globale Artikel um Typ-Filter/Anzeige erweitert, Backend-Items nutzen type_id.
 - B-05 OpenAPI: admin inventory types und type_id in Items dokumentiert.
+- B-05 Admin-Import/Export: globale Artikel CSV/XLSX um Typ-Spalte ergänzt (optional).
 - Offene Punkte: restliche Next-Tasks fortführen (A-05/I-04 Review), B-03 Review der Migration.

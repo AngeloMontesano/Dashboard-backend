@@ -44,6 +44,7 @@ CSV_DELIMITER = ";"
 CATEGORY_COLUMNS: tuple[str, ...] = ("name", "is_active", "is_system")
 UNIT_COLUMNS: tuple[str, ...] = ("code", "label", "is_active")
 INDUSTRY_MAPPING_COLUMNS: tuple[str, ...] = ("action", "sku", "barcode", "name", "category", "is_active", "item_id")
+GLOBAL_ITEM_COLUMNS: tuple[str, ...] = (*CSV_COLUMNS, "type")
 
 
 router = APIRouter(prefix="/inventory", tags=["admin-inventory"], dependencies=[Depends(require_admin_key), Depends(get_admin_actor)])
@@ -690,6 +691,15 @@ async def admin_import_items(
                 if category is None:
                     raise ValueError(f"Kategorie '{category_name}' nicht gefunden")
 
+            type_name = str(row.get("type") or "").strip()
+            global_type = None
+            if type_name:
+                global_type = await db.scalar(
+                    select(GlobalType).where(func.lower(GlobalType.name) == func.lower(type_name))
+                )
+                if global_type is None:
+                    raise ValueError(f"Typ '{type_name}' nicht gefunden")
+
             def _to_int(val: object) -> int:
                 raw = str(val or "").strip()
                 return int(raw or 0)
@@ -711,6 +721,7 @@ async def admin_import_items(
                 item.name = name
                 item.description = row.get("description") or ""
                 item.category_id = category.id if category else None
+                item.type_id = global_type.id if global_type else None
                 item.quantity = quantity
                 item.unit = unit
                 item.is_active = is_active
@@ -729,6 +740,7 @@ async def admin_import_items(
                     name=name,
                     description=row.get("description") or "",
                     category_id=category.id if category else None,
+                    type_id=global_type.id if global_type else None,
                     quantity=quantity,
                     unit=unit,
                     is_active=is_active,
@@ -767,12 +779,17 @@ async def admin_export_items(
     if category_ids:
         cat_rows = (await db.scalars(select(Category).where(Category.id.in_(category_ids)))).all()
         categories = {c.id: c for c in cat_rows}
+    type_ids = {row.type_id for row in rows if row.type_id}
+    types: dict = {}
+    if type_ids:
+        type_rows = (await db.scalars(select(GlobalType).where(GlobalType.id.in_(type_ids)))).all()
+        types = {t.id: t for t in type_rows}
 
     if format == "xlsx":
         wb = Workbook()
         ws = wb.active
         ws.title = "Items"
-        ws.append(list(CSV_COLUMNS))
+        ws.append(list(GLOBAL_ITEM_COLUMNS))
         for item in rows:
             ws.append(
                 [
@@ -789,6 +806,7 @@ async def admin_export_items(
                     item.target_stock,
                     item.recommended_stock,
                     item.order_mode,
+                    types.get(item.type_id).name if item.type_id else "",
                 ]
             )
         out = BytesIO()
@@ -801,7 +819,7 @@ async def admin_export_items(
         )
 
     buf = StringIO()
-    writer = csv.DictWriter(buf, fieldnames=CSV_COLUMNS, delimiter=CSV_DELIMITER)
+    writer = csv.DictWriter(buf, fieldnames=GLOBAL_ITEM_COLUMNS, delimiter=CSV_DELIMITER)
     writer.writeheader()
     for item in rows:
         writer.writerow(
@@ -819,6 +837,7 @@ async def admin_export_items(
                 "target_stock": item.target_stock,
                 "recommended_stock": item.recommended_stock,
                 "order_mode": item.order_mode,
+                "type": types.get(item.type_id).name if item.type_id else "",
             }
         )
     return StreamingResponse(

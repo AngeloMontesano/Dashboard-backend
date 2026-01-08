@@ -299,6 +299,7 @@ import GlobaleKategorienView from "./views/GlobaleKategorienView.vue";
 import GlobaleTypenView from "./views/GlobaleTypenView.vue";
 import GlobaleEinheitenView from "./views/GlobaleEinheitenView.vue";
 import GlobaleBranchenView from "./views/GlobaleBranchenView.vue";
+import GlobaleKundenEinstellungenView from "./views/GlobaleKundenEinstellungenView.vue";
 import AdminBackupView from "./views/AdminBackupView.vue";
 
 /* Zentraler Toast State */
@@ -453,6 +454,7 @@ const pageSubtitle = computed(() => {
   if (ui.section === "globals-types") return "Typen für globale Artikel pflegen";
   if (ui.section === "globals-units") return "Artikel-Einheiten pflegen";
   if (ui.section === "globals-industries") return "Branchen pflegen und Artikel zuordnen";
+  if (ui.section === "globals-customer-settings") return "Support- und Hilfeinformationen pflegen";
   return "Security, Theme, Feature Flags";
 });
 

@@ -3,6 +3,7 @@
 - [ADMIN-UI-02] (ADMIN_UI_STYLE_SYSTEM) Theme-Handling zentralisieren (`src/theme/theme.ts`) und useTheme darauf aufbauen.
 - [ADMIN-UI-03] (ADMIN_UI_STYLE_SYSTEM) Layout-Politur für Filter-/Action-Reihen und Import-File-Inputs (Grid/Spacing, responsive).
 - [ADMIN-UI-04] (ADMIN_UI_STYLE_SYSTEM) Admin-Standards dokumentieren (`docs/standards/ADMIN_UI_STANDARDS.md`) + WORKLOG/TODO pflegen.
+- [ADMIN-UI-05] (ADMIN_UI_STYLE_SYSTEM) Admin-Login Background auf Customer-Login parity (Glow-Verlauf, Dark/Light) gebracht.
 
 ## Now (Top 10)
 - [A-01] Tenant-Status-API spezifizieren (`/api/public/tenant-status`) – Epic A

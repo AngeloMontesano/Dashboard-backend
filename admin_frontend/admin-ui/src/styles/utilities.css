@@ -421,14 +421,12 @@
   overflow: auto;
 }
 
+/* auth-shell background moved to styles/background/login.css */
 .auth-shell{
   min-height: 100vh;
   display: grid;
   place-items: center;
-  padding: var(--space-12);
-  position: relative;
-  background: color-mix(in srgb, var(--bg) 82%, transparent);
-  backdrop-filter: blur(18px);
+  padding: var(--space-16);
 }
 
 .auth-card{

@@ -910,3 +910,14 @@
   - Login-Overlay milchiger gestaltet durch semi-transparente Hintergrundmischung + Blur auf `.auth-shell`.
 - Einbauort
   - `admin_frontend/admin-ui/src/styles/utilities.css`
+
+## Schritt 16 – Admin Login Background Parity
+- Datum/Uhrzeit: 2026-01-09T14:00:00Z
+- Task-ID: ADMIN-UI-LOGIN-BG-PARITY
+- Was geändert wurde
+  - Customer-Login Background in Admin übernommen (dunkler Verlauf + Glow-Radials in Dark Mode).
+  - Login-Background in eigenes Stylesheet ausgelagert (`styles/background/login.css`), Aurora-Overlay im Login deaktiviert.
+- Einbauorte
+  - `admin_frontend/admin-ui/src/styles/background/login.css`
+  - `admin_frontend/admin-ui/src/App.vue`
+  - `admin_frontend/admin-ui/src/main.ts`

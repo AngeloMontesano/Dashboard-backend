@@ -1,14 +1,12 @@
 # Roadmap Index
 
 ## Standards (nicht verhandelbar)
-- [Frontend Rules](../standards/FRONTEND_RULES.md): Genau eine Axios-Quelle pro App, Basis-URL strikt `/api`, keine Host-Ermittlung im Code, Tenant- bzw. Admin-Header nur über die bereitgestellten Helper.
-- [API Clients](../standards/API_CLIENTS.md): Admin-Client mit Pflichtheader `X-Admin-Key` (optional `X-Admin-Actor`), Customer-Client mit Tenant-Headern aus `getTenantHeaders()`, Timeouts zentral (15s/20s), keine zusätzlichen `axios.create` Instanzen.
-- [OpenAPI Types](../standards/OPENAPI_TYPES.md): Typen kommen aus `docs/openapi/openapi.json`, Wrapper nutzen ausschließlich die generierte `openapi.ts`, keine manuellen Änderungen daran.
-- [UI/Design/CSS](../standards/DESIGN_SYSTEM.md) · [COMPONENT_CONVENTIONS](../standards/COMPONENT_CONVENTIONS.md) · [CSS_AND_UI_CONVENTIONS](../standards/CSS_AND_UI_CONVENTIONS.md): Styling über Tokens/Utilities, keine Inline-Styles oder neuen Farbwerte in Views, UI-Bausteine unter `src/components/ui/`, PrimeVue nur im Customer-Frontend.
-- [Error Handling](../standards/ERROR_HANDLING.md): Fehlerklassifizierung (`auth`, `client`, `server`, `network`, `unknown`), keine rohen HTTP-Fehler im UI, stattdessen Liste/Badges mit passenden Aktionen (Retry/Login/Edit).
-- [Darkmode/Theme Tokens](../standards/DARKMODE.md) & [THEME_TOKENS](../standards/THEME_TOKENS.md): Theme-State via `useTheme`, Persistenz in `localStorage`, `data-theme` am Root; alle Farben/Abstände/Radii über Tokens.
-- OpenAPI Quelle (Single Point of Truth): `https://api.test.myitnetwork.de/openapi.json` – lokale `docs/openapi/openapi.json` spiegelt diesen Stand, Generierung erfolgt darüber.
-- Typgenerierung: `npm run gen:types` (remote Quelle) oder `npm run gen:types:local` (lokale Datei); Ausgabedatei pro Frontend: `src/api/gen/openapi.ts` (nicht manuell editieren).
+- [Frontend Rules](../standards/FRONTEND_RULES.md): Eine Axios-Quelle pro App, Basis-URL immer `/api`, keine Host-Ermittlung im Frontend, Tenant-Header nur über die vorgesehenen Helper.
+- [API Clients](../standards/API_CLIENTS.md): Admin-Client mit Pflichtheader `X-Admin-Key`, Customer-Client mit Tenant-Headern aus `getTenantHeaders()`, Timeouts zentral (15s/20s), keine zusätzlichen `axios.create` Instanzen.
+- [OpenAPI Types](../standards/OPENAPI_TYPES.md): Typen werden aus `https://api.test.myitnetwork.de/openapi.json` generiert (Single Source of Truth), Wrapper nutzen ausschließlich diese Typen, `openapi.ts` ist unverändert generiert.
+- [Component/Design/CSS Standards](../standards/DESIGN_SYSTEM.md), [COMPONENT_CONVENTIONS](../standards/COMPONENT_CONVENTIONS.md), [CSS_AND_UI_CONVENTIONS](../standards/CSS_AND_UI_CONVENTIONS.md): Styles über Tokens/Utilities, keine Inline-Styles, UI-Bausteine unter `src/components/ui/`, PrimeVue bleibt nur im Customer-Frontend-historie ersetzt.
+- [Error Handling](../standards/ERROR_HANDLING.md): Fehlerklassifizierung (`auth`, `client`, `server`, `network`, `unknown`), keine rohen HTTP-Fehler im UI, Retry-/Login-/Edit-Aktionen pro Kategorie.
+- [Darkmode/Theme Tokens](../standards/DARKMODE.md) & [THEME_TOKENS](../standards/THEME_TOKENS.md): Light/Dark per `useTheme`, Persistenz in `localStorage`, Tokens definieren alle Farben/Abstände; `data-theme` am Root setzen.
 
 ## Epic-Template (verbindlich)
 1. Ziel

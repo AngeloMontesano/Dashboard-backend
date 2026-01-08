@@ -250,6 +250,14 @@
             <input type="checkbox" v-model="settingsState.form.auto_order_enabled" :disabled="settingsState.loading" />
             <span>Auto-Bestellung aktiv</span>
           </label>
+          <label class="field checkbox">
+            <input
+              type="checkbox"
+              v-model="settingsState.form.barcode_scanner_reduce_enabled"
+              :disabled="settingsState.loading"
+            />
+            <span>Barcodescanner Bestand reduzieren</span>
+          </label>
         </div>
         <div class="action-row" v-if="settingsState.form">
           <button class="btnGhost small" type="button" :disabled="settingsState.loading" @click="loadTenantSettings(selectedTenant.id)">

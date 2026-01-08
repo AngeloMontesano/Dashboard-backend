@@ -21,6 +21,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/public/tenant-status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Public Tenant Status */
+        get: operations["public_tenant_status_public_tenant_status_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/inventory/ping": {
         parameters: {
             query?: never;
@@ -1295,10 +1312,128 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/global/industries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Admin List Global Industries */
+        get: operations["admin_list_global_industries_admin_global_industries_get"];
+        put?: never;
+        /** Admin Create Global Industry */
+        post: operations["admin_create_global_industry_admin_global_industries_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/global/industries/{industry_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Admin Delete Global Industry */
+        delete: operations["admin_delete_global_industry_admin_global_industries__industry_id__delete"];
+        options?: never;
+        head?: never;
+        /** Admin Update Global Industry */
+        patch: operations["admin_update_global_industry_admin_global_industries__industry_id__patch"];
+        trace?: never;
+    };
+    "/admin/global/categories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Admin List Global Categories */
+        get: operations["admin_list_global_categories_admin_global_categories_get"];
+        put?: never;
+        /** Admin Create Global Category */
+        post: operations["admin_create_global_category_admin_global_categories_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/global/categories/{category_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Admin Delete Global Category */
+        delete: operations["admin_delete_global_category_admin_global_categories__category_id__delete"];
+        options?: never;
+        head?: never;
+        /** Admin Update Global Category */
+        patch: operations["admin_update_global_category_admin_global_categories__category_id__patch"];
+        trace?: never;
+    };
+    "/admin/global/types": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Admin List Global Types */
+        get: operations["admin_list_global_types_admin_global_types_get"];
+        put?: never;
+        /** Admin Create Global Type */
+        post: operations["admin_create_global_type_admin_global_types_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/global/types/{type_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Admin Delete Global Type */
+        delete: operations["admin_delete_global_type_admin_global_types__type_id__delete"];
+        options?: never;
+        head?: never;
+        /** Admin Update Global Type */
+        patch: operations["admin_update_global_type_admin_global_types__type_id__patch"];
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** PublicTenantStatus */
+        PublicTenantStatus: {
+            /** @enum {string} */
+            status: "ok" | "not_found" | "inactive" | "unavailable";
+            slug?: string | null;
+            host?: string | null;
+            tenant_id?: string | null;
+            is_active?: boolean | null;
+            reason?: string | null;
+        };
         /** AdminCredentialLogin */
         AdminCredentialLogin: {
             /**
@@ -1478,20 +1613,23 @@ export interface components {
             /** Synced Admin Items */
             synced_admin_items: number;
         };
-        /** IndustryCreate */
-        IndustryCreate: {
-            /** Name */
-            name: string;
+        /** IndustryAssignTenantsRequest */
+        IndustryAssignTenantsRequest: {
             /**
-             * Description
-             * @default
+             * Tenant Ids
+             * @default null
              */
-            description: string;
+            tenant_ids: string[];
             /**
-             * Is Active
+             * Initial Quantity
+             * @default 0
+             */
+            initial_quantity: number;
+            /**
+             * Preserve Existing Quantity
              * @default true
              */
-            is_active: boolean;
+            preserve_existing_quantity: boolean;
         };
         /** IndustryMappingImportResult */
         IndustryMappingImportResult: {
@@ -1522,6 +1660,21 @@ export interface components {
             is_active: boolean;
             /** Id */
             id: string;
+        };
+        /** IndustryCreate */
+        IndustryCreate: {
+            /** Name */
+            name: string;
+            /**
+             * Description
+             * @default
+             */
+            description: string;
+            /**
+             * Is Active
+             * @default true
+             */
+            is_active: boolean;
         };
         /** IndustryOverlapCounts */
         IndustryOverlapCounts: {
@@ -2205,6 +2358,11 @@ export interface components {
              * @default
              */
             tax_number: string;
+            /**
+             * Barcode Scanner Reduce Enabled
+             * @default false
+             */
+            barcode_scanner_reduce_enabled: boolean;
             /** Industry Id */
             industry_id?: string | null;
             /** Id */
@@ -2277,6 +2435,11 @@ export interface components {
              * @default
              */
             tax_number: string;
+            /**
+             * Barcode Scanner Reduce Enabled
+             * @default false
+             */
+            barcode_scanner_reduce_enabled: boolean;
             /** Industry Id */
             industry_id?: string | null;
         };
@@ -2407,6 +2570,68 @@ export interface components {
             /** Error Type */
             type: string;
         };
+        /** GlobalIndustry */
+        GlobalIndustry: {
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
+            /** Is Active */
+            is_active: boolean;
+        };
+        /** GlobalCategory */
+        GlobalCategory: {
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
+            /** Is Active */
+            is_active: boolean;
+            /** Is System */
+            is_system: boolean;
+        };
+        /** GlobalType */
+        GlobalType: {
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
+            /** Is Active */
+            is_active: boolean;
+        };
+        /** GlobalIndustryList */
+        GlobalIndustryList: {
+            /** Items */
+            items: components["schemas"]["GlobalIndustry"][];
+            /** Total */
+            total: number;
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+        };
+        /** GlobalCategoryList */
+        GlobalCategoryList: {
+            /** Items */
+            items: components["schemas"]["GlobalCategory"][];
+            /** Total */
+            total: number;
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+        };
+        /** GlobalTypeList */
+        GlobalTypeList: {
+            /** Items */
+            items: components["schemas"]["GlobalType"][];
+            /** Total */
+            total: number;
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+        };
     };
     responses: never;
     parameters: never;
@@ -2445,6 +2670,29 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    public_tenant_status_public_tenant_status_get: {
+        parameters: {
+            query?: {
+                /** @description Optional Tenant Slug, sonst Auflösung aus Host/Header */
+                slug?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Tenant Status */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicTenantStatus"];
                 };
             };
         };
@@ -5553,6 +5801,487 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+        };
+    };
+    admin_list_global_industries_admin_global_industries_get: {
+        parameters: {
+            query?: {
+                q?: string | null;
+                is_active?: boolean | null;
+                limit?: number | null;
+                offset?: number | null;
+            };
+            header?: {
+                "x-admin-key"?: string | null;
+                "x-admin-actor"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GlobalIndustryList"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_create_global_industry_admin_global_industries_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-admin-key"?: string | null;
+                "x-admin-actor"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Name */
+                    name: string;
+                    /**
+                     * Is Active
+                     * @default true
+                     */
+                    is_active?: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GlobalIndustry"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_delete_global_industry_admin_global_industries__industry_id__delete: {
+        parameters: {
+            query?: {
+                confirm?: boolean | null;
+            };
+            header?: {
+                "x-admin-key"?: string | null;
+                "x-admin-actor"?: string | null;
+            };
+            path: {
+                industry_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_update_global_industry_admin_global_industries__industry_id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-admin-key"?: string | null;
+                "x-admin-actor"?: string | null;
+            };
+            path: {
+                industry_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Name */
+                    name?: string;
+                    /** Is Active */
+                    is_active?: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GlobalIndustry"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_list_global_categories_admin_global_categories_get: {
+        parameters: {
+            query?: {
+                q?: string | null;
+                is_active?: boolean | null;
+                limit?: number | null;
+                offset?: number | null;
+            };
+            header?: {
+                "x-admin-key"?: string | null;
+                "x-admin-actor"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GlobalCategoryList"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_create_global_category_admin_global_categories_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-admin-key"?: string | null;
+                "x-admin-actor"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Name */
+                    name: string;
+                    /**
+                     * Is Active
+                     * @default true
+                     */
+                    is_active?: boolean;
+                    /**
+                     * Is System
+                     * @default false
+                     */
+                    is_system?: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GlobalCategory"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_delete_global_category_admin_global_categories__category_id__delete: {
+        parameters: {
+            query?: {
+                confirm?: boolean | null;
+            };
+            header?: {
+                "x-admin-key"?: string | null;
+                "x-admin-actor"?: string | null;
+            };
+            path: {
+                category_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_update_global_category_admin_global_categories__category_id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-admin-key"?: string | null;
+                "x-admin-actor"?: string | null;
+            };
+            path: {
+                category_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Name */
+                    name?: string;
+                    /** Is Active */
+                    is_active?: boolean;
+                    /** Is System */
+                    is_system?: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GlobalCategory"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_list_global_types_admin_global_types_get: {
+        parameters: {
+            query?: {
+                q?: string | null;
+                is_active?: boolean | null;
+                limit?: number | null;
+                offset?: number | null;
+            };
+            header?: {
+                "x-admin-key"?: string | null;
+                "x-admin-actor"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GlobalTypeList"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_create_global_type_admin_global_types_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-admin-key"?: string | null;
+                "x-admin-actor"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Name */
+                    name: string;
+                    /**
+                     * Is Active
+                     * @default true
+                     */
+                    is_active?: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GlobalType"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_delete_global_type_admin_global_types__type_id__delete: {
+        parameters: {
+            query?: {
+                confirm?: boolean | null;
+            };
+            header?: {
+                "x-admin-key"?: string | null;
+                "x-admin-actor"?: string | null;
+            };
+            path: {
+                type_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_update_global_type_admin_global_types__type_id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-admin-key"?: string | null;
+                "x-admin-actor"?: string | null;
+            };
+            path: {
+                type_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Name */
+                    name?: string;
+                    /** Is Active */
+                    is_active?: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GlobalType"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

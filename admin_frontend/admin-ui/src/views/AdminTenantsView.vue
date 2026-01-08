@@ -659,28 +659,3 @@ function composeAddress(street: string, number: string) {
   return [street?.trim(), number?.trim()].filter(Boolean).join(" ");
 }
 </script>
-
-<style scoped>
-.settings-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 12px;
-  margin-top: 12px;
-}
-
-.settings-grid .field {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.settings-grid .field.checkbox {
-  flex-direction: row;
-  align-items: center;
-  gap: 8px;
-}
-
-.settings-grid .span-2 {
-  grid-column: span 2;
-}
-</style>

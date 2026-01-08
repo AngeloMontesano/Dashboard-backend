@@ -35,7 +35,7 @@
         <button class="btnGhost" disabled>Passwort Reset</button>
       </div>
 
-      <div class="sectionTitle" style="margin-top: 12px;">Notiz</div>
+      <div class="sectionTitle u-mt-6">Notiz</div>
       <textarea
         class="input area"
         :value="note"
@@ -65,52 +65,3 @@ defineEmits<{
   (e: "update:note", v: string): void;
 }>();
 </script>
-
-<style scoped>
-.drawerCard {
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  box-shadow: var(--shadow);
-  padding: 14px;
-  margin-top: 12px;
-}
-
-.drawerHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 12px;
-}
-
-.drawerTitle {
-  font-weight: 800;
-}
-
-.drawerSub {
-  color: var(--muted);
-  font-size: 12px;
-  margin-top: 2px;
-}
-
-.drawerBody {
-  display: grid;
-  gap: 10px;
-}
-
-.rowActions {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.sectionTitle {
-  font-weight: 700;
-  font-size: 13px;
-}
-
-.input.area {
-  min-height: 90px;
-}
-</style>

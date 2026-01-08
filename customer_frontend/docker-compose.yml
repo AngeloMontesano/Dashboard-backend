@@ -1,6 +1,11 @@
-  admin_ui:
+  customer_ui:
     build: ./customer-ui
     ports:
-      - "6173:6173"
+      - "5173:5173"
+    environment:
+      TZ: ${TZ}
+    volumes:
+      - ${CUSTOMER_UI_NODE_CACHE}:/root/.npm
+      - ${CUSTOMER_UI_LOGS}:/app/logs
     depends_on:
       - api

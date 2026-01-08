@@ -37,7 +37,7 @@
         </div>
       </div>
 
-      <div class="sectionTitle" style="margin-top: 12px;">Payload</div>
+      <div class="sectionTitle u-mt-6">Payload</div>
 
       <div class="box">
         <div class="codeHeader">

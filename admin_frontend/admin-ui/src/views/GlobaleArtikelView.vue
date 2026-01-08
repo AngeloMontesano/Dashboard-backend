@@ -44,7 +44,7 @@
         </div>
       </div>
 
-      <div class="filter-card two-column">
+      <div class="filter-card three-column">
         <div class="stack">
           <label class="field-label" for="global-item-search">Suche</label>
           <input
@@ -65,6 +65,13 @@
           </select>
           <span class="text-muted text-small">Treffer: {{ items.length }} / {{ totalItems }}</span>
         </div>
+        <div class="stack">
+          <label class="field-label" for="global-item-type">Typ</label>
+          <select id="global-item-type" class="input" v-model="typeFilter" @change="loadItems">
+            <option value="">Alle</option>
+            <option v-for="t in types" :key="t.id" :value="t.id">{{ t.name }}</option>
+          </select>
+        </div>
       </div>
 
       <div class="table-card">
@@ -80,6 +87,7 @@
                 <th>Artikel</th>
                 <th>Kategorie</th>
                 <th>Einheit</th>
+                <th>Typ</th>
                 <th>Status</th>
                 <th class="narrowCol"></th>
               </tr>
@@ -100,6 +108,7 @@
                 </td>
                 <td>{{ item.category_name || getCategoryName(item.category_id) || "—" }}</td>
                 <td class="mono">{{ item.unit }}</td>
+                <td>{{ item.type_id ? getTypeName(item.type_id) : "—" }}</td>
                 <td>
                   <span class="tag" :class="item.is_active ? 'ok' : 'bad'">
                     {{ item.is_active ? "aktiv" : "deaktiviert" }}
@@ -113,7 +122,7 @@
                 </td>
               </tr>
               <tr v-if="!items.length">
-                <td colspan="6" class="mutedPad">Keine Artikel gefunden.</td>
+                <td colspan="7" class="mutedPad">Keine Artikel gefunden.</td>
               </tr>
             </tbody>
           </table>
@@ -153,6 +162,13 @@
                   <select class="input" v-model="modal.category_id">
                     <option value="">Keine</option>
                     <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
+                  </select>
+                </label>
+                <label class="field">
+                  <span class="field-label">Typ</span>
+                  <select class="input" v-model="modal.type_id">
+                    <option value="">Kein Typ</option>
+                    <option v-for="t in types" :key="t.id" :value="t.id">{{ t.name }}</option>
                   </select>
                 </label>
                 <label class="field span-2">
@@ -209,9 +225,11 @@ import { computed, reactive, ref, onMounted } from "vue";
 import { useToast } from "../composables/useToast";
 import {
   getCategoryName,
+  getTypeName,
   useGlobalMasterdata,
   type GlobalItem,
   type GlobalCategory,
+  type GlobalType,
   type GlobalUnit,
 } from "../composables/useGlobalMasterdata";
 import {
@@ -223,6 +241,7 @@ import {
   exportGlobalItems,
   fetchGlobalCategories,
   fetchGlobalUnits,
+  fetchGlobalTypes,
 } from "../api/globals";
 import UiPage from "../components/ui/UiPage.vue";
 import UiSection from "../components/ui/UiSection.vue";
@@ -233,11 +252,12 @@ const props = defineProps<{
 }>();
 
 const { toast } = useToast();
-const { items, categories, units: globalUnits, replaceItems, replaceCategories, replaceUnits, upsertItem } =
+const { items, categories, types, units: globalUnits, replaceItems, replaceCategories, replaceTypes, replaceUnits, upsertItem } =
   useGlobalMasterdata();
 
 const search = ref("");
 const categoryFilter = ref("");
+const typeFilter = ref("");
 const selectedId = ref("");
 const totalItems = ref(0);
 const page = ref(1);
@@ -260,6 +280,7 @@ const modal = reactive({
   description: "",
   unit: "pcs",
   category_id: "",
+  type_id: "",
   quantity: 0,
   min_stock: 0,
   target_stock: 0,
@@ -295,14 +316,16 @@ const unitOptions = computed<GlobalUnit[]>(() => {
 async function loadCategoriesUnits() {
   if (!props.adminKey) return;
   try {
-    const [cats, units] = await Promise.all([
+    const [cats, units, globalTypes] = await Promise.all([
       fetchGlobalCategories(props.adminKey, props.actor),
       fetchGlobalUnits(props.adminKey, props.actor),
+      fetchGlobalTypes(props.adminKey, props.actor),
     ]);
     replaceCategories(cats);
     replaceUnits(units);
+    replaceTypes(globalTypes);
   } catch (e: any) {
-    toast(`Kategorien/Einheiten konnten nicht geladen werden: ${e?.message || e}`, "error");
+    toast(`Kategorien/Einheiten/Typen konnten nicht geladen werden: ${e?.message || e}`, "error");
   }
 }
 
@@ -316,6 +339,7 @@ async function loadItems() {
     const params: Record<string, any> = {
       q: search.value || undefined,
       category_id: categoryFilter.value || undefined,
+      type_id: typeFilter.value || undefined,
       page: page.value,
       page_size: pageSize,
     };
@@ -343,6 +367,7 @@ function openCreateModal() {
   modal.description = "";
   modal.unit = unitOptions.value[0]?.code || "pcs";
   modal.category_id = "";
+  modal.type_id = "";
   modal.quantity = 0;
   modal.min_stock = 0;
   modal.target_stock = 0;
@@ -360,6 +385,7 @@ function openEdit(item: GlobalItem) {
   modal.description = item.description || "";
   modal.unit = item.unit || "pcs";
   modal.category_id = item.category_id || "";
+  modal.type_id = item.type_id || "";
   modal.quantity = item.quantity || 0;
   modal.min_stock = item.min_stock || 0;
   modal.target_stock = item.target_stock || 0;
@@ -393,6 +419,7 @@ async function save() {
       unit: modal.unit || "pcs",
       is_active: modal.is_active,
       category_id: modal.category_id || null,
+      type_id: modal.type_id || null,
       min_stock: Number.isFinite(modal.min_stock) ? Number(modal.min_stock) : 0,
       max_stock: Number.isFinite(modal.max_stock) ? Number(modal.max_stock) : 0,
       target_stock: Number.isFinite(modal.target_stock) ? Number(modal.target_stock) : 0,
@@ -491,16 +518,3 @@ onMounted(() => {
   }
 });
 </script>
-
-<style scoped>
-.modal__footer--with-delete {
-  display: flex;
-  gap: 12px;
-  justify-content: flex-end;
-  padding-top: 12px;
-}
-
-.modal__footer--with-delete .btnGhost.danger {
-  margin-right: auto;
-}
-</style>

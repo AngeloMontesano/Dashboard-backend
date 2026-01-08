@@ -26,6 +26,7 @@ from app.models.item import Item
 from app.models.item_unit import ItemUnit
 from app.models.movement import InventoryMovement
 from app.models.order import InventoryOrder, InventoryOrderItem
+from app.models.global_customer_setting import GlobalCustomerSetting
 from app.models.tenant_setting import TenantSetting
 import app.modules.inventory.schemas as inv_schemas
 from app.modules.inventory.schemas import (
@@ -68,7 +69,8 @@ from app.modules.inventory.schemas import (
     MassImportResult,
     EmailSendResponse,
 )
-from app.modules.admin.smtp_settings_service import get_active_smtp_settings, SmtpConfig
+from app.modules.support.schemas import GlobalCustomerSettingsOut, HelpInfoOut, SalesContactOut, SupportHoursEntry
+from app.modules.support.service import get_or_create_global_customer_settings
 
 router = APIRouter(prefix="/inventory", tags=["inventory"])
 logger = logging.getLogger(__name__)
@@ -1225,6 +1227,25 @@ def _settings_to_out(settings: TenantSetting) -> TenantSettingsOut:
         branch_number=settings.branch_number,
         tax_number=settings.tax_number,
         industry_id=str(settings.industry_id) if settings.industry_id else None,
+        sales_contact_name=settings.sales_contact_name,
+        sales_contact_phone=settings.sales_contact_phone,
+        sales_contact_email=settings.sales_contact_email,
+    )
+
+
+def _global_settings_to_out(settings: GlobalCustomerSetting) -> GlobalCustomerSettingsOut:
+    return GlobalCustomerSettingsOut(
+        id=str(settings.id),
+        support_hours=[
+            SupportHoursEntry(
+                day=str(entry.get("day", "")),
+                time=str(entry.get("time", "")),
+            )
+            for entry in (settings.support_hours or [])
+        ],
+        support_phone=settings.support_phone,
+        support_email=settings.support_email,
+        support_note=settings.support_note,
     )
 
 
@@ -1249,6 +1270,9 @@ async def _get_or_create_settings(*, ctx: TenantContext, db: AsyncSession) -> Te
         contact_name="",
         branch_number="",
         tax_number="",
+        sales_contact_name="",
+        sales_contact_phone="",
+        sales_contact_email="",
         industry_id=None,
     )
     db.add(settings)
@@ -1288,10 +1312,32 @@ async def update_tenant_settings(
     settings.branch_number = payload.branch_number.strip()
     settings.tax_number = payload.tax_number.strip()
     settings.industry_id = payload.industry_id
+    settings.sales_contact_name = payload.sales_contact_name.strip()
+    settings.sales_contact_phone = payload.sales_contact_phone.strip()
+    settings.sales_contact_email = payload.sales_contact_email.strip()
 
     await db.commit()
     await db.refresh(settings)
     return _settings_to_out(settings)
+
+
+@router.get("/help-info", response_model=HelpInfoOut)
+async def get_help_info(
+    ctx: TenantContext = Depends(get_tenant_context),
+    user_ctx: CurrentUserContext = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> HelpInfoOut:
+    tenant_settings = await _get_or_create_settings(ctx=ctx, db=db)
+    global_settings = await get_or_create_global_customer_settings(db)
+    support = HelpInfoOut(
+        support=_global_settings_to_out(global_settings),
+        sales_contact=SalesContactOut(
+            name=tenant_settings.sales_contact_name,
+            phone=tenant_settings.sales_contact_phone,
+            email=tenant_settings.sales_contact_email,
+        ),
+    )
+    return support
 
 
 @router.get("/settings/export", dependencies=[Depends(require_owner_or_admin)])

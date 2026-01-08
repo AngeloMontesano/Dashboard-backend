@@ -12,3 +12,5 @@ __pycache__/
 *.tsbuildinfo
 **/*.tsbuildinfo
 .smtp.json
+z_delete/
+docker-compose.yml

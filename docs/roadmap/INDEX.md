@@ -31,3 +31,21 @@
 - [EPIC_G_DOCUMENTATION_AND_HELP](EPIC_G_DOCUMENTATION_AND_HELP.md)
 - [EPIC_H_MONITORING_LIGHTWEIGHT](EPIC_H_MONITORING_LIGHTWEIGHT.md)
 - [EPIC_I_CONTACT_DATA_AND_SUPPORT](EPIC_I_CONTACT_DATA_AND_SUPPORT.md)
+
+## Spezifikationen & Referenzen
+- Tenant-Status (A-01): [docs/openapi/TENANT_STATUS.md](../openapi/TENANT_STATUS.md) inkl. Proxy-Header-Matrix (A-11 Vorbereitung); Schema `PublicTenantStatus` in [docs/openapi/openapi.json](../openapi/openapi.json)
+- Globale Kataloge (B-02): [docs/openapi/GLOBAL_CATALOG.md](../openapi/GLOBAL_CATALOG.md) mit Paging-Defaults (`limit=50`, max 200), Fehlercodes (`industry_in_use/category_in_use/item_in_use/forbidden_system_record`), Status-Codes, Headerpflicht (`X-Admin-Key`), Response-Envelope ohne `data`-Wrapper und QA/Review-Checkliste; Schemas in [docs/openapi/openapi.json](../openapi/openapi.json) nachziehen
+- OpenAPI Quelle (lokal): [docs/openapi/openapi.json](../openapi/openapi.json)
+
+## Backlog & Logs
+- [TODO.md](../../TODO.md): Priorisierter Now/Next/Later-Backlog mit Epic/Task-IDs.
+- [Epic_TODO.md](../../Epic_TODO.md): Aufgaben je Epic (A–I) als Referenzliste.
+- [WORKLOG.md](../../WORKLOG.md): Chronologische Arbeitsnotizen und Scans.
+- [Epic_WORKLOG.md](../../Epic_WORKLOG.md): Änderungen/Prüfungen auf Epic-Ebene.
+
+## Qualitätscheck
+- Alle Epic-Dateien existieren und sind hier verlinkt.
+- Jede Epic folgt dem Template (Ziel → Risiken) und enthält 8–20 Tasks mit ID, Bereich, Abhängigkeiten und Done-Kriterium.
+- TODO.md und Epic_TODO.md referenzieren die Task-IDs konsistent (Now/Next/Later).
+- WORKLOG.md/Epic_WORKLOG.md dokumentieren Datum, Änderungen und offene Punkte.
+- Standards aus `docs/standards/` sind oben verlinkt und gelten für alle geplanten Arbeiten.

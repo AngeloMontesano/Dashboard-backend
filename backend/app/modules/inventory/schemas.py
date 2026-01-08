@@ -285,6 +285,9 @@ class TenantSettingsBase(BaseModel):
     branch_number: str = Field("", max_length=64)
     tax_number: str = Field("", max_length=64)
     industry_id: Optional[str] = None
+    sales_contact_name: str = Field("", max_length=255)
+    sales_contact_phone: str = Field("", max_length=64)
+    sales_contact_email: str = Field("", max_length=255)
 
 
 class TenantSettingsUpdate(TenantSettingsBase):

@@ -6,8 +6,9 @@ from typing import Optional
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.config import settings
 from app.models.system_email_setting import SystemEmailSetting
+
+DEFAULT_SMTP_USE_TLS = True
 
 
 @dataclass
@@ -17,7 +18,7 @@ class EmailSettings:
     user: Optional[str]
     password: Optional[str]
     from_email: Optional[str]
-    use_tls: bool = True
+    use_tls: bool = DEFAULT_SMTP_USE_TLS
 
     def is_configured(self) -> bool:
         return bool(self.host and self.port and self.from_email)
@@ -25,7 +26,7 @@ class EmailSettings:
 
 async def load_email_settings(db: AsyncSession) -> EmailSettings:
     """
-    Load email settings from DB if present, otherwise fall back to environment.
+    Load email settings from DB.
     """
     row = await db.scalar(select(SystemEmailSetting).limit(1))
     if row:
@@ -35,15 +36,15 @@ async def load_email_settings(db: AsyncSession) -> EmailSettings:
             user=row.user,
             password=row.password,
             from_email=row.from_email,
-            use_tls=row.use_tls if row.use_tls is not None else settings.SMTP_USE_TLS,
+            use_tls=row.use_tls if row.use_tls is not None else DEFAULT_SMTP_USE_TLS,
         )
     return EmailSettings(
-        host=settings.SMTP_HOST,
-        port=settings.SMTP_PORT,
-        user=settings.SMTP_USER,
-        password=settings.SMTP_PASSWORD,
-        from_email=settings.SMTP_FROM,
-        use_tls=settings.SMTP_USE_TLS,
+        host=None,
+        port=None,
+        user=None,
+        password=None,
+        from_email=None,
+        use_tls=DEFAULT_SMTP_USE_TLS,
     )
 
 
@@ -62,7 +63,7 @@ async def upsert_email_settings(
     """
     row = await db.scalar(select(SystemEmailSetting).limit(1))
     if row is None:
-        row = SystemEmailSetting()
+        row = SystemEmailSetting(use_tls=DEFAULT_SMTP_USE_TLS)
         db.add(row)
 
     # Keep existing values when None is provided (e.g., password not changed)
@@ -74,6 +75,8 @@ async def upsert_email_settings(
     row.from_email = from_email
     if use_tls is not None:
         row.use_tls = use_tls
+    elif row.use_tls is None:
+        row.use_tls = DEFAULT_SMTP_USE_TLS
 
     await db.commit()
     await db.refresh(row)
@@ -84,5 +87,5 @@ async def upsert_email_settings(
         user=row.user,
         password=row.password,
         from_email=row.from_email,
-        use_tls=row.use_tls if row.use_tls is not None else settings.SMTP_USE_TLS,
+        use_tls=row.use_tls if row.use_tls is not None else DEFAULT_SMTP_USE_TLS,
     )

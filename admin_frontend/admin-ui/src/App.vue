@@ -10,11 +10,16 @@
     - Sections links sind gekoppelt an Content rechts (keine "toten" Menüs)
   -->
   <div :class="['app', appThemeClass]">
-    <template v-if="!ui.authenticated">
-      <AdminLoginView @loggedIn="applyLogin" />
-    </template>
-    <template v-else>
-      <div class="shell">
+    <div
+      class="bg-aurora"
+      :class="ui.authenticated ? 'bg-aurora--static' : 'bg-aurora--animated'"
+    ></div>
+    <div class="app-content">
+      <template v-if="!ui.authenticated">
+        <AdminLoginView @loggedIn="applyLogin" />
+      </template>
+      <template v-else>
+        <div class="shell">
         <!-- =========================================================
              SIDEBAR
         ========================================================== -->
@@ -207,6 +212,7 @@
             />
 
           <!-- SECTION: Globale Stammdaten -->
+            <GlobaleKatalogeView v-else-if="ui.section === 'globals-catalog'" />
             <GlobaleArtikelView v-else-if="ui.section === 'globals-articles'" :adminKey="ui.adminKey" :actor="ui.actor" />
             <GlobaleKategorienView
               v-else-if="ui.section === 'globals-categories'"
@@ -236,8 +242,9 @@
             />
           </section>
         </main>
-      </div>
-    </template>
+        </div>
+      </template>
+    </div>
 
     <!-- =========================================================
          ZENTRALER TOAST
@@ -275,6 +282,7 @@ import AdminSettingsView from "./views/AdminSettingsView.vue";
 import AdminLoginView from "./views/AdminLoginView.vue";
 import ToastHost from "./components/common/ToastHost.vue";
 import AdminOperationsView from "./views/AdminOperationsView.vue";
+import GlobaleKatalogeView from "./views/GlobaleKatalogeView.vue";
 import GlobaleArtikelView from "./views/GlobaleArtikelView.vue";
 import GlobaleKategorienView from "./views/GlobaleKategorienView.vue";
 import GlobaleTypenView from "./views/GlobaleTypenView.vue";
@@ -302,6 +310,7 @@ const adminDashboardSections = [
 ] as const;
 
 const globalSections = [
+  { id: "globals-catalog", label: "Globale Kataloge", icon: "📚" },
   { id: "globals-articles", label: "Globale Artikel", icon: "📦" },
   { id: "globals-categories", label: "Globale Kategorien", icon: "🗂️" },
   { id: "globals-types", label: "Globale Typen", icon: "🏷️" },
@@ -315,6 +324,7 @@ type GlobalSectionId = (typeof globalSections)[number]["id"];
 type SectionId = CustomerSectionId | AdminDashboardSectionId | GlobalSectionId;
 
 const globalSectionPaths: Record<GlobalSectionId, string> = {
+  "globals-catalog": "/globals",
   "globals-articles": "/globals/articles",
   "globals-categories": "/globals/categories",
   "globals-types": "/globals/types",
@@ -405,6 +415,7 @@ const pageTitle = computed(() => {
     memberships: "Kunden User",
     operations: "Operations",
     settings: "Einstellungen",
+    "globals-catalog": "Globale Kataloge",
     "globals-articles": "Globale Artikel",
     "globals-categories": "Globale Kategorien",
     "globals-types": "Globale Typen",
@@ -583,81 +594,3 @@ onBeforeUnmount(() => {
   window.removeEventListener("popstate", syncFromLocation);
 });
 </script>
-
-<style>
-.topbar-flat {
-  background: transparent;
-  border: none;
-  box-shadow: none;
-  padding: 0;
-  margin: 0 0 4px 0;
-}
-
-.topbar-flat .topRight {
-  align-items: center;
-}
-
-.topActions {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.pageHint {
-  color: var(--muted);
-  margin-top: 4px;
-}
-
-/* Sidebar kompakter */
-.shell {
-  align-items: start;
-}
-
-.sidebar {
-  height: fit-content;
-  position: sticky;
-  top: 12px;
-  align-self: start;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.nav {
-  align-self: start;
-  height: fit-content;
-}
-
-.sideBottom {
-  align-self: start;
-  margin-top: 4px;
-}
-
-.topbar.topbar-flat {
-  padding: 10px 12px 12px;
-  min-height: unset;
-}
-
-.sysRow.compact {
-  justify-content: flex-start;
-  padding: 4px 0;
-}
-
-.statusDot--lg {
-  width: 12px;
-  height: 12px;
-  border: 2px solid rgba(255, 255, 255, 0.15);
-}
-
-.themeOptions {
-  display: grid;
-  gap: 6px;
-}
-
-.themeOption {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--text);
-}
-</style>

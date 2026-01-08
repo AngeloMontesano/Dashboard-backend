@@ -16,7 +16,7 @@
         </div>
       </div>
 
-      <div class="filter-card">
+      <div class="filter-card two-column">
         <div class="stack">
           <label class="field-label" for="global-type-search">Suche</label>
           <input
@@ -105,9 +105,9 @@
             </div>
             <div class="modal__footer">
               <button class="btnGhost" type="button" @click="closeModal">Abbrechen</button>
-              <button class="btnPrimary" type="button" :disabled="busy.save" @click="save">
-                {{ busy.save ? "speichert..." : "Speichern" }}
-              </button>
+      <button class="btnPrimary" type="button" :disabled="busy.save" @click="save">
+        {{ busy.save ? "speichert..." : "Speichern" }}
+      </button>
             </div>
           </div>
         </div>

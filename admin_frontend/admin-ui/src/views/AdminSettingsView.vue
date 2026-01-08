@@ -134,74 +134,6 @@
 
         <section class="settingsSection">
           <div class="sectionHeader">
-            <div class="sectionTitle">Email / SMTP</div>
-            <button class="btnGhost small" @click="toggleSection('email')" :aria-expanded="!sectionCollapsed.email">
-              {{ sectionCollapsed.email ? "Aufklappen" : "Einklappen" }}
-            </button>
-          </div>
-          <div v-if="!sectionCollapsed.email" class="kvGrid">
-            <div class="kv">
-              <div class="k">Host</div>
-              <div class="v">
-                <input class="input" v-model="smtpSettings.host" :disabled="busy.smtpSave || busy.smtpLoad" placeholder="mail.myitnetwork.de" />
-              </div>
-            </div>
-            <div class="kv">
-              <div class="k">Port</div>
-              <div class="v">
-                <input class="input" type="number" v-model.number="smtpSettings.port" :disabled="busy.smtpSave || busy.smtpLoad" />
-              </div>
-            </div>
-            <div class="kv">
-              <div class="k">From</div>
-              <div class="v">
-                <input class="input" type="email" v-model="smtpSettings.from_email" :disabled="busy.smtpSave || busy.smtpLoad" placeholder="notification@example.com" />
-              </div>
-            </div>
-            <div class="kv">
-              <div class="k">User</div>
-              <div class="v">
-                <input class="input" v-model="smtpSettings.user" :disabled="busy.smtpSave || busy.smtpLoad" placeholder="smtp-user" />
-                <div class="muted">Optional, leer lassen falls nicht benötigt.</div>
-              </div>
-            </div>
-            <div class="kv">
-              <div class="k">Passwort</div>
-              <div class="v">
-                <input class="input" type="password" v-model="smtpSettings.password" :disabled="busy.smtpSave || busy.smtpLoad" :placeholder="smtpLoaded.has_password ? '••••••••' : 'Passwort eingeben'" />
-                <div class="muted">Leer lassen, um das bestehende Passwort beizubehalten.</div>
-              </div>
-            </div>
-            <div class="kv">
-              <div class="k">TLS</div>
-              <div class="v">
-                <label class="checkboxRow">
-                  <input type="checkbox" v-model="smtpSettings.use_tls" :disabled="busy.smtpSave || busy.smtpLoad" />
-                  <span>STARTTLS nutzen</span>
-                </label>
-              </div>
-            </div>
-            <div class="kv">
-              <div class="k">Aktionen</div>
-              <div class="v actionsRow">
-                <button class="btn" :disabled="busy.smtpSave || busy.smtpLoad" @click="saveEmailSettings">
-                  {{ busy.smtpSave ? "Speichert..." : "Speichern" }}
-                </button>
-                <div class="row gap8 wrap">
-                  <input class="input" type="email" v-model="emailTarget" :disabled="busy.smtpTest || busy.smtpLoad" placeholder="test@example.com" />
-                  <button class="btnGhost" :disabled="busy.smtpTest || busy.smtpLoad" @click="testEmailSettings">
-                    {{ busy.smtpTest ? "Sendet..." : "Test-E-Mail senden" }}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <div class="divider"></div>
-
-        <section class="settingsSection">
-          <div class="sectionHeader">
             <div class="sectionTitle">Feature Flags (UI)</div>
             <button class="btnGhost small" @click="toggleSection('flags')" :aria-expanded="sectionOpen.flags">
               {{ sectionOpen.flags ? "Einklappen" : "Aufklappen" }}
@@ -388,6 +320,7 @@ type SmtpFormState = {
 const emailForm = ref<SmtpFormState>({
   host: "",
   port: 587,
+  user: "",
   from_email: "",
   has_password: false,
   use_tls: true,
@@ -515,88 +448,3 @@ async function sendTestEmail() {
   }
 }
 </script>
-
-<style scoped>
-.stack{
-  display: grid;
-  gap: 12px;
-}
-.collapsible{
-  border: 1px solid var(--border);
-  border-radius: var(--radius2);
-  background: var(--surface2);
-  padding: 12px;
-  box-shadow: var(--shadow);
-}
-.collapsibleHeader{
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 8px;
-}
-.sectionHint{
-  color: var(--muted);
-  font-size: 12px;
-}
-.fieldGrid{
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 10px;
-}
-.field .k{
-  margin-bottom: 4px;
-}
-.themeSelector{
-  display: flex;
-  gap: 12px;
-}
-.themeOption{
-  display: inline-flex;
-  gap: 6px;
-  align-items: center;
-  padding: 6px 10px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius2);
-  background: var(--surface);
-  cursor: pointer;
-}
-.themeOption input{
-  margin: 0;
-}
-
-.settingsSection{
-  display: grid;
-  gap: 12px;
-}
-
-.sectionHeader{
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.checkboxRow{
-  display: inline-flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.alert{
-  border: 1px solid var(--border);
-  background: var(--surface2);
-  border-radius: var(--radius2);
-  padding: 10px 12px;
-  margin-bottom: 12px;
-}
-.alert.warn{
-  border-color: var(--orange-500, #f59e0b);
-}
-.alertTitle{
-  font-weight: 600;
-}
-.alertText{
-  color: var(--muted);
-  font-size: 13px;
-}
-</style>

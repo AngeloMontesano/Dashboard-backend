@@ -5,9 +5,6 @@ services:
       service: db
     ports:
       - "5432:5432"
-    networks:
-      docker:
-        ipv4_address: ${DB_IP}
 
   api:
     extends:
@@ -24,9 +21,6 @@ services:
     dns:
       - 1.1.1.1
       - 8.8.8.8
-    networks:
-      docker:
-        ipv4_address: ${API_IP}
 
   admin_ui:
     build:
@@ -36,21 +30,16 @@ services:
       - "5173:5173"
     depends_on:
       - api
-    networks:
-      docker:
-        ipv4_address: ${ADMIN_UI_IP}
+
 
   customer_ui:
     build:
       context: ./customer_frontend/customer-ui
       dockerfile: Dockerfile
     ports:
-      - "5173:5173"
+      - "6173:6173"
     depends_on:
       - api
-    networks:
-      docker:
-        ipv4_address: ${CUSTOMER_UI_IP}
 
 volumes:
   pgdata:
@@ -60,6 +49,3 @@ volumes:
       o: bind
       device: ${POSTGRES_DATA_DIR}
 
-networks:
-  docker:
-    external: true

@@ -102,3 +102,4 @@
 - EPIC_B B-05 Admin-UI: Global-Types-State im Masterdata-Store ergänzt (UI-only).
 - EPIC_B B-05 Backend/Frontend: Admin-API für globale Typen ergänzt und View angebunden.
 - EPIC_B B-05 Admin-UI: Globale Artikel um Typ-Filter/Anzeige erweitert (type_id).
+- EPIC_B B-05 OpenAPI: Admin-Inventory Types + type_id in Items ergänzt.

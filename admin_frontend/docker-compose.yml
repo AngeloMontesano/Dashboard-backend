@@ -1,8 +1,11 @@
   admin_ui:
     build: ./admin-ui
-    env_file:
-      - ../.env
     ports:
       - "5173:5173"
+    environment:
+      TZ: ${TZ}
+    volumes:
+      - ${ADMIN_UI_NODE_CACHE}:/root/.npm
+      - ${ADMIN_UI_LOGS}:/app/logs
     depends_on:
       - api

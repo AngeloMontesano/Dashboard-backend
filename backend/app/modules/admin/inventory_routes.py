@@ -449,6 +449,7 @@ async def admin_export_units(
 async def admin_list_items(
     q: str | None = Query(default=None, description="Suche in SKU, Barcode, Name"),
     category_id: str | None = Query(default=None),
+    type_id: str | None = Query(default=None),
     active: bool | None = Query(default=True),
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=50, ge=1, le=200),
@@ -459,6 +460,8 @@ async def admin_list_items(
         base = base.where(Item.is_active.is_(active))
     if category_id:
         base = base.where(Item.category_id == category_id)
+    if type_id:
+        base = base.where(Item.type_id == type_id)
     if q:
         like = f"%{q}%"
         base = base.where(
@@ -494,6 +497,10 @@ async def admin_create_item(payload: ItemCreate, db: AsyncSession = Depends(get_
     if category and category.tenant_id is not None:
         raise HTTPException(status_code=400, detail={"error": {"code": "category_forbidden", "message": "Kategorie gehört zu Tenant"}})
 
+    global_type = await db.get(GlobalType, payload.type_id) if payload.type_id else None
+    if payload.type_id and global_type is None:
+        raise HTTPException(status_code=400, detail={"error": {"code": "type_not_found", "message": "Typ nicht gefunden"}})
+
     item = Item(
         tenant_id=None,
         sku=normalized_sku,
@@ -501,6 +508,7 @@ async def admin_create_item(payload: ItemCreate, db: AsyncSession = Depends(get_
         name=payload.name.strip(),
         description=payload.description or "",
         category_id=category.id if category else None,
+        type_id=global_type.id if global_type else None,
         quantity=payload.quantity,
         unit=payload.unit,
         is_active=payload.is_active,
@@ -534,6 +542,18 @@ async def admin_update_item(item_id: str, payload: ItemUpdate, db: AsyncSession 
         item.category_id = category.id if category else None
     else:
         category = await db.get(Category, item.category_id) if item.category_id else None
+
+    if payload.type_id is not None:
+        if payload.type_id == "":
+            item.type_id = None
+        else:
+            global_type = await db.get(GlobalType, payload.type_id)
+            if global_type is None:
+                raise HTTPException(
+                    status_code=400,
+                    detail={"error": {"code": "type_not_found", "message": "Typ nicht gefunden"}},
+                )
+            item.type_id = global_type.id
 
     if payload.sku:
         normalized_sku = _normalize_sku(payload.sku, prefix_customer=False)

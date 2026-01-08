@@ -11,8 +11,7 @@
       <div class="table-card">
         <div class="stack">
           <p class="section-subtitle">
-            Keine OpenAPI-Pfade für globale Typen vorhanden. Aktionen werden nur im UI gespeichert und dienen als
-            Vorbereitung bis passende Backend-Endpunkte existieren.
+            Globale Typen sind zentrale Stammdaten und werden serverseitig gespeichert. Änderungen gelten tenant-übergreifend.
           </p>
         </div>
       </div>
@@ -27,7 +26,7 @@
             placeholder="Typname"
             aria-label="Globale Typen filtern"
           />
-          <div class="hint">Filtert nur den lokalen Zustand.</div>
+          <div class="hint">Filtert die aktuelle Liste.</div>
         </div>
         <div class="stack">
           <span class="text-muted text-small">Treffer: {{ filteredTypes.length }}</span>

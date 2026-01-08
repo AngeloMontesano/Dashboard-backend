@@ -114,6 +114,11 @@
   align-items: start;
 }
 
+.filter-card.three-column{
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 1fr);
+  align-items: start;
+}
+
 .field-label{
   font-weight: 750;
   font-size: 13px;

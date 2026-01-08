@@ -27,6 +27,28 @@ Globale Firmenkontaktdaten im Admin pflegen, tenant-spezifische Vertriebs­konta
 - Anzeige im Customer-UI als kontaktierbare Links, klare Labels.
 - Fallback: Wenn tenant-spezifisch fehlt, nur globale Daten anzeigen.
 
+### I-04 Admin-UI Formulare (Entwurf)
+**Ort**
+- Admin → Einstellungen → „Kontaktdaten“ (neuer Abschnitt in globalen Einstellungen).
+
+**Felder (Global)**
+- Firmenname (`company_name`) – Pflicht, max. 120 Zeichen.
+- Support-E-Mail (`support_email`) – Pflicht, E-Mail-Validierung.
+- Support-Telefon (`support_phone`) – Pflicht, E.164 oder lokale Nummer, max. 30 Zeichen.
+- Support-URL (`support_url`) – optional, gültige URL.
+
+**Helpertexte**
+- „Diese Kontaktdaten erscheinen im Customer-Frontend unter Einstellungen/Hilfe.“
+- „Telefonnummer im internationalen Format empfohlen (z. B. +49 …).“
+
+**Validierung & Fehler**
+- Inline-Fehler unter dem Feld, keine globale Fehlermeldung.
+- Speichern deaktiviert, solange Pflichtfelder fehlen oder ungültig sind.
+
+**Speichern/Status**
+- Primär-Button „Speichern“; bei Erfolg Toast „Kontaktdaten aktualisiert“.
+- Bei Fehler: Backend-Fehlercode anzeigen (ohne Stacktrace), Felder behalten.
+
 ## 7) API/Backend Annahmen
 - Admin-Endpunkte für globale Einstellungen erweitern um Kontaktfelder.
 - Tenant-Settings-Endpunkt erweitert um Vertriebs-Kontaktfelder.

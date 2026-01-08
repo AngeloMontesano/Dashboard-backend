@@ -34,6 +34,16 @@ Technische Doku für Betrieb/Installation und verständliche User-Doku (Customer
 - Doku-Struktur: `/docs/` Ordner mit Unterkapiteln (Install, Betrieb, Troubleshooting, FAQ Customer/Admin).
 - Help-Konfiguration: statische Links/Emails in Config/Env.
 
+### Help-Button Konzept Customer (G-05)
+- Position: rechts oben in der Topbar und zusätzlich in „Einstellungen → Hilfe“.
+- Inhalt: kurzer Einstiegstext, Links zu FAQ/Handbuch, Support-Kontakt (Mail/Telefon), Status-Link.
+- Verhalten: Klick öffnet ein leichtes Drawer/Popover; Link „Mehr Hilfe“ öffnet Doku im neuen Tab.
+- Zustände:
+  - Normal: Hilfe-Links + Kontakt.
+  - Offline: Hinweis „Offline – Support-Link später öffnen“ (kein Blocker).
+  - Tenant not found/inactive: Link zur Hauptseite + Support-Kontakt.
+- Tracking (optional): Event `help_open`, `help_link_click` (nur Link-Typ, keine PII).
+
 ## 9) Tasks (umsetzbar, klein)
 - **G-01** – Doku-Struktur definieren (Kapitel, Ordner).  
   - Bereich: docs  

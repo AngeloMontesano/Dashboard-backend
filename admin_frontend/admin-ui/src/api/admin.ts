@@ -25,6 +25,8 @@ import type {
   SmtpTestResponse,
   SystemEmailSettings,
   SystemEmailSettingsUpdate,
+  GlobalCustomerSettingsOut,
+  GlobalCustomerSettingsUpdate,
 } from "../types";
 
 import { api, adminHeaders } from "./client";
@@ -47,6 +49,8 @@ type TenantUserListResponse =
   paths["/admin/tenants/{tenant_id}/users"]["get"]["responses"]["200"]["content"]["application/json"];
 type TenantSettingsResponse =
   paths["/admin/tenants/{tenant_id}/settings"]["get"]["responses"]["200"]["content"]["application/json"];
+type GlobalCustomerSettingsResponse =
+  paths["/admin/customer-settings"]["get"]["responses"]["200"]["content"]["application/json"];
 
 type AdminCategoriesResponse =
   paths["/admin/inventory/categories"]["get"]["responses"]["200"]["content"]["application/json"];
@@ -85,6 +89,7 @@ type AdminSystemActionResponseRaw = AdminSystemActionResponse;
 type AdminSystemEmailSettingsResponse = SystemEmailSettings;
 type AdminSmtpSettingsResponse = SmtpSettingsOut;
 type AdminSmtpTestResponse = SmtpTestResponse;
+type AdminGlobalCustomerSettingsResponse = GlobalCustomerSettingsResponse;
 
 function withAdmin(adminKey: string, actor?: string) {
   return { headers: adminHeaders(adminKey, actor) };
@@ -154,6 +159,28 @@ export async function adminUpdateTenantSettings(
 ) {
   const res = await api.put<TenantSettingsOut>(
     `/admin/tenants/${tenantId}/settings`,
+    payload,
+    withAdmin(adminKey, actor)
+  );
+  return res.data;
+}
+
+/* Global Customer Settings */
+export async function adminGetGlobalCustomerSettings(adminKey: string, actor?: string) {
+  const res = await api.get<AdminGlobalCustomerSettingsResponse>(
+    "/admin/customer-settings",
+    withAdmin(adminKey, actor)
+  );
+  return res.data as GlobalCustomerSettingsOut;
+}
+
+export async function adminUpdateGlobalCustomerSettings(
+  adminKey: string,
+  actor: string | undefined,
+  payload: GlobalCustomerSettingsUpdate
+) {
+  const res = await api.put<GlobalCustomerSettingsOut>(
+    "/admin/customer-settings",
     payload,
     withAdmin(adminKey, actor)
   );

@@ -331,6 +331,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/inventory/help-info": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Help Info */
+        get: operations["get_help_info_inventory_help_info_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/inventory/settings": {
         parameters: {
             query?: never;
@@ -748,6 +765,24 @@ export interface paths {
         get: operations["admin_get_tenant_settings_admin_tenants__tenant_id__settings_get"];
         /** Admin Update Tenant Settings */
         put: operations["admin_update_tenant_settings_admin_tenants__tenant_id__settings_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/customer-settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Global Customer Settings */
+        get: operations["get_global_customer_settings_admin_customer_settings_get"];
+        /** Update Global Customer Settings */
+        put: operations["update_global_customer_settings_admin_customer_settings_put"];
         post?: never;
         delete?: never;
         options?: never;
@@ -1420,6 +1455,42 @@ export interface paths {
         patch: operations["admin_update_global_type_admin_global_types__type_id__patch"];
         trace?: never;
     };
+    "/admin/inventory/types": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Admin List Global Types */
+        get: operations["admin_list_types_admin_inventory_types_get"];
+        put?: never;
+        /** Admin Create Global Type */
+        post: operations["admin_create_type_admin_inventory_types_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/inventory/types/{type_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Admin Delete Global Type */
+        delete: operations["admin_delete_type_admin_inventory_types__type_id__delete"];
+        options?: never;
+        head?: never;
+        /** Admin Update Global Type */
+        patch: operations["admin_update_type_admin_inventory_types__type_id__patch"];
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1769,6 +1840,8 @@ export interface components {
              * @default 0
              */
             order_mode: number;
+            /** Type Id */
+            type_id?: string | null;
         };
         /** ItemOut */
         ItemOut: {
@@ -1834,6 +1907,8 @@ export interface components {
              * @default false
              */
             is_admin_created: boolean;
+            /** Type Id */
+            type_id?: string | null;
         };
         /** ItemUnitOut */
         ItemUnitOut: {
@@ -1872,6 +1947,8 @@ export interface components {
             recommended_stock?: number | null;
             /** Order Mode */
             order_mode?: number | null;
+            /** Type Id */
+            type_id?: string | null;
         };
         /** ItemsPage */
         ItemsPage: {
@@ -2291,6 +2368,90 @@ export interface components {
             ok: boolean;
             tenant: components["schemas"]["TenantOutPing"];
         };
+        /** SupportHoursEntry */
+        SupportHoursEntry: {
+            /**
+             * Day
+             * @default
+             */
+            day: string;
+            /**
+             * Time
+             * @default
+             */
+            time: string;
+        };
+        /** GlobalCustomerSettingsOut */
+        GlobalCustomerSettingsOut: {
+            /**
+             * Support Hours
+             * @default []
+             */
+            support_hours: components["schemas"]["SupportHoursEntry"][];
+            /**
+             * Support Phone
+             * @default
+             */
+            support_phone: string;
+            /**
+             * Support Email
+             * @default
+             */
+            support_email: string;
+            /**
+             * Support Note
+             * @default
+             */
+            support_note: string;
+            /** Id */
+            id: string;
+        };
+        /** GlobalCustomerSettingsUpdate */
+        GlobalCustomerSettingsUpdate: {
+            /**
+             * Support Hours
+             * @default []
+             */
+            support_hours: components["schemas"]["SupportHoursEntry"][];
+            /**
+             * Support Phone
+             * @default
+             */
+            support_phone: string;
+            /**
+             * Support Email
+             * @default
+             */
+            support_email: string;
+            /**
+             * Support Note
+             * @default
+             */
+            support_note: string;
+        };
+        /** SalesContactOut */
+        SalesContactOut: {
+            /**
+             * Name
+             * @default
+             */
+            name: string;
+            /**
+             * Phone
+             * @default
+             */
+            phone: string;
+            /**
+             * Email
+             * @default
+             */
+            email: string;
+        };
+        /** HelpInfoOut */
+        HelpInfoOut: {
+            support: components["schemas"]["GlobalCustomerSettingsOut"];
+            sales_contact: components["schemas"]["SalesContactOut"];
+        };
         /** TenantSettingsOut */
         TenantSettingsOut: {
             /**
@@ -2365,6 +2526,21 @@ export interface components {
             barcode_scanner_reduce_enabled: boolean;
             /** Industry Id */
             industry_id?: string | null;
+            /**
+             * Sales Contact Name
+             * @default
+             */
+            sales_contact_name: string;
+            /**
+             * Sales Contact Phone
+             * @default
+             */
+            sales_contact_phone: string;
+            /**
+             * Sales Contact Email
+             * @default
+             */
+            sales_contact_email: string;
             /** Id */
             id: string;
         };
@@ -2442,6 +2618,21 @@ export interface components {
             barcode_scanner_reduce_enabled: boolean;
             /** Industry Id */
             industry_id?: string | null;
+            /**
+             * Sales Contact Name
+             * @default
+             */
+            sales_contact_name: string;
+            /**
+             * Sales Contact Phone
+             * @default
+             */
+            sales_contact_phone: string;
+            /**
+             * Sales Contact Email
+             * @default
+             */
+            sales_contact_email: string;
         };
         /** TenantUpdate */
         TenantUpdate: {
@@ -2631,6 +2822,41 @@ export interface components {
             limit: number;
             /** Offset */
             offset: number;
+        };
+        /** GlobalTypeOut */
+        GlobalTypeOut: {
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
+            /** Description */
+            description: string;
+            /** Is Active */
+            is_active: boolean;
+        };
+        /** GlobalTypeCreate */
+        GlobalTypeCreate: {
+            /** Name */
+            name: string;
+            /**
+             * Description
+             * @default
+             */
+            description: string;
+            /**
+             * Is Active
+             * @default true
+             */
+            is_active: boolean;
+        };
+        /** GlobalTypeUpdate */
+        GlobalTypeUpdate: {
+            /** Name */
+            name?: string;
+            /** Description */
+            description?: string;
+            /** Is Active */
+            is_active?: boolean;
         };
     };
     responses: never;
@@ -3412,6 +3638,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_help_info_inventory_help_info_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HelpInfoOut"];
                 };
             };
             /** @description Validation Error */
@@ -4517,6 +4774,74 @@ export interface operations {
             };
         };
     };
+    get_global_customer_settings_admin_customer_settings_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-admin-key"?: string | null;
+                "x-admin-actor"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GlobalCustomerSettingsOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_global_customer_settings_admin_customer_settings_put: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-admin-key"?: string | null;
+                "x-admin-actor"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GlobalCustomerSettingsUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GlobalCustomerSettingsOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     admin_list_categories_admin_inventory_categories_get: {
         parameters: {
             query?: never;
@@ -4904,6 +5229,7 @@ export interface operations {
                 active?: boolean | null;
                 page?: number;
                 page_size?: number;
+                type_id?: string | null;
             };
             header?: {
                 "x-admin-key"?: string | null;
@@ -6273,6 +6599,144 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["GlobalType"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_list_types_admin_inventory_types_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-admin-key"?: string | null;
+                "x-admin-actor"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GlobalTypeOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_create_type_admin_inventory_types_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-admin-key"?: string | null;
+                "x-admin-actor"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GlobalTypeCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GlobalTypeOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_delete_type_admin_inventory_types__type_id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-admin-key"?: string | null;
+                "x-admin-actor"?: string | null;
+            };
+            path: {
+                type_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_update_type_admin_inventory_types__type_id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-admin-key"?: string | null;
+                "x-admin-actor"?: string | null;
+            };
+            path: {
+                type_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GlobalTypeUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GlobalTypeOut"];
                 };
             };
             /** @description Validation Error */

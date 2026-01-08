@@ -5,9 +5,9 @@ export type GlobalCategory = components["schemas"]["CategoryOut"];
 export type CategoryCreatePayload = components["schemas"]["CategoryCreate"];
 export type CategoryUpdatePayload = components["schemas"]["CategoryUpdate"];
 
-export type GlobalItem = components["schemas"]["ItemOut"];
-export type ItemCreatePayload = components["schemas"]["ItemCreate"];
-export type ItemUpdatePayload = components["schemas"]["ItemUpdate"];
+export type GlobalItem = components["schemas"]["ItemOut"] & { type_id?: string | null };
+export type ItemCreatePayload = components["schemas"]["ItemCreate"] & { type_id?: string | null };
+export type ItemUpdatePayload = components["schemas"]["ItemUpdate"] & { type_id?: string | null };
 
 export type GlobalUnit = components["schemas"]["ItemUnitOut"];
 export type GlobalIndustry = components["schemas"]["IndustryOut"];

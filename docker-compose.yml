@@ -5,9 +5,10 @@ services:
       service: db
     ports:
       - "5432:5432"
+    # Variante A (ipvlan, eigene LAN-IP)
     networks:
       docker:
-        ipv4_address: ${DB_IP}
+        ipv4_address: 192.168.10.60
 
   api:
     extends:
@@ -15,7 +16,6 @@ services:
       service: api
     environment:
       PYTHONPATH: /app
-      TZ: ${TZ}
     ports:
       - "${API_PORT:-8000}:8000"
     depends_on:
@@ -24,41 +24,56 @@ services:
     dns:
       - 1.1.1.1
       - 8.8.8.8
+    # Variante A (ipvlan, eigene LAN-IP)
     networks:
       docker:
-        ipv4_address: ${API_IP}
+        ipv4_address: 192.168.10.61
 
   admin_ui:
-    build:
-      context: ./admin_frontend/admin-ui
-      dockerfile: Dockerfile
+    build: ./admin_frontend/admin-ui
     ports:
       - "5173:5173"
     depends_on:
       - api
+    # Variante A (ipvlan, eigene LAN-IP)
     networks:
       docker:
-        ipv4_address: ${ADMIN_UI_IP}
+        ipv4_address: 192.168.10.62
 
   customer_ui:
-    build:
-      context: ./customer_frontend/customer-ui
-      dockerfile: Dockerfile
+    build: ./customer_frontend/customer-ui
     ports:
-      - "5173:5173"
+      - "6173:5173"
     depends_on:
       - api
+    # Variante A (ipvlan, eigene LAN-IP)
     networks:
       docker:
-        ipv4_address: ${CUSTOMER_UI_IP}
+        ipv4_address: 192.168.10.63
+
+  control:
+    image: alpine:3.20
+    container_name: lm_saas_control
+    depends_on:
+      - api
+      - admin_ui
+      - customer_ui
+    command: >
+      sh -lc "
+      apk add --no-cache curl >/dev/null;
+      while true; do
+        echo '[CONTROL] checking...';
+        curl -fsS http://api:8000/health || echo '[FAIL] api';
+        curl -fsS http://admin_ui:5173/ || echo '[FAIL] admin_ui';
+        curl -fsS http://customer_ui:5173/ || echo '[FAIL] customer_ui';
+        sleep 10;
+      done
+      "
+
 
 volumes:
   pgdata:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ${POSTGRES_DATA_DIR}
+
 
 networks:
   docker:

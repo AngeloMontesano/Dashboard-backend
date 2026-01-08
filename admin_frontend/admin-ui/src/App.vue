@@ -226,6 +226,17 @@
               :adminKey="ui.adminKey"
               :actor="ui.actor"
             />
+            <GlobaleKundenEinstellungenView
+              v-else-if="ui.section === 'globals-customer-settings'"
+              :adminKey="ui.adminKey"
+              :actor="ui.actor"
+            />
+
+          <!-- SECTION: Backup -->
+            <AdminBackupView v-else-if="ui.section === 'backup'" :tenant="tenantContext" />
+
+          <!-- SECTION: Backup -->
+            <AdminBackupView v-else-if="ui.section === 'backup'" :tenant="tenantContext" />
 
           <!-- SECTION: Settings -->
             <AdminSettingsView
@@ -288,6 +299,8 @@ import GlobaleKategorienView from "./views/GlobaleKategorienView.vue";
 import GlobaleTypenView from "./views/GlobaleTypenView.vue";
 import GlobaleEinheitenView from "./views/GlobaleEinheitenView.vue";
 import GlobaleBranchenView from "./views/GlobaleBranchenView.vue";
+import GlobaleKundenEinstellungenView from "./views/GlobaleKundenEinstellungenView.vue";
+import AdminBackupView from "./views/AdminBackupView.vue";
 
 /* Zentraler Toast State */
 const { toast } = useToast();
@@ -307,6 +320,7 @@ const adminDashboardSections = [
   { id: "users", label: "Admin User", icon: "👤" },
   { id: "settings", label: "Einstellungen", icon: "⚙️" },
   { id: "operations", label: "Operations", icon: "🛠️" },
+  { id: "backup", label: "Backup", icon: "💾" },
 ] as const;
 
 const globalSections = [
@@ -316,6 +330,7 @@ const globalSections = [
   { id: "globals-types", label: "Globale Typen", icon: "🏷️" },
   { id: "globals-units", label: "Globale Einheiten", icon: "🧭" },
   { id: "globals-industries", label: "Globale Branchen", icon: "🏭" },
+  { id: "globals-customer-settings", label: "Globale Kunden Einstellung", icon: "🧾" },
 ] as const;
 
 type CustomerSectionId = (typeof customerSections)[number]["id"];
@@ -330,6 +345,7 @@ const globalSectionPaths: Record<GlobalSectionId, string> = {
   "globals-types": "/globals/types",
   "globals-units": "/globals/units",
   "globals-industries": "/globals/industries",
+  "globals-customer-settings": "/globals/customer-settings",
 };
 
 /* UI State */
@@ -414,6 +430,7 @@ const pageTitle = computed(() => {
     users: "Benutzer",
     memberships: "Kunden User",
     operations: "Operations",
+    backup: "Backup",
     settings: "Einstellungen",
     "globals-catalog": "Globale Kataloge",
     "globals-articles": "Globale Artikel",
@@ -421,6 +438,7 @@ const pageTitle = computed(() => {
     "globals-types": "Globale Typen",
     "globals-units": "Globale Einheiten",
     "globals-industries": "Globale Branchen",
+    "globals-customer-settings": "Globale Kunden Einstellung",
   };
   return m[ui.section];
 });
@@ -430,12 +448,13 @@ const pageSubtitle = computed(() => {
   if (ui.section === "users") return "Admin-Portal Benutzer verwalten";
   if (ui.section === "memberships") return "User mit Tenants verknüpfen und Rollen setzen";
   if (ui.section === "operations") return "Health, Audit, Snapshots und Logs";
-  if (ui.section === "globals-catalog") return "Übersicht der globalen Stammdaten und Zugänge";
-  if (ui.section === "globals-articles") return "Artikel-Stammdaten erfassen (Backend fehlt, UI-only)";
-  if (ui.section === "globals-categories") return "Kategorien als globale Stammdaten pflegen (UI-only)";
-  if (ui.section === "globals-types") return "Typen für globale Artikel pflegen (UI-only)";
-  if (ui.section === "globals-units") return "Artikel-Einheiten pflegen (UI-only)";
-  if (ui.section === "globals-industries") return "Branchen pflegen und Artikel zuordnen (UI-only)";
+  if (ui.section === "backup") return "Tenant-spezifische Backups mit Schema-Introspektion";
+  if (ui.section === "globals-articles") return "Artikel-Stammdaten verwalten";
+  if (ui.section === "globals-categories") return "Kategorien als globale Stammdaten pflegen";
+  if (ui.section === "globals-types") return "Typen für globale Artikel pflegen";
+  if (ui.section === "globals-units") return "Artikel-Einheiten pflegen";
+  if (ui.section === "globals-industries") return "Branchen pflegen und Artikel zuordnen";
+  if (ui.section === "globals-customer-settings") return "Support- und Hilfeinformationen pflegen";
   return "Security, Theme, Feature Flags";
 });
 
@@ -583,6 +602,7 @@ function syncFromLocation() {
     "/kunden": "kunden",
     "/users": "users",
     "/memberships": "memberships",
+    "/backup": "backup",
     "/settings": "settings",
   };
 

@@ -286,6 +286,9 @@ class TenantSettingsBase(BaseModel):
     tax_number: str = Field("", max_length=64)
     barcode_scanner_reduce_enabled: bool = False
     industry_id: Optional[str] = None
+    sales_contact_name: str = Field("", max_length=255)
+    sales_contact_phone: str = Field("", max_length=64)
+    sales_contact_email: str = Field("", max_length=255)
 
 
 class TenantSettingsUpdate(TenantSettingsBase):

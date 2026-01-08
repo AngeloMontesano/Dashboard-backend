@@ -5,7 +5,7 @@ export type GlobalCategory = components["schemas"]["CategoryOut"];
 export type GlobalCategoryCreate = components["schemas"]["CategoryCreate"];
 export type GlobalCategoryUpdate = components["schemas"]["CategoryUpdate"];
 
-export type GlobalItem = components["schemas"]["ItemOut"];
+export type GlobalItem = components["schemas"]["ItemOut"] & { type_id?: string | null };
 export type GlobalItemCreate = components["schemas"]["ItemCreate"];
 export type GlobalItemUpdate = components["schemas"]["ItemUpdate"];
 
@@ -148,5 +148,11 @@ export function useGlobalMasterdata() {
 export function getCategoryName(categoryId?: string | null) {
   if (!categoryId) return "";
   const match = state.categories.find((c) => c.id === categoryId);
+  return match?.name || "";
+}
+
+export function getTypeName(typeId?: string | null) {
+  if (!typeId) return "";
+  const match = state.types.find((t) => t.id === typeId);
   return match?.name || "";
 }

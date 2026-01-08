@@ -44,6 +44,7 @@ CSV_DELIMITER = ";"
 CATEGORY_COLUMNS: tuple[str, ...] = ("name", "is_active", "is_system")
 UNIT_COLUMNS: tuple[str, ...] = ("code", "label", "is_active")
 INDUSTRY_MAPPING_COLUMNS: tuple[str, ...] = ("action", "sku", "barcode", "name", "category", "is_active", "item_id")
+GLOBAL_ITEM_COLUMNS: tuple[str, ...] = (*CSV_COLUMNS, "type")
 
 
 router = APIRouter(prefix="/inventory", tags=["admin-inventory"], dependencies=[Depends(require_admin_key), Depends(get_admin_actor)])
@@ -449,6 +450,7 @@ async def admin_export_units(
 async def admin_list_items(
     q: str | None = Query(default=None, description="Suche in SKU, Barcode, Name"),
     category_id: str | None = Query(default=None),
+    type_id: str | None = Query(default=None),
     active: bool | None = Query(default=True),
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=50, ge=1, le=200),
@@ -459,6 +461,8 @@ async def admin_list_items(
         base = base.where(Item.is_active.is_(active))
     if category_id:
         base = base.where(Item.category_id == category_id)
+    if type_id:
+        base = base.where(Item.type_id == type_id)
     if q:
         like = f"%{q}%"
         base = base.where(
@@ -494,6 +498,10 @@ async def admin_create_item(payload: ItemCreate, db: AsyncSession = Depends(get_
     if category and category.tenant_id is not None:
         raise HTTPException(status_code=400, detail={"error": {"code": "category_forbidden", "message": "Kategorie gehört zu Tenant"}})
 
+    global_type = await db.get(GlobalType, payload.type_id) if payload.type_id else None
+    if payload.type_id and global_type is None:
+        raise HTTPException(status_code=400, detail={"error": {"code": "type_not_found", "message": "Typ nicht gefunden"}})
+
     item = Item(
         tenant_id=None,
         sku=normalized_sku,
@@ -501,6 +509,7 @@ async def admin_create_item(payload: ItemCreate, db: AsyncSession = Depends(get_
         name=payload.name.strip(),
         description=payload.description or "",
         category_id=category.id if category else None,
+        type_id=global_type.id if global_type else None,
         quantity=payload.quantity,
         unit=payload.unit,
         is_active=payload.is_active,
@@ -534,6 +543,18 @@ async def admin_update_item(item_id: str, payload: ItemUpdate, db: AsyncSession 
         item.category_id = category.id if category else None
     else:
         category = await db.get(Category, item.category_id) if item.category_id else None
+
+    if payload.type_id is not None:
+        if payload.type_id == "":
+            item.type_id = None
+        else:
+            global_type = await db.get(GlobalType, payload.type_id)
+            if global_type is None:
+                raise HTTPException(
+                    status_code=400,
+                    detail={"error": {"code": "type_not_found", "message": "Typ nicht gefunden"}},
+                )
+            item.type_id = global_type.id
 
     if payload.sku:
         normalized_sku = _normalize_sku(payload.sku, prefix_customer=False)
@@ -670,6 +691,15 @@ async def admin_import_items(
                 if category is None:
                     raise ValueError(f"Kategorie '{category_name}' nicht gefunden")
 
+            type_name = str(row.get("type") or "").strip()
+            global_type = None
+            if type_name:
+                global_type = await db.scalar(
+                    select(GlobalType).where(func.lower(GlobalType.name) == func.lower(type_name))
+                )
+                if global_type is None:
+                    raise ValueError(f"Typ '{type_name}' nicht gefunden")
+
             def _to_int(val: object) -> int:
                 raw = str(val or "").strip()
                 return int(raw or 0)
@@ -691,6 +721,7 @@ async def admin_import_items(
                 item.name = name
                 item.description = row.get("description") or ""
                 item.category_id = category.id if category else None
+                item.type_id = global_type.id if global_type else None
                 item.quantity = quantity
                 item.unit = unit
                 item.is_active = is_active
@@ -709,6 +740,7 @@ async def admin_import_items(
                     name=name,
                     description=row.get("description") or "",
                     category_id=category.id if category else None,
+                    type_id=global_type.id if global_type else None,
                     quantity=quantity,
                     unit=unit,
                     is_active=is_active,
@@ -747,12 +779,17 @@ async def admin_export_items(
     if category_ids:
         cat_rows = (await db.scalars(select(Category).where(Category.id.in_(category_ids)))).all()
         categories = {c.id: c for c in cat_rows}
+    type_ids = {row.type_id for row in rows if row.type_id}
+    types: dict = {}
+    if type_ids:
+        type_rows = (await db.scalars(select(GlobalType).where(GlobalType.id.in_(type_ids)))).all()
+        types = {t.id: t for t in type_rows}
 
     if format == "xlsx":
         wb = Workbook()
         ws = wb.active
         ws.title = "Items"
-        ws.append(list(CSV_COLUMNS))
+        ws.append(list(GLOBAL_ITEM_COLUMNS))
         for item in rows:
             ws.append(
                 [
@@ -769,6 +806,7 @@ async def admin_export_items(
                     item.target_stock,
                     item.recommended_stock,
                     item.order_mode,
+                    types.get(item.type_id).name if item.type_id else "",
                 ]
             )
         out = BytesIO()
@@ -781,7 +819,7 @@ async def admin_export_items(
         )
 
     buf = StringIO()
-    writer = csv.DictWriter(buf, fieldnames=CSV_COLUMNS, delimiter=CSV_DELIMITER)
+    writer = csv.DictWriter(buf, fieldnames=GLOBAL_ITEM_COLUMNS, delimiter=CSV_DELIMITER)
     writer.writeheader()
     for item in rows:
         writer.writerow(
@@ -799,6 +837,7 @@ async def admin_export_items(
                 "target_stock": item.target_stock,
                 "recommended_stock": item.recommended_stock,
                 "order_mode": item.order_mode,
+                "type": types.get(item.type_id).name if item.type_id else "",
             }
         )
     return StreamingResponse(

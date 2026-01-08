@@ -3,8 +3,6 @@ services:
     extends:
       file: ./backend/docker-compose.yml
       service: db
-    env_file:
-      - .env
     ports:
       - "5432:5432"
 
@@ -12,29 +10,32 @@ services:
     extends:
       file: ./backend/docker-compose.yml
       service: api
-    env_file:
-      - .env
     environment:
       PYTHONPATH: /app
+      TZ: ${TZ}
     ports:
       - "${API_PORT:-8000}:8000"
     depends_on:
       db:
         condition: service_healthy
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
 
   admin_ui:
-    build: ./admin_frontend/admin-ui
-    env_file:
-      - .env
+    build:
+      context: ./admin_frontend/admin-ui
+      dockerfile: Dockerfile
     ports:
       - "5173:5173"
     depends_on:
       - api
 
+
   customer_ui:
-    build: ./customer_frontend/customer-ui
-    env_file:
-      - .env
+    build:
+      context: ./customer_frontend/customer-ui
+      dockerfile: Dockerfile
     ports:
       - "6173:6173"
     depends_on:
@@ -42,3 +43,9 @@ services:
 
 volumes:
   pgdata:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${POSTGRES_DATA_DIR}
+

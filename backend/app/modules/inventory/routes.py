@@ -1223,6 +1223,7 @@ def _settings_to_out(settings: TenantSetting) -> TenantSettingsOut:
         contact_name=settings.contact_name,
         branch_number=settings.branch_number,
         tax_number=settings.tax_number,
+        barcode_scanner_reduce_enabled=settings.barcode_scanner_reduce_enabled,
         industry_id=str(settings.industry_id) if settings.industry_id else None,
     )
 
@@ -1248,6 +1249,7 @@ async def _get_or_create_settings(*, ctx: TenantContext, db: AsyncSession) -> Te
         contact_name="",
         branch_number="",
         tax_number="",
+        barcode_scanner_reduce_enabled=False,
         industry_id=None,
     )
     db.add(settings)
@@ -1286,6 +1288,7 @@ async def update_tenant_settings(
     settings.contact_name = payload.contact_name.strip()
     settings.branch_number = payload.branch_number.strip()
     settings.tax_number = payload.tax_number.strip()
+    settings.barcode_scanner_reduce_enabled = payload.barcode_scanner_reduce_enabled
     settings.industry_id = payload.industry_id
 
     await db.commit()

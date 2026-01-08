@@ -213,6 +213,7 @@
               :adminKey="ui.adminKey"
               :actor="ui.actor"
             />
+            <GlobaleTypenView v-else-if="ui.section === 'globals-types'" :adminKey="ui.adminKey" :actor="ui.actor" />
             <GlobaleEinheitenView v-else-if="ui.section === 'globals-units'" :adminKey="ui.adminKey" :actor="ui.actor" />
             <GlobaleBranchenView
               v-else-if="ui.section === 'globals-industries'"
@@ -276,6 +277,7 @@ import ToastHost from "./components/common/ToastHost.vue";
 import AdminOperationsView from "./views/AdminOperationsView.vue";
 import GlobaleArtikelView from "./views/GlobaleArtikelView.vue";
 import GlobaleKategorienView from "./views/GlobaleKategorienView.vue";
+import GlobaleTypenView from "./views/GlobaleTypenView.vue";
 import GlobaleEinheitenView from "./views/GlobaleEinheitenView.vue";
 import GlobaleBranchenView from "./views/GlobaleBranchenView.vue";
 
@@ -302,6 +304,7 @@ const adminDashboardSections = [
 const globalSections = [
   { id: "globals-articles", label: "Globale Artikel", icon: "📦" },
   { id: "globals-categories", label: "Globale Kategorien", icon: "🗂️" },
+  { id: "globals-types", label: "Globale Typen", icon: "🏷️" },
   { id: "globals-units", label: "Globale Einheiten", icon: "🧭" },
   { id: "globals-industries", label: "Globale Branchen", icon: "🏭" },
 ] as const;
@@ -314,6 +317,7 @@ type SectionId = CustomerSectionId | AdminDashboardSectionId | GlobalSectionId;
 const globalSectionPaths: Record<GlobalSectionId, string> = {
   "globals-articles": "/globals/articles",
   "globals-categories": "/globals/categories",
+  "globals-types": "/globals/types",
   "globals-units": "/globals/units",
   "globals-industries": "/globals/industries",
 };
@@ -403,6 +407,7 @@ const pageTitle = computed(() => {
     settings: "Einstellungen",
     "globals-articles": "Globale Artikel",
     "globals-categories": "Globale Kategorien",
+    "globals-types": "Globale Typen",
     "globals-units": "Globale Einheiten",
     "globals-industries": "Globale Branchen",
   };
@@ -414,10 +419,11 @@ const pageSubtitle = computed(() => {
   if (ui.section === "users") return "Admin-Portal Benutzer verwalten";
   if (ui.section === "memberships") return "User mit Tenants verknüpfen und Rollen setzen";
   if (ui.section === "operations") return "Health, Audit, Snapshots und Logs";
-  if (ui.section === "globals-articles") return "Artikel-Stammdaten erfassen (Backend fehlt, UI-only)";
-  if (ui.section === "globals-categories") return "Kategorien als globale Stammdaten pflegen (UI-only)";
-  if (ui.section === "globals-units") return "Artikel-Einheiten pflegen (UI-only)";
-  if (ui.section === "globals-industries") return "Branchen pflegen und Artikel zuordnen (UI-only)";
+  if (ui.section === "globals-articles") return "Artikel-Stammdaten verwalten";
+  if (ui.section === "globals-categories") return "Kategorien als globale Stammdaten pflegen";
+  if (ui.section === "globals-types") return "Typen für globale Artikel pflegen";
+  if (ui.section === "globals-units") return "Artikel-Einheiten pflegen";
+  if (ui.section === "globals-industries") return "Branchen pflegen und Artikel zuordnen";
   return "Security, Theme, Feature Flags";
 });
 

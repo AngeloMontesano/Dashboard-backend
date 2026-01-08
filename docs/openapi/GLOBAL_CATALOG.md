@@ -72,7 +72,7 @@ Alle Pfade unter `/admin/global`, Header: `X-Admin-Key`, optional `X-Admin-Actor
 ## OpenAPI-Schema (Vorschlag)
 - Schemas: `GlobalIndustry`, `GlobalCategory`, `GlobalType`, `GlobalItem`, `GlobalItemList`, `GlobalIndustryItemMapping`.
 - Fehler-Codes: `industry_not_found`, `category_not_found`, `type_not_found`, `global_item_not_found`, `mapping_in_use`, `duplicate_name`, `duplicate_sku`.
-- Aufnahme in `docs/openapi/openapi.json` in Folgeschritt (nach Freigabe).
+- Aufnahme in `https://api.test.myitnetwork.de/openapi.json` in Folgeschritt (nach Freigabe).
 
 ## Akzeptanznotizen
 - Alle Endpunkte respektieren Admin-Header und nutzen das bestehende Fehlerformat.

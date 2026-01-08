@@ -47,9 +47,6 @@ services:
       docker:
         ipv4_address: 192.168.99.63
 
-volumes:
-  pgdata:
-
 networks:
   docker:
     external: true

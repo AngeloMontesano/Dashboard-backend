@@ -122,10 +122,9 @@
   align-items: start;
 }
 
-@media (max-width: 960px){
-  .filter-card.two-column{
-    grid-template-columns: 1fr;
-  }
+.filter-card.three-column{
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 1fr);
+  align-items: start;
 }
 
 .field-label{

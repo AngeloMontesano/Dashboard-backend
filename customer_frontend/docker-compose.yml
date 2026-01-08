@@ -1,6 +1,8 @@
-  admin_ui:
+  customer_ui:
     build: ./customer-ui
     ports:
-      - "6173:6173"
+      - "5173:5173"
+    environment:
+      TZ: ${TZ}
     depends_on:
       - api

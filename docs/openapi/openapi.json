@@ -1660,6 +1660,55 @@
         }
       }
     },
+    "/inventory/help-info": {
+      "get": {
+        "tags": [
+          "inventory"
+        ],
+        "summary": "Get Help Info",
+        "operationId": "get_help_info_inventory_help_info_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HelpInfoOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/inventory/settings": {
       "get": {
         "tags": [
@@ -2041,11 +2090,11 @@
               "type": "integer",
               "maximum": 1000,
               "minimum": 1,
-              "description": "Maximale Anzahl zur\u00fcckgegebener Bewegungen",
+              "description": "Maximale Anzahl zurückgegebener Bewegungen",
               "default": 200,
               "title": "Limit"
             },
-            "description": "Maximale Anzahl zur\u00fcckgegebener Bewegungen"
+            "description": "Maximale Anzahl zurückgegebener Bewegungen"
           },
           {
             "name": "authorization",
@@ -2641,7 +2690,7 @@
           "admin-tenants"
         ],
         "summary": "Admin Delete Tenant",
-        "description": "L\u00f6scht einen Tenant nur mit expliziter Best\u00e4tigung.\nAufruf: DELETE /admin/tenants/{tenant_id}?confirm=true",
+        "description": "Löscht einen Tenant nur mit expliziter Bestätigung.\nAufruf: DELETE /admin/tenants/{tenant_id}?confirm=true",
         "operationId": "admin_delete_tenant_admin_tenants__tenant_id__delete",
         "parameters": [
           {
@@ -3343,7 +3392,7 @@
           "admin-audit"
         ],
         "summary": "Admin Get Audit",
-        "description": "Liefert Audit Log Eintr\u00e4ge mit optionalen Filtern.",
+        "description": "Liefert Audit Log Einträge mit optionalen Filtern.",
         "operationId": "admin_get_audit_admin_audit_get",
         "parameters": [
           {
@@ -3535,7 +3584,7 @@
           "admin-diagnostics"
         ],
         "summary": "Admin Diagnostics",
-        "description": "Diagnostik f\u00fcr typische Dateninkonsistenzen.\nLiefert nur Read-Informationen, keine \u00c4nderungen.",
+        "description": "Diagnostik für typische Dateninkonsistenzen.\nLiefert nur Read-Informationen, keine Änderungen.",
         "operationId": "admin_diagnostics_admin_diagnostics_get",
         "parameters": [
           {
@@ -4116,6 +4165,146 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/TenantSettingsOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/customer-settings": {
+      "get": {
+        "tags": [
+          "admin",
+          "admin-customer-settings"
+        ],
+        "summary": "Get Global Customer Settings",
+        "operationId": "get_global_customer_settings_admin_customer_settings_get",
+        "parameters": [
+          {
+            "name": "x-admin-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Key"
+            }
+          },
+          {
+            "name": "x-admin-actor",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Actor"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GlobalCustomerSettingsOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "admin",
+          "admin-customer-settings"
+        ],
+        "summary": "Update Global Customer Settings",
+        "operationId": "update_global_customer_settings_admin_customer_settings_put",
+        "parameters": [
+          {
+            "name": "x-admin-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Key"
+            }
+          },
+          {
+            "name": "x-admin-actor",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Actor"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GlobalCustomerSettingsUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GlobalCustomerSettingsOut"
                 }
               }
             }
@@ -5057,6 +5246,22 @@
                 }
               ],
               "title": "X-Admin-Actor"
+            }
+          },
+          {
+            "name": "type_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Type Id"
             }
           }
         ],
@@ -6262,7 +6467,7 @@
           "admin-system"
         ],
         "summary": "Admin System Info",
-        "description": "Systeminformationen (Version, Commit, DB-Status) f\u00fcr Admins.",
+        "description": "Systeminformationen (Version, Commit, DB-Status) für Admins.",
         "operationId": "admin_system_info_admin_system_info_get",
         "parameters": [
           {
@@ -6329,7 +6534,7 @@
           "admin-system"
         ],
         "summary": "Admin System Cache Reset",
-        "description": "Platzhalter f\u00fcr Cache-Invalidierung (noch kein Cache-Backend vorhanden).",
+        "description": "Platzhalter für Cache-Invalidierung (noch kein Cache-Backend vorhanden).",
         "operationId": "admin_system_cache_reset_admin_system_actions_cache_reset_post",
         "parameters": [
           {
@@ -6396,7 +6601,7 @@
           "admin-system"
         ],
         "summary": "Admin System Reindex",
-        "description": "Platzhalter f\u00fcr Reindex (noch keine Index-Engine angebunden).",
+        "description": "Platzhalter für Reindex (noch keine Index-Engine angebunden).",
         "operationId": "admin_system_reindex_admin_system_actions_reindex_post",
         "parameters": [
           {
@@ -6463,7 +6668,7 @@
           "admin-system"
         ],
         "summary": "Admin System Restart",
-        "description": "Platzhalter f\u00fcr Restart (nicht unterst\u00fctzt ohne Orchestrator Hook).",
+        "description": "Platzhalter für Restart (nicht unterstützt ohne Orchestrator Hook).",
         "operationId": "admin_system_restart_admin_system_actions_restart_post",
         "parameters": [
           {
@@ -6792,6 +6997,1497 @@
             "content": {
               "application/json": {
                 "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/global/industries": {
+      "get": {
+        "tags": [
+          "admin",
+          "admin-global-catalog"
+        ],
+        "summary": "Admin List Global Industries",
+        "operationId": "admin_list_global_industries_admin_global_industries_get",
+        "parameters": [
+          {
+            "name": "x-admin-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Key"
+            }
+          },
+          {
+            "name": "x-admin-actor",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Actor"
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          },
+          {
+            "name": "is_active",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Is Active"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Offset"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GlobalIndustryList"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "admin",
+          "admin-global-catalog"
+        ],
+        "summary": "Admin Create Global Industry",
+        "operationId": "admin_create_global_industry_admin_global_industries_post",
+        "parameters": [
+          {
+            "name": "x-admin-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Key"
+            }
+          },
+          {
+            "name": "x-admin-actor",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Actor"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "title": "GlobalIndustryCreate",
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "title": "Name",
+                    "type": "string"
+                  },
+                  "is_active": {
+                    "title": "Is Active",
+                    "type": "boolean",
+                    "default": true
+                  }
+                },
+                "required": [
+                  "name"
+                ]
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GlobalIndustry"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/global/industries/{industry_id}": {
+      "patch": {
+        "tags": [
+          "admin",
+          "admin-global-catalog"
+        ],
+        "summary": "Admin Update Global Industry",
+        "operationId": "admin_update_global_industry_admin_global_industries__industry_id__patch",
+        "parameters": [
+          {
+            "name": "x-admin-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Key"
+            }
+          },
+          {
+            "name": "x-admin-actor",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Actor"
+            }
+          },
+          {
+            "name": "industry_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "title": "Industry Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "title": "GlobalIndustryUpdate",
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "title": "Name",
+                    "type": "string"
+                  },
+                  "is_active": {
+                    "title": "Is Active",
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GlobalIndustry"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "admin",
+          "admin-global-catalog"
+        ],
+        "summary": "Admin Delete Global Industry",
+        "operationId": "admin_delete_global_industry_admin_global_industries__industry_id__delete",
+        "parameters": [
+          {
+            "name": "x-admin-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Key"
+            }
+          },
+          {
+            "name": "x-admin-actor",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Actor"
+            }
+          },
+          {
+            "name": "industry_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "title": "Industry Id",
+              "type": "string"
+            }
+          },
+          {
+            "name": "confirm",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Confirm"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/global/categories": {
+      "get": {
+        "tags": [
+          "admin",
+          "admin-global-catalog"
+        ],
+        "summary": "Admin List Global Categories",
+        "operationId": "admin_list_global_categories_admin_global_categories_get",
+        "parameters": [
+          {
+            "name": "x-admin-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Key"
+            }
+          },
+          {
+            "name": "x-admin-actor",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Actor"
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          },
+          {
+            "name": "is_active",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Is Active"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Offset"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GlobalCategoryList"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "admin",
+          "admin-global-catalog"
+        ],
+        "summary": "Admin Create Global Category",
+        "operationId": "admin_create_global_category_admin_global_categories_post",
+        "parameters": [
+          {
+            "name": "x-admin-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Key"
+            }
+          },
+          {
+            "name": "x-admin-actor",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Actor"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "title": "GlobalCategoryCreate",
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "title": "Name",
+                    "type": "string"
+                  },
+                  "is_active": {
+                    "title": "Is Active",
+                    "type": "boolean",
+                    "default": true
+                  },
+                  "is_system": {
+                    "title": "Is System",
+                    "type": "boolean",
+                    "default": false
+                  }
+                },
+                "required": [
+                  "name"
+                ]
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GlobalCategory"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/global/categories/{category_id}": {
+      "patch": {
+        "tags": [
+          "admin",
+          "admin-global-catalog"
+        ],
+        "summary": "Admin Update Global Category",
+        "operationId": "admin_update_global_category_admin_global_categories__category_id__patch",
+        "parameters": [
+          {
+            "name": "x-admin-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Key"
+            }
+          },
+          {
+            "name": "x-admin-actor",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Actor"
+            }
+          },
+          {
+            "name": "category_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "title": "Category Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "title": "GlobalCategoryUpdate",
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "title": "Name",
+                    "type": "string"
+                  },
+                  "is_active": {
+                    "title": "Is Active",
+                    "type": "boolean"
+                  },
+                  "is_system": {
+                    "title": "Is System",
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GlobalCategory"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "admin",
+          "admin-global-catalog"
+        ],
+        "summary": "Admin Delete Global Category",
+        "operationId": "admin_delete_global_category_admin_global_categories__category_id__delete",
+        "parameters": [
+          {
+            "name": "x-admin-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Key"
+            }
+          },
+          {
+            "name": "x-admin-actor",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Actor"
+            }
+          },
+          {
+            "name": "category_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "title": "Category Id",
+              "type": "string"
+            }
+          },
+          {
+            "name": "confirm",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Confirm"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/global/types": {
+      "get": {
+        "tags": [
+          "admin",
+          "admin-global-catalog"
+        ],
+        "summary": "Admin List Global Types",
+        "operationId": "admin_list_global_types_admin_global_types_get",
+        "parameters": [
+          {
+            "name": "x-admin-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Key"
+            }
+          },
+          {
+            "name": "x-admin-actor",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Actor"
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          },
+          {
+            "name": "is_active",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Is Active"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Offset"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GlobalTypeList"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "admin",
+          "admin-global-catalog"
+        ],
+        "summary": "Admin Create Global Type",
+        "operationId": "admin_create_global_type_admin_global_types_post",
+        "parameters": [
+          {
+            "name": "x-admin-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Key"
+            }
+          },
+          {
+            "name": "x-admin-actor",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Actor"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "title": "GlobalTypeCreate",
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "title": "Name",
+                    "type": "string"
+                  },
+                  "is_active": {
+                    "title": "Is Active",
+                    "type": "boolean",
+                    "default": true
+                  }
+                },
+                "required": [
+                  "name"
+                ]
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GlobalType"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/global/types/{type_id}": {
+      "patch": {
+        "tags": [
+          "admin",
+          "admin-global-catalog"
+        ],
+        "summary": "Admin Update Global Type",
+        "operationId": "admin_update_global_type_admin_global_types__type_id__patch",
+        "parameters": [
+          {
+            "name": "x-admin-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Key"
+            }
+          },
+          {
+            "name": "x-admin-actor",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Actor"
+            }
+          },
+          {
+            "name": "type_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "title": "Type Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "title": "GlobalTypeUpdate",
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "title": "Name",
+                    "type": "string"
+                  },
+                  "is_active": {
+                    "title": "Is Active",
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GlobalType"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "admin",
+          "admin-global-catalog"
+        ],
+        "summary": "Admin Delete Global Type",
+        "operationId": "admin_delete_global_type_admin_global_types__type_id__delete",
+        "parameters": [
+          {
+            "name": "x-admin-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Key"
+            }
+          },
+          {
+            "name": "x-admin-actor",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Actor"
+            }
+          },
+          {
+            "name": "type_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "title": "Type Id",
+              "type": "string"
+            }
+          },
+          {
+            "name": "confirm",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Confirm"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/inventory/types": {
+      "get": {
+        "tags": [
+          "admin-inventory"
+        ],
+        "summary": "Admin List Global Types",
+        "operationId": "admin_list_types_admin_inventory_types_get",
+        "parameters": [
+          {
+            "name": "x-admin-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Key"
+            }
+          },
+          {
+            "name": "x-admin-actor",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Actor"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Admin List Types",
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/GlobalTypeOut"
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "admin-inventory"
+        ],
+        "summary": "Admin Create Global Type",
+        "operationId": "admin_create_type_admin_inventory_types_post",
+        "parameters": [
+          {
+            "name": "x-admin-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Key"
+            }
+          },
+          {
+            "name": "x-admin-actor",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Actor"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GlobalTypeCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GlobalTypeOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/inventory/types/{type_id}": {
+      "patch": {
+        "tags": [
+          "admin-inventory"
+        ],
+        "summary": "Admin Update Global Type",
+        "operationId": "admin_update_type_admin_inventory_types__type_id__patch",
+        "parameters": [
+          {
+            "name": "x-admin-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Key"
+            }
+          },
+          {
+            "name": "x-admin-actor",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Actor"
+            }
+          },
+          {
+            "name": "type_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "title": "Type Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GlobalTypeUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GlobalTypeOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "admin-inventory"
+        ],
+        "summary": "Admin Delete Global Type",
+        "operationId": "admin_delete_type_admin_inventory_types__type_id__delete",
+        "parameters": [
+          {
+            "name": "x-admin-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Key"
+            }
+          },
+          {
+            "name": "x-admin-actor",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Actor"
+            }
+          },
+          {
+            "name": "type_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "title": "Type Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
               }
             }
           }
@@ -7318,250 +9014,6 @@
       },
       "IndustryOut": {
         "properties": {
-          "tenant_id": {
-            "type": "string",
-            "title": "Tenant Id"
-          },
-          "tenant_slug": {
-            "type": "string",
-            "title": "Tenant Slug"
-          },
-          "tenant_name": {
-            "type": "string",
-            "title": "Tenant Name"
-          },
-          "created": {
-            "type": "integer",
-            "title": "Created"
-          },
-          "skipped_existing": {
-            "type": "integer",
-            "title": "Skipped Existing"
-          }
-        },
-        "type": "object",
-        "required": [
-          "tenant_id",
-          "tenant_slug",
-          "tenant_name",
-          "created",
-          "skipped_existing"
-        ],
-        "title": "IndustryAssignTenantResult"
-      },
-      "IndustryAssignResponse": {
-        "properties": {
-          "industry_id": {
-            "type": "string",
-            "title": "Industry Id"
-          },
-          "template_items": {
-            "type": "integer",
-            "title": "Template Items"
-          },
-          "affected_tenants": {
-            "type": "integer",
-            "title": "Affected Tenants"
-          },
-          "created_total": {
-            "type": "integer",
-            "title": "Created Total"
-          },
-          "skipped_total": {
-            "type": "integer",
-            "title": "Skipped Total"
-          },
-          "initial_quantity": {
-            "type": "integer",
-            "title": "Initial Quantity"
-          },
-          "results": {
-            "items": {
-              "$ref": "#/components/schemas/IndustryAssignTenantResult"
-            },
-            "type": "array",
-            "title": "Results"
-          }
-        },
-        "type": "object",
-        "required": [
-          "industry_id",
-          "template_items",
-          "affected_tenants",
-          "created_total",
-          "skipped_total",
-          "initial_quantity",
-          "results"
-        ],
-        "title": "IndustryAssignResponse"
-      },
-      "IndustryCreate": {
-        "properties": {
-          "tenant_ids": {
-            "anyOf": [
-              {
-                "items": {
-                  "type": "string",
-                  "format": "uuid"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Tenant Ids"
-          },
-          "initial_quantity": {
-            "type": "integer",
-            "minimum": 0.0,
-            "title": "Initial Quantity",
-            "default": 0
-          },
-          "preserve_existing_quantity": {
-            "type": "boolean",
-            "title": "Preserve Existing Quantity",
-            "default": true
-          }
-        },
-        "type": "object",
-        "title": "IndustryAssignRequest"
-      },
-      "IndustryAssignResponse": {
-        "properties": {
-          "industry_id": {
-            "type": "string",
-            "title": "Industry Id"
-          },
-          "industry_name": {
-            "type": "string",
-            "title": "Industry Name"
-          },
-          "total_items": {
-            "type": "integer",
-            "title": "Total Items"
-          },
-          "target_tenants": {
-            "type": "integer",
-            "title": "Target Tenants"
-          },
-          "created": {
-            "type": "integer",
-            "title": "Created"
-          },
-          "skipped_existing": {
-            "type": "integer",
-            "title": "Skipped Existing"
-          },
-          "synced_admin_items": {
-            "type": "integer",
-            "title": "Synced Admin Items"
-          },
-          "missing_tenants": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Missing Tenants"
-          },
-          "mismatched_tenants": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Mismatched Tenants"
-          },
-          "inactive_tenants": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Inactive Tenants"
-          },
-          "results": {
-            "items": {
-              "$ref": "#/components/schemas/IndustryAssignTenantResult"
-            },
-            "type": "array",
-            "title": "Results"
-          }
-        },
-        "type": "object",
-        "required": [
-          "industry_id",
-          "industry_name",
-          "total_items",
-          "target_tenants",
-          "created",
-          "skipped_existing",
-          "synced_admin_items",
-          "missing_tenants",
-          "mismatched_tenants",
-          "inactive_tenants",
-          "results"
-        ],
-        "title": "IndustryAssignResponse"
-      },
-      "IndustryAssignTenantResult": {
-        "properties": {
-          "tenant_id": {
-            "type": "string",
-            "title": "Tenant Id"
-          },
-          "tenant_slug": {
-            "type": "string",
-            "title": "Tenant Slug"
-          },
-          "created": {
-            "type": "integer",
-            "title": "Created"
-          },
-          "skipped_existing": {
-            "type": "integer",
-            "title": "Skipped Existing"
-          },
-          "synced_admin_items": {
-            "type": "integer",
-            "title": "Synced Admin Items"
-          }
-        },
-        "type": "object",
-        "required": [
-          "tenant_id",
-          "tenant_slug",
-          "created",
-          "skipped_existing",
-          "synced_admin_items"
-        ],
-        "title": "IndustryAssignTenantResult"
-      },
-      "IndustryCreate": {
-        "properties": {
-          "name": {
-            "type": "string",
-            "maxLength": 255,
-            "title": "Name"
-          },
-          "description": {
-            "type": "string",
-            "maxLength": 512,
-            "title": "Description",
-            "default": ""
-          },
-          "is_active": {
-            "type": "boolean",
-            "title": "Is Active",
-            "default": true
-          }
-        },
-        "type": "object",
-        "required": [
-          "name"
-        ],
-        "title": "IndustryCreate"
-      },
-      "IndustryOut": {
-        "properties": {
           "name": {
             "type": "string",
             "maxLength": 255,
@@ -7589,6 +9041,31 @@
           "id"
         ],
         "title": "IndustryOut"
+      },
+      "IndustryCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "Name"
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 512,
+            "title": "Description",
+            "default": ""
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "IndustryCreate"
       },
       "IndustryOverlapCounts": {
         "properties": {
@@ -7777,6 +9254,17 @@
             "type": "integer",
             "title": "Order Mode",
             "default": 0
+          },
+          "type_id": {
+            "title": "Type Id",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -7881,6 +9369,17 @@
             "type": "boolean",
             "title": "Is Admin Created",
             "default": false
+          },
+          "type_id": {
+            "title": "Type Id",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -8064,6 +9563,17 @@
               }
             ],
             "title": "Order Mode"
+          },
+          "type_id": {
+            "title": "Type Id",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -9206,7 +10716,7 @@
           "is_active"
         ],
         "title": "TenantOutPing",
-        "description": "Minimaler Tenant Output f\u00fcr /inventory/ping."
+        "description": "Minimaler Tenant Output für /inventory/ping."
       },
       "TenantPingResponse": {
         "properties": {
@@ -9224,7 +10734,134 @@
           "tenant"
         ],
         "title": "TenantPingResponse",
-        "description": "Response Modell f\u00fcr /inventory/ping."
+        "description": "Response Modell für /inventory/ping."
+      },
+      "SupportHoursEntry": {
+        "properties": {
+          "day": {
+            "type": "string",
+            "maxLength": 64,
+            "title": "Day",
+            "default": ""
+          },
+          "time": {
+            "type": "string",
+            "maxLength": 64,
+            "title": "Time",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "title": "SupportHoursEntry"
+      },
+      "GlobalCustomerSettingsOut": {
+        "properties": {
+          "support_hours": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SupportHoursEntry"
+            },
+            "title": "Support Hours",
+            "default": []
+          },
+          "support_phone": {
+            "type": "string",
+            "maxLength": 64,
+            "title": "Support Phone",
+            "default": ""
+          },
+          "support_email": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "Support Email",
+            "default": ""
+          },
+          "support_note": {
+            "type": "string",
+            "title": "Support Note",
+            "default": ""
+          },
+          "id": {
+            "type": "string",
+            "title": "Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id"
+        ],
+        "title": "GlobalCustomerSettingsOut"
+      },
+      "GlobalCustomerSettingsUpdate": {
+        "properties": {
+          "support_hours": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SupportHoursEntry"
+            },
+            "title": "Support Hours",
+            "default": []
+          },
+          "support_phone": {
+            "type": "string",
+            "maxLength": 64,
+            "title": "Support Phone",
+            "default": ""
+          },
+          "support_email": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "Support Email",
+            "default": ""
+          },
+          "support_note": {
+            "type": "string",
+            "title": "Support Note",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "title": "GlobalCustomerSettingsUpdate"
+      },
+      "SalesContactOut": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "Name",
+            "default": ""
+          },
+          "phone": {
+            "type": "string",
+            "maxLength": 64,
+            "title": "Phone",
+            "default": ""
+          },
+          "email": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "Email",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "title": "SalesContactOut"
+      },
+      "HelpInfoOut": {
+        "properties": {
+          "support": {
+            "$ref": "#/components/schemas/GlobalCustomerSettingsOut"
+          },
+          "sales_contact": {
+            "$ref": "#/components/schemas/SalesContactOut"
+          }
+        },
+        "type": "object",
+        "required": [
+          "support",
+          "sales_contact"
+        ],
+        "title": "HelpInfoOut"
       },
       "TenantSettingsOut": {
         "properties": {
@@ -9315,6 +10952,24 @@
               }
             ],
             "title": "Industry Id"
+          },
+          "sales_contact_name": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "Sales Contact Name",
+            "default": ""
+          },
+          "sales_contact_phone": {
+            "type": "string",
+            "maxLength": 64,
+            "title": "Sales Contact Phone",
+            "default": ""
+          },
+          "sales_contact_email": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "Sales Contact Email",
+            "default": ""
           },
           "id": {
             "type": "string",
@@ -9416,6 +11071,24 @@
               }
             ],
             "title": "Industry Id"
+          },
+          "sales_contact_name": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "Sales Contact Name",
+            "default": ""
+          },
+          "sales_contact_phone": {
+            "type": "string",
+            "maxLength": 64,
+            "title": "Sales Contact Phone",
+            "default": ""
+          },
+          "sales_contact_email": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "Sales Contact Email",
+            "default": ""
           }
         },
         "type": "object",
@@ -9783,6 +11456,242 @@
           "type"
         ],
         "title": "ValidationError"
+      },
+      "GlobalIndustry": {
+        "title": "GlobalIndustry",
+        "type": "object",
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "is_active": {
+            "title": "Is Active",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "is_active"
+        ]
+      },
+      "GlobalCategory": {
+        "title": "GlobalCategory",
+        "type": "object",
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "is_active": {
+            "title": "Is Active",
+            "type": "boolean"
+          },
+          "is_system": {
+            "title": "Is System",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "is_active",
+          "is_system"
+        ]
+      },
+      "GlobalType": {
+        "title": "GlobalType",
+        "type": "object",
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "is_active": {
+            "title": "Is Active",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "is_active"
+        ]
+      },
+      "GlobalIndustryList": {
+        "title": "GlobalIndustryList",
+        "type": "object",
+        "properties": {
+          "items": {
+            "title": "Items",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GlobalIndustry"
+            }
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          },
+          "limit": {
+            "title": "Limit",
+            "type": "integer"
+          },
+          "offset": {
+            "title": "Offset",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "limit",
+          "offset"
+        ]
+      },
+      "GlobalCategoryList": {
+        "title": "GlobalCategoryList",
+        "type": "object",
+        "properties": {
+          "items": {
+            "title": "Items",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GlobalCategory"
+            }
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          },
+          "limit": {
+            "title": "Limit",
+            "type": "integer"
+          },
+          "offset": {
+            "title": "Offset",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "limit",
+          "offset"
+        ]
+      },
+      "GlobalTypeList": {
+        "title": "GlobalTypeList",
+        "type": "object",
+        "properties": {
+          "items": {
+            "title": "Items",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GlobalType"
+            }
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          },
+          "limit": {
+            "title": "Limit",
+            "type": "integer"
+          },
+          "offset": {
+            "title": "Offset",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "limit",
+          "offset"
+        ]
+      },
+      "GlobalTypeOut": {
+        "title": "GlobalTypeOut",
+        "type": "object",
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "is_active": {
+            "title": "Is Active",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "description",
+          "is_active"
+        ]
+      },
+      "GlobalTypeCreate": {
+        "title": "GlobalTypeCreate",
+        "type": "object",
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string",
+            "default": ""
+          },
+          "is_active": {
+            "title": "Is Active",
+            "type": "boolean",
+            "default": true
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "GlobalTypeUpdate": {
+        "title": "GlobalTypeUpdate",
+        "type": "object",
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "is_active": {
+            "title": "Is Active",
+            "type": "boolean"
+          }
+        }
       }
     }
   }

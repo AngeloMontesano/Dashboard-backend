@@ -5,9 +5,10 @@ services:
       service: db
     ports:
       - "5432:5432"
+    # Variante A (ipvlan, eigene LAN-IP)
     networks:
       docker:
-        ipv4_address: 192.168.99.60
+        ipv4_address: 192.168.10.60
 
   api:
     extends:
@@ -23,9 +24,10 @@ services:
     dns:
       - 1.1.1.1
       - 8.8.8.8
+    # Variante A (ipvlan, eigene LAN-IP)
     networks:
       docker:
-        ipv4_address: 192.168.99.61
+        ipv4_address: 192.168.10.61
 
   admin_ui:
     build: ./admin_frontend/admin-ui
@@ -33,9 +35,10 @@ services:
       - "5173:5173"
     depends_on:
       - api
+    # Variante A (ipvlan, eigene LAN-IP)
     networks:
       docker:
-        ipv4_address: 192.168.99.62
+        ipv4_address: 192.168.10.62
 
   customer_ui:
     build: ./customer_frontend/customer-ui
@@ -43,9 +46,34 @@ services:
       - "6173:5173"
     depends_on:
       - api
+    # Variante A (ipvlan, eigene LAN-IP)
     networks:
       docker:
-        ipv4_address: 192.168.99.63
+        ipv4_address: 192.168.10.63
+
+  control:
+    image: alpine:3.20
+    container_name: lm_saas_control
+    depends_on:
+      - api
+      - admin_ui
+      - customer_ui
+    command: >
+      sh -lc "
+      apk add --no-cache curl >/dev/null;
+      while true; do
+        echo '[CONTROL] checking...';
+        curl -fsS http://api:8000/health || echo '[FAIL] api';
+        curl -fsS http://admin_ui:5173/ || echo '[FAIL] admin_ui';
+        curl -fsS http://customer_ui:5173/ || echo '[FAIL] customer_ui';
+        sleep 10;
+      done
+      "
+
+
+volumes:
+  pgdata:
+
 
 networks:
   docker:

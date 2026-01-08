@@ -1,8 +1,8 @@
   admin_ui:
     build: ./admin-ui
-    #env_file:
-      #- ../.env
     ports:
       - "5173:5173"
+    environment:
+      TZ: ${TZ}
     depends_on:
       - api

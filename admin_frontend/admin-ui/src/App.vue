@@ -430,12 +430,11 @@ const pageSubtitle = computed(() => {
   if (ui.section === "users") return "Admin-Portal Benutzer verwalten";
   if (ui.section === "memberships") return "User mit Tenants verknüpfen und Rollen setzen";
   if (ui.section === "operations") return "Health, Audit, Snapshots und Logs";
-  if (ui.section === "globals-catalog") return "Übersicht der globalen Stammdaten und Zugänge";
-  if (ui.section === "globals-articles") return "Artikel-Stammdaten erfassen (Backend fehlt, UI-only)";
-  if (ui.section === "globals-categories") return "Kategorien als globale Stammdaten pflegen (UI-only)";
-  if (ui.section === "globals-types") return "Typen für globale Artikel pflegen (UI-only)";
-  if (ui.section === "globals-units") return "Artikel-Einheiten pflegen (UI-only)";
-  if (ui.section === "globals-industries") return "Branchen pflegen und Artikel zuordnen (UI-only)";
+  if (ui.section === "globals-articles") return "Artikel-Stammdaten verwalten";
+  if (ui.section === "globals-categories") return "Kategorien als globale Stammdaten pflegen";
+  if (ui.section === "globals-types") return "Typen für globale Artikel pflegen";
+  if (ui.section === "globals-units") return "Artikel-Einheiten pflegen";
+  if (ui.section === "globals-industries") return "Branchen pflegen und Artikel zuordnen";
   return "Security, Theme, Feature Flags";
 });
 

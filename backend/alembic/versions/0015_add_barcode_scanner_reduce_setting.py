@@ -19,10 +19,14 @@ depends_on = None
 
 def upgrade() -> None:
     op.alter_column("alembic_version", "version_num", type_=sa.String(length=64))
-    op.add_column(
-        "tenant_settings",
-        sa.Column("barcode_scanner_reduce_enabled", sa.Boolean(), nullable=False, server_default=sa.false()),
-    )
+    bind = op.get_bind()
+    inspector = sa.inspect(bind)
+    columns = {column["name"] for column in inspector.get_columns("tenant_settings")}
+    if "barcode_scanner_reduce_enabled" not in columns:
+        op.add_column(
+            "tenant_settings",
+            sa.Column("barcode_scanner_reduce_enabled", sa.Boolean(), nullable=False, server_default=sa.false()),
+        )
     op.alter_column("tenant_settings", "barcode_scanner_reduce_enabled", server_default=None)
 
 

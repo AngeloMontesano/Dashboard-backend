@@ -241,6 +241,9 @@
           <!-- SECTION: Backup -->
             <AdminBackupView v-else-if="ui.section === 'backup'" :tenant="tenantContext" />
 
+          <!-- SECTION: Backup -->
+            <AdminBackupView v-else-if="ui.section === 'backup'" :tenant="tenantContext" />
+
           <!-- SECTION: Settings -->
             <AdminSettingsView
               v-else

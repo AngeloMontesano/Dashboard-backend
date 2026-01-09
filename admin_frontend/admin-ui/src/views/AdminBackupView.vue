@@ -9,13 +9,6 @@
 
       <BackupMonitoringDetails />
 
-      <BackupArchivePanel
-        :adminKey="adminKey"
-        :actor="actor"
-        :tenantId="tenant.id"
-        :tenantSlug="tenant.slug"
-      />
-
       <BackupChecksCard />
     </UiSection>
   </UiPage>
@@ -28,12 +21,9 @@ import BackupContextCard from "../components/backup/BackupContextCard.vue";
 import BackupMonitoringOverview from "../components/backup/BackupMonitoringOverview.vue";
 import BackupMonitoringDetails from "../components/backup/BackupMonitoringDetails.vue";
 import BackupGuidancePanel from "../components/backup/BackupGuidancePanel.vue";
-import BackupArchivePanel from "../components/backup/BackupArchivePanel.vue";
 import BackupChecksCard from "../components/backup/BackupChecksCard.vue";
 
 defineProps<{
-  adminKey: string;
-  actor?: string;
   tenant: {
     id: string;
     name: string;

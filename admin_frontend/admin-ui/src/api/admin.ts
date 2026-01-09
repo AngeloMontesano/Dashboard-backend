@@ -25,6 +25,9 @@ import type {
   SmtpTestResponse,
   SystemEmailSettings,
   SystemEmailSettingsUpdate,
+  GlobalCustomerSettingsOut,
+  GlobalCustomerSettingsUpdate,
+  DemoInventoryImportResponse,
 } from "../types";
 
 import { api, adminHeaders } from "./client";
@@ -47,6 +50,8 @@ type TenantUserListResponse =
   paths["/admin/tenants/{tenant_id}/users"]["get"]["responses"]["200"]["content"]["application/json"];
 type TenantSettingsResponse =
   paths["/admin/tenants/{tenant_id}/settings"]["get"]["responses"]["200"]["content"]["application/json"];
+type GlobalCustomerSettingsResponse =
+  paths["/admin/customer-settings"]["get"]["responses"]["200"]["content"]["application/json"];
 
 type AdminCategoriesResponse =
   paths["/admin/inventory/categories"]["get"]["responses"]["200"]["content"]["application/json"];
@@ -85,19 +90,8 @@ type AdminSystemActionResponseRaw = AdminSystemActionResponse;
 type AdminSystemEmailSettingsResponse = SystemEmailSettings;
 type AdminSmtpSettingsResponse = SmtpSettingsOut;
 type AdminSmtpTestResponse = SmtpTestResponse;
-type BackupEntry = {
-  id: string;
-  scope: string;
-  tenant_id: string | null;
-  tenant_slug: string | null;
-  created_at: string;
-  status: string;
-  restored_at?: string | null;
-  files: { name: string; size_bytes: number; size_label: string }[];
-};
-
-type BackupListResponse = { items: BackupEntry[] };
-type BackupActionResponse = { backup: BackupEntry; message: string };
+type AdminGlobalCustomerSettingsResponse = GlobalCustomerSettingsResponse;
+type AdminDemoInventoryImportResponse = DemoInventoryImportResponse;
 
 function withAdmin(adminKey: string, actor?: string) {
   return { headers: adminHeaders(adminKey, actor) };
@@ -168,6 +162,37 @@ export async function adminUpdateTenantSettings(
   const res = await api.put<TenantSettingsOut>(
     `/admin/tenants/${tenantId}/settings`,
     payload,
+    withAdmin(adminKey, actor)
+  );
+  return res.data;
+}
+
+/* Global Customer Settings */
+export async function adminGetGlobalCustomerSettings(adminKey: string, actor?: string) {
+  const res = await api.get<AdminGlobalCustomerSettingsResponse>(
+    "/admin/customer-settings",
+    withAdmin(adminKey, actor)
+  );
+  return res.data as GlobalCustomerSettingsOut;
+}
+
+export async function adminUpdateGlobalCustomerSettings(
+  adminKey: string,
+  actor: string | undefined,
+  payload: GlobalCustomerSettingsUpdate
+) {
+  const res = await api.put<GlobalCustomerSettingsOut>(
+    "/admin/customer-settings",
+    payload,
+    withAdmin(adminKey, actor)
+  );
+  return res.data;
+}
+
+export async function adminImportDemoInventory(adminKey: string, actor?: string) {
+  const res = await api.post<AdminDemoInventoryImportResponse>(
+    "/admin/inventory/demo-import",
+    {},
     withAdmin(adminKey, actor)
   );
   return res.data;

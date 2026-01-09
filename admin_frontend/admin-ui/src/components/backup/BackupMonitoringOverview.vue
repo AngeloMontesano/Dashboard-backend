@@ -7,10 +7,7 @@
           Kurzstatus der Backup-Pipeline mit Absprung zu Details.
         </div>
       </div>
-      <div class="row gap8">
-        <a class="btnGhost small" href="#backup-monitoring-details">Zu Details</a>
-        <a class="btnGhost small" href="#backup-archive">Zu Archiv</a>
-      </div>
+      <a class="btnGhost small" href="#backup-monitoring-details">Zu Details</a>
     </div>
 
     <div class="card-grid">

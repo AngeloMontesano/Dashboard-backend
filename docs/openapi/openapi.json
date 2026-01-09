@@ -1660,6 +1660,55 @@
         }
       }
     },
+    "/inventory/help-info": {
+      "get": {
+        "tags": [
+          "inventory"
+        ],
+        "summary": "Get Help Info",
+        "operationId": "get_help_info_inventory_help_info_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HelpInfoOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/inventory/settings": {
       "get": {
         "tags": [
@@ -4116,6 +4165,146 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/TenantSettingsOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/customer-settings": {
+      "get": {
+        "tags": [
+          "admin",
+          "admin-customer-settings"
+        ],
+        "summary": "Get Global Customer Settings",
+        "operationId": "get_global_customer_settings_admin_customer_settings_get",
+        "parameters": [
+          {
+            "name": "x-admin-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Key"
+            }
+          },
+          {
+            "name": "x-admin-actor",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Actor"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GlobalCustomerSettingsOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "admin",
+          "admin-customer-settings"
+        ],
+        "summary": "Update Global Customer Settings",
+        "operationId": "update_global_customer_settings_admin_customer_settings_put",
+        "parameters": [
+          {
+            "name": "x-admin-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Key"
+            }
+          },
+          {
+            "name": "x-admin-actor",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Actor"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GlobalCustomerSettingsUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GlobalCustomerSettingsOut"
                 }
               }
             }
@@ -10547,6 +10736,133 @@
         "title": "TenantPingResponse",
         "description": "Response Modell für /inventory/ping."
       },
+      "SupportHoursEntry": {
+        "properties": {
+          "day": {
+            "type": "string",
+            "maxLength": 64,
+            "title": "Day",
+            "default": ""
+          },
+          "time": {
+            "type": "string",
+            "maxLength": 64,
+            "title": "Time",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "title": "SupportHoursEntry"
+      },
+      "GlobalCustomerSettingsOut": {
+        "properties": {
+          "support_hours": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SupportHoursEntry"
+            },
+            "title": "Support Hours",
+            "default": []
+          },
+          "support_phone": {
+            "type": "string",
+            "maxLength": 64,
+            "title": "Support Phone",
+            "default": ""
+          },
+          "support_email": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "Support Email",
+            "default": ""
+          },
+          "support_note": {
+            "type": "string",
+            "title": "Support Note",
+            "default": ""
+          },
+          "id": {
+            "type": "string",
+            "title": "Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id"
+        ],
+        "title": "GlobalCustomerSettingsOut"
+      },
+      "GlobalCustomerSettingsUpdate": {
+        "properties": {
+          "support_hours": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SupportHoursEntry"
+            },
+            "title": "Support Hours",
+            "default": []
+          },
+          "support_phone": {
+            "type": "string",
+            "maxLength": 64,
+            "title": "Support Phone",
+            "default": ""
+          },
+          "support_email": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "Support Email",
+            "default": ""
+          },
+          "support_note": {
+            "type": "string",
+            "title": "Support Note",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "title": "GlobalCustomerSettingsUpdate"
+      },
+      "SalesContactOut": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "Name",
+            "default": ""
+          },
+          "phone": {
+            "type": "string",
+            "maxLength": 64,
+            "title": "Phone",
+            "default": ""
+          },
+          "email": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "Email",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "title": "SalesContactOut"
+      },
+      "HelpInfoOut": {
+        "properties": {
+          "support": {
+            "$ref": "#/components/schemas/GlobalCustomerSettingsOut"
+          },
+          "sales_contact": {
+            "$ref": "#/components/schemas/SalesContactOut"
+          }
+        },
+        "type": "object",
+        "required": [
+          "support",
+          "sales_contact"
+        ],
+        "title": "HelpInfoOut"
+      },
       "TenantSettingsOut": {
         "properties": {
           "company_name": {
@@ -10636,6 +10952,24 @@
               }
             ],
             "title": "Industry Id"
+          },
+          "sales_contact_name": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "Sales Contact Name",
+            "default": ""
+          },
+          "sales_contact_phone": {
+            "type": "string",
+            "maxLength": 64,
+            "title": "Sales Contact Phone",
+            "default": ""
+          },
+          "sales_contact_email": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "Sales Contact Email",
+            "default": ""
           },
           "id": {
             "type": "string",
@@ -10737,6 +11071,24 @@
               }
             ],
             "title": "Industry Id"
+          },
+          "sales_contact_name": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "Sales Contact Name",
+            "default": ""
+          },
+          "sales_contact_phone": {
+            "type": "string",
+            "maxLength": 64,
+            "title": "Sales Contact Phone",
+            "default": ""
+          },
+          "sales_contact_email": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "Sales Contact Email",
+            "default": ""
           }
         },
         "type": "object",

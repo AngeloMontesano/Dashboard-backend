@@ -226,6 +226,11 @@
               :adminKey="ui.adminKey"
               :actor="ui.actor"
             />
+            <GlobaleKundenEinstellungenView
+              v-else-if="ui.section === 'globals-customer-settings'"
+              :adminKey="ui.adminKey"
+              :actor="ui.actor"
+            />
 
           <!-- SECTION: Settings -->
             <AdminSettingsView
@@ -288,6 +293,7 @@ import GlobaleKategorienView from "./views/GlobaleKategorienView.vue";
 import GlobaleTypenView from "./views/GlobaleTypenView.vue";
 import GlobaleEinheitenView from "./views/GlobaleEinheitenView.vue";
 import GlobaleBranchenView from "./views/GlobaleBranchenView.vue";
+import GlobaleKundenEinstellungenView from "./views/GlobaleKundenEinstellungenView.vue";
 
 /* Zentraler Toast State */
 const { toast } = useToast();
@@ -316,6 +322,7 @@ const globalSections = [
   { id: "globals-types", label: "Globale Typen", icon: "🏷️" },
   { id: "globals-units", label: "Globale Einheiten", icon: "🧭" },
   { id: "globals-industries", label: "Globale Branchen", icon: "🏭" },
+  { id: "globals-customer-settings", label: "Globale Kunden Einstellung", icon: "🧾" },
 ] as const;
 
 type CustomerSectionId = (typeof customerSections)[number]["id"];
@@ -330,6 +337,7 @@ const globalSectionPaths: Record<GlobalSectionId, string> = {
   "globals-types": "/globals/types",
   "globals-units": "/globals/units",
   "globals-industries": "/globals/industries",
+  "globals-customer-settings": "/globals/customer-settings",
 };
 
 /* UI State */
@@ -421,6 +429,7 @@ const pageTitle = computed(() => {
     "globals-types": "Globale Typen",
     "globals-units": "Globale Einheiten",
     "globals-industries": "Globale Branchen",
+    "globals-customer-settings": "Globale Kunden Einstellung",
   };
   return m[ui.section];
 });
@@ -435,6 +444,7 @@ const pageSubtitle = computed(() => {
   if (ui.section === "globals-types") return "Typen für globale Artikel pflegen";
   if (ui.section === "globals-units") return "Artikel-Einheiten pflegen";
   if (ui.section === "globals-industries") return "Branchen pflegen und Artikel zuordnen";
+  if (ui.section === "globals-customer-settings") return "Support- und Hilfeinformationen pflegen";
   return "Security, Theme, Feature Flags";
 });
 

@@ -169,22 +169,6 @@ async def admin_download_backup(backup_id: str) -> FileResponse:
     )
 
 
-@router.get("/{backup_id}/files/{filename}")
-async def admin_download_backup_file(backup_id: str, filename: str) -> FileResponse:
-    items = _load_index()
-    match = next((item for item in items if item["id"] == backup_id), None)
-    if not match:
-        raise HTTPException(status_code=404, detail="Backup nicht gefunden")
-    folder = _backup_dir(backup_id)
-    file_path = (folder / filename).resolve()
-    if not file_path.exists() or file_path.parent != folder.resolve():
-        raise HTTPException(status_code=404, detail="Datei nicht gefunden")
-    return FileResponse(
-        file_path,
-        media_type="application/json",
-        filename=filename,
-    )
-
 @router.post("/tenants/{tenant_id}", response_model=BackupActionResponse)
 async def admin_create_tenant_backup(tenant_id: str, db: AsyncSession = Depends(get_db)) -> BackupActionResponse:
     tenant = await _get_tenant_or_404(db, tenant_id)

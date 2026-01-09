@@ -71,14 +71,29 @@ let rowId = 0;
 const nextRowId = () => `row-${Date.now()}-${rowId++}`;
 const hasItemSelection = (row: OrderRow): row is OrderRow & { itemId: string } => Boolean(row.itemId);
 
+const resolveItemId = (item: { id?: string | number | null; item_id?: string | number | null }) =>
+  item.id ?? item.item_id ?? null;
+const resolveItemName = (item: { name?: string | null; item_name?: string | null }, fallback: string) =>
+  item.name || item.item_name || fallback;
+
 const selectableItems = computed(() => {
   const map = new Map<string, { value: string; label: string }>();
-  const pushItem = (item: { id: string; name: string; quantity?: number | null; sku?: string | null }) => {
-    if (!item?.id || map.has(item.id)) return;
-    const parts = [item.name];
+  const pushItem = (item: {
+    id?: string | number | null;
+    item_id?: string | number | null;
+    name?: string | null;
+    item_name?: string | null;
+    quantity?: number | null;
+    sku?: string | null;
+  }) => {
+    const rawId = resolveItemId(item);
+    if (!rawId) return;
+    const id = String(rawId);
+    if (map.has(id)) return;
+    const parts = [resolveItemName(item, `Artikel ${id}`)];
     if (typeof item.quantity === 'number') parts.push(`Bestand ${item.quantity}`);
     if (item.sku) parts.push(`SKU ${item.sku}`);
-    map.set(item.id, { value: item.id, label: parts.join(' • ') });
+    map.set(id, { value: id, label: parts.join(' • ') });
   };
   state.items.forEach(pushItem);
   state.recommended.forEach(pushItem);
@@ -233,13 +248,19 @@ function prefillRowsFromRecommended(force = false) {
       .filter(Boolean) as string[]
   );
   const additions = state.recommended
-    .filter((item) => !existingIds.has(item.id))
-    .map((item) => ({
-      id: nextRowId(),
-      itemId: item.id,
-      quantity: Math.max(item.recommended_qty || item.quantity || 1, 1),
-      note: ''
-    }));
+    .map((item) => {
+      const rawId = resolveItemId(item);
+      if (!rawId) return null;
+      const itemId = String(rawId);
+      if (existingIds.has(itemId)) return null;
+      return {
+        id: nextRowId(),
+        itemId,
+        quantity: Math.max(item.recommended_qty || item.quantity || 1, 1),
+        note: ''
+      };
+    })
+    .filter(Boolean) as OrderRow[];
   if (additions.length) {
     state.createRows = [...state.createRows, ...additions];
   }

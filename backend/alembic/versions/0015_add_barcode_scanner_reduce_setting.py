@@ -18,6 +18,7 @@ depends_on = None
 
 
 def upgrade() -> None:
+    op.alter_column("alembic_version", "version_num", type_=sa.String(length=64))
     op.add_column(
         "tenant_settings",
         sa.Column("barcode_scanner_reduce_enabled", sa.Boolean(), nullable=False, server_default=sa.false()),
@@ -27,3 +28,4 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     op.drop_column("tenant_settings", "barcode_scanner_reduce_enabled")
+    op.alter_column("alembic_version", "version_num", type_=sa.String(length=32))

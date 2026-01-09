@@ -240,6 +240,11 @@ function closeHelp() {
   z-index: 1000;
 }
 
+:global(.theme-dark) .help-overlay,
+:global([data-theme="dark"]) .help-overlay {
+  background: rgba(4, 6, 10, 0.75);
+}
+
 .help-modal {
   background: var(--surface);
   color: var(--text);

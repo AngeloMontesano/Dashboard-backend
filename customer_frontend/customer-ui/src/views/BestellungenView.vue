@@ -78,19 +78,11 @@ const resolveItemName = (item: { name?: string | null; item_name?: string | null
 
 const selectableItems = computed(() => {
   const map = new Map<string, { value: string; label: string }>();
-  const pushItem = (item: {
-    id?: string | number | null;
-    item_id?: string | number | null;
-    name?: string | null;
-    item_name?: string | null;
-    quantity?: number | null;
-    sku?: string | null;
-  }) => {
-    const rawId = resolveItemId(item);
-    if (!rawId) return;
-    const id = String(rawId);
+  const pushItem = (item: { id: string; name: string; quantity?: number | null; sku?: string | null }) => {
+    if (!item?.id) return;
+    const id = String(item.id);
     if (map.has(id)) return;
-    const parts = [resolveItemName(item, `Artikel ${id}`)];
+    const parts = [item.name];
     if (typeof item.quantity === 'number') parts.push(`Bestand ${item.quantity}`);
     if (item.sku) parts.push(`SKU ${item.sku}`);
     map.set(id, { value: id, label: parts.join(' • ') });
@@ -248,19 +240,13 @@ function prefillRowsFromRecommended(force = false) {
       .filter(Boolean) as string[]
   );
   const additions = state.recommended
-    .map((item) => {
-      const rawId = resolveItemId(item);
-      if (!rawId) return null;
-      const itemId = String(rawId);
-      if (existingIds.has(itemId)) return null;
-      return {
-        id: nextRowId(),
-        itemId,
-        quantity: Math.max(item.recommended_qty || item.quantity || 1, 1),
-        note: ''
-      };
-    })
-    .filter(Boolean) as OrderRow[];
+    .filter((item) => !existingIds.has(String(item.id)))
+    .map((item) => ({
+      id: nextRowId(),
+      itemId: String(item.id),
+      quantity: Math.max(item.recommended_qty || item.quantity || 1, 1),
+      note: ''
+    }));
   if (additions.length) {
     state.createRows = [...state.createRows, ...additions];
   }

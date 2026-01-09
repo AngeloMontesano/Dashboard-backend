@@ -231,13 +231,18 @@ function closeHelp() {
 .help-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.55);
+  background: rgba(15, 23, 42, 0.22);
   backdrop-filter: blur(6px);
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 2rem;
   z-index: 1000;
+}
+
+:global(.theme-dark) .help-overlay,
+:global([data-theme="dark"]) .help-overlay {
+  background: rgba(4, 6, 10, 0.72);
 }
 
 .help-modal {

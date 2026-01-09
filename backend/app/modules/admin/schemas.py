@@ -106,12 +106,3 @@ class DemoInventorySeedOut(BaseModel):
     categories_updated: int
     items_created: int
     items_updated: int
-
-
-class DemoInventoryDeleteOut(BaseModel):
-    ok: bool
-    tenant_slug: str
-    tenant_found: bool
-    movements_deleted: int
-    items_deleted: int
-    categories_deleted: int

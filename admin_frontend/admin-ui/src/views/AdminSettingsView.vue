@@ -231,9 +231,6 @@
               <button class="btnPrimary" :disabled="demoImporting || !adminKey" @click="importDemoInventory">
                 {{ demoImporting ? "Importiert..." : "Demo-Artikel importieren" }}
               </button>
-              <button class="btnGhost" :disabled="demoDeleting || !adminKey" @click="deleteDemoInventory">
-                {{ demoDeleting ? "Löscht..." : "Demo-Artikel löschen" }}
-              </button>
             </div>
             <div v-if="demoImportResult" class="kvGrid">
               <div class="kv">
@@ -258,29 +255,6 @@
                   erstellt: {{ demoImportResult.items_created }},
                   aktualisiert: {{ demoImportResult.items_updated }}
                 </div>
-              </div>
-            </div>
-            <div v-if="demoDeleteResult" class="kvGrid">
-              <div class="kv">
-                <div class="k">Tenant</div>
-                <div class="v">
-                  {{ demoDeleteResult.tenant_slug }}
-                  <span class="muted">
-                    ({{ demoDeleteResult.tenant_found ? "gefunden" : "nicht gefunden" }})
-                  </span>
-                </div>
-              </div>
-              <div class="kv">
-                <div class="k">Bewegungen</div>
-                <div class="v">gelöscht: {{ demoDeleteResult.movements_deleted }}</div>
-              </div>
-              <div class="kv">
-                <div class="k">Artikel</div>
-                <div class="v">gelöscht: {{ demoDeleteResult.items_deleted }}</div>
-              </div>
-              <div class="kv">
-                <div class="k">Kategorien</div>
-                <div class="v">gelöscht: {{ demoDeleteResult.categories_deleted }}</div>
               </div>
             </div>
           </div>
@@ -326,7 +300,6 @@ import { ref, watch, reactive, computed, withDefaults } from "vue";
 import {
   adminGetSystemInfo,
   adminGetSmtpSettings,
-  adminDeleteDemoInventory,
   adminImportDemoInventory,
   adminUpdateSmtpSettings,
   adminTestSmtpSettings,
@@ -335,7 +308,6 @@ import { useToast } from "../composables/useToast";
 import pkg from "../../package.json";
 import type {
   AdminSystemInfo,
-  DemoInventoryDeleteResponse,
   DemoInventoryImportResponse,
   SmtpSettingsIn,
   SmtpSettingsOut,
@@ -409,8 +381,6 @@ const testingEmail = ref(false);
 const loadingEmail = ref(false);
 const demoImporting = ref(false);
 const demoImportResult = ref<DemoInventoryImportResponse | null>(null);
-const demoDeleting = ref(false);
-const demoDeleteResult = ref<DemoInventoryDeleteResponse | null>(null);
 
 function onThemeChange(themeId: ThemeMode) {
   localTheme.value = themeId;
@@ -533,7 +503,6 @@ async function importDemoInventory() {
   if (!props.adminKey) return;
   demoImporting.value = true;
   demoImportResult.value = null;
-  demoDeleteResult.value = null;
   try {
     demoImportResult.value = await adminImportDemoInventory(props.adminKey, props.actor);
     toast("Demo-Artikel importiert.", "success");
@@ -541,21 +510,6 @@ async function importDemoInventory() {
     toast(`Demo-Artikel Import fehlgeschlagen: ${asError(e)}`, "danger");
   } finally {
     demoImporting.value = false;
-  }
-}
-
-async function deleteDemoInventory() {
-  if (!props.adminKey) return;
-  demoDeleting.value = true;
-  demoDeleteResult.value = null;
-  demoImportResult.value = null;
-  try {
-    demoDeleteResult.value = await adminDeleteDemoInventory(props.adminKey, props.actor);
-    toast("Demo-Artikel gelöscht.", "success");
-  } catch (e: any) {
-    toast(`Demo-Artikel löschen fehlgeschlagen: ${asError(e)}`, "danger");
-  } finally {
-    demoDeleting.value = false;
   }
 }
 </script>

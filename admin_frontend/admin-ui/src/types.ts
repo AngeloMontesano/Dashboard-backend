@@ -116,12 +116,3 @@ export type DemoInventoryImportResponse = {
   items_created: number;
   items_updated: number;
 };
-
-export type DemoInventoryDeleteResponse = {
-  ok: boolean;
-  tenant_slug: string;
-  tenant_found: boolean;
-  movements_deleted: number;
-  items_deleted: number;
-  categories_deleted: number;
-};

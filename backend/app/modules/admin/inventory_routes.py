@@ -16,8 +16,8 @@ from app.models.global_type import GlobalType
 from app.models.industry import Industry, IndustryArticle
 from app.models.tenant import Tenant
 from app.models.tenant_setting import TenantSetting
-from app.modules.admin.demo_seed import delete_kunde1_demo_inventory, seed_kunde1_inventory
-from app.modules.admin.schemas import DemoInventoryDeleteOut, DemoInventorySeedOut
+from app.modules.admin.demo_seed import seed_kunde1_inventory
+from app.modules.admin.schemas import DemoInventorySeedOut
 from app.modules.inventory.routes import _normalize_sku, CSV_COLUMNS
 from app.modules.inventory.schemas import (
     CategoryCreate,
@@ -101,13 +101,6 @@ async def admin_import_demo_inventory(db: AsyncSession = Depends(get_db)) -> Dem
     result = await seed_kunde1_inventory(db)
     await db.commit()
     return DemoInventorySeedOut(ok=True, **result)
-
-
-@router.delete("/demo-import", response_model=DemoInventoryDeleteOut)
-async def admin_delete_demo_inventory(db: AsyncSession = Depends(get_db)) -> DemoInventoryDeleteOut:
-    result = await delete_kunde1_demo_inventory(db)
-    await db.commit()
-    return DemoInventoryDeleteOut(ok=True, **result)
 
 
 @router.get("/categories", response_model=list[CategoryOut])

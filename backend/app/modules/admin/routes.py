@@ -15,6 +15,7 @@ from app.modules.admin.users_routes import router as users_router
 from app.modules.admin.inventory_routes import router as admin_inventory_router
 from app.modules.admin.system_routes import router as system_router
 from app.modules.admin.smtp_routes import router as smtp_router
+from app.modules.admin.backups_routes import router as backups_router
 
 router = APIRouter(
     prefix="/admin",

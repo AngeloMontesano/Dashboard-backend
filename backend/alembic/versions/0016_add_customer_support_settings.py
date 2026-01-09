@@ -1,7 +1,7 @@
 """add global customer support settings and sales contact fields
 
 Revision ID: 0016_add_customer_support_settings
-Revises: 0015_merge_heads
+Revises: 0015_add_barcode_scanner_reduce_setting
 Create Date: 2026-01-10
 """
 
@@ -14,7 +14,7 @@ from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
 revision = "0016_add_customer_support_settings"
-down_revision = "0015_merge_heads"
+down_revision = "0015_add_barcode_scanner_reduce_setting"
 branch_labels = None
 depends_on = None
 

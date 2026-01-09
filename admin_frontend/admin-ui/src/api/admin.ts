@@ -230,6 +230,48 @@ export async function adminUpdateEmailSettings(adminKey: string, actor: string |
   return res.data;
 }
 
+/* Backups */
+export async function adminListBackups(adminKey: string, actor?: string) {
+  const res = await api.get<BackupListResponse>("/admin/backups", withAdmin(adminKey, actor));
+  return res.data.items;
+}
+
+export async function adminCreateTenantBackup(adminKey: string, actor: string | undefined, tenantId: string) {
+  const res = await api.post<BackupActionResponse>(`/admin/backups/tenants/${tenantId}`, null, withAdmin(adminKey, actor));
+  return res.data.backup;
+}
+
+export async function adminCreateAllBackups(adminKey: string, actor?: string) {
+  const res = await api.post<BackupActionResponse>("/admin/backups/all", null, withAdmin(adminKey, actor));
+  return res.data.backup;
+}
+
+export async function adminRestoreBackup(adminKey: string, actor: string | undefined, backupId: string) {
+  const res = await api.post<BackupActionResponse>(`/admin/backups/${backupId}/restore`, null, withAdmin(adminKey, actor));
+  return res.data.backup;
+}
+
+export async function adminDownloadBackup(adminKey: string, actor: string | undefined, backupId: string) {
+  const res = await api.get(`/admin/backups/${backupId}/download`, {
+    ...withAdmin(adminKey, actor),
+    responseType: "blob",
+  });
+  return res.data as Blob;
+}
+
+export async function adminDownloadBackupFile(
+  adminKey: string,
+  actor: string | undefined,
+  backupId: string,
+  filename: string
+) {
+  const res = await api.get(`/admin/backups/${backupId}/files/${filename}`, {
+    ...withAdmin(adminKey, actor),
+    responseType: "blob",
+  });
+  return res.data as Blob;
+}
+
 /* SMTP */
 export async function adminGetSmtpSettings(adminKey: string, actor?: string) {
   const res = await api.get<AdminSmtpSettingsResponse>("/admin/smtp/settings", withAdmin(adminKey, actor));

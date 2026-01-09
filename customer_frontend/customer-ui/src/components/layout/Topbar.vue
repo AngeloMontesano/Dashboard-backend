@@ -231,7 +231,7 @@ function closeHelp() {
 .help-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.55);
+  background: rgba(15, 23, 42, 0.78);
   backdrop-filter: blur(6px);
   display: flex;
   align-items: center;

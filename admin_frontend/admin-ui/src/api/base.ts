@@ -1,6 +1,7 @@
 // Zentrale URL-Helfer für das Admin-Frontend.
 const runtimeHostname = typeof window !== "undefined" ? window.location.hostname : "";
 const API_BASE_PATH = "/api";
+const DEFAULT_BACKUP_BASE_PATH = "/api/admin/backups";
 
 export function getBaseURL() {
   return API_BASE_PATH;
@@ -8,4 +9,12 @@ export function getBaseURL() {
 
 export function getBaseDomain() {
   return runtimeHostname;
+}
+
+export function getBackupBasePath() {
+  const envPath = import.meta.env?.VITE_ADMIN_BACKUP_BASE_PATH as string | undefined;
+  if (!envPath) return DEFAULT_BACKUP_BASE_PATH;
+  if (envPath.startsWith("/api")) return envPath;
+  if (envPath.startsWith("/")) return `/api${envPath}`;
+  return `/api/${envPath}`;
 }

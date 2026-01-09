@@ -267,6 +267,48 @@
             <input type="checkbox" v-model="settingsState.form.auto_order_enabled" :disabled="settingsState.loading" />
             <span>Auto-Bestellung aktiv</span>
           </label>
+          <label class="field checkbox">
+            <input
+              type="checkbox"
+              v-model="settingsState.form.barcode_scanner_reduce_enabled"
+              :disabled="settingsState.loading"
+            />
+            <span>Barcodescanner Bestand reduzieren</span>
+          </label>
+        </div>
+        <div class="settings-grid" v-if="settingsState.form && settingsState.activeTab === 'sales'">
+          <label class="field">
+            <span class="field-label">Name</span>
+            <input class="input" v-model="settingsState.form.sales_contact_name" :disabled="settingsState.loading" />
+          </label>
+          <label class="field">
+            <span class="field-label">Telefon</span>
+            <input class="input" v-model="settingsState.form.sales_contact_phone" :disabled="settingsState.loading" />
+          </label>
+          <label class="field">
+            <span class="field-label">E-Mail</span>
+            <input class="input" v-model="settingsState.form.sales_contact_email" :disabled="settingsState.loading" />
+          </label>
+          <div class="hint">
+            Diese Daten werden im Kunden-Frontend im Hilfe-Overlay angezeigt.
+          </div>
+        </div>
+        <div class="settings-grid" v-if="settingsState.form && settingsState.activeTab === 'sales'">
+          <label class="field">
+            <span class="field-label">Name</span>
+            <input class="input" v-model="settingsState.form.sales_contact_name" :disabled="settingsState.loading" />
+          </label>
+          <label class="field">
+            <span class="field-label">Telefon</span>
+            <input class="input" v-model="settingsState.form.sales_contact_phone" :disabled="settingsState.loading" />
+          </label>
+          <label class="field">
+            <span class="field-label">E-Mail</span>
+            <input class="input" v-model="settingsState.form.sales_contact_email" :disabled="settingsState.loading" />
+          </label>
+          <div class="hint">
+            Diese Daten werden im Kunden-Frontend im Hilfe-Overlay angezeigt.
+          </div>
         </div>
         <div class="settings-grid" v-if="settingsState.form && settingsState.activeTab === 'sales'">
           <label class="field">

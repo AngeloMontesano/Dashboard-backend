@@ -27,6 +27,7 @@ import type {
   SystemEmailSettingsUpdate,
   GlobalCustomerSettingsOut,
   GlobalCustomerSettingsUpdate,
+  DemoInventoryImportResponse,
 } from "../types";
 
 import { api, adminHeaders } from "./client";
@@ -90,6 +91,7 @@ type AdminSystemEmailSettingsResponse = SystemEmailSettings;
 type AdminSmtpSettingsResponse = SmtpSettingsOut;
 type AdminSmtpTestResponse = SmtpTestResponse;
 type AdminGlobalCustomerSettingsResponse = GlobalCustomerSettingsResponse;
+type AdminDemoInventoryImportResponse = DemoInventoryImportResponse;
 
 function withAdmin(adminKey: string, actor?: string) {
   return { headers: adminHeaders(adminKey, actor) };
@@ -182,6 +184,15 @@ export async function adminUpdateGlobalCustomerSettings(
   const res = await api.put<GlobalCustomerSettingsOut>(
     "/admin/customer-settings",
     payload,
+    withAdmin(adminKey, actor)
+  );
+  return res.data;
+}
+
+export async function adminImportDemoInventory(adminKey: string, actor?: string) {
+  const res = await api.post<AdminDemoInventoryImportResponse>(
+    "/admin/inventory/demo-import",
+    {},
     withAdmin(adminKey, actor)
   );
   return res.data;

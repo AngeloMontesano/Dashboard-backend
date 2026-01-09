@@ -1,14 +1,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.category import Category
 from app.models.item import Item
-from app.models.movement import InventoryMovement
 from app.models.tenant import Tenant
 
 
@@ -143,7 +141,6 @@ async def seed_kunde1_inventory(
     existing_by_sku = {item.sku: item for item in existing_items}
     items_created = 0
     items_updated = 0
-    movement_seeds: list[tuple[Item, int, str, datetime]] = []
 
     for index, seed in enumerate(ITEM_SEEDS, start=1):
         sku = f"BAK-{index:03d}"
@@ -167,65 +164,27 @@ async def seed_kunde1_inventory(
             item.unit = seed.unit
             item.is_active = True
             items_updated += 1
-        else:
-            item = Item(
-                tenant_id=tenant.id,
-                sku=sku,
-                barcode=barcode,
-                name=seed.name,
-                description=f"Bäckerbedarf: {seed.name}",
-                category_id=category_map[seed.category].id,
-                quantity=quantity,
-                min_stock=min_stock,
-                max_stock=max_stock,
-                target_stock=target_stock,
-                recommended_stock=recommended_stock,
-                order_mode=order_mode,
-                unit=seed.unit,
-                is_active=True,
-                is_admin_created=False,
-            )
-            db.add(item)
-            items_created += 1
-
-        start_date = datetime.now(tz=timezone.utc) - timedelta(days=730)
-        step_days = 730 / 29
-        for movement_index in range(30):
-            created_at = start_date + timedelta(days=movement_index * step_days)
-            movement_seeds.append((item, movement_index, sku, created_at))
-
-    await db.flush()
-
-    existing_movement_ids = (
-        await db.scalars(
-            select(InventoryMovement.client_tx_id).where(
-                InventoryMovement.tenant_id == tenant.id,
-                InventoryMovement.client_tx_id.like("demo-%"),
-            )
-        )
-    ).all()
-    existing_movement_set = set(existing_movement_ids)
-
-    for item, movement_index, sku, created_at in movement_seeds:
-        client_tx_id = f"demo-{sku}-{movement_index:02d}"
-        if client_tx_id in existing_movement_set:
             continue
-        movement_type = "OUT" if movement_index % 2 == 0 else "IN"
-        sku_offset = int(sku.split("-")[1])
-        qty = 3 + (movement_index % 5) * 2 + (sku_offset % 3)
-        note = "Demo-Verbrauch" if movement_type == "OUT" else "Demo-Wareneingang"
-        db.add(
-            InventoryMovement(
-                tenant_id=tenant.id,
-                item_id=item.id,
-                client_tx_id=client_tx_id,
-                type=movement_type,
-                barcode=item.barcode,
-                qty=qty,
-                note=note,
-                created_at=created_at,
-            )
+
+        item = Item(
+            tenant_id=tenant.id,
+            sku=sku,
+            barcode=barcode,
+            name=seed.name,
+            description=f"Bäckerbedarf: {seed.name}",
+            category_id=category_map[seed.category].id,
+            quantity=quantity,
+            min_stock=min_stock,
+            max_stock=max_stock,
+            target_stock=target_stock,
+            recommended_stock=recommended_stock,
+            order_mode=order_mode,
+            unit=seed.unit,
+            is_active=True,
+            is_admin_created=False,
         )
+        db.add(item)
+        items_created += 1
 
     return {
         "tenant_slug": slug,

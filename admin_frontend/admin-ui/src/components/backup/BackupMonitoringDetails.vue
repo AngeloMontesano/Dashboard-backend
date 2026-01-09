@@ -27,6 +27,11 @@
         <div class="text-muted text-small">Keine Abweichungen</div>
       </div>
       <div class="detail-box">
+        <div class="detail-box__label">Letzter Check</div>
+        <div class="detail-box__value">OK · Health + Integrität</div>
+        <div class="text-muted text-small">Zeit: 10:40 · Dauer: 18s</div>
+      </div>
+      <div class="detail-box">
         <div class="detail-box__label">Retention</div>
         <div class="detail-box__value">30 Tage · 20 Versionen</div>
         <div class="text-muted text-small">Letzter Cleanup: heute</div>

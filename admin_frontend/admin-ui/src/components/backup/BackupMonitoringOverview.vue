@@ -30,6 +30,7 @@
 const overview = [
   { label: "Letzter Export", value: "OK", status: "ok" },
   { label: "Letzter Restore", value: "OK", status: "ok" },
+  { label: "Letzter Check", value: "OK", status: "ok" },
   { label: "Offene Fehler", value: "0", status: "ok" },
   { label: "Retention", value: "Aktiv", status: "ok" },
 ] as const;

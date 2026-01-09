@@ -232,6 +232,9 @@
               :actor="ui.actor"
             />
 
+          <!-- SECTION: Backup -->
+            <AdminBackupView v-else-if="ui.section === 'backup'" :tenant="tenantContext" />
+
           <!-- SECTION: Settings -->
             <AdminSettingsView
               v-else
@@ -293,6 +296,7 @@ import GlobaleKategorienView from "./views/GlobaleKategorienView.vue";
 import GlobaleTypenView from "./views/GlobaleTypenView.vue";
 import GlobaleEinheitenView from "./views/GlobaleEinheitenView.vue";
 import GlobaleBranchenView from "./views/GlobaleBranchenView.vue";
+import AdminBackupView from "./views/AdminBackupView.vue";
 import GlobaleKundenEinstellungenView from "./views/GlobaleKundenEinstellungenView.vue";
 
 /* Zentraler Toast State */

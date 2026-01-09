@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends
 
 from app.core.deps import get_admin_actor, require_admin_key
 from app.modules.admin.audit_routes import router as audit_router
+from app.modules.admin.customer_settings_routes import router as customer_settings_router
 from app.modules.admin.diagnostics_routes import router as diagnostics_router
 from app.modules.admin.memberships_routes import router as memberships_router
 from app.modules.admin.roles_routes import router as roles_router
@@ -37,6 +38,7 @@ router.include_router(admin_inventory_router)
 router.include_router(system_router)
 router.include_router(smtp_router)
 router.include_router(backups_router)
+router.include_router(customer_settings_router)
 
 
 @router.get("/ping")

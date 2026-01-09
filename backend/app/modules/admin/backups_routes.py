@@ -6,7 +6,7 @@ import uuid
 from pathlib import Path
 from zipfile import ZipFile
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from sqlalchemy import select
@@ -15,6 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import settings
 from app.core.db import get_db
 from app.models.tenant import Tenant
+from app.modules.admin.audit import write_audit_log
 
 
 router = APIRouter(prefix="/backups", tags=["admin-backups"])
@@ -169,6 +170,28 @@ async def admin_download_backup(backup_id: str) -> FileResponse:
     )
 
 
+@router.get("/{backup_id}/files/{filename}")
+async def admin_download_backup_file(backup_id: str, filename: str) -> FileResponse:
+    items = _load_index()
+    match = next((item for item in items if item["id"] == backup_id), None)
+    if not match:
+        raise HTTPException(status_code=404, detail="Backup nicht gefunden")
+    folder = _backup_dir(backup_id)
+    file_path = (folder / filename).resolve()
+    if not file_path.exists() or file_path.parent != folder.resolve():
+        raise HTTPException(status_code=404, detail="Datei nicht gefunden")
+    return FileResponse(
+        file_path,
+        media_type="application/json",
+        filename=filename,
+    )
+
+@router.post("/tenants/{tenant_id}", response_model=BackupActionResponse)
+async def admin_create_tenant_backup(
+    tenant_id: str,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+) -> BackupActionResponse:
 @router.post("/tenants/{tenant_id}", response_model=BackupActionResponse)
 async def admin_create_tenant_backup(tenant_id: str, db: AsyncSession = Depends(get_db)) -> BackupActionResponse:
     tenant = await _get_tenant_or_404(db, tenant_id)
@@ -193,10 +216,24 @@ async def admin_create_tenant_backup(tenant_id: str, db: AsyncSession = Depends(
     )
     items = [payload, *_load_index()]
     _save_index(items)
+    actor = request.headers.get("x-admin-actor") or "system"
+    await write_audit_log(
+        db=db,
+        actor=actor,
+        action="backup.create",
+        entity_type="backup",
+        entity_id=backup_id,
+        payload={"scope": "tenant", "tenant_id": str(tenant.id), "tenant_slug": tenant.slug},
+    )
+    await db.commit()
     return BackupActionResponse(backup=_build_entry(payload), message="Tenant-Backup erstellt")
 
 
 @router.post("/all", response_model=BackupActionResponse)
+async def admin_create_all_tenants_backup(
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+) -> BackupActionResponse:
 async def admin_create_all_tenants_backup(db: AsyncSession = Depends(get_db)) -> BackupActionResponse:
     backups = (await db.execute(select(Tenant).order_by(Tenant.slug.asc()))).scalars().all()
     backup_id = str(uuid.uuid4())
@@ -225,10 +262,25 @@ async def admin_create_all_tenants_backup(db: AsyncSession = Depends(get_db)) ->
     )
     items = [payload, *_load_index()]
     _save_index(items)
+    actor = request.headers.get("x-admin-actor") or "system"
+    await write_audit_log(
+        db=db,
+        actor=actor,
+        action="backup.create",
+        entity_type="backup",
+        entity_id=backup_id,
+        payload={"scope": "all", "tenant_count": len(backups)},
+    )
+    await db.commit()
     return BackupActionResponse(backup=_build_entry(payload), message="Backup für alle Tenants erstellt")
 
 
 @router.post("/{backup_id}/restore", response_model=BackupActionResponse)
+async def admin_restore_backup(
+    backup_id: str,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+) -> BackupActionResponse:
 async def admin_restore_backup(backup_id: str) -> BackupActionResponse:
     items = _load_index()
     match = next((item for item in items if item["id"] == backup_id), None)
@@ -236,4 +288,14 @@ async def admin_restore_backup(backup_id: str) -> BackupActionResponse:
         raise HTTPException(status_code=404, detail="Backup nicht gefunden")
     match["restored_at"] = _now_iso()
     _save_index(items)
+    actor = request.headers.get("x-admin-actor") or "system"
+    await write_audit_log(
+        db=db,
+        actor=actor,
+        action="backup.restore",
+        entity_type="backup",
+        entity_id=backup_id,
+        payload={"scope": match.get("scope")},
+    )
+    await db.commit()
     return BackupActionResponse(backup=_build_entry(match), message="Restore angestoßen")

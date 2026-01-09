@@ -37,6 +37,7 @@ router.include_router(tenant_settings_router)
 router.include_router(admin_inventory_router)
 router.include_router(system_router)
 router.include_router(smtp_router)
+router.include_router(backups_router)
 router.include_router(customer_settings_router)
 
 

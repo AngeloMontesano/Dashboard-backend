@@ -1,5 +1,5 @@
 <template>
-  <div class="table-card" id="backup-archive">
+  <div class="table-card">
     <div class="table-card__header">
       <div class="stack-sm">
         <div class="tableTitle">Backups & Archive</div>
@@ -7,13 +7,10 @@
           Wähle einen Stand für Restore. Dateien werden angezeigt und als ZIP heruntergeladen.
         </div>
       </div>
-      <div class="row gap8">
-        <a class="btnGhost small" href="#backup-archive-list">Zur Liste</a>
-        <button class="btnGhost small" type="button" @click="createDemoBackup">Demo-Backup erstellen</button>
-      </div>
+      <button class="btnGhost small" type="button" @click="createDemoBackup">Demo-Backup erstellen</button>
     </div>
 
-    <div class="tableWrap" v-if="backups.length" id="backup-archive-list">
+    <div class="tableWrap" v-if="backups.length">
       <table class="table">
         <thead>
           <tr>
@@ -48,8 +45,6 @@
     </div>
 
     <div class="text-muted text-small" v-else>Keine Backups vorhanden.</div>
-
-    <div class="hint">API Pfad: <span class="mono">{{ backupBasePath }}</span></div>
 
     <div class="detail-card" v-if="selectedBackup">
       <div class="detail-card__header">
@@ -88,39 +83,6 @@
 
       <div class="hint" v-if="restoreStatus">{{ restoreStatus }}</div>
     </div>
-
-    <div class="table-card" v-if="history.length">
-      <div class="table-card__header">
-        <div class="stack-sm">
-          <div class="tableTitle">Historie</div>
-          <div class="text-muted text-small">Erstellte Backups und Restore-Aktionen.</div>
-        </div>
-      </div>
-      <div class="tableWrap">
-        <table class="table">
-          <thead>
-            <tr>
-              <th>Aktion</th>
-              <th>Backup</th>
-              <th>Zeit</th>
-              <th>Status</th>
-              <th class="right">Hinweis</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="entry in history" :key="entry.id">
-              <td>{{ entry.action === "create" ? "Backup erstellt" : "Restore" }}</td>
-              <td>{{ entry.backupName }}</td>
-              <td class="mono">{{ entry.timestamp }}</td>
-              <td>
-                <span class="tag" :class="entry.status === 'ok' ? 'ok' : 'bad'">{{ entry.statusLabel }}</span>
-              </td>
-              <td class="right text-muted text-small">{{ entry.message }}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -128,19 +90,24 @@
 import { computed, ref } from "vue";
 import { zipSync, strToU8 } from "fflate";
 import { useToast } from "../../composables/useToast";
-import { getBackupBasePath } from "../../api/base";
-import { addBackup, loadBackupState, markRestore, type BackupEntry } from "./backupStore";
+
+type BackupFile = {
+  name: string;
+  sizeLabel: string;
+  content: string;
+};
+
+type BackupEntry = {
+  id: string;
+  name: string;
+  createdAt: string;
+  status: "ok" | "error";
+  statusLabel: string;
+  files: BackupFile[];
+};
 
 const { toast } = useToast();
-const backupBasePath = getBackupBasePath();
-const state = ref(loadBackupState());
-const backups = computed(() => state.value.backups);
-const history = computed(() =>
-  state.value.history.map((entry) => ({
-    ...entry,
-    statusLabel: entry.status === "ok" ? "OK" : "Error",
-  }))
-);
+const backups = ref<BackupEntry[]>([buildDemoBackup(1), buildDemoBackup(2)]);
 const selectedId = ref(backups.value[0]?.id || "");
 const restoreStatus = ref("");
 
@@ -151,7 +118,7 @@ function selectBackup(id: string) {
   restoreStatus.value = "";
 }
 
-function downloadFile(backup: BackupEntry, file: BackupEntry["files"][number]) {
+function downloadFile(backup: BackupEntry, file: BackupFile) {
   const blob = new Blob([file.content], { type: "application/json" });
   saveBlob(blob, `${backup.name}-${file.name}`);
 }
@@ -175,14 +142,15 @@ function restoreSelected() {
   window.setTimeout(() => {
     restoreStatus.value = `Restore abgeschlossen: ${selectedBackup.value?.name}`;
     toast(`Restore abgeschlossen: ${selectedBackup.value?.name}`, "success");
-    state.value = markRestore(state.value, selectedBackup.value as BackupEntry);
   }, 1200);
 }
 
 function createDemoBackup() {
-  state.value = addBackup(state.value);
-  selectedId.value = state.value.backups[0]?.id || "";
-  toast(`Backup erstellt: ${state.value.backups[0]?.name}`, "success");
+  const nextIndex = backups.value.length + 1;
+  const entry = buildDemoBackup(nextIndex);
+  backups.value = [entry, ...backups.value];
+  selectedId.value = entry.id;
+  toast(`Backup erstellt: ${entry.name}`, "success");
 }
 
 function saveBlob(blob: Blob, filename: string) {
@@ -193,9 +161,35 @@ function saveBlob(blob: Blob, filename: string) {
   URL.revokeObjectURL(link.href);
 }
 
-const hasBackups = computed(() => backups.value.length > 0);
-
-if (hasBackups.value && !selectedId.value) {
-  selectedId.value = backups.value[0]?.id || "";
+function buildDemoBackup(index: number): BackupEntry {
+  const timestamp = new Date(Date.now() - index * 3600_000)
+    .toISOString()
+    .replace("T", " ")
+    .replace(/:\d{2}\.\d{3}Z$/, "");
+  const id = `backup-${index}`;
+  return {
+    id,
+    name: `tenant-backup-${index}`,
+    createdAt: timestamp,
+    status: "ok",
+    statusLabel: "OK",
+    files: [
+      {
+        name: "meta.json",
+        sizeLabel: "4 KB",
+        content: JSON.stringify({ id, createdAt: timestamp, version: "1.0" }, null, 2),
+      },
+      {
+        name: "tables.json",
+        sizeLabel: "18 KB",
+        content: JSON.stringify({ tables: ["tenants", "users", "orders"] }, null, 2),
+      },
+      {
+        name: "data.json",
+        sizeLabel: "120 KB",
+        content: JSON.stringify({ rows: 1240, checksum: "sha256:demo" }, null, 2),
+      },
+    ],
+  };
 }
 </script>

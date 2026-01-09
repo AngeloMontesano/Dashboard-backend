@@ -39,6 +39,7 @@ class Settings(BaseSettings):
     # Multi-Tenancy
     BASE_DOMAIN: str = Field(..., description="Base domain für Tenant Subdomains, z.B. test.myitnetwork.de")
     BASE_ADMIN_DOMAIN: str = Field(..., description="Base domain für Admin UI Subdomains")
+    BACKUP_STORAGE_PATH: str = Field("storage/backups", description="Pfad für Backup-Dateien")
 
 
 settings = Settings()

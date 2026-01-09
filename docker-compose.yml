@@ -1,0 +1,76 @@
+services:
+  db:
+    extends:
+      file: ./backend/docker-compose.yml
+      service: db
+    networks:
+      docker:
+        ipv4_address: 192.168.10.60
+        aliases:
+          - db
+
+  api:
+    extends:
+      file: ./backend/docker-compose.yml
+      service: api
+    environment:
+      PYTHONPATH: /app
+    depends_on:
+      db:
+        condition: service_healthy
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
+    networks:
+      docker:
+        ipv4_address: 192.168.10.61
+        aliases:
+          - api
+
+  admin_ui:
+    build: ./admin_frontend/admin-ui
+    depends_on:
+      - api
+    networks:
+      docker:
+        ipv4_address: 192.168.10.62
+        aliases:
+          - admin_ui
+
+  customer_ui:
+    build: ./customer_frontend/customer-ui
+    depends_on:
+      - api
+    networks:
+      docker:
+        ipv4_address: 192.168.10.63
+        aliases:
+          - customer_ui
+
+  control:
+    image: alpine:3.20
+    container_name: lm_saas_control
+    depends_on:
+      - api
+      - admin_ui
+      - customer_ui
+    command: >
+      sh -lc "
+      apk add --no-cache curl >/dev/null;
+      while true; do
+        echo '[CONTROL] checking...';
+        curl -fsS http://192.168.10.61:8000/health || echo '[FAIL] api';
+        curl -fsS http://192.168.10.62:5173/ || echo '[FAIL] admin_ui';
+        curl -fsS http://192.168.10.63:5173/ || echo '[FAIL] customer_ui';
+        sleep 10;
+      done
+      "
+    networks:
+      docker:
+        ipv4_address: 192.168.10.64
+        aliases:
+          - control
+
+networks:
+  docker:
+    external: true

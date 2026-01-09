@@ -2,7 +2,7 @@
 
 ## Zusammenfassung der bindenden Standards
 - Proxy-Pfad `/api` ist verpflichtend; keine festen Hosts oder weiteren Axios-Instanzen außerhalb von `src/api/client.ts` je App (siehe `docs/standards/FRONTEND_RULES.md`, `API_CLIENTS.md`).  
-- OpenAPI-Typen werden aus `docs/openapi/openapi.json` generiert und in den API-Wrappern genutzt (`docs/standards/OPENAPI_TYPES.md`).  
+- OpenAPI-Typen werden aus `https://api.test.myitnetwork.de/openapi.json` generiert und in den API-Wrappern genutzt (`docs/standards/OPENAPI_TYPES.md`).  
 - Design-System und Theme-Tokens pro App: Light/Dark (optional Ocean), alle Farben/Abstände/Radien über Tokens und Utilities; keine Inline-Styles, keine view-spezifischen Overrides (`docs/standards/DESIGN_SYSTEM.md`, `THEME_TOKENS.md`, `CSS_AND_UI_CONVENTIONS.md`).  
 - UI-Bausteine unter `src/components/ui` und Utilities (`src/styles/utilities.css`) sind die einzige Quelle für Layout/Spacing; Views enthalten nur Struktur/Datenlogik (`docs/standards/COMPONENT_CONVENTIONS.md`).  
 - Darkmode folgt System-Default, Persistenz via `localStorage`, Steuerung über `useTheme`, `data-theme` am `<html>`-Element (`docs/standards/DARKMODE.md`).  

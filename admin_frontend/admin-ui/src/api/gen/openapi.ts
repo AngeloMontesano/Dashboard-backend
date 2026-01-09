@@ -2519,6 +2519,11 @@ export interface components {
              * @default
              */
             tax_number: string;
+            /**
+             * Barcode Scanner Reduce Enabled
+             * @default false
+             */
+            barcode_scanner_reduce_enabled: boolean;
             /** Industry Id */
             industry_id?: string | null;
             /**
@@ -2606,6 +2611,11 @@ export interface components {
              * @default
              */
             tax_number: string;
+            /**
+             * Barcode Scanner Reduce Enabled
+             * @default false
+             */
+            barcode_scanner_reduce_enabled: boolean;
             /** Industry Id */
             industry_id?: string | null;
             /**

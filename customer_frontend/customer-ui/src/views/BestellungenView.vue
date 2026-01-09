@@ -74,11 +74,13 @@ const hasItemSelection = (row: OrderRow): row is OrderRow & { itemId: string } =
 const selectableItems = computed(() => {
   const map = new Map<string, { value: string; label: string }>();
   const pushItem = (item: { id: string; name: string; quantity?: number | null; sku?: string | null }) => {
-    if (!item?.id || map.has(item.id)) return;
+    if (!item?.id) return;
+    const id = String(item.id);
+    if (map.has(id)) return;
     const parts = [item.name];
     if (typeof item.quantity === 'number') parts.push(`Bestand ${item.quantity}`);
     if (item.sku) parts.push(`SKU ${item.sku}`);
-    map.set(item.id, { value: item.id, label: parts.join(' • ') });
+    map.set(id, { value: id, label: parts.join(' • ') });
   };
   state.items.forEach(pushItem);
   state.recommended.forEach(pushItem);
@@ -233,10 +235,10 @@ function prefillRowsFromRecommended(force = false) {
       .filter(Boolean) as string[]
   );
   const additions = state.recommended
-    .filter((item) => !existingIds.has(item.id))
+    .filter((item) => !existingIds.has(String(item.id)))
     .map((item) => ({
       id: nextRowId(),
-      itemId: item.id,
+      itemId: String(item.id),
       quantity: Math.max(item.recommended_qty || item.quantity || 1, 1),
       note: ''
     }));

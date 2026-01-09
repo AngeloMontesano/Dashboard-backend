@@ -1227,6 +1227,7 @@ def _settings_to_out(settings: TenantSetting) -> TenantSettingsOut:
         contact_name=settings.contact_name,
         branch_number=settings.branch_number,
         tax_number=settings.tax_number,
+        barcode_scanner_reduce_enabled=settings.barcode_scanner_reduce_enabled,
         industry_id=str(settings.industry_id) if settings.industry_id else None,
         sales_contact_name=settings.sales_contact_name,
         sales_contact_phone=settings.sales_contact_phone,
@@ -1271,6 +1272,7 @@ async def _get_or_create_settings(*, ctx: TenantContext, db: AsyncSession) -> Te
         contact_name="",
         branch_number="",
         tax_number="",
+        barcode_scanner_reduce_enabled=False,
         sales_contact_name="",
         sales_contact_phone="",
         sales_contact_email="",
@@ -1312,6 +1314,7 @@ async def update_tenant_settings(
     settings.contact_name = payload.contact_name.strip()
     settings.branch_number = payload.branch_number.strip()
     settings.tax_number = payload.tax_number.strip()
+    settings.barcode_scanner_reduce_enabled = payload.barcode_scanner_reduce_enabled
     settings.industry_id = payload.industry_id
     settings.sales_contact_name = payload.sales_contact_name.strip()
     settings.sales_contact_phone = payload.sales_contact_phone.strip()
@@ -1356,6 +1359,17 @@ async def get_help_info(
         support=support,
         sales_contact=sales_contact,
     )
+    tenant_settings = await _get_or_create_settings(ctx=ctx, db=db)
+    global_settings = await get_or_create_global_customer_settings(db)
+    support = HelpInfoOut(
+        support=_global_settings_to_out(global_settings),
+        sales_contact=SalesContactOut(
+            name=tenant_settings.sales_contact_name,
+            phone=tenant_settings.sales_contact_phone,
+            email=tenant_settings.sales_contact_email,
+        ),
+    )
+    return support
 
 
 @router.get("/settings/export", dependencies=[Depends(require_owner_or_admin)])

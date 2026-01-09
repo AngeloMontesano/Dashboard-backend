@@ -231,7 +231,7 @@ function closeHelp() {
 .help-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.22);
+  background: rgba(15, 23, 42, 0.78);
   backdrop-filter: blur(6px);
   display: flex;
   align-items: center;
@@ -242,7 +242,7 @@ function closeHelp() {
 
 :global(.theme-dark) .help-overlay,
 :global([data-theme="dark"]) .help-overlay {
-  background: rgba(4, 6, 10, 0.72);
+  background: rgba(4, 6, 10, 0.75);
 }
 
 .help-modal {

@@ -96,3 +96,22 @@ class TenantUserOut(BaseModel):
     role: str
     user_is_active: bool
     membership_is_active: bool
+
+
+class DemoInventorySeedOut(BaseModel):
+    ok: bool
+    tenant_slug: str
+    tenant_created: bool
+    categories_created: int
+    categories_updated: int
+    items_created: int
+    items_updated: int
+
+
+class DemoInventoryDeleteOut(BaseModel):
+    ok: bool
+    tenant_slug: str
+    tenant_found: bool
+    movements_deleted: int
+    items_deleted: int
+    categories_deleted: int

@@ -53,6 +53,8 @@
 | admin_frontend/admin-ui/src/styles/layout.css:331-355 ↔ customer_frontend/customer-ui/src/styles/layout.css:333-357 | Primary/Ghost Button Base | beide | Button-Grundstil (Radius/Padding/Weight/Disabled) identisch; Shadow/Surface-Tokens leicht abweichend |
 | admin_frontend/admin-ui/src/styles/layout.css:326-329 ↔ customer_frontend/customer-ui/src/styles/layout.css:328-331 | Status Label | beide | `.statusLabel` identisch in Font/Weight, doppelte Pflege ohne Abweichung |
 | admin_frontend/admin-ui/src/styles/layout.css:323-324 ↔ customer_frontend/customer-ui/src/styles/layout.css:325-326 | Status Dot Colors | beide | `.statusDot.ok/.bad` identisch (success/danger Tokens), reine Dublette |
+| admin_frontend/admin-ui/src/styles/layout.css:331-355 ↔ customer_frontend/customer-ui/src/styles/layout.css:523-527 | Button Compatibility Layer (`.button`) | beide | `.button/.button--primary/.button--ghost` spiegeln Admin-Buttons (Radius/Spacing/Flex), Tokens/Shadow leicht abweichend |
+| admin_frontend/admin-ui/src/styles/utilities.css:233-238 ↔ customer_frontend/customer-ui/src/styles/layout.css:516-516 | Actions Row (Compatibility Layer) | beide | `.actions` dupliziert `action-row` (flex/wrap), Gap/Token leicht abweichend |
 
 Notizen:
 - Alle Fundstellen stammen aus Schritt 1 (Inventarisierung). Noch keine Deklaration wurde verändert.

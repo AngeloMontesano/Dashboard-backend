@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { computed, nextTick, ref } from 'vue';
+import { computed, nextTick, onMounted, ref, watch } from 'vue';
 import StatusPill from '@/components/common/StatusPill.vue';
 import { useMovementQueue, type MovementRecord } from '@/composables/useMovementQueue';
 import { useOnlineStatus } from '@/composables/useOnlineStatus';
 import { useToast } from '@/composables/useToast';
 import { useAuth } from '@/composables/useAuth';
+import { fetchSettings } from '@/api/inventory';
 import UiPage from '@/components/ui/UiPage.vue';
 import UiSection from '@/components/ui/UiSection.vue';
 import UiToolbar from '@/components/ui/UiToolbar.vue';
@@ -16,6 +17,7 @@ const note = ref('');
 const barcodeInput = ref<HTMLInputElement | null>(null);
 const clearing = ref(false);
 const submitting = ref<{ IN: boolean; OUT: boolean }>({ IN: false, OUT: false });
+const settings = ref<Awaited<ReturnType<typeof fetchSettings>> | null>(null);
 
 const { isOnline } = useOnlineStatus();
 const { state: authState } = useAuth();
@@ -35,6 +37,25 @@ const { push: pushToast } = useToast();
 
 const recentMovements = computed(() => movements.value.slice(0, 30));
 const issueCount = computed(() => attentionCount.value);
+const barcodeScannerReduceEnabled = computed(() => settings.value?.barcode_scanner_reduce_enabled ?? false);
+
+const focusBarcodeInput = async () => {
+  await nextTick();
+  barcodeInput.value?.focus();
+};
+
+const loadSettings = async () => {
+  if (!authState.accessToken) return;
+  try {
+    settings.value = await fetchSettings(authState.accessToken);
+  } catch (err: any) {
+    pushToast({
+      title: 'Einstellungen',
+      description: 'Systemverhalten konnte nicht geladen werden.',
+      variant: 'warning'
+    });
+  }
+};
 
 const statusTone = (item: MovementRecord) => {
   const state = deriveIssueState(item);
@@ -74,8 +95,7 @@ const resetForm = async () => {
   barcode.value = '';
   qty.value = 1;
   note.value = '';
-  await nextTick();
-  barcodeInput.value?.focus();
+  await focusBarcodeInput();
 };
 
 const submitMovement = async (type: 'IN' | 'OUT') => {
@@ -113,6 +133,12 @@ const submitMovement = async (type: 'IN' | 'OUT') => {
   }
 };
 
+const handleBarcodeEnter = (event: KeyboardEvent) => {
+  if (!barcodeScannerReduceEnabled.value) return;
+  event.preventDefault();
+  void submitMovement('OUT');
+};
+
 const handleClearSent = async () => {
   if (clearing.value) return;
   clearing.value = true;
@@ -122,6 +148,26 @@ const handleClearSent = async () => {
     clearing.value = false;
   }
 };
+
+onMounted(() => {
+  void focusBarcodeInput();
+});
+
+watch(
+  () => authState.accessToken,
+  (value) => {
+    if (value) {
+      void loadSettings();
+    }
+  },
+  { immediate: true }
+);
+
+watch(hasWriteAccess, (value) => {
+  if (value) {
+    void focusBarcodeInput();
+  }
+});
 </script>
 
 <template>
@@ -172,6 +218,7 @@ const handleClearSent = async () => {
             placeholder="Barcode scannen oder eingeben"
             :disabled="!hasWriteAccess"
             autofocus
+            @keydown.enter="handleBarcodeEnter"
           />
         </div>
         <div class="field">

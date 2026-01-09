@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { reactive, onMounted } from 'vue';
+import { reactive, onMounted, ref } from 'vue';
 import UiPage from '@/components/ui/UiPage.vue';
 import UiSection from '@/components/ui/UiSection.vue';
 import UiToolbar from '@/components/ui/UiToolbar.vue';
@@ -40,6 +40,8 @@ const state = reactive<{
   addressStreet: '',
   addressNumber: ''
 });
+
+const activeTab = ref<'company' | 'system'>('company');
 
 function showError(err: unknown, fallback: string) {
   const classified = handleAuthError(err);
@@ -186,7 +188,26 @@ onMounted(loadSettings);
         {{ state.success }}
       </div>
 
-      <div class="form-grid mt-md" v-if="state.settings">
+      <div class="tab-row mt-md">
+        <button
+          class="tab-button"
+          type="button"
+          :class="{ 'tab-button--active': activeTab === 'company' }"
+          @click="activeTab = 'company'"
+        >
+          Firmendaten
+        </button>
+        <button
+          class="tab-button"
+          type="button"
+          :class="{ 'tab-button--active': activeTab === 'system' }"
+          @click="activeTab = 'system'"
+        >
+          Systemverhalten
+        </button>
+      </div>
+
+      <div class="form-grid mt-md" v-if="state.settings && activeTab === 'company'">
         <label class="form-field">
           <span class="form-label">Firma</span>
           <input v-model="state.settings.company_name" type="text" class="input" :disabled="state.loading" />
@@ -250,7 +271,7 @@ onMounted(loadSettings);
         </label>
       </div>
 
-      <div class="mt-lg">
+      <div class="mt-lg" v-if="activeTab === 'company'">
         <h3 class="eyebrow">Test-E-Mail</h3>
         <div class="form-grid">
           <label class="form-field">
@@ -262,6 +283,42 @@ onMounted(loadSettings);
           </button>
         </div>
       </div>
+
+      <div class="form-grid mt-md" v-if="state.settings && activeTab === 'system'">
+        <label class="form-field checkbox-field">
+          <input
+            v-model="state.settings.barcode_scanner_reduce_enabled"
+            type="checkbox"
+            :disabled="state.loading"
+            aria-label="Barcodescanner Bestand reduzieren"
+          />
+          <span class="form-label">Barcodescanner Bestand reduzieren</span>
+        </label>
+      </div>
     </UiSection>
   </UiPage>
 </template>
+
+<style scoped>
+.tab-row {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.tab-button {
+  border: 1px solid var(--border);
+  background: transparent;
+  color: inherit;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.tab-button--active {
+  background: var(--surface-muted);
+  border-color: var(--primary, #2563eb);
+  color: var(--primary, #2563eb);
+}
+</style>

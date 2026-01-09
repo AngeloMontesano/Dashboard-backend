@@ -14,6 +14,7 @@ type ImportItemsResponse =
   paths["/inventory/items/import"]["post"]["responses"]["200"]["content"]["application/json"];
 type SettingsOut = components["schemas"]["TenantSettingsOut"];
 type SettingsUpdate = components["schemas"]["TenantSettingsUpdate"];
+export type HelpInfoOut = components["schemas"]["HelpInfoOut"];
 type MassImportResult = components["schemas"]["MassImportResult"];
 type OrderOut = components["schemas"]["OrderOut"];
 type OrderCreate = components["schemas"]["OrderCreate"];
@@ -129,6 +130,11 @@ export async function fetchMovements(params: MovementsQuery & { token: string })
 
 export async function fetchSettings(token: string) {
   const res = await api.get<SettingsOut>("/inventory/settings", { headers: authHeaders(token) });
+  return res.data;
+}
+
+export async function fetchHelpInfo(token: string) {
+  const res = await api.get<HelpInfoOut>("/inventory/help-info", { headers: authHeaders(token) });
   return res.data;
 }
 

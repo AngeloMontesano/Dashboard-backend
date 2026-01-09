@@ -6,7 +6,7 @@ import uuid
 from pathlib import Path
 from zipfile import ZipFile
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Query
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from sqlalchemy import select
@@ -141,17 +141,9 @@ async def _get_tenant_or_404(db: AsyncSession, tenant_id: str) -> Tenant:
 
 
 @router.get("", response_model=BackupListResponse)
-async def admin_list_backups(
-    tenant_id: str | None = Query(default=None),
-    scope: str | None = Query(default=None),
-) -> BackupListResponse:
+async def admin_list_backups() -> BackupListResponse:
     _ensure_storage()
-    items = _load_index()
-    if tenant_id:
-        items = [item for item in items if item.get("tenant_id") == tenant_id]
-    if scope:
-        items = [item for item in items if item.get("scope") == scope]
-    items = [_build_entry(item) for item in items]
+    items = [_build_entry(item) for item in _load_index()]
     return BackupListResponse(items=items)
 
 
@@ -200,6 +192,8 @@ async def admin_create_tenant_backup(
     request: Request,
     db: AsyncSession = Depends(get_db),
 ) -> BackupActionResponse:
+@router.post("/tenants/{tenant_id}", response_model=BackupActionResponse)
+async def admin_create_tenant_backup(tenant_id: str, db: AsyncSession = Depends(get_db)) -> BackupActionResponse:
     tenant = await _get_tenant_or_404(db, tenant_id)
     backup_id = str(uuid.uuid4())
     created_at = _now_iso()
@@ -240,6 +234,7 @@ async def admin_create_all_tenants_backup(
     request: Request,
     db: AsyncSession = Depends(get_db),
 ) -> BackupActionResponse:
+async def admin_create_all_tenants_backup(db: AsyncSession = Depends(get_db)) -> BackupActionResponse:
     backups = (await db.execute(select(Tenant).order_by(Tenant.slug.asc()))).scalars().all()
     backup_id = str(uuid.uuid4())
     created_at = _now_iso()
@@ -286,6 +281,7 @@ async def admin_restore_backup(
     request: Request,
     db: AsyncSession = Depends(get_db),
 ) -> BackupActionResponse:
+async def admin_restore_backup(backup_id: str) -> BackupActionResponse:
     items = _load_index()
     match = next((item for item in items if item["id"] == backup_id), None)
     if not match:

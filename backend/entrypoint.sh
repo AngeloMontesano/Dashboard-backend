@@ -2,7 +2,7 @@
 set -e
 
 echo "Run migrations..."
-alembic upgrade head
+alembic upgrade heads
 
 echo "Seed initial data (only if empty)..."
 python -m app.scripts.seed_initial

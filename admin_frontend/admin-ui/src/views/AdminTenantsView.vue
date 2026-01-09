@@ -171,9 +171,26 @@
         </div>
 
         <div class="divider mt-4"></div>
-        <div class="sectionTitle mt-2">Firmendaten & Adresse</div>
+        <div class="tabs mt-2">
+          <button
+            type="button"
+            class="tab"
+            :class="{ active: settingsState.activeTab === 'company' }"
+            @click="settingsState.activeTab = 'company'"
+          >
+            Firmendaten & Adresse
+          </button>
+          <button
+            type="button"
+            class="tab"
+            :class="{ active: settingsState.activeTab === 'sales' }"
+            @click="settingsState.activeTab = 'sales'"
+          >
+            Persönlicher Vertriebler
+          </button>
+        </div>
         <div v-if="settingsState.error" class="errorText">Fehler: {{ settingsState.error }}</div>
-        <div class="settings-grid" v-if="settingsState.form">
+        <div class="settings-grid" v-if="settingsState.form && settingsState.activeTab === 'company'">
           <label class="field">
             <span class="field-label">Firma</span>
             <input class="input" v-model="settingsState.form.company_name" :disabled="settingsState.loading" />
@@ -250,6 +267,65 @@
             <input type="checkbox" v-model="settingsState.form.auto_order_enabled" :disabled="settingsState.loading" />
             <span>Auto-Bestellung aktiv</span>
           </label>
+          <label class="field checkbox">
+            <input
+              type="checkbox"
+              v-model="settingsState.form.barcode_scanner_reduce_enabled"
+              :disabled="settingsState.loading"
+            />
+            <span>Barcodescanner Bestand reduzieren</span>
+          </label>
+        </div>
+        <div class="settings-grid" v-if="settingsState.form && settingsState.activeTab === 'sales'">
+          <label class="field">
+            <span class="field-label">Name</span>
+            <input class="input" v-model="settingsState.form.sales_contact_name" :disabled="settingsState.loading" />
+          </label>
+          <label class="field">
+            <span class="field-label">Telefon</span>
+            <input class="input" v-model="settingsState.form.sales_contact_phone" :disabled="settingsState.loading" />
+          </label>
+          <label class="field">
+            <span class="field-label">E-Mail</span>
+            <input class="input" v-model="settingsState.form.sales_contact_email" :disabled="settingsState.loading" />
+          </label>
+          <div class="hint">
+            Diese Daten werden im Kunden-Frontend im Hilfe-Overlay angezeigt.
+          </div>
+        </div>
+        <div class="settings-grid" v-if="settingsState.form && settingsState.activeTab === 'sales'">
+          <label class="field">
+            <span class="field-label">Name</span>
+            <input class="input" v-model="settingsState.form.sales_contact_name" :disabled="settingsState.loading" />
+          </label>
+          <label class="field">
+            <span class="field-label">Telefon</span>
+            <input class="input" v-model="settingsState.form.sales_contact_phone" :disabled="settingsState.loading" />
+          </label>
+          <label class="field">
+            <span class="field-label">E-Mail</span>
+            <input class="input" v-model="settingsState.form.sales_contact_email" :disabled="settingsState.loading" />
+          </label>
+          <div class="hint">
+            Diese Daten werden im Kunden-Frontend im Hilfe-Overlay angezeigt.
+          </div>
+        </div>
+        <div class="settings-grid" v-if="settingsState.form && settingsState.activeTab === 'sales'">
+          <label class="field">
+            <span class="field-label">Name</span>
+            <input class="input" v-model="settingsState.form.sales_contact_name" :disabled="settingsState.loading" />
+          </label>
+          <label class="field">
+            <span class="field-label">Telefon</span>
+            <input class="input" v-model="settingsState.form.sales_contact_phone" :disabled="settingsState.loading" />
+          </label>
+          <label class="field">
+            <span class="field-label">E-Mail</span>
+            <input class="input" v-model="settingsState.form.sales_contact_email" :disabled="settingsState.loading" />
+          </label>
+          <div class="hint">
+            Diese Daten werden im Kunden-Frontend im Hilfe-Overlay angezeigt.
+          </div>
         </div>
         <div class="action-row" v-if="settingsState.form">
           <button class="btnGhost small" type="button" :disabled="settingsState.loading" @click="loadTenantSettings(selectedTenant.id)">
@@ -344,6 +420,7 @@ const settingsState = reactive<{
   form: TenantSettingsUpdate | null;
   addressStreet: string;
   addressNumber: string;
+  activeTab: "company" | "sales";
 }>({
   loading: false,
   saving: false,
@@ -351,6 +428,7 @@ const settingsState = reactive<{
   form: null,
   addressStreet: "",
   addressNumber: "",
+  activeTab: "company",
 });
 
 /* Modal State */

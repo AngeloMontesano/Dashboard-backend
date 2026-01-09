@@ -1,5 +1,5 @@
 <template>
-  <div class="table-card" id="backup-archive">
+  <div class="table-card">
     <div class="table-card__header">
       <div class="stack-sm">
         <div class="tableTitle">Backups & Archive</div>
@@ -7,13 +7,10 @@
           Wähle einen Stand für Restore. Dateien werden angezeigt und als ZIP heruntergeladen.
         </div>
       </div>
-      <div class="row gap8">
-        <a class="btnGhost small" href="#backup-archive-list">Zur Liste</a>
-        <button class="btnGhost small" type="button" @click="createDemoBackup">Demo-Backup erstellen</button>
-      </div>
+      <button class="btnGhost small" type="button" @click="createDemoBackup">Demo-Backup erstellen</button>
     </div>
 
-    <div class="tableWrap" v-if="backups.length" id="backup-archive-list">
+    <div class="tableWrap" v-if="backups.length">
       <table class="table">
         <thead>
           <tr>

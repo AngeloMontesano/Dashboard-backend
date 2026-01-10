@@ -16,7 +16,6 @@ from app.modules.admin.users_routes import router as users_router
 from app.modules.admin.inventory_routes import router as admin_inventory_router
 from app.modules.admin.system_routes import router as system_router
 from app.modules.admin.smtp_routes import router as smtp_router
-from app.modules.admin.backups_routes import router as backups_router
 
 router = APIRouter(
     prefix="/admin",
@@ -40,7 +39,6 @@ router.include_router(system_router)
 router.include_router(smtp_router)
 router.include_router(backups_router)
 router.include_router(customer_settings_router)
-router.include_router(backups_router)
 
 
 @router.get("/ping")

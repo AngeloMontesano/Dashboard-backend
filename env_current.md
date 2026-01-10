@@ -23,6 +23,12 @@ Hinweis: `old_lm` wird ignoriert. SMTP wird aktuell nicht aus ENV gelesen (DB-Se
 
 - `BASE_DOMAIN=test.myitnetwork.de`
 - `BASE_ADMIN_DOMAIN=admin.test.myitnetwork.de`
+- `BACKUP_STORAGE_PATH=storage/backups`
+- `BACKUP_STORAGE_DRIVER=local`
+- `BACKUP_RETENTION_MAX_DAYS=`
+- `BACKUP_RETENTION_MAX_COUNT=`
+- `BACKUP_SCHEDULE_ENABLED=false`
+- `BACKUP_SCHEDULE_INTERVAL_MINUTES=1440`
 
 - `POSTGRES_DB_TEST=lager_test`
 - `DATABASE_URL_TEST=postgresql+asyncpg://lager:lager@db_test:5432/lager_test`

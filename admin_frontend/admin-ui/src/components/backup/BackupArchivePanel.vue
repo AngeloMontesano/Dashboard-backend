@@ -1,13 +1,20 @@
 <template>
   <div class="table-card">
-    <div class="table-card__header">
-      <div class="stack-sm">
-        <div class="tableTitle">Backups & Archive</div>
-        <div class="text-muted text-small">
-          Wähle einen Stand für Restore. Dateien werden angezeigt und als ZIP heruntergeladen.
+      <div class="table-card__header">
+        <div class="stack-sm">
+          <div class="tableTitle">Backups & Archive</div>
+          <div class="text-muted text-small">
+            Wähle einen Stand für Restore. Dateien werden angezeigt und als ZIP heruntergeladen.
+          </div>
         </div>
-      </div>
-      <button class="btnGhost small" type="button" @click="createDemoBackup">Demo-Backup erstellen</button>
+        <div class="row gap8">
+          <button class="btnGhost small" type="button" :disabled="busy" @click="createTenantBackup">
+            Tenant-Backup starten
+          </button>
+          <button class="btnGhost small" type="button" :disabled="busy" @click="createAllBackups">
+            Alle Tenants (Job)
+          </button>
+        </div>
     </div>
 
     <div class="tableWrap" v-if="backups.length">
@@ -87,17 +94,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue";
-import { zipSync, strToU8 } from "fflate";
-import { useToast } from "../../composables/useToast";
+import { computed } from "vue";
 
 type BackupFile = {
   name: string;
   sizeLabel: string;
-  content: string;
 };
 
-type BackupEntry = {
+export type BackupEntry = {
   id: string;
   name: string;
   createdAt: string;
@@ -106,90 +110,46 @@ type BackupEntry = {
   files: BackupFile[];
 };
 
-const { toast } = useToast();
-const backups = ref<BackupEntry[]>([buildDemoBackup(1), buildDemoBackup(2)]);
-const selectedId = ref(backups.value[0]?.id || "");
-const restoreStatus = ref("");
+const props = defineProps<{
+  backups: BackupEntry[];
+  selectedId: string;
+  restoreStatus: string;
+  busy: boolean;
+}>();
 
-const selectedBackup = computed(() => backups.value.find((entry) => entry.id === selectedId.value) || null);
+const emit = defineEmits<{
+  (e: "select", id: string): void;
+  (e: "downloadZip", backup: BackupEntry): void;
+  (e: "downloadFile", payload: { backup: BackupEntry; file: BackupFile }): void;
+  (e: "restore", backup: BackupEntry): void;
+  (e: "createTenantBackup"): void;
+  (e: "createAllBackups"): void;
+}>();
+
+const selectedBackup = computed(() => props.backups.find((entry) => entry.id === props.selectedId) || null);
 
 function selectBackup(id: string) {
-  selectedId.value = id;
-  restoreStatus.value = "";
+  emit("select", id);
 }
 
 function downloadFile(backup: BackupEntry, file: BackupFile) {
-  const blob = new Blob([file.content], { type: "application/json" });
-  saveBlob(blob, `${backup.name}-${file.name}`);
+  emit("downloadFile", { backup, file });
 }
 
 function downloadZip(backup: BackupEntry) {
-  const payload: Record<string, Uint8Array> = {};
-  backup.files.forEach((file) => {
-    payload[file.name] = strToU8(file.content);
-  });
-  const zipped = zipSync(payload, { level: 6 });
-  const blob = new Blob([zipped], { type: "application/zip" });
-  saveBlob(blob, `${backup.name}.zip`);
+  emit("downloadZip", backup);
 }
 
 function restoreSelected() {
   if (!selectedBackup.value) return;
-  const confirmed = window.confirm(`Restore für ${selectedBackup.value.name} starten?`);
-  if (!confirmed) return;
-  restoreStatus.value = `Restore für ${selectedBackup.value.name} läuft...`;
-  toast(`Restore gestartet: ${selectedBackup.value.name}`, "info");
-  window.setTimeout(() => {
-    restoreStatus.value = `Restore abgeschlossen: ${selectedBackup.value?.name}`;
-    toast(`Restore abgeschlossen: ${selectedBackup.value?.name}`, "success");
-  }, 1200);
+  emit("restore", selectedBackup.value);
 }
 
-function createDemoBackup() {
-  const nextIndex = backups.value.length + 1;
-  const entry = buildDemoBackup(nextIndex);
-  backups.value = [entry, ...backups.value];
-  selectedId.value = entry.id;
-  toast(`Backup erstellt: ${entry.name}`, "success");
+function createTenantBackup() {
+  emit("createTenantBackup");
 }
 
-function saveBlob(blob: Blob, filename: string) {
-  const link = document.createElement("a");
-  link.href = URL.createObjectURL(blob);
-  link.download = filename;
-  link.click();
-  URL.revokeObjectURL(link.href);
-}
-
-function buildDemoBackup(index: number): BackupEntry {
-  const timestamp = new Date(Date.now() - index * 3600_000)
-    .toISOString()
-    .replace("T", " ")
-    .replace(/:\d{2}\.\d{3}Z$/, "");
-  const id = `backup-${index}`;
-  return {
-    id,
-    name: `tenant-backup-${index}`,
-    createdAt: timestamp,
-    status: "ok",
-    statusLabel: "OK",
-    files: [
-      {
-        name: "meta.json",
-        sizeLabel: "4 KB",
-        content: JSON.stringify({ id, createdAt: timestamp, version: "1.0" }, null, 2),
-      },
-      {
-        name: "tables.json",
-        sizeLabel: "18 KB",
-        content: JSON.stringify({ tables: ["tenants", "users", "orders"] }, null, 2),
-      },
-      {
-        name: "data.json",
-        sizeLabel: "120 KB",
-        content: JSON.stringify({ rows: 1240, checksum: "sha256:demo" }, null, 2),
-      },
-    ],
-  };
+function createAllBackups() {
+  emit("createAllBackups");
 }
 </script>

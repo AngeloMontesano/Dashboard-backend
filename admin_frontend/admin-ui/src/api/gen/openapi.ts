@@ -2823,6 +2823,41 @@ export interface components {
             /** Offset */
             offset: number;
         };
+        /** GlobalTypeOut */
+        GlobalTypeOut: {
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
+            /** Description */
+            description: string;
+            /** Is Active */
+            is_active: boolean;
+        };
+        /** GlobalTypeCreate */
+        GlobalTypeCreate: {
+            /** Name */
+            name: string;
+            /**
+             * Description
+             * @default
+             */
+            description: string;
+            /**
+             * Is Active
+             * @default true
+             */
+            is_active: boolean;
+        };
+        /** GlobalTypeUpdate */
+        GlobalTypeUpdate: {
+            /** Name */
+            name?: string;
+            /** Description */
+            description?: string;
+            /** Is Active */
+            is_active?: boolean;
+        };
     };
     responses: never;
     parameters: never;

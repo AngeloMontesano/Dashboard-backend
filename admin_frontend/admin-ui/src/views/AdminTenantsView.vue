@@ -293,6 +293,40 @@
             Diese Daten werden im Kunden-Frontend im Hilfe-Overlay angezeigt.
           </div>
         </div>
+        <div class="settings-grid" v-if="settingsState.form && settingsState.activeTab === 'sales'">
+          <label class="field">
+            <span class="field-label">Name</span>
+            <input class="input" v-model="settingsState.form.sales_contact_name" :disabled="settingsState.loading" />
+          </label>
+          <label class="field">
+            <span class="field-label">Telefon</span>
+            <input class="input" v-model="settingsState.form.sales_contact_phone" :disabled="settingsState.loading" />
+          </label>
+          <label class="field">
+            <span class="field-label">E-Mail</span>
+            <input class="input" v-model="settingsState.form.sales_contact_email" :disabled="settingsState.loading" />
+          </label>
+          <div class="hint">
+            Diese Daten werden im Kunden-Frontend im Hilfe-Overlay angezeigt.
+          </div>
+        </div>
+        <div class="settings-grid" v-if="settingsState.form && settingsState.activeTab === 'sales'">
+          <label class="field">
+            <span class="field-label">Name</span>
+            <input class="input" v-model="settingsState.form.sales_contact_name" :disabled="settingsState.loading" />
+          </label>
+          <label class="field">
+            <span class="field-label">Telefon</span>
+            <input class="input" v-model="settingsState.form.sales_contact_phone" :disabled="settingsState.loading" />
+          </label>
+          <label class="field">
+            <span class="field-label">E-Mail</span>
+            <input class="input" v-model="settingsState.form.sales_contact_email" :disabled="settingsState.loading" />
+          </label>
+          <div class="hint">
+            Diese Daten werden im Kunden-Frontend im Hilfe-Overlay angezeigt.
+          </div>
+        </div>
         <div class="action-row" v-if="settingsState.form">
           <button class="btnGhost small" type="button" :disabled="settingsState.loading" @click="loadTenantSettings(selectedTenant.id)">
             Neu laden

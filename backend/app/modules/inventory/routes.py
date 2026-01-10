@@ -9,6 +9,7 @@ from typing import Any, Literal
 from fastapi import APIRouter, Depends, File, HTTPException, Path, Query, UploadFile, Request
 from fastapi.responses import StreamingResponse
 from sqlalchemy import func, or_, select
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 from openpyxl import Workbook, load_workbook
@@ -1330,6 +1331,34 @@ async def get_help_info(
     user_ctx: CurrentUserContext = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> HelpInfoOut:
+    try:
+        tenant_settings = await _get_or_create_settings(ctx=ctx, db=db)
+        sales_contact = SalesContactOut(
+            name=tenant_settings.sales_contact_name,
+            phone=tenant_settings.sales_contact_phone,
+            email=tenant_settings.sales_contact_email,
+        )
+    except SQLAlchemyError:
+        logger.exception("help-info tenant settings lookup failed")
+        sales_contact = SalesContactOut()
+
+    try:
+        global_settings = await get_or_create_global_customer_settings(db)
+        support = _global_settings_to_out(global_settings)
+    except SQLAlchemyError:
+        logger.exception("help-info global settings lookup failed")
+        support = GlobalCustomerSettingsOut(
+            id="",
+            support_hours=[],
+            support_phone="",
+            support_email="",
+            support_note="",
+        )
+
+    return HelpInfoOut(
+        support=support,
+        sales_contact=sales_contact,
+    )
     tenant_settings = await _get_or_create_settings(ctx=ctx, db=db)
     global_settings = await get_or_create_global_customer_settings(db)
     support = HelpInfoOut(

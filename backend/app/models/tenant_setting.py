@@ -35,7 +35,9 @@ class TenantSetting(Base):
     contact_name: Mapped[str] = mapped_column(String(255), nullable=False, default="")
     branch_number: Mapped[str] = mapped_column(String(64), nullable=False, default="")
     tax_number: Mapped[str] = mapped_column(String(64), nullable=False, default="")
-    barcode_scanner_reduce_enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    sales_contact_name: Mapped[str] = mapped_column(String(255), nullable=False, default="")
+    sales_contact_phone: Mapped[str] = mapped_column(String(64), nullable=False, default="")
+    sales_contact_email: Mapped[str] = mapped_column(String(255), nullable=False, default="")
 
     industry_id: Mapped[uuid.UUID | None] = mapped_column(
         GUID(),

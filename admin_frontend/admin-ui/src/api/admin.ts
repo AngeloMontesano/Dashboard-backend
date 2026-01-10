@@ -90,6 +90,32 @@ type AdminSystemActionResponseRaw = AdminSystemActionResponse;
 type AdminSystemEmailSettingsResponse = SystemEmailSettings;
 type AdminSmtpSettingsResponse = SmtpSettingsOut;
 type AdminSmtpTestResponse = SmtpTestResponse;
+type BackupApiEntry = {
+  id: string;
+  scope: string;
+  tenant_id: string | null;
+  tenant_slug: string | null;
+  created_at: string;
+  status: string;
+  restored_at?: string | null;
+  files: { name: string; size_bytes: number; size_label: string }[];
+};
+
+type BackupEntry = {
+  id: string;
+  scope: string;
+  tenantId: string | null;
+  tenantSlug: string | null;
+  createdAt: string;
+  restoredAt?: string | null;
+  status: string;
+  statusLabel: string;
+  name: string;
+  files: { name: string; sizeBytes: number; sizeLabel: string }[];
+};
+
+type BackupListResponse = { items: BackupApiEntry[] };
+type BackupActionResponse = { backup: BackupApiEntry; message: string };
 type AdminGlobalCustomerSettingsResponse = GlobalCustomerSettingsResponse;
 type AdminDemoInventoryImportResponse = DemoInventoryImportResponse;
 
@@ -228,6 +254,48 @@ export async function adminGetEmailSettings(adminKey: string, actor?: string) {
 export async function adminUpdateEmailSettings(adminKey: string, actor: string | undefined, payload: SystemEmailSettingsUpdate) {
   const res = await api.put<AdminSystemEmailSettingsResponse>("/admin/system/email", payload, withAdmin(adminKey, actor));
   return res.data;
+}
+
+/* Backups */
+export async function adminListBackups(adminKey: string, actor?: string) {
+  const res = await api.get<BackupListResponse>("/admin/backups", withAdmin(adminKey, actor));
+  return res.data.items;
+}
+
+export async function adminCreateTenantBackup(adminKey: string, actor: string | undefined, tenantId: string) {
+  const res = await api.post<BackupActionResponse>(`/admin/backups/tenants/${tenantId}`, null, withAdmin(adminKey, actor));
+  return res.data.backup;
+}
+
+export async function adminCreateAllBackups(adminKey: string, actor?: string) {
+  const res = await api.post<BackupActionResponse>("/admin/backups/all", null, withAdmin(adminKey, actor));
+  return res.data.backup;
+}
+
+export async function adminRestoreBackup(adminKey: string, actor: string | undefined, backupId: string) {
+  const res = await api.post<BackupActionResponse>(`/admin/backups/${backupId}/restore`, null, withAdmin(adminKey, actor));
+  return res.data.backup;
+}
+
+export async function adminDownloadBackup(adminKey: string, actor: string | undefined, backupId: string) {
+  const res = await api.get(`/admin/backups/${backupId}/download`, {
+    ...withAdmin(adminKey, actor),
+    responseType: "blob",
+  });
+  return res.data as Blob;
+}
+
+export async function adminDownloadBackupFile(
+  adminKey: string,
+  actor: string | undefined,
+  backupId: string,
+  filename: string
+) {
+  const res = await api.get(`/admin/backups/${backupId}/files/${filename}`, {
+    ...withAdmin(adminKey, actor),
+    responseType: "blob",
+  });
+  return res.data as Blob;
 }
 
 /* SMTP */

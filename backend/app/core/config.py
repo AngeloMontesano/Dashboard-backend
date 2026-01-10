@@ -40,6 +40,12 @@ class Settings(BaseSettings):
     BASE_DOMAIN: str = Field(..., description="Base domain für Tenant Subdomains, z.B. test.myitnetwork.de")
     BASE_ADMIN_DOMAIN: str = Field(..., description="Base domain für Admin UI Subdomains")
     BACKUP_STORAGE_PATH: str = Field("storage/backups", description="Pfad für Backup-Dateien")
+    BACKUP_RETENTION_MAX_DAYS: int | None = Field(
+        None, description="Maximales Backup-Alter in Tagen (Retention)", ge=0
+    )
+    BACKUP_RETENTION_MAX_COUNT: int | None = Field(
+        None, description="Maximale Anzahl von Backups (Retention)", ge=0
+    )
 
 
 settings = Settings()

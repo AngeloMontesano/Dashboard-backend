@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 import json
 import uuid
 from pathlib import Path
 from zipfile import ZipFile
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from sqlalchemy import select
@@ -14,8 +14,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.db import get_db
+from app.models.audit_log import AdminAuditLog
 from app.models.tenant import Tenant
 from app.modules.admin.audit import write_audit_log
+from app.modules.admin.backup_storage import LocalBackupStorage
+from app.modules.admin.schemas import AuditOut
 
 
 router = APIRouter(prefix="/backups", tags=["admin-backups"])
@@ -47,20 +50,24 @@ class BackupActionResponse(BaseModel):
     message: str
 
 
+def _storage() -> LocalBackupStorage:
+    return LocalBackupStorage(root_path=Path(settings.BACKUP_STORAGE_PATH).resolve())
+
+
 def _now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
 def _backup_root() -> Path:
-    return Path(settings.BACKUP_STORAGE_PATH).resolve()
+    return _storage().root()
 
 
 def _index_path() -> Path:
-    return _backup_root() / "index.json"
+    return _storage().index_path()
 
 
 def _ensure_storage() -> None:
-    _backup_root().mkdir(parents=True, exist_ok=True)
+    _storage().ensure_root()
 
 
 def _read_json(path: Path) -> dict:
@@ -79,19 +86,26 @@ def _format_size(size_bytes: int) -> str:
     return f"{size_bytes / (1024 * 1024):.1f} MB"
 
 
-def _load_index() -> list[dict]:
+def _load_index(prune: bool = False) -> list[dict]:
     if not _index_path().exists():
         return []
-    return _read_json(_index_path()).get("items", [])
+    items = _read_json(_index_path()).get("items", [])
+    if not prune:
+        return items
+    pruned_items = _apply_retention(items)
+    if pruned_items != items:
+        _write_json(_index_path(), {"items": pruned_items})
+    return pruned_items
 
 
 def _save_index(items: list[dict]) -> None:
     _ensure_storage()
-    _write_json(_index_path(), {"items": items})
+    pruned_items = _apply_retention(items)
+    _write_json(_index_path(), {"items": pruned_items})
 
 
 def _backup_dir(backup_id: str) -> Path:
-    return _backup_root() / backup_id
+    return _storage().backup_dir(backup_id)
 
 
 def _collect_files(backup_id: str) -> list[BackupFileInfo]:
@@ -109,6 +123,63 @@ def _collect_files(backup_id: str) -> list[BackupFileInfo]:
             )
         )
     return files
+
+
+def _parse_created_at(value: str | None) -> datetime | None:
+    if not value:
+        return None
+    try:
+        parsed = datetime.fromisoformat(value)
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        return parsed.replace(tzinfo=timezone.utc)
+    return parsed
+
+
+def _delete_backup_files(backup_id: str) -> None:
+    _storage().delete_backup(backup_id)
+
+
+def _apply_retention(items: list[dict]) -> list[dict]:
+    max_days = settings.BACKUP_RETENTION_MAX_DAYS
+    max_count = settings.BACKUP_RETENTION_MAX_COUNT
+    if not max_days and not max_count:
+        return items
+
+    now = datetime.now(timezone.utc)
+    remaining = items
+    removed: list[dict] = []
+
+    if max_days is not None:
+        cutoff = now - timedelta(days=max_days)
+        next_remaining: list[dict] = []
+        for item in remaining:
+            created_at = _parse_created_at(item.get("created_at"))
+            if created_at and created_at < cutoff:
+                removed.append(item)
+            else:
+                next_remaining.append(item)
+        remaining = next_remaining
+
+    if max_count is not None and len(remaining) > max_count:
+        earliest = datetime.min.replace(tzinfo=timezone.utc)
+        sorted_items = sorted(
+            remaining,
+            key=lambda item: _parse_created_at(item.get("created_at")) or earliest,
+            reverse=True,
+        )
+        keep = sorted_items[:max_count]
+        keep_ids = {item.get("id") for item in keep}
+        removed.extend([item for item in remaining if item.get("id") not in keep_ids])
+        remaining = keep
+
+    for item in removed:
+        backup_id = item.get("id")
+        if backup_id:
+            _delete_backup_files(backup_id)
+
+    return remaining
 
 
 def _build_entry(payload: dict) -> BackupEntry:
@@ -141,15 +212,61 @@ async def _get_tenant_or_404(db: AsyncSession, tenant_id: str) -> Tenant:
 
 
 @router.get("", response_model=BackupListResponse)
-async def admin_list_backups() -> BackupListResponse:
+async def admin_list_backups(
+    tenant_id: str | None = Query(default=None),
+    scope: str | None = Query(default=None),
+) -> BackupListResponse:
     _ensure_storage()
-    items = [_build_entry(item) for item in _load_index()]
+    if scope and scope not in {"tenant", "all"}:
+        raise HTTPException(status_code=400, detail="Ungültiger scope")
+    raw_items = _load_index(prune=True)
+    if tenant_id:
+        raw_items = [item for item in raw_items if item.get("tenant_id") == tenant_id]
+    if scope:
+        raw_items = [item for item in raw_items if item.get("scope") == scope]
+    items = [_build_entry(item) for item in raw_items]
     return BackupListResponse(items=items)
+
+
+@router.get("/history", response_model=list[AuditOut])
+async def admin_backup_history(
+    db: AsyncSession = Depends(get_db),
+    action: str | None = Query(default=None),
+    created_from: datetime | None = Query(default=None),
+    created_to: datetime | None = Query(default=None),
+    limit: int = Query(default=100, ge=1, le=500),
+    offset: int = Query(default=0, ge=0),
+) -> list[AuditOut]:
+    """
+    Liefert Audit-Log Einträge für Backups.
+    """
+    stmt = select(AdminAuditLog).where(AdminAuditLog.entity_type == "backup")
+    if action is not None:
+        stmt = stmt.where(AdminAuditLog.action == action)
+    if created_from is not None:
+        stmt = stmt.where(AdminAuditLog.created_at >= created_from)
+    if created_to is not None:
+        stmt = stmt.where(AdminAuditLog.created_at <= created_to)
+    stmt = stmt.order_by(AdminAuditLog.created_at.desc()).limit(limit).offset(offset)
+    result = await db.execute(stmt)
+    entries = list(result.scalars().all())
+    return [
+        AuditOut(
+            id=str(e.id),
+            actor=e.actor,
+            action=e.action,
+            entity_type=e.entity_type,
+            entity_id=e.entity_id,
+            payload=e.payload,
+            created_at=e.created_at,
+        )
+        for e in entries
+    ]
 
 
 @router.get("/{backup_id}", response_model=BackupEntry)
 async def admin_get_backup(backup_id: str) -> BackupEntry:
-    items = _load_index()
+    items = _load_index(prune=True)
     match = next((item for item in items if item["id"] == backup_id), None)
     if not match:
         raise HTTPException(status_code=404, detail="Backup nicht gefunden")
@@ -158,7 +275,7 @@ async def admin_get_backup(backup_id: str) -> BackupEntry:
 
 @router.get("/{backup_id}/download")
 async def admin_download_backup(backup_id: str) -> FileResponse:
-    items = _load_index()
+    items = _load_index(prune=True)
     match = next((item for item in items if item["id"] == backup_id), None)
     if not match:
         raise HTTPException(status_code=404, detail="Backup nicht gefunden")
@@ -172,7 +289,7 @@ async def admin_download_backup(backup_id: str) -> FileResponse:
 
 @router.get("/{backup_id}/files/{filename}")
 async def admin_download_backup_file(backup_id: str, filename: str) -> FileResponse:
-    items = _load_index()
+    items = _load_index(prune=True)
     match = next((item for item in items if item["id"] == backup_id), None)
     if not match:
         raise HTTPException(status_code=404, detail="Backup nicht gefunden")
@@ -212,7 +329,7 @@ async def admin_create_tenant_backup(
             "tenant.json": {"id": str(tenant.id), "slug": tenant.slug, "name": tenant.name},
         },
     )
-    items = [payload, *_load_index()]
+    items = [payload, *_load_index(prune=True)]
     _save_index(items)
     actor = request.headers.get("x-admin-actor") or "system"
     await write_audit_log(
@@ -257,7 +374,7 @@ async def admin_create_all_tenants_backup(
             },
         },
     )
-    items = [payload, *_load_index()]
+    items = [payload, *_load_index(prune=True)]
     _save_index(items)
     actor = request.headers.get("x-admin-actor") or "system"
     await write_audit_log(
@@ -278,7 +395,7 @@ async def admin_restore_backup(
     request: Request,
     db: AsyncSession = Depends(get_db),
 ) -> BackupActionResponse:
-    items = _load_index()
+    items = _load_index(prune=True)
     match = next((item for item in items if item["id"] == backup_id), None)
     if not match:
         raise HTTPException(status_code=404, detail="Backup nicht gefunden")

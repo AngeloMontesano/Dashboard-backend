@@ -4,6 +4,7 @@ import asyncio
 from datetime import date, datetime, timedelta, timezone
 import hashlib
 import json
+import shutil
 import uuid
 from pathlib import Path
 import time

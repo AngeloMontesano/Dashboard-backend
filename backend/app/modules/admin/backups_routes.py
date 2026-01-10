@@ -192,8 +192,6 @@ async def admin_create_tenant_backup(
     request: Request,
     db: AsyncSession = Depends(get_db),
 ) -> BackupActionResponse:
-@router.post("/tenants/{tenant_id}", response_model=BackupActionResponse)
-async def admin_create_tenant_backup(tenant_id: str, db: AsyncSession = Depends(get_db)) -> BackupActionResponse:
     tenant = await _get_tenant_or_404(db, tenant_id)
     backup_id = str(uuid.uuid4())
     created_at = _now_iso()

@@ -4,6 +4,7 @@
 
 from flask import Blueprint, render_template, request, redirect, url_for, jsonify
 from models import db, Artikel, Kategorie, Lagerort
+from utils import save_changed_articles
 
 # 🔹 Blueprint für die Artikelverwaltung
 bp = Blueprint("artikel", __name__, url_prefix="/artikel")
@@ -112,45 +113,11 @@ def save_all():
         print("🚀 save_all wurde aufgerufen!")  # Debugging für Terminal
         print("\n🔹 Empfangene Formulardaten:", request.form)  # Debugging
 
-        changed_articles = {}
-        updated_count = 0
-
-        for key, value in request.form.items():
-            # Prüfen, ob der Key ein Feld aus der Datenbank ist
-            if "_" in key:  
-                field_name = key.split("_")[0]  # Entfernt die Artikel-ID vom Feldnamen
-                pf_artikel_id = request.form.get("pf_artikel_id")
-
-                if not pf_artikel_id:
-                    continue  
-
-                if pf_artikel_id not in changed_articles:
-                    changed_articles[pf_artikel_id] = {}
-
-                changed_articles[pf_artikel_id][field_name] = value.strip()
-
-        print(f"🛠️ Geänderte Artikel: {changed_articles}")
-
-        if not changed_articles:
-            return jsonify({"message": "Keine Änderungen vorhanden."}), 200
-
-        for pf_artikel_id, changes in changed_articles.items():
-            artikel = Artikel.query.filter_by(pf_artikel_id=pf_artikel_id).first()
-            if not artikel:
-                print(f"⚠️ WARNUNG: Artikel {pf_artikel_id} nicht gefunden!")
-                continue  
-
-            # Änderungen auf das richtige Datenbank-Objekt anwenden
-            for key, value in changes.items():
-                if hasattr(artikel, key):  
-                    setattr(artikel, key, value)
-                    print(f"✅ Artikel {pf_artikel_id}: {key} → {value}")
-                else:
-                    print(f"⚠️ WARNUNG: Artikel {pf_artikel_id} hat kein Feld {key}!")
-
-            updated_count += 1
-
-        db.session.commit()
+        updated_count, error = save_changed_articles(request.form)
+        
+        if error:
+            return jsonify({"message": error}), 200
+            
         print(f"✅ {updated_count} Artikel wurden aktualisiert.")
 
         return jsonify({"message": f"{updated_count} Artikel gespeichert"}), 200

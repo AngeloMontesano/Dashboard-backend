@@ -50,20 +50,24 @@ class BackupActionResponse(BaseModel):
     message: str
 
 
+def _storage() -> LocalBackupStorage:
+    return LocalBackupStorage(root_path=Path(settings.BACKUP_STORAGE_PATH).resolve())
+
+
 def _now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
 def _backup_root() -> Path:
-    return Path(settings.BACKUP_STORAGE_PATH).resolve()
+    return _storage().root()
 
 
 def _index_path() -> Path:
-    return _backup_root() / "index.json"
+    return _storage().index_path()
 
 
 def _ensure_storage() -> None:
-    _backup_root().mkdir(parents=True, exist_ok=True)
+    _storage().ensure_root()
 
 
 def _read_json(path: Path) -> dict:
@@ -101,7 +105,7 @@ def _save_index(items: list[dict]) -> None:
 
 
 def _backup_dir(backup_id: str) -> Path:
-    return _backup_root() / backup_id
+    return _storage().backup_dir(backup_id)
 
 
 def _collect_files(backup_id: str) -> list[BackupFileInfo]:

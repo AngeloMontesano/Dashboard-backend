@@ -14,3 +14,4 @@ __pycache__/
 .smtp.json
 z_delete/
 docker-compose.yml
+.aider*

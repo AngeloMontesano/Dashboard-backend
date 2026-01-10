@@ -12,6 +12,7 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.sql.schema import Table
 
 from app.core.config import settings
 from app.core.db import get_db
@@ -421,6 +422,22 @@ async def admin_restore_backup(
     match = next((item for item in items if item["id"] == backup_id), None)
     if not match:
         raise HTTPException(status_code=404, detail="Backup nicht gefunden")
+    if match.get("scope") != "tenant":
+        raise HTTPException(status_code=400, detail="Restore unterstützt nur Tenant-Backups")
+    if not match.get("tenant_id"):
+        raise HTTPException(status_code=400, detail="Tenant-ID fehlt im Backup")
+    await _get_tenant_or_404(db, match["tenant_id"])
+    meta_path = _backup_dir(backup_id) / "meta.json"
+    if not meta_path.exists():
+        raise HTTPException(status_code=400, detail="Meta-Datei fehlt im Backup")
+    meta = _read_json(meta_path)
+    expected_counts = meta.get("table_counts", {})
+    await _restore_tenant_tables(
+        db=db,
+        backup_id=backup_id,
+        tenant_id=uuid.UUID(match["tenant_id"]),
+        expected_counts=expected_counts if isinstance(expected_counts, dict) else None,
+    )
     match["restored_at"] = _now_iso()
     _save_index(items)
     actor = request.headers.get("x-admin-actor") or "system"
@@ -430,7 +447,7 @@ async def admin_restore_backup(
         action="backup.restore",
         entity_type="backup",
         entity_id=backup_id,
-        payload={"scope": match.get("scope")},
+        payload={"scope": match.get("scope"), "table_counts": expected_counts},
     )
     await db.commit()
     return BackupActionResponse(backup=_build_entry(match), message="Restore angestoßen")

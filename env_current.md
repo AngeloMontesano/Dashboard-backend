@@ -29,10 +29,6 @@ Hinweis: `old_lm` wird ignoriert. SMTP wird aktuell nicht aus ENV gelesen (DB-Se
 - `BACKUP_RETENTION_MAX_COUNT=`
 - `BACKUP_SCHEDULE_ENABLED=false`
 - `BACKUP_SCHEDULE_INTERVAL_MINUTES=1440`
-- `BACKUP_SCHEDULE_MODE=app`
-- `BACKUP_SCHEDULE_LOCK_KEY=932754`
-- `BACKUP_JOB_MAX_RETRIES=2`
-- `BACKUP_JOB_RETRY_DELAY_SECONDS=5`
 
 - `POSTGRES_DB_TEST=lager_test`
 - `DATABASE_URL_TEST=postgresql+asyncpg://lager:lager@db_test:5432/lager_test`

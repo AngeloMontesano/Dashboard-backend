@@ -15,3 +15,4 @@ __pycache__/
 z_delete/
 docker-compose.yml
 .aider*
+/dokumentation

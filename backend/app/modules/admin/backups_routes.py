@@ -6,7 +6,7 @@ import uuid
 from pathlib import Path
 from zipfile import ZipFile
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from sqlalchemy import select
@@ -141,9 +141,19 @@ async def _get_tenant_or_404(db: AsyncSession, tenant_id: str) -> Tenant:
 
 
 @router.get("", response_model=BackupListResponse)
-async def admin_list_backups() -> BackupListResponse:
+async def admin_list_backups(
+    tenant_id: str | None = Query(default=None),
+    scope: str | None = Query(default=None),
+) -> BackupListResponse:
     _ensure_storage()
-    items = [_build_entry(item) for item in _load_index()]
+    if scope and scope not in {"tenant", "all"}:
+        raise HTTPException(status_code=400, detail="Ungültiger scope")
+    raw_items = _load_index()
+    if tenant_id:
+        raw_items = [item for item in raw_items if item.get("tenant_id") == tenant_id]
+    if scope:
+        raw_items = [item for item in raw_items if item.get("scope") == scope]
+    items = [_build_entry(item) for item in raw_items]
     return BackupListResponse(items=items)
 
 

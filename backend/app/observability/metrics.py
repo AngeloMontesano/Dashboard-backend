@@ -32,3 +32,26 @@ http_request_duration_seconds = Histogram(
     ),
     registry=metrics_registry,
 )
+
+# Backup job metrics
+backup_jobs_total = Counter(
+    "backup_jobs_total",
+    "Total backup jobs by status",
+    ["status"],
+    registry=metrics_registry,
+)
+
+backup_job_retries_total = Counter(
+    "backup_job_retries_total",
+    "Total backup job retries",
+    ["status"],
+    registry=metrics_registry,
+)
+
+backup_job_duration_seconds = Histogram(
+    "backup_job_duration_seconds",
+    "Backup job duration in seconds",
+    ["status"],
+    buckets=(5, 10, 30, 60, 120, 300, 600, 1200, 1800),
+    registry=metrics_registry,
+)

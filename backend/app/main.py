@@ -20,6 +20,7 @@ from app.core.errors import register_exception_handlers
 from app.core.logging import configure_logging
 from app.modules.admin.routes import router as admin_router
 from app.modules.admin.login_routes import router as admin_login_router
+from app.modules.admin.backup_scheduler import start_backup_scheduler, stop_backup_scheduler
 from app.modules.inventory.routes import router as inventory_router
 from app.modules.auth.routes import router as auth_router
 from app.modules.public.routes import router as public_router
@@ -76,6 +77,11 @@ def create_app() -> FastAPI:
             settings.BASE_DOMAIN,
             settings.BASE_ADMIN_DOMAIN,
         )
+        start_backup_scheduler()
+
+    @app.on_event("shutdown")
+    async def shutdown_scheduler() -> None:
+        stop_backup_scheduler()
 
     @app.on_event("startup")
     async def ensure_schema() -> None:

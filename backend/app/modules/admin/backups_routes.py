@@ -200,6 +200,10 @@ def _build_entry(payload: dict) -> BackupEntry:
     return entry
 
 
+def _build_job(payload: dict) -> BackupJobEntry:
+    return BackupJobEntry(**payload)
+
+
 def _write_backup_files(backup_id: str, files: dict[str, dict]) -> None:
     folder = _backup_dir(backup_id)
     folder.mkdir(parents=True, exist_ok=True)
@@ -232,6 +236,99 @@ async def _get_tenant_or_404(db: AsyncSession, tenant_id: str) -> Tenant:
     if not tenant:
         raise HTTPException(status_code=404, detail="Tenant nicht gefunden")
     return tenant
+
+
+async def _create_tenant_backup(
+    db: AsyncSession,
+    tenant: Tenant,
+    actor: str,
+) -> BackupEntry:
+    backup_id = str(uuid.uuid4())
+    created_at = _now_iso()
+    payload = {
+        "id": backup_id,
+        "scope": "tenant",
+        "tenant_id": str(tenant.id),
+        "tenant_slug": tenant.slug,
+        "created_at": created_at,
+        "status": "ok",
+        "restored_at": None,
+        "files": [],
+    }
+    tenant_payload = {"id": str(tenant.id), "slug": tenant.slug, "name": tenant.name}
+    table_files, table_counts = await _export_tenant_tables(db, tenant.id)
+    files = {"tenant.json": tenant_payload, **table_files}
+    files["meta.json"] = {
+        "backup_id": backup_id,
+        "created_at": created_at,
+        "scope": "tenant",
+        "tables": list(table_counts.keys()),
+        "table_counts": table_counts,
+        "files": _build_file_manifest(files),
+        "checksum": _checksum_payload(tenant_payload),
+    }
+    _write_backup_files(backup_id, files)
+    items = [payload, *_load_index(prune=True)]
+    _save_index(items)
+    await write_audit_log(
+        db=db,
+        actor=actor,
+        action="backup.create",
+        entity_type="backup",
+        entity_id=backup_id,
+        payload={"scope": "tenant", "tenant_id": str(tenant.id), "tenant_slug": tenant.slug},
+    )
+    return _build_entry(payload)
+
+
+async def _update_job(job_id: str, **updates: object) -> BackupJobEntry:
+    async with _jobs_lock:
+        jobs = _load_jobs()
+        for job in jobs:
+            if job.get("id") == job_id:
+                job.update(updates)
+                _save_jobs(jobs)
+                return _build_job(job)
+    raise HTTPException(status_code=404, detail="Backup-Job nicht gefunden")
+
+
+async def _run_backup_job(job_id: str, actor: str) -> None:
+    try:
+        await _update_job(job_id, status="running", started_at=_now_iso())
+        sessionmaker = get_sessionmaker()
+        async with sessionmaker() as db:
+            tenants = (await db.execute(select(Tenant).order_by(Tenant.slug.asc()))).scalars().all()
+            await _update_job(job_id, total=len(tenants))
+            backup_ids: list[str] = []
+            processed = 0
+            for tenant in tenants:
+                entry = await _create_tenant_backup(db, tenant, actor)
+                await db.commit()
+                backup_ids.append(entry.id)
+                processed += 1
+                await _update_job(job_id, processed=processed, backup_ids=backup_ids)
+        await _update_job(job_id, status="completed", finished_at=_now_iso())
+    except Exception as exc:
+        await _update_job(job_id, status="failed", finished_at=_now_iso(), error=str(exc))
+
+
+async def _enqueue_all_tenants_job(actor: str) -> BackupJobEntry:
+    job_payload = {
+        "id": str(uuid.uuid4()),
+        "status": "queued",
+        "created_at": _now_iso(),
+        "started_at": None,
+        "finished_at": None,
+        "total": 0,
+        "processed": 0,
+        "backup_ids": [],
+        "error": None,
+    }
+    async with _jobs_lock:
+        jobs = [job_payload, *_load_jobs()]
+        _save_jobs(jobs)
+    asyncio.create_task(_run_backup_job(job_payload["id"], actor))
+    return _build_job(job_payload)
 
 
 @router.get("", response_model=BackupListResponse)
@@ -355,19 +452,12 @@ async def admin_create_tenant_backup(
     items = [payload, *_load_index(prune=True)]
     _save_index(items)
     actor = request.headers.get("x-admin-actor") or "system"
-    await write_audit_log(
-        db=db,
-        actor=actor,
-        action="backup.create",
-        entity_type="backup",
-        entity_id=backup_id,
-        payload={"scope": "tenant", "tenant_id": str(tenant.id), "tenant_slug": tenant.slug},
-    )
+    entry = await _create_tenant_backup(db, tenant, actor)
     await db.commit()
-    return BackupActionResponse(backup=_build_entry(payload), message="Tenant-Backup erstellt")
+    return BackupActionResponse(backup=entry, message="Tenant-Backup erstellt")
 
 
-@router.post("/all", response_model=BackupActionResponse)
+@router.post("/all", response_model=BackupJobResponse)
 async def admin_create_all_tenants_backup(
     request: Request,
     db: AsyncSession = Depends(get_db),
@@ -400,16 +490,8 @@ async def admin_create_all_tenants_backup(
     items = [payload, *_load_index(prune=True)]
     _save_index(items)
     actor = request.headers.get("x-admin-actor") or "system"
-    await write_audit_log(
-        db=db,
-        actor=actor,
-        action="backup.create",
-        entity_type="backup",
-        entity_id=backup_id,
-        payload={"scope": "all", "tenant_count": len(backups)},
-    )
-    await db.commit()
-    return BackupActionResponse(backup=_build_entry(payload), message="Backup für alle Tenants erstellt")
+    job = await _enqueue_all_tenants_job(actor)
+    return BackupJobResponse(job=job, message="Backup-Job für alle Tenants gestartet")
 
 
 @router.post("/{backup_id}/restore", response_model=BackupActionResponse)

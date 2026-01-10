@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
 import json
+import shutil
 import uuid
 from pathlib import Path
 from zipfile import ZipFile
@@ -17,7 +18,6 @@ from app.core.db import get_db
 from app.models.audit_log import AdminAuditLog
 from app.models.tenant import Tenant
 from app.modules.admin.audit import write_audit_log
-from app.modules.admin.backup_storage import LocalBackupStorage
 from app.modules.admin.schemas import AuditOut
 
 
@@ -138,7 +138,10 @@ def _parse_created_at(value: str | None) -> datetime | None:
 
 
 def _delete_backup_files(backup_id: str) -> None:
-    _storage().delete_backup(backup_id)
+    folder = _backup_dir(backup_id).resolve()
+    root = _backup_root().resolve()
+    if folder.exists() and folder.is_dir() and folder.parent == root:
+        shutil.rmtree(folder)
 
 
 def _apply_retention(items: list[dict]) -> list[dict]:
@@ -219,7 +222,7 @@ async def admin_list_backups(
     _ensure_storage()
     if scope and scope not in {"tenant", "all"}:
         raise HTTPException(status_code=400, detail="Ungültiger scope")
-    raw_items = _load_index(prune=True)
+    raw_items = _load_index()
     if tenant_id:
         raw_items = [item for item in raw_items if item.get("tenant_id") == tenant_id]
     if scope:

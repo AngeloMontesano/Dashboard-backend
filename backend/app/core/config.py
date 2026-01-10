@@ -41,10 +41,10 @@ class Settings(BaseSettings):
     BASE_ADMIN_DOMAIN: str = Field(..., description="Base domain für Admin UI Subdomains")
     BACKUP_STORAGE_PATH: str = Field("storage/backups", description="Pfad für Backup-Dateien")
     BACKUP_RETENTION_MAX_DAYS: int | None = Field(
-        None, description="Maximales Backup-Alter in Tagen (Retention)", ge=0
+        None, description="Maximales Backup-Alter in Tagen (Retention)"
     )
     BACKUP_RETENTION_MAX_COUNT: int | None = Field(
-        None, description="Maximale Anzahl von Backups (Retention)", ge=0
+        None, description="Maximale Anzahl von Backups (Retention)"
     )
 
 

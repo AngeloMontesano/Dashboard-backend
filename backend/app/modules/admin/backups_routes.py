@@ -232,7 +232,6 @@ async def admin_create_all_tenants_backup(
     request: Request,
     db: AsyncSession = Depends(get_db),
 ) -> BackupActionResponse:
-async def admin_create_all_tenants_backup(db: AsyncSession = Depends(get_db)) -> BackupActionResponse:
     backups = (await db.execute(select(Tenant).order_by(Tenant.slug.asc()))).scalars().all()
     backup_id = str(uuid.uuid4())
     created_at = _now_iso()

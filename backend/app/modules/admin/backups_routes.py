@@ -82,10 +82,16 @@ def _format_size(size_bytes: int) -> str:
     return f"{size_bytes / (1024 * 1024):.1f} MB"
 
 
-def _load_index() -> list[dict]:
+def _load_index(prune: bool = False) -> list[dict]:
     if not _index_path().exists():
         return []
-    return _read_json(_index_path()).get("items", [])
+    items = _read_json(_index_path()).get("items", [])
+    if not prune:
+        return items
+    pruned_items = _apply_retention(items)
+    if pruned_items != items:
+        _write_json(_index_path(), {"items": pruned_items})
+    return pruned_items
 
 
 def _save_index(items: list[dict]) -> None:
@@ -259,7 +265,7 @@ async def admin_backup_history(
 
 @router.get("/{backup_id}", response_model=BackupEntry)
 async def admin_get_backup(backup_id: str) -> BackupEntry:
-    items = _load_index()
+    items = _load_index(prune=True)
     match = next((item for item in items if item["id"] == backup_id), None)
     if not match:
         raise HTTPException(status_code=404, detail="Backup nicht gefunden")
@@ -268,7 +274,7 @@ async def admin_get_backup(backup_id: str) -> BackupEntry:
 
 @router.get("/{backup_id}/download")
 async def admin_download_backup(backup_id: str) -> FileResponse:
-    items = _load_index()
+    items = _load_index(prune=True)
     match = next((item for item in items if item["id"] == backup_id), None)
     if not match:
         raise HTTPException(status_code=404, detail="Backup nicht gefunden")
@@ -282,7 +288,7 @@ async def admin_download_backup(backup_id: str) -> FileResponse:
 
 @router.get("/{backup_id}/files/{filename}")
 async def admin_download_backup_file(backup_id: str, filename: str) -> FileResponse:
-    items = _load_index()
+    items = _load_index(prune=True)
     match = next((item for item in items if item["id"] == backup_id), None)
     if not match:
         raise HTTPException(status_code=404, detail="Backup nicht gefunden")
@@ -322,7 +328,7 @@ async def admin_create_tenant_backup(
             "tenant.json": {"id": str(tenant.id), "slug": tenant.slug, "name": tenant.name},
         },
     )
-    items = [payload, *_load_index()]
+    items = [payload, *_load_index(prune=True)]
     _save_index(items)
     actor = request.headers.get("x-admin-actor") or "system"
     await write_audit_log(
@@ -367,7 +373,7 @@ async def admin_create_all_tenants_backup(
             },
         },
     )
-    items = [payload, *_load_index()]
+    items = [payload, *_load_index(prune=True)]
     _save_index(items)
     actor = request.headers.get("x-admin-actor") or "system"
     await write_audit_log(
@@ -388,7 +394,7 @@ async def admin_restore_backup(
     request: Request,
     db: AsyncSession = Depends(get_db),
 ) -> BackupActionResponse:
-    items = _load_index()
+    items = _load_index(prune=True)
     match = next((item for item in items if item["id"] == backup_id), None)
     if not match:
         raise HTTPException(status_code=404, detail="Backup nicht gefunden")

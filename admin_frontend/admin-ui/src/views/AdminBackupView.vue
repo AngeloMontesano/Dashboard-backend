@@ -1,6 +1,52 @@
 <template>
   <UiPage>
     <UiSection title="Backup" subtitle="Tenant-spezifische Exporte & Restore (Schema-Introspektion + tenant_id-Pflicht)">
+      <div class="filter-card two-column">
+        <div class="stack">
+          <label class="field-label" for="backup-tenant-search">Tenant suchen</label>
+          <input
+            id="backup-tenant-search"
+            class="input"
+            v-model.trim="tenantSearch"
+            placeholder="Name oder Slug eingeben (min. 2 Zeichen)"
+            aria-label="Tenant suchen"
+          />
+          <div class="hint">Live-Suche: ab dem 2. Buchstaben wird gefiltert.</div>
+
+          <div class="list-panel">
+            <button
+              v-for="t in filteredTenants"
+              :key="t.id"
+              class="list-panel__item"
+              :class="{ 'is-active': selectedTenant?.id === t.id }"
+              type="button"
+              @click="selectTenant(t)"
+            >
+              <div class="stack-sm">
+                <div class="label">{{ t.name }}</div>
+                <span class="muted mono">{{ t.slug }}</span>
+              </div>
+              <span class="badge" :class="t.is_active ? 'tone-success' : 'tone-danger'">
+                {{ t.is_active ? "aktiv" : "deaktiviert" }}
+              </span>
+            </button>
+            <div v-if="busy.tenants" class="muted text-small">Tenants werden geladen...</div>
+            <div v-else-if="!filteredTenants.length" class="muted text-small">
+              {{ tenantSearch.trim().length < 2 ? "Mindestens 2 Zeichen eingeben." : "Keine Tenants gefunden." }}
+            </div>
+          </div>
+        </div>
+
+        <div class="stack">
+          <div class="field-label">Ausgewählter Tenant</div>
+          <div class="mono text-small">{{ selectedTenantLabel }}</div>
+          <div class="mono text-small muted">{{ selectedTenantSlug }}</div>
+          <button class="btnGhost small" type="button" :disabled="!tenant.id" @click="clearTenant">
+            Auswahl löschen
+          </button>
+        </div>
+      </div>
+
       <BackupContextCard :tenant="tenant" />
 
       <BackupMonitoringOverview :overview="overviewItems" />
@@ -50,6 +96,7 @@ import {
   adminCreateTenantBackup,
   adminDownloadBackup,
   adminDownloadBackupFile,
+  adminListTenants,
   adminListBackupJobs,
   adminListBackups,
   adminRestoreBackup,
@@ -57,7 +104,7 @@ import {
 } from "../api/admin";
 import { formatLocal } from "../components/audit/format";
 import { useToast } from "../composables/useToast";
-import type { AuditOut } from "../types";
+import type { AuditOut, TenantOut } from "../types";
 
 type BackupFile = {
   name: string;
@@ -89,19 +136,38 @@ const props = defineProps<{
   actor: string;
 }>();
 
+const emit = defineEmits<{
+  (e: "tenantSelected", payload: { id: string; name: string; slug: string } | null): void;
+}>();
+
 const { toast } = useToast();
 
 const backups = ref<BackupEntry[]>([]);
 const jobs = ref<BackupJobEntry[]>([]);
 const history = ref<AuditOut[]>([]);
+const tenants = ref<TenantOut[]>([]);
+const tenantSearch = ref("");
 const selectedId = ref("");
 const restoreStatus = ref("");
 const busy = reactive({
   loading: false,
   action: false,
+  tenants: false,
 });
 
 const selectedBackup = computed(() => backups.value.find((entry) => entry.id === selectedId.value) || null);
+const selectedTenant = computed(() => tenants.value.find((tenant) => tenant.id === props.tenant?.id) || null);
+const selectedTenantLabel = computed(() => selectedTenant.value?.name || props.tenant?.name || "Kein Tenant gewählt");
+const selectedTenantSlug = computed(() => {
+  const slug = selectedTenant.value?.slug || props.tenant?.slug;
+  return slug ? `Slug: ${slug}` : "—";
+});
+
+const filteredTenants = computed(() => {
+  const q = tenantSearch.value.trim().toLowerCase();
+  if (q.length < 2) return tenants.value;
+  return tenants.value.filter((tenant) => tenant.name.toLowerCase().includes(q) || tenant.slug.toLowerCase().includes(q));
+});
 
 function mapBackupEntry(entry: {
   id: string;
@@ -165,9 +231,30 @@ async function loadData() {
   }
 }
 
+async function loadTenants() {
+  if (!props.adminKey) return;
+  busy.tenants = true;
+  try {
+    tenants.value = await adminListTenants(props.adminKey, props.actor || undefined, { limit: 200, offset: 0 });
+  } catch (error) {
+    console.error("[backup] load tenants failed", error);
+    toast("Tenants konnten nicht geladen werden.", "error");
+  } finally {
+    busy.tenants = false;
+  }
+}
+
 function selectBackup(id: string) {
   selectedId.value = id;
   restoreStatus.value = "";
+}
+
+function selectTenant(tenant: TenantOut) {
+  emit("tenantSelected", { id: tenant.id, name: tenant.name, slug: tenant.slug });
+}
+
+function clearTenant() {
+  emit("tenantSelected", null);
 }
 
 async function createTenantBackup() {
@@ -338,11 +425,19 @@ const jobsTable = computed(() =>
 );
 
 onMounted(loadData);
+onMounted(loadTenants);
 
 watch(
   () => [props.adminKey, props.tenant?.id],
   () => {
     loadData();
+  }
+);
+
+watch(
+  () => props.adminKey,
+  () => {
+    loadTenants();
   }
 );
 </script>

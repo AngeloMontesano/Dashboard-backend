@@ -238,6 +238,7 @@
               :tenant="tenantContext"
               :adminKey="ui.adminKey"
               :actor="ui.actor"
+              @tenantSelected="setTenantContext"
             />
 
           <!-- SECTION: Settings -->

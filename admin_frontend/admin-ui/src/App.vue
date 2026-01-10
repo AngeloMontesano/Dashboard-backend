@@ -233,66 +233,12 @@
             />
 
           <!-- SECTION: Backup -->
-            <AdminBackupView v-else-if="ui.section === 'backup'" :tenant="tenantContext" />
-
-          <!-- SECTION: Backup -->
-            <AdminBackupView v-else-if="ui.section === 'backup'" :tenant="tenantContext" />
-
-          <!-- SECTION: Backup -->
-            <AdminBackupView v-else-if="ui.section === 'backup'" :tenant="tenantContext" />
-
-          <!-- SECTION: Backup -->
-            <AdminBackupView v-else-if="ui.section === 'backup'" :tenant="tenantContext" />
-
-          <!-- SECTION: Backup -->
-            <AdminBackupView v-else-if="ui.section === 'backup'" :tenant="tenantContext" />
-
-          <!-- SECTION: Backup -->
             <AdminBackupView
               v-else-if="ui.section === 'backup'"
               :tenant="tenantContext"
               :adminKey="ui.adminKey"
               :actor="ui.actor"
-            />
-
-          <!-- SECTION: Backup -->
-            <AdminBackupView
-              v-else-if="ui.section === 'backup'"
-              :tenant="tenantContext"
-              :adminKey="ui.adminKey"
-              :actor="ui.actor"
-            />
-
-          <!-- SECTION: Backup -->
-            <AdminBackupView
-              v-else-if="ui.section === 'backup'"
-              :tenant="tenantContext"
-              :adminKey="ui.adminKey"
-              :actor="ui.actor"
-            />
-
-          <!-- SECTION: Backup -->
-            <AdminBackupView
-              v-else-if="ui.section === 'backup'"
-              :tenant="tenantContext"
-              :adminKey="ui.adminKey"
-              :actor="ui.actor"
-            />
-
-          <!-- SECTION: Backup -->
-            <AdminBackupView
-              v-else-if="ui.section === 'backup'"
-              :tenant="tenantContext"
-              :adminKey="ui.adminKey"
-              :actor="ui.actor"
-            />
-
-          <!-- SECTION: Backup -->
-            <AdminBackupView
-              v-else-if="ui.section === 'backup'"
-              :tenant="tenantContext"
-              :adminKey="ui.adminKey"
-              :actor="ui.actor"
+              @tenantSelected="setTenantContext"
             />
 
           <!-- SECTION: Settings -->

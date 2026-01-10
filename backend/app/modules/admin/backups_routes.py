@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from datetime import date, datetime, timedelta, timezone
-import hashlib
+from datetime import datetime, timedelta, timezone
 import json
+import shutil
 import uuid
 from pathlib import Path
 from zipfile import ZipFile
@@ -17,10 +17,8 @@ from sqlalchemy.sql.schema import Table
 from app.core.config import settings
 from app.core.db import get_db
 from app.models.audit_log import AdminAuditLog
-from app.models.base import Base
 from app.models.tenant import Tenant
 from app.modules.admin.audit import write_audit_log
-from app.modules.admin.backup_storage import LocalBackupStorage
 from app.modules.admin.schemas import AuditOut
 
 
@@ -97,40 +95,6 @@ def _format_size(size_bytes: int) -> str:
     return f"{size_bytes / (1024 * 1024):.1f} MB"
 
 
-def _ensure_models_imported() -> None:
-    import app.models.audit_log  # noqa: F401
-    import app.models.category  # noqa: F401
-    import app.models.item  # noqa: F401
-    import app.models.order  # noqa: F401
-    import app.models.membership  # noqa: F401
-    import app.models.movement  # noqa: F401
-    import app.models.tenant_setting  # noqa: F401
-    import app.models.refresh_session  # noqa: F401
-    import app.models.tenant  # noqa: F401
-    import app.models.user  # noqa: F401
-
-
-def _tenant_tables() -> list[Table]:
-    _ensure_models_imported()
-    tables = []
-    for table in Base.metadata.sorted_tables:
-        if "tenant_id" in table.c:
-            tables.append(table)
-    return tables
-
-
-def _serialize_value(value: object) -> object:
-    if isinstance(value, (datetime, date)):
-        return value.isoformat()
-    if isinstance(value, uuid.UUID):
-        return str(value)
-    return value
-
-
-def _serialize_row(row: dict) -> dict:
-    return {key: _serialize_value(value) for key, value in row.items()}
-
-
 def _load_index(prune: bool = False) -> list[dict]:
     if not _index_path().exists():
         return []
@@ -183,7 +147,10 @@ def _parse_created_at(value: str | None) -> datetime | None:
 
 
 def _delete_backup_files(backup_id: str) -> None:
-    _storage().delete_backup(backup_id)
+    folder = _backup_dir(backup_id).resolve()
+    root = _backup_root().resolve()
+    if folder.exists() and folder.is_dir() and folder.parent == root:
+        shutil.rmtree(folder)
 
 
 def _apply_retention(items: list[dict]) -> list[dict]:
@@ -251,92 +218,6 @@ def _build_file_manifest(files: dict[str, dict]) -> dict[str, dict]:
     return manifest
 
 
-def _table_filename(table: Table) -> str:
-    return f"{table.name}.json"
-
-
-async def _export_tenant_tables(
-    db: AsyncSession,
-    tenant_id: uuid.UUID,
-) -> tuple[dict[str, dict], dict[str, int]]:
-    files: dict[str, dict] = {}
-    counts: dict[str, int] = {}
-    for table in _tenant_tables():
-        stmt = select(table).where(table.c.tenant_id == tenant_id)
-        result = await db.execute(stmt)
-        rows = [_serialize_row(dict(row)) for row in result.mappings().all()]
-        files[_table_filename(table)] = {"table": table.name, "rows": rows}
-        counts[table.name] = len(rows)
-    return files, counts
-
-
-def _coerce_row_types(table: Table, row: dict) -> dict:
-    coerced = {}
-    for column in table.c:
-        value = row.get(column.name)
-        if value is None:
-            coerced[column.name] = None
-            continue
-        python_type = None
-        try:
-            python_type = column.type.python_type
-        except NotImplementedError:
-            python_type = None
-        if python_type is uuid.UUID and isinstance(value, str):
-            coerced[column.name] = uuid.UUID(value)
-        elif python_type is datetime and isinstance(value, str):
-            coerced[column.name] = datetime.fromisoformat(value)
-        elif python_type is date and isinstance(value, str):
-            coerced[column.name] = date.fromisoformat(value)
-        else:
-            coerced[column.name] = value
-    return coerced
-
-
-def _upsert_stmt(table: Table, rows: list[dict], dialect_name: str):
-    pk_cols = [col.name for col in table.primary_key.columns]
-    if dialect_name == "postgresql":
-        from sqlalchemy.dialects.postgresql import insert as dialect_insert
-    elif dialect_name == "sqlite":
-        from sqlalchemy.dialects.sqlite import insert as dialect_insert
-    else:
-        from sqlalchemy import insert as dialect_insert
-    stmt = dialect_insert(table).values(rows)
-    if not pk_cols or dialect_name not in {"postgresql", "sqlite"}:
-        return stmt
-    update_cols = {col.name: stmt.excluded[col.name] for col in table.c if col.name not in pk_cols}
-    return stmt.on_conflict_do_update(index_elements=pk_cols, set_=update_cols)
-
-
-async def _restore_tenant_tables(
-    db: AsyncSession,
-    backup_id: str,
-    tenant_id: uuid.UUID,
-    expected_counts: dict[str, int] | None = None,
-) -> None:
-    dialect_name = db.get_bind().dialect.name
-    for table in _tenant_tables():
-        table_file = _backup_dir(backup_id) / _table_filename(table)
-        if not table_file.exists():
-            raise HTTPException(status_code=400, detail=f"Backup-Datei fehlt: {table_file.name}")
-        payload = _read_json(table_file)
-        rows = payload.get("rows", [])
-        if expected_counts is not None:
-            expected = expected_counts.get(table.name)
-            if expected is not None and expected != len(rows):
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"Backup-Daten inkonsistent für {table.name}: {len(rows)} != {expected}",
-                )
-        if not rows:
-            continue
-        coerced_rows = [_coerce_row_types(table, row) for row in rows]
-        for row in coerced_rows:
-            row["tenant_id"] = tenant_id
-        stmt = _upsert_stmt(table, coerced_rows, dialect_name)
-        await db.execute(stmt)
-
-
 def _write_backup_zip(backup_id: str) -> Path:
     folder = _backup_dir(backup_id)
     zip_path = folder / f"{backup_id}.zip"
@@ -361,7 +242,7 @@ async def admin_list_backups(
     _ensure_storage()
     if scope and scope not in {"tenant", "all"}:
         raise HTTPException(status_code=400, detail="Ungültiger scope")
-    raw_items = _load_index(prune=True)
+    raw_items = _load_index()
     if tenant_id:
         raw_items = [item for item in raw_items if item.get("tenant_id") == tenant_id]
     if scope:
@@ -464,19 +345,13 @@ async def admin_create_tenant_backup(
         "restored_at": None,
         "files": [],
     }
-    tenant_payload = {"id": str(tenant.id), "slug": tenant.slug, "name": tenant.name}
-    table_files, table_counts = await _export_tenant_tables(db, tenant.id)
-    files = {"tenant.json": tenant_payload, **table_files}
-    files["meta.json"] = {
-        "backup_id": backup_id,
-        "created_at": created_at,
-        "scope": "tenant",
-        "tables": list(table_counts.keys()),
-        "table_counts": table_counts,
-        "files": _build_file_manifest(files),
-        "checksum": _checksum_payload(tenant_payload),
-    }
-    _write_backup_files(backup_id, files)
+    _write_backup_files(
+        backup_id,
+        {
+            "meta.json": {"backup_id": backup_id, "created_at": created_at, "scope": "tenant"},
+            "tenant.json": {"id": str(tenant.id), "slug": tenant.slug, "name": tenant.name},
+        },
+    )
     items = [payload, *_load_index(prune=True)]
     _save_index(items)
     actor = request.headers.get("x-admin-actor") or "system"
@@ -510,23 +385,18 @@ async def admin_create_all_tenants_backup(
         "restored_at": None,
         "files": [],
     }
-    tenants_payload = {
-        "count": len(backups),
-        "items": [
-            {"id": str(t.id), "slug": t.slug, "name": t.name} for t in backups
-        ],
-    }
-    files = {
-        "tenants.json": tenants_payload,
-    }
-    files["meta.json"] = {
-        "backup_id": backup_id,
-        "created_at": created_at,
-        "scope": "all",
-        "files": _build_file_manifest(files),
-        "checksum": _checksum_payload(tenants_payload),
-    }
-    _write_backup_files(backup_id, files)
+    _write_backup_files(
+        backup_id,
+        {
+            "meta.json": {"backup_id": backup_id, "created_at": created_at, "scope": "all"},
+            "tenants.json": {
+                "count": len(backups),
+                "items": [
+                    {"id": str(t.id), "slug": t.slug, "name": t.name} for t in backups
+                ],
+            },
+        },
+    )
     items = [payload, *_load_index(prune=True)]
     _save_index(items)
     actor = request.headers.get("x-admin-actor") or "system"

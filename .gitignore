@@ -16,3 +16,6 @@ z_delete/
 docker-compose.yml
 .aider*
 /dokumentation
+.aider.chat.*
+.aider.history.*
+.aider.session.*

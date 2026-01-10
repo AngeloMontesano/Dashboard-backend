@@ -278,7 +278,6 @@ async def admin_restore_backup(
     request: Request,
     db: AsyncSession = Depends(get_db),
 ) -> BackupActionResponse:
-async def admin_restore_backup(backup_id: str) -> BackupActionResponse:
     items = _load_index()
     match = next((item for item in items if item["id"] == backup_id), None)
     if not match:

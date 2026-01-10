@@ -20,7 +20,7 @@ from app.core.errors import register_exception_handlers
 from app.core.logging import configure_logging
 from app.modules.admin.routes import router as admin_router
 from app.modules.admin.login_routes import router as admin_login_router
-from app.modules.admin.backups_routes import start_backup_scheduler, stop_backup_scheduler
+from app.modules.admin.backup_scheduler import start_backup_scheduler, stop_backup_scheduler
 from app.modules.inventory.routes import router as inventory_router
 from app.modules.auth.routes import router as auth_router
 from app.modules.public.routes import router as public_router

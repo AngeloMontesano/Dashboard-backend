@@ -11,6 +11,8 @@ class BackupStorage(Protocol):
 
     def index_path(self) -> Path: ...
 
+    def jobs_path(self) -> Path: ...
+
     def backup_dir(self, backup_id: str) -> Path: ...
 
     def ensure_root(self) -> None: ...
@@ -28,6 +30,9 @@ class LocalBackupStorage:
     def index_path(self) -> Path:
         return self.root_path / "index.json"
 
+    def jobs_path(self) -> Path:
+        return self.root_path / "jobs.json"
+
     def backup_dir(self, backup_id: str) -> Path:
         return self.root_path / backup_id
 
@@ -39,3 +44,13 @@ class LocalBackupStorage:
         root = self.root_path.resolve()
         if folder.exists() and folder.is_dir() and folder.parent == root:
             shutil.rmtree(folder)
+
+
+class UnsupportedBackupStorageError(ValueError):
+    pass
+
+
+def get_backup_storage(driver: str, root_path: Path) -> LocalBackupStorage:
+    if driver == "local":
+        return LocalBackupStorage(root_path=root_path)
+    raise UnsupportedBackupStorageError(f"Unbekannter Backup-Storage-Treiber: {driver}")

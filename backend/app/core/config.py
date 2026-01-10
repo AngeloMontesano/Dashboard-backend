@@ -40,24 +40,11 @@ class Settings(BaseSettings):
     BASE_DOMAIN: str = Field(..., description="Base domain für Tenant Subdomains, z.B. test.myitnetwork.de")
     BASE_ADMIN_DOMAIN: str = Field(..., description="Base domain für Admin UI Subdomains")
     BACKUP_STORAGE_PATH: str = Field("storage/backups", description="Pfad für Backup-Dateien")
-    BACKUP_STORAGE_DRIVER: str = Field(
-        "local",
-        description="Storage-Treiber für Backups (z.B. local; andere Treiber optional)",
-    )
     BACKUP_RETENTION_MAX_DAYS: int | None = Field(
-        None, description="Maximales Backup-Alter in Tagen (Retention)", ge=0
+        None, description="Maximales Backup-Alter in Tagen (Retention)"
     )
     BACKUP_RETENTION_MAX_COUNT: int | None = Field(
-        None, description="Maximale Anzahl von Backups (Retention)", ge=0
-    )
-    BACKUP_SCHEDULE_ENABLED: bool = Field(
-        False,
-        description="Automatische Batch-Backups für alle Tenants aktivieren",
-    )
-    BACKUP_SCHEDULE_INTERVAL_MINUTES: int = Field(
-        1440,
-        description="Intervall für automatische Batch-Backups in Minuten",
-        ge=1,
+        None, description="Maximale Anzahl von Backups (Retention)"
     )
 
 

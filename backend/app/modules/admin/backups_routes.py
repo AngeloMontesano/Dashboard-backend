@@ -6,7 +6,7 @@ import uuid
 from pathlib import Path
 from zipfile import ZipFile
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from sqlalchemy import select
@@ -14,8 +14,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.db import get_db
+from app.models.audit_log import AdminAuditLog
 from app.models.tenant import Tenant
 from app.modules.admin.audit import write_audit_log
+from app.modules.admin.schemas import AuditOut
 
 
 router = APIRouter(prefix="/backups", tags=["admin-backups"])
@@ -141,10 +143,56 @@ async def _get_tenant_or_404(db: AsyncSession, tenant_id: str) -> Tenant:
 
 
 @router.get("", response_model=BackupListResponse)
-async def admin_list_backups() -> BackupListResponse:
+async def admin_list_backups(
+    tenant_id: str | None = Query(default=None),
+    scope: str | None = Query(default=None),
+) -> BackupListResponse:
     _ensure_storage()
-    items = [_build_entry(item) for item in _load_index()]
+    if scope and scope not in {"tenant", "all"}:
+        raise HTTPException(status_code=400, detail="Ungültiger scope")
+    raw_items = _load_index()
+    if tenant_id:
+        raw_items = [item for item in raw_items if item.get("tenant_id") == tenant_id]
+    if scope:
+        raw_items = [item for item in raw_items if item.get("scope") == scope]
+    items = [_build_entry(item) for item in raw_items]
     return BackupListResponse(items=items)
+
+
+@router.get("/history", response_model=list[AuditOut])
+async def admin_backup_history(
+    db: AsyncSession = Depends(get_db),
+    action: str | None = Query(default=None),
+    created_from: datetime | None = Query(default=None),
+    created_to: datetime | None = Query(default=None),
+    limit: int = Query(default=100, ge=1, le=500),
+    offset: int = Query(default=0, ge=0),
+) -> list[AuditOut]:
+    """
+    Liefert Audit-Log Einträge für Backups.
+    """
+    stmt = select(AdminAuditLog).where(AdminAuditLog.entity_type == "backup")
+    if action is not None:
+        stmt = stmt.where(AdminAuditLog.action == action)
+    if created_from is not None:
+        stmt = stmt.where(AdminAuditLog.created_at >= created_from)
+    if created_to is not None:
+        stmt = stmt.where(AdminAuditLog.created_at <= created_to)
+    stmt = stmt.order_by(AdminAuditLog.created_at.desc()).limit(limit).offset(offset)
+    result = await db.execute(stmt)
+    entries = list(result.scalars().all())
+    return [
+        AuditOut(
+            id=str(e.id),
+            actor=e.actor,
+            action=e.action,
+            entity_type=e.entity_type,
+            entity_id=e.entity_id,
+            payload=e.payload,
+            created_at=e.created_at,
+        )
+        for e in entries
+    ]
 
 
 @router.get("/{backup_id}", response_model=BackupEntry)

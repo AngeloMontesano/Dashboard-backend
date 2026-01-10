@@ -114,8 +114,23 @@ type BackupEntry = {
   files: { name: string; sizeBytes: number; sizeLabel: string }[];
 };
 
+export type BackupJobEntry = {
+  id: string;
+  status: string;
+  created_at: string;
+  trigger?: string | null;
+  scheduled_at?: string | null;
+  started_at?: string | null;
+  finished_at?: string | null;
+  total: number;
+  processed: number;
+  backup_ids: string[];
+  error?: string | null;
+};
+
 type BackupListResponse = { items: BackupApiEntry[] };
 type BackupActionResponse = { backup: BackupApiEntry; message: string };
+type BackupJobResponse = { job: BackupJobEntry; message: string };
 type AdminGlobalCustomerSettingsResponse = GlobalCustomerSettingsResponse;
 type AdminDemoInventoryImportResponse = DemoInventoryImportResponse;
 
@@ -257,8 +272,12 @@ export async function adminUpdateEmailSettings(adminKey: string, actor: string |
 }
 
 /* Backups */
-export async function adminListBackups(adminKey: string, actor?: string) {
-  const res = await api.get<BackupListResponse>("/admin/backups", withAdmin(adminKey, actor));
+export async function adminListBackups(
+  adminKey: string,
+  actor?: string,
+  params?: { tenant_id?: string; scope?: "tenant" | "all" }
+) {
+  const res = await api.get<BackupListResponse>("/admin/backups", { ...withAdmin(adminKey, actor), params });
   return res.data.items;
 }
 
@@ -268,8 +287,8 @@ export async function adminCreateTenantBackup(adminKey: string, actor: string | 
 }
 
 export async function adminCreateAllBackups(adminKey: string, actor?: string) {
-  const res = await api.post<BackupActionResponse>("/admin/backups/all", null, withAdmin(adminKey, actor));
-  return res.data.backup;
+  const res = await api.post<BackupJobResponse>("/admin/backups/all", null, withAdmin(adminKey, actor));
+  return res.data.job;
 }
 
 export async function adminRestoreBackup(adminKey: string, actor: string | undefined, backupId: string) {
@@ -296,6 +315,16 @@ export async function adminDownloadBackupFile(
     responseType: "blob",
   });
   return res.data as Blob;
+}
+
+export async function adminListBackupJobs(adminKey: string, actor?: string) {
+  const res = await api.get<BackupJobEntry[]>("/admin/backups/jobs", withAdmin(adminKey, actor));
+  return res.data;
+}
+
+export async function adminBackupHistory(adminKey: string, actor?: string, params?: { limit?: number; offset?: number }) {
+  const res = await api.get<AuditOut[]>("/admin/backups/history", { ...withAdmin(adminKey, actor), params });
+  return res.data;
 }
 
 /* SMTP */

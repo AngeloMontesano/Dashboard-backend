@@ -322,11 +322,7 @@ export async function adminListBackupJobs(adminKey: string, actor?: string) {
   return res.data;
 }
 
-export async function adminBackupHistory(
-  adminKey: string,
-  actor?: string,
-  params?: { action?: string; created_from?: string; created_to?: string; limit?: number; offset?: number }
-) {
+export async function adminBackupHistory(adminKey: string, actor?: string, params?: { limit?: number; offset?: number }) {
   const res = await api.get<AuditOut[]>("/admin/backups/history", { ...withAdmin(adminKey, actor), params });
   return res.data;
 }

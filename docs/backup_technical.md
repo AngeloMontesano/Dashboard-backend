@@ -5,17 +5,11 @@ Das Backup-System stellt Admin-Endpunkte zur Verfügung, um tenant-spezifische s
 
 ## Architektur & Speicherung
 - **Storage-Root:** konfigurierbar über `BACKUP_STORAGE_PATH` (Default: `storage/backups`).
-- **Storage-Schnittstelle:** Die Implementierung nutzt aktuell ein lokales Dateisystem. Eine Schnittstelle ist vorbereitet, sodass alternative Backends als **mögliche Lösung** ergänzt werden können.
-- **Retention (optional):**
-  - `BACKUP_RETENTION_MAX_DAYS` (>= 0) löscht Backups, die älter als X Tage sind.
-  - `BACKUP_RETENTION_MAX_COUNT` (>= 0) begrenzt die maximale Anzahl gespeicherter Backups.
-  - Retention wird beim Lesen/Schreiben des Backup-Index angewendet.
 - **Index:** `index.json` im Storage-Root, enthält `items`-Liste aller Backups.
 - **Backup-Verzeichnis:** `<backup_id>/` im Storage-Root.
 - **Dateien je Backup:**
   - `meta.json` (Backup-Metadaten)
   - `tenant.json` oder `tenants.json` (aktuell: nur Meta-Informationen)
-  - `meta.json` enthält Checksums/Größen der exportierten JSON-Dateien zur Integritätsprüfung.
   - ZIP-Download wird on-demand aus den JSON-Dateien erzeugt.
 
 ## API-Endpunkte (Admin)
@@ -25,9 +19,6 @@ Alle Endpunkte laufen unter `/admin/backups`.
 - `GET /admin/backups`
   - Query: `tenant_id`, `scope` (`tenant` | `all`)
   - Liefert `BackupListResponse`.
-- `GET /admin/backups/history`
-  - Query: `action`, `created_from`, `created_to`, `limit`, `offset`
-  - Liefert Audit-Log-Einträge für Backups.
 - `GET /admin/backups/{backup_id}`
   - Liefert `BackupEntry`.
 
@@ -58,12 +49,14 @@ Bei `backup.create` und `backup.restore` werden Audit-Log-Einträge geschrieben.
 - **Nur Metadaten-Export:** Keine echten Datenexporte aus tenant-gebundenen Tabellen.
 - **Restore:** Noch keine Datenimporte (Upsert/Idempotenz) – nur Metadaten-Update.
 - **Kein Job-Queue/Scheduler:** `POST /admin/backups/all` läuft synchron.
-- **Storage-Interface vorhanden:** Aktuell nur lokale Implementierung angebunden.
+- **Keine Retention-Policy:** Aufbewahrung muss manuell erfolgen.
+- **Kein Storage-Provider-Interface:** Nur lokales Dateisystem.
 - **Keine Checksums/Counts-Validierung:** Metadaten enthalten noch keine verifizierbaren Integritätsdaten.
 
 ## Empfehlungen für nächste Ausbaustufe
 1. **DB-Introspektion** für Tabellen mit `tenant_id`.
 2. **Export/Import-Pipeline** (FK-Reihenfolge, Upsert/Idempotenz).
 3. **Job-Queue** für Batch-Backups + Status-Endpunkte.
-4. **Storage-Abstraktion** als mögliche Lösung (z. B. Provider-Interface für alternative Backends).
-5. **Checksums/Counts** in Metadaten + Restore-Validierung.
+4. **Retention-Policy** (z. B. max. X Backups, max. Y Tage).
+5. **Storage-Abstraktion** (Local, S3, MinIO).
+6. **Checksums/Counts** in Metadaten + Restore-Validierung.

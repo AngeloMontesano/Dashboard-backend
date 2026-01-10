@@ -7,7 +7,6 @@ Mit dem Admin-Backup-Bereich können Administratoren Backups pro Tenant oder fü
 - Admin-Zugriff auf das System.
 - Das Backend ist erreichbar.
 - `BACKUP_STORAGE_PATH` ist korrekt gesetzt (Server-seitig).
-- Optional: Retention-Parameter (`BACKUP_RETENTION_MAX_DAYS`, `BACKUP_RETENTION_MAX_COUNT`, jeweils >= 0) sind konfiguriert.
 
 ## Funktionen im Überblick
 
@@ -15,21 +14,16 @@ Mit dem Admin-Backup-Bereich können Administratoren Backups pro Tenant oder fü
 - Anzeige aller vorhandenen Backups.
 - Filter nach **Tenant** und **Scope** (Tenant/Alle).
 - Anzeige von Erstellzeit, Status, Dateien.
-- Metadaten enthalten Checksums/Größen zur Integritätsprüfung (technisch).
 
-### 2) Historie / Audit
-- Zeigt Audit-Log-Einträge für Backup-Erstellung und Restore.
-- Ermöglicht Nachvollziehbarkeit von Änderungen.
-
-### 3) Backup erstellen
+### 2) Backup erstellen
 - **Tenant-Backup**: erstellt ein Backup für einen ausgewählten Tenant.
 - **Backup für alle Tenants**: erstellt ein globales Backup (derzeit nur Metadaten pro Tenant).
 
-### 4) Download
+### 3) Download
 - **ZIP-Download**: lädt alle JSON-Dateien des Backups als ZIP.
 - **Einzeldatei-Download**: lädt eine einzelne JSON-Datei aus dem Backup.
 
-### 5) Restore
+### 4) Restore
 - Startet die Wiederherstellung für ein ausgewähltes Backup.
 - Es wird ein Audit-Log-Eintrag erstellt.
 
@@ -40,7 +34,6 @@ Mit dem Admin-Backup-Bereich können Administratoren Backups pro Tenant oder fü
 ## Best Practices
 - Verwende den ZIP-Download als Sicherungskopie.
 - Prüfe die Backup-Liste regelmäßig.
-- Beachte mögliche automatische Aufräumregeln (Retention).
 - Nutze Restore nur, wenn die Auswirkungen bekannt sind (aktuell Metadaten-Statuswechsel).
 
 ## Fehlersuche
@@ -51,4 +44,5 @@ Mit dem Admin-Backup-Bereich können Administratoren Backups pro Tenant oder fü
 ## Was als Nächstes kommt
 - Echte Datenexporte/Importe.
 - Job-Queue für Backups aller Tenants.
-- Erweiterbare Storage-Schnittstelle als mögliche Lösung (alternative Backends).
+- Retention-Regeln (automatisches Löschen alter Backups).
+- S3/MinIO-Unterstützung.

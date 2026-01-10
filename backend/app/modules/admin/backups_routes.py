@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
-import hashlib
 import json
+import shutil
 import uuid
 from pathlib import Path
 from zipfile import ZipFile
@@ -18,7 +18,6 @@ from app.core.db import get_db
 from app.models.audit_log import AdminAuditLog
 from app.models.tenant import Tenant
 from app.modules.admin.audit import write_audit_log
-from app.modules.admin.backup_storage import LocalBackupStorage
 from app.modules.admin.schemas import AuditOut
 
 
@@ -147,7 +146,10 @@ def _parse_created_at(value: str | None) -> datetime | None:
 
 
 def _delete_backup_files(backup_id: str) -> None:
-    _storage().delete_backup(backup_id)
+    folder = _backup_dir(backup_id).resolve()
+    root = _backup_root().resolve()
+    if folder.exists() and folder.is_dir() and folder.parent == root:
+        shutil.rmtree(folder)
 
 
 def _apply_retention(items: list[dict]) -> list[dict]:
@@ -239,7 +241,7 @@ async def admin_list_backups(
     _ensure_storage()
     if scope and scope not in {"tenant", "all"}:
         raise HTTPException(status_code=400, detail="Ungültiger scope")
-    raw_items = _load_index(prune=True)
+    raw_items = _load_index()
     if tenant_id:
         raw_items = [item for item in raw_items if item.get("tenant_id") == tenant_id]
     if scope:
@@ -342,18 +344,13 @@ async def admin_create_tenant_backup(
         "restored_at": None,
         "files": [],
     }
-    tenant_payload = {"id": str(tenant.id), "slug": tenant.slug, "name": tenant.name}
-    files = {
-        "tenant.json": tenant_payload,
-    }
-    files["meta.json"] = {
-        "backup_id": backup_id,
-        "created_at": created_at,
-        "scope": "tenant",
-        "files": _build_file_manifest(files),
-        "checksum": _checksum_payload(tenant_payload),
-    }
-    _write_backup_files(backup_id, files)
+    _write_backup_files(
+        backup_id,
+        {
+            "meta.json": {"backup_id": backup_id, "created_at": created_at, "scope": "tenant"},
+            "tenant.json": {"id": str(tenant.id), "slug": tenant.slug, "name": tenant.name},
+        },
+    )
     items = [payload, *_load_index(prune=True)]
     _save_index(items)
     actor = request.headers.get("x-admin-actor") or "system"
@@ -387,23 +384,18 @@ async def admin_create_all_tenants_backup(
         "restored_at": None,
         "files": [],
     }
-    tenants_payload = {
-        "count": len(backups),
-        "items": [
-            {"id": str(t.id), "slug": t.slug, "name": t.name} for t in backups
-        ],
-    }
-    files = {
-        "tenants.json": tenants_payload,
-    }
-    files["meta.json"] = {
-        "backup_id": backup_id,
-        "created_at": created_at,
-        "scope": "all",
-        "files": _build_file_manifest(files),
-        "checksum": _checksum_payload(tenants_payload),
-    }
-    _write_backup_files(backup_id, files)
+    _write_backup_files(
+        backup_id,
+        {
+            "meta.json": {"backup_id": backup_id, "created_at": created_at, "scope": "all"},
+            "tenants.json": {
+                "count": len(backups),
+                "items": [
+                    {"id": str(t.id), "slug": t.slug, "name": t.name} for t in backups
+                ],
+            },
+        },
+    )
     items = [payload, *_load_index(prune=True)]
     _save_index(items)
     actor = request.headers.get("x-admin-actor") or "system"

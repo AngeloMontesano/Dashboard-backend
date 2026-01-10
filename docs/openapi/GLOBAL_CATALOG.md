@@ -85,9 +85,9 @@ Alle Pfade unter `/admin/global`, Header: `X-Admin-Key`, optional `X-Admin-Actor
   - Status: 200, 404 wenn Industry fehlt
 
 ## OpenAPI-Schema (Vorschlag)
-- Schemas: `GlobalIndustry`, `GlobalCategory`, `GlobalType`, `GlobalItem`, `GlobalItemList`, `GlobalIndustryItemMapping`, `PagedMeta {total, limit, offset}`.
-- Fehler-Codes: `industry_not_found`, `category_not_found`, `type_not_found`, `global_item_not_found`, `mapping_in_use`, `industry_in_use`, `category_in_use`, `item_in_use`, `duplicate_name`, `duplicate_sku`, `forbidden_system_record`.
-- Aufnahme in `docs/openapi/openapi.json` in Folgeschritt (nach Freigabe).
+- Schemas: `GlobalIndustry`, `GlobalCategory`, `GlobalType`, `GlobalItem`, `GlobalItemList`, `GlobalIndustryItemMapping`.
+- Fehler-Codes: `industry_not_found`, `category_not_found`, `type_not_found`, `global_item_not_found`, `mapping_in_use`, `duplicate_name`, `duplicate_sku`.
+- Aufnahme in `https://api.test.myitnetwork.de/openapi.json` in Folgeschritt (nach Freigabe).
 
 ## Defaults & Limits
 - Paging-Defaults: `limit=50`, `offset=0`; max `limit=200`.

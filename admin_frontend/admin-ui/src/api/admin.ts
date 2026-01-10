@@ -90,6 +90,32 @@ type AdminSystemActionResponseRaw = AdminSystemActionResponse;
 type AdminSystemEmailSettingsResponse = SystemEmailSettings;
 type AdminSmtpSettingsResponse = SmtpSettingsOut;
 type AdminSmtpTestResponse = SmtpTestResponse;
+type BackupApiEntry = {
+  id: string;
+  scope: string;
+  tenant_id: string | null;
+  tenant_slug: string | null;
+  created_at: string;
+  status: string;
+  restored_at?: string | null;
+  files: { name: string; size_bytes: number; size_label: string }[];
+};
+
+type BackupEntry = {
+  id: string;
+  scope: string;
+  tenantId: string | null;
+  tenantSlug: string | null;
+  createdAt: string;
+  restoredAt?: string | null;
+  status: string;
+  statusLabel: string;
+  name: string;
+  files: { name: string; sizeBytes: number; sizeLabel: string }[];
+};
+
+type BackupListResponse = { items: BackupApiEntry[] };
+type BackupActionResponse = { backup: BackupApiEntry; message: string };
 type AdminGlobalCustomerSettingsResponse = GlobalCustomerSettingsResponse;
 type AdminDemoInventoryImportResponse = DemoInventoryImportResponse;
 

@@ -15,19 +15,15 @@ Mit dem Admin-Backup-Bereich können Administratoren Backups pro Tenant oder fü
 - Filter nach **Tenant** und **Scope** (Tenant/Alle).
 - Anzeige von Erstellzeit, Status, Dateien.
 
-### 2) Historie / Audit
-- Zeigt Audit-Log-Einträge für Backup-Erstellung und Restore.
-- Ermöglicht Nachvollziehbarkeit von Änderungen.
-
-### 3) Backup erstellen
+### 2) Backup erstellen
 - **Tenant-Backup**: erstellt ein Backup für einen ausgewählten Tenant.
 - **Backup für alle Tenants**: erstellt ein globales Backup (derzeit nur Metadaten pro Tenant).
 
-### 4) Download
+### 3) Download
 - **ZIP-Download**: lädt alle JSON-Dateien des Backups als ZIP.
 - **Einzeldatei-Download**: lädt eine einzelne JSON-Datei aus dem Backup.
 
-### 5) Restore
+### 4) Restore
 - Startet die Wiederherstellung für ein ausgewähltes Backup.
 - Es wird ein Audit-Log-Eintrag erstellt.
 

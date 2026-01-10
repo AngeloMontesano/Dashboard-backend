@@ -19,9 +19,6 @@ Alle Endpunkte laufen unter `/admin/backups`.
 - `GET /admin/backups`
   - Query: `tenant_id`, `scope` (`tenant` | `all`)
   - Liefert `BackupListResponse`.
-- `GET /admin/backups/history`
-  - Query: `action`, `created_from`, `created_to`, `limit`, `offset`
-  - Liefert Audit-Log-Einträge für Backups.
 - `GET /admin/backups/{backup_id}`
   - Liefert `BackupEntry`.
 

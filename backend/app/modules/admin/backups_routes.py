@@ -78,6 +78,14 @@ def _write_json(path: Path, payload: dict) -> None:
     path.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
 
 
+def _json_bytes(payload: dict) -> bytes:
+    return json.dumps(payload, ensure_ascii=False, sort_keys=True).encode("utf-8")
+
+
+def _checksum_payload(payload: dict) -> str:
+    return hashlib.sha256(_json_bytes(payload)).hexdigest()
+
+
 def _format_size(size_bytes: int) -> str:
     if size_bytes < 1024:
         return f"{size_bytes} B"
@@ -196,6 +204,17 @@ def _write_backup_files(backup_id: str, files: dict[str, dict]) -> None:
     folder.mkdir(parents=True, exist_ok=True)
     for name, content in files.items():
         _write_json(folder / name, content)
+
+
+def _build_file_manifest(files: dict[str, dict]) -> dict[str, dict]:
+    manifest: dict[str, dict] = {}
+    for name, content in files.items():
+        payload_bytes = _json_bytes(content)
+        manifest[name] = {
+            "checksum": hashlib.sha256(payload_bytes).hexdigest(),
+            "size_bytes": len(payload_bytes),
+        }
+    return manifest
 
 
 def _write_backup_zip(backup_id: str) -> Path:

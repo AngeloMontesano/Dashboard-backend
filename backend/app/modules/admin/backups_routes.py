@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 import json
+import shutil
 import uuid
 from pathlib import Path
 from zipfile import ZipFile
@@ -89,7 +90,8 @@ def _load_index() -> list[dict]:
 
 def _save_index(items: list[dict]) -> None:
     _ensure_storage()
-    _write_json(_index_path(), {"items": items})
+    pruned_items = _apply_retention(items)
+    _write_json(_index_path(), {"items": pruned_items})
 
 
 def _backup_dir(backup_id: str) -> Path:
@@ -111,6 +113,66 @@ def _collect_files(backup_id: str) -> list[BackupFileInfo]:
             )
         )
     return files
+
+
+def _parse_created_at(value: str | None) -> datetime | None:
+    if not value:
+        return None
+    try:
+        parsed = datetime.fromisoformat(value)
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        return parsed.replace(tzinfo=timezone.utc)
+    return parsed
+
+
+def _delete_backup_files(backup_id: str) -> None:
+    folder = _backup_dir(backup_id).resolve()
+    root = _backup_root().resolve()
+    if folder.exists() and folder.is_dir() and folder.parent == root:
+        shutil.rmtree(folder)
+
+
+def _apply_retention(items: list[dict]) -> list[dict]:
+    max_days = settings.BACKUP_RETENTION_MAX_DAYS
+    max_count = settings.BACKUP_RETENTION_MAX_COUNT
+    if not max_days and not max_count:
+        return items
+
+    now = datetime.now(timezone.utc)
+    remaining = items
+    removed: list[dict] = []
+
+    if max_days is not None:
+        cutoff = now - timedelta(days=max_days)
+        next_remaining: list[dict] = []
+        for item in remaining:
+            created_at = _parse_created_at(item.get("created_at"))
+            if created_at and created_at < cutoff:
+                removed.append(item)
+            else:
+                next_remaining.append(item)
+        remaining = next_remaining
+
+    if max_count is not None and len(remaining) > max_count:
+        earliest = datetime.min.replace(tzinfo=timezone.utc)
+        sorted_items = sorted(
+            remaining,
+            key=lambda item: _parse_created_at(item.get("created_at")) or earliest,
+            reverse=True,
+        )
+        keep = sorted_items[:max_count]
+        keep_ids = {item.get("id") for item in keep}
+        removed.extend([item for item in remaining if item.get("id") not in keep_ids])
+        remaining = keep
+
+    for item in removed:
+        backup_id = item.get("id")
+        if backup_id:
+            _delete_backup_files(backup_id)
+
+    return remaining
 
 
 def _build_entry(payload: dict) -> BackupEntry:

@@ -218,7 +218,7 @@ async def admin_list_backups(
     _ensure_storage()
     if scope and scope not in {"tenant", "all"}:
         raise HTTPException(status_code=400, detail="Ungültiger scope")
-    raw_items = _load_index(prune=True)
+    raw_items = _load_index()
     if tenant_id:
         raw_items = [item for item in raw_items if item.get("tenant_id") == tenant_id]
     if scope:

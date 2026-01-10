@@ -13,28 +13,28 @@
     <div class="detail-grid">
       <div class="detail-box">
         <div class="detail-box__label">Letzter Export</div>
-        <div class="detail-box__value">OK · 12 Tabellen</div>
-        <div class="text-muted text-small">Zeit: 10:32 · Dauer: 2m 14s</div>
+        <div class="detail-box__value">{{ lastExport.title }}</div>
+        <div class="text-muted text-small">{{ lastExport.detail }}</div>
       </div>
       <div class="detail-box">
         <div class="detail-box__label">Letzter Restore</div>
-        <div class="detail-box__value">OK · Dry-Run</div>
-        <div class="text-muted text-small">Zeit: 09:10 · Dauer: 1m 02s</div>
+        <div class="detail-box__value">{{ lastRestore.title }}</div>
+        <div class="text-muted text-small">{{ lastRestore.detail }}</div>
       </div>
       <div class="detail-box">
         <div class="detail-box__label">Validierung</div>
-        <div class="detail-box__value">Counts + Checksums</div>
-        <div class="text-muted text-small">Keine Abweichungen</div>
+        <div class="detail-box__value">{{ validation.title }}</div>
+        <div class="text-muted text-small">{{ validation.detail }}</div>
       </div>
       <div class="detail-box">
-        <div class="detail-box__label">Letzter Check</div>
-        <div class="detail-box__value">OK · Health + Integrität</div>
-        <div class="text-muted text-small">Zeit: 10:40 · Dauer: 18s</div>
+        <div class="detail-box__label">Jobs</div>
+        <div class="detail-box__value">{{ jobsSummary.title }}</div>
+        <div class="text-muted text-small">{{ jobsSummary.detail }}</div>
       </div>
       <div class="detail-box">
         <div class="detail-box__label">Retention</div>
-        <div class="detail-box__value">30 Tage · 20 Versionen</div>
-        <div class="text-muted text-small">Letzter Cleanup: heute</div>
+        <div class="detail-box__value">{{ retention.title }}</div>
+        <div class="text-muted text-small">{{ retention.detail }}</div>
       </div>
     </div>
 
@@ -49,7 +49,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="job in jobs" :key="job.name">
+          <tr v-for="job in jobs" :key="job.id">
             <td>{{ job.name }}</td>
             <td>
               <span class="tag" :class="job.status === 'ok' ? 'ok' : 'bad'">{{ job.statusLabel }}</span>
@@ -64,10 +64,15 @@
 </template>
 
 <script setup lang="ts">
-const jobs = [
-  { name: "Schema-Introspektion", status: "ok", statusLabel: "OK", lastRun: "10:31", note: "Tabellenliste aktuell" },
-  { name: "Mass Export", status: "ok", statusLabel: "OK", lastRun: "10:32", note: "Export-Report erstellt" },
-  { name: "Restore Dry-Run", status: "ok", statusLabel: "OK", lastRun: "09:10", note: "FK-Checks bestanden" },
-  { name: "Retention Cleanup", status: "ok", statusLabel: "OK", lastRun: "08:00", note: "Alte Backups entfernt" },
-] as const;
+type DetailRow = { title: string; detail: string };
+type JobRow = { id: string; name: string; status: "ok" | "error"; statusLabel: string; lastRun: string; note: string };
+
+defineProps<{
+  lastExport: DetailRow;
+  lastRestore: DetailRow;
+  validation: DetailRow;
+  jobsSummary: DetailRow;
+  retention: DetailRow;
+  jobs: JobRow[];
+}>();
 </script>
